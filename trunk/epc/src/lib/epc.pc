@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.8  1998/05/06 20:20:12  gpauliss
+ * Added support for longs
+ *
  * Revision 1.7  1998/02/19 17:10:02  gpauliss
  * <>
  *
@@ -104,6 +107,8 @@ EXEC SQL INCLUDE sqlca;
 	short parameter_type_nl;
 	int int_par = 0;
 	short int_par_nl;
+	long long_par = 0;
+	short long_par_nl;
 	float float_par = 0;
 	short float_par_nl;
 	double double_par = 0;
@@ -133,6 +138,9 @@ EXEC SQL INCLUDE sqlca;
    					IF :parameter_type:parameter_type_nl = EPC.C_INT
    					THEN 
    						epc.request_get_parameter_value( :int_par:int_par_nl );
+	   				ELSIF :parameter_type:parameter_type_nl = EPC.C_LONG
+   					THEN 
+   						epc.request_get_parameter_value( :long_par:long_par_nl );
 	   				ELSIF :parameter_type:parameter_type_nl = EPC.C_FLOAT
    					THEN 
    						epc.request_get_parameter_value( :float_par:float_par_nl );
@@ -169,6 +177,13 @@ EXEC SQL INCLUDE sqlca;
 					int_par = 0;
 				retval = add_int_parameter( call, 
 					int_par, parameter_mode );
+				break;
+
+			case C_LONG:
+				if ( long_par_nl == -1 )
+					long_par = 0;
+				retval = add_long_parameter( call, 
+					long_par, parameter_mode );
 				break;
 
 			case C_FLOAT:
@@ -339,6 +354,7 @@ EXEC SQL INCLUDE sqlca;
 	const int epc_type = type;
   	char * str_val = "";
   	int int_val = 0;
+  	long long_val = 0;
   	float float_val = 0;
   	double double_val = 0;
 	EXEC SQL END DECLARE SECTION;
@@ -353,6 +369,10 @@ EXEC SQL INCLUDE sqlca;
 		case C_INT:
 			int_val = * (int *) value;
 			debug( "pack_value: int_val = %d\n", int_val );
+			break;
+		case C_LONG:
+			long_val = * (long *) value;
+			debug( "pack_value: long_val = %ld\n", long_val );
 			break;
 		case C_FLOAT:
 			float_val = * (float *) value;
@@ -372,21 +392,24 @@ EXEC SQL INCLUDE sqlca;
 
 	EXEC SQL WHENEVER SQLERROR GOTO send_error;
   	EXEC SQL EXECUTE
-  		BEGIN
-			IF		:epc_type = epc.c_string
-			THEN
-				epc.result_set_parameter_value( :str_val );
+  	BEGIN
+		IF	:epc_type = epc.c_string
+		THEN
+			epc.result_set_parameter_value( :str_val );
     		ELSIF	:epc_type = epc.c_int
-  			THEN
-				epc.result_set_parameter_value( :int_val );
-			ELSIF	:epc_type = epc.c_float
-			THEN
-				epc.result_set_parameter_value( :float_val );
-			ELSIF	:epc_type = epc.c_double
-			THEN
-				epc.result_set_parameter_value( :double_val );
-			END IF;
-		END;
+  		THEN
+			epc.result_set_parameter_value( :int_val );
+    		ELSIF	:epc_type = epc.c_long
+  		THEN
+			epc.result_set_parameter_value( :long_val );
+		ELSIF	:epc_type = epc.c_float
+		THEN
+			epc.result_set_parameter_value( :float_val );
+		ELSIF	:epc_type = epc.c_double
+		THEN
+			epc.result_set_parameter_value( :double_val );
+		END IF;
+	END;
 	END-EXEC;
 
 		/* everything OK */

@@ -1,7 +1,7 @@
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
- * Creation date  : 25-JUN-1997
+ * Creation date	: 25-JUN-1997
  *
  * Created by 		: Huub van der Wouden
  *
@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  1998/05/06 20:23:42  gpauliss
+ * Added support for longs
+ *
  * Revision 1.4  1998/02/19 16:41:09  gpauliss
  * Using dos filename conventions (8.3)
  *
@@ -34,6 +37,7 @@
 #include "idl_prs.h"
 #include "idl_defs.h"
 #include "idl_kwrd.h"
+#include "epc_defs.h"
 
 static interface _interface;
 
@@ -44,6 +48,10 @@ keyword keywords[] = {
 	},
 	{ C_INT,	{	{ C, 		"int",		"C_INT" },
 					{ PLSQL,	"integer",	"epc.c_int" }
+				}
+	},
+	{ C_LONG,	{	{ C, 		"long",		"C_LONG" },
+					{ PLSQL,	"integer",	"epc.c_long" }
 				}
 	},
 	{ C_FLOAT,	{	{ C,		"float",	"C_FLOAT" },
@@ -72,16 +80,14 @@ keyword keywords[] = {
 	}
 };
 
-void print_parameter( parm )
-parameter * parm;
+void print_parameter( parameter * parm )
 {
 	printf( "\t\t%s\n", parm->name );
 	printf( "\t\t%d\n", parm->mode );
 	printf( "\t\t%d\n", parm->datatype );
 }
 
-void print_function( fun )
-function * fun;
+void print_function( function * fun )
 {
 	int i;
 
@@ -235,8 +241,26 @@ void generate_plsql_function_body( FILE * pout, function * fun )
 	fprintf( pout, " is\n" );
 
 	/* RETURN VARIABLE */
-	if ( fun->datatype != C_VOID ) {
+	switch( fun->datatype )
+	{
+	case C_VOID:
+		break;
+
+	case C_INT:
+	case C_LONG:
+	case C_FLOAT:
+	case C_DOUBLE:
 		fprintf( pout, " \t\tresult %s;\n", get_syntax( fun->datatype, PLSQL ) );
+		break;
+
+	case C_STRING:
+		fprintf( 
+			pout, 
+			" \t\tresult %s(%d);\n", 
+			get_syntax( fun->datatype, PLSQL ), 
+			MAX_STR_VAL_LEN 
+		);
+		break;
 	}
 
 	fprintf( pout, "\tbegin\n" );
@@ -409,6 +433,7 @@ void generate_c_function ( FILE * pout, function * fun )
 			fprintf( pout, "\tmemcpy( call->return_value.value, res, strlen(res)+1 );\n" );
 			break;
 		case C_INT:
+		case C_LONG:
 		case C_FLOAT:
 		case C_DOUBLE:
 			fprintf( pout, "\tmemcpy( call->return_value.value, &res, sizeof(res) );\n" );

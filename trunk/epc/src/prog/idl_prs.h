@@ -1,7 +1,7 @@
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
- * Creation date  : 25-JUN-1997
+ * Creation date	: 25-JUN-1997
  *
  * Created by 		: Huub van der Wouden
  *
@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/05/06 20:23:44  gpauliss
+ * Added support for longs
+ *
  * Revision 1.2  1998/02/19 16:42:09  gpauliss
  * Using dos filename conventions (8.3)
  *

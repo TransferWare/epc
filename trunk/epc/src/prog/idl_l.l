@@ -1,8 +1,8 @@
 %{
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
- * Creation date  : 26-JUN-1997
+ * Creation date	: 26-JUN-1997
  *
  * Created by 		: Huub van der Wouden
  *
@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.4  1998/05/06 20:24:02  gpauliss
+ * Added support for longs
+ *
  * Revision 1.3  1998/02/19 16:42:30  gpauliss
  * Using dos filename conventions (8.3)
  *
@@ -56,19 +59,20 @@ static char *strdup( const char * str )
 "[out]"					{ yylval.ival = C_OUT; return OUT; }
 "[inout]"				{ yylval.ival = C_INOUT; return INOUT; }
 
-"char"[ \t]*"*"			{ yylval.ival = C_STRING; return STRING; }
+"char"[ \t]*"*"				{ yylval.ival = C_STRING; return STRING; }
 "int"					{ yylval.ival = C_INT; return INT; }
+"long"					{ yylval.ival = C_LONG; return LONG; }
 "float"					{ yylval.ival = C_FLOAT; return FLOAT; }
 "double"				{ yylval.ival = C_DOUBLE; return DOUBLE; }
 "void"					{ yylval.ival = C_VOID; return VOID; }
 
-[A-Za-z][A-Za-z0-9_]*	{ yylval.sval = strdup(yytext); return NAME; }
+[A-Za-z][A-Za-z0-9_]*			{ yylval.sval = strdup(yytext); return NAME; }
 
 [{}(),;]				{ return yytext[0]; }
 
 [ \t\r\n]+				;
 
-.						yyerror("invalid character");
+.					yyerror("invalid character");
 
 %%
 

@@ -14,7 +14,8 @@ typedef struct {
 	int mode;
 	int type;
 	union {
-		int		ival;
+		int	ival;
+		long	lval;
 		double	dval;
 		float	fval;
 		char *	sval;
