@@ -64,12 +64,18 @@ case "$host" in
   do
     for base in clntsh
     do
-      PROCLIB=`find $dir -name lib$base.\* 2>/dev/null`
-      if test -n "$PROCLIB"
-      then
-        PROCLIB="-L`dirname $PROCLIB` -l$base"
-        break;
-      fi
+      # Bug 849475
+      # Check links first, next normal files
+      for type in l f
+      do	
+        PROCLIB=`find $dir -type $type -name lib$base.\* 2>/dev/null`
+        if test -n "$PROCLIB"
+        then
+          PROCLIB="-L`dirname $PROCLIB` -l$base"
+          break;
+        fi
+      done
+      test -z "$PROCLIB" || break
     done
     test -z "$PROCLIB" || break
   done
@@ -89,7 +95,8 @@ do
   for file in sqlcpr.h sqlproto.h
   do
     # Windows: ignores case
-    acx_cv_protohdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file 2>/dev/null`
+    # Bug 849475: just return one header by using head -1
+    acx_cv_protohdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
     test -z "$acx_cv_protohdr" || break
   done
   test -z "$acx_cv_protohdr" || break
