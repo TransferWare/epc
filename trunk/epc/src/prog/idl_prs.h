@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.14  2005/01/03 12:26:43  gpaulissen
+ * Release 4.4.0
+ *
  * Revision 1.13  2004/12/28 12:18:11  gpaulissen
  * Test on Amazon
  *
@@ -93,12 +96,10 @@ typedef struct
 
 extern void set_interface (char *name);
 
-extern void add_function (char *name, idl_type_t datatype, const int oneway);
+extern void add_function (const char *name, const idl_type_t datatype, const dword_t size, const int oneway);
 
-extern
-  void
-add_parameter (char *name, idl_mode_t mode, idl_type_t datatype,
-               dword_t size);
+extern void
+add_parameter (char *name, idl_mode_t mode, idl_type_t datatype, dword_t size);
 
 extern void generate_plsql (void);
 

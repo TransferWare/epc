@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.16  2005/01/03 12:26:42  gpaulissen
+ * Release 4.4.0
+ *
  * Revision 1.15  2004/12/28 12:18:10  gpaulissen
  * Test on Amazon
  *
@@ -72,7 +75,7 @@
 #define MAX_FUNC_NAME_LEN       512     /* must be a multiple of 4 */
 #define MAX_INTERFACE_NAME_LEN  32      /* must be a multiple of 4 */
 #define MAX_NAMESPACE_LEN       128     /* must be a multiple of 4 */
-#define MAX_STR_VAL_LEN         4000    /* excluding terminating zero */
+#define MAX_STR_VAL_LEN         4096    /* excluding terminating zero */
 #define MAX_FUNCTIONS           100
 #define MAX_PARAMETERS          20
 
@@ -97,28 +100,40 @@ typedef char *string;
 #endif
 
 /* DATA TYPES */
-#define C_STRING 1
-#define C_INT 2
-#define C_LONG 3
-#define C_FLOAT 4
-#define C_DOUBLE 5
-#define C_VOID 6
-#define C_XML 7
-
+enum idl_type {
+  C_STRING = 1,
 #define C_DATATYPE_MIN C_STRING
+  C_INT = 2,
+  C_LONG = 3,
+  C_FLOAT = 4,
+  C_DOUBLE = 5,
+  C_VOID = 6,
+  C_XML = 7
 #define C_DATATYPE_MAX C_XML
+};
 
-typedef dword_t idl_type_t;     /* one of the values above */
+/* align structures in non LINT mode */
+
+#ifdef S_SPLINT_S
+typedef enum idl_type idl_type_t;
+#else
+typedef dword_t idl_type_t;
+#endif
 
 /* PARAMETER MODES */
-#define C_IN 101
-#define C_OUT 102
-#define C_INOUT 103
-
+enum idl_mode {
+  C_IN = 101,
 #define C_PARAMETER_MODE_MIN C_IN
+  C_OUT = 102,
+  C_INOUT = 103
 #define C_PARAMETER_MODE_MAX C_INOUT
+};
 
-typedef dword_t idl_mode_t;     /* one of the values above */
+#ifdef S_SPLINT_S
+typedef enum idl_mode idl_mode_t;
+#else
+typedef dword_t idl_mode_t;
+#endif
 
 typedef int idl_int_t;
 typedef long idl_long_t;
