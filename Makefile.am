@@ -21,8 +21,6 @@ MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 ACLOCAL			= aclocal -I $(ac_aux_dir)
 
-dist: doc
-
 generated_html_dirs     = doc/sql doc/c
 
 doc: $(generated_html_dirs)
@@ -45,7 +43,7 @@ doc/sql: $(FORCE)
 
 DOXYGEN = doxygen
 
-doc/c: $(top_srcdir)/Doxyfile
+doc/c: $(top_srcdir)/Doxyfile $(FORCE)
 	@$(DOXYGEN) $<
 
 EXTRA_DIST              = VERSION $(generated_html_dirs)
