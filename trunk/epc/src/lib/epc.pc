@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.31  2003/04/10 19:50:26  gpaulissen
+ * Update
+ *
  * Revision 1.30  2003/03/29 18:31:42  gpaulissen
  * Various fixes
  *
@@ -360,7 +363,7 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
       THEN
         epc.set_request_pipe( :request_pipe );
       END IF;
-      epc.empty_pipe( epc.get_request_pipe, 0 );
+      epc.purge( epc.get_request_pipe );
     END;
     END-EXEC;
 

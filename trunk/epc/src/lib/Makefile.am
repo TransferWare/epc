@@ -21,18 +21,20 @@ AUTOMAKE_OPTIONS     = ansi2knr
 
 MOSTLYCLEANFILES     = epc.c
 
-procincludes         = @PROCINCLUDES@
-
-procincludes        += INCLUDE=$(top_srcdir)/src/lib
-
-AM_CPPFLAGS          = `echo "$(procincludes)" | sed -e 's/include=/-I/g' -e 's/INCLUDE=/-I/g'`
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib
 
 include_HEADERS      = epc.h epc_defs.h epc_dbg.h idl_defs.h
 
-lib_LTLIBRARIES        = libepc.la
+lib_LTLIBRARIES      = libepc.la
 
-libepc_la_SOURCES     = lsnr.c epc.c epc_call.c epc_dbg.c epc_call.h
-libepc_la_LDFLAGS     = -no-undefined -version-info 0:0:0 
+libepc_la_SOURCES    = lsnr.c epc.c epc_call.c epc_dbg.c epc_call.h
+
+##
+## History of interface versions:
+## - 0:0:0 start
+## - 1:0:0 due to add epc_abort and epc_disconnect
+
+libepc_la_LDFLAGS     = -no-undefined -version-info 1:0:1
 libepc_la_LIBADD      = @PROCLIB@
 
 EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc
@@ -41,4 +43,4 @@ EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc
 @SUFFIXES@: .c .pc
 
 .pc.c:
-	@PROC@ $(procincludes) @PROCFLAGS@ iname=$< oname=$@
+	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$< ONAME=$@

@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.2  2003/04/10 19:50:27  gpaulissen
+ * Update
+ *
  * Revision 1.1  2003/03/29 18:31:42  gpaulissen
  * Various fixes
  *
@@ -106,7 +109,7 @@ static
 void
 set_signal_handlers( void )
 {
-  DBUG_ENTER( "set+signal_handlers" );
+  DBUG_ENTER( "set_signal_handlers" );
 
   signal( SIGINT, handle_signal );
   signal( SIGABRT, handle_signal );

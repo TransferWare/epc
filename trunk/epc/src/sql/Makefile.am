@@ -15,12 +15,11 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-noinst_PROGRAMS = epc
+noinst_DATA = epc.pls epc.html
 
-epc_SOURCES = epc.pls
+epc.html: epc.pls
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+	@PERL@ -S pod2html --infile=$? --outfile=$@
 
-epc$(EXEEXT): epc.pls
-	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @$<
-
-EXTRA_DIST           = Imakefile
+EXTRA_DIST           = Imakefile epc.html
 
