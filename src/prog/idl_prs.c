@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.19  2001/09/18 14:34:13  gpaulissen
+ * Oracle 8 external routines added.
+ *
  * Revision 1.18  2001/01/24 16:29:09  gpaulissen
  * Release 2.0.0
  *
@@ -75,6 +78,8 @@
 #include "idl_defs.h"
 #include "idl_kwrd.h"
 
+#include "dbug.h"
+
 /*
 || Defines
 */
@@ -106,7 +111,9 @@ static void generate_plsql_function( FILE * pout, idl_function_t * fun );
 static void generate_plsql_function_declaration( FILE * pout, idl_function_t * fun );
 static void generate_plsql_header( FILE * pout );
 static void generate_plsql_function_body( FILE * pout, idl_function_t * fun );
+static void generate_plsql_function_body_ext( FILE * pout, idl_function_t * fun );
 static void generate_plsql_body( FILE * pout );
+static void generate_plsql_body_ext( FILE * pout );
 static void generate_c_parameters( FILE * pout, idl_function_t * fun );
 static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype );
 static void generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode );
@@ -141,30 +148,35 @@ keyword keywords[] = {
   { C_INT,	
     {	
       { C, 	"int",		"C_INT" },
-      { PLSQL,	"INTEGER",	"epc.c_int" }
+      /*      { PLSQL,	"INTEGER",	"epc.c_int" }*/
+      { PLSQL,	"BINARY_INTEGER",	"epc.c_int" }
     }
   },
   { C_LONG,	
     {	
       { C, 	"long",		"C_LONG" },
-      { PLSQL,	"INTEGER",	"epc.c_long" }
+      /*      { PLSQL,	"INTEGER",	"epc.c_long" }*/
+      { PLSQL,	"BINARY_INTEGER",	"epc.c_long" }
     }
   },
   { C_FLOAT,	
     {	
       { C,	"float",	"C_FLOAT" },
-      { PLSQL,	"NUMBER",	"epc.c_float" }
+      /*      { PLSQL,	"NUMBER",	"epc.c_float" }*/
+      { PLSQL,	"FLOAT",	"epc.c_float" }
     }
   },
   { C_DOUBLE,	
     {	
       { C,	"double",	"C_DOUBLE" },
-      { PLSQL,	"NUMBER",	"epc.c_double" }
+      /*      { PLSQL,	"NUMBER",	"epc.c_double" }*/
+      { PLSQL,	"DOUBLE PRECISION",	"epc.c_double" }
     }
   },
   { C_STRING,	
     {
-      { C,	"char *",	"C_STRING" },
+      /* string is a typedef */
+      { C,	"string",	"C_STRING" },
       { PLSQL,	"VARCHAR2",	"epc.c_string" }
     }
   },
@@ -448,6 +460,8 @@ static void generate_plsql_function_body( FILE * pout, idl_function_t * fun )
   int i;
   idl_parameter_t * parm;
 
+  DBUG_ENTER( "generate_plsql_function_body" );
+
   generate_plsql_function ( pout, fun );
   fprintf( pout, " IS\n" );
 
@@ -500,11 +514,77 @@ static void generate_plsql_function_body( FILE * pout, idl_function_t * fun )
   fprintf( pout, "\t\tTHEN\tRAISE;\n" );
 
   fprintf( pout, "\tEND;\n\n" );
+
+  DBUG_LEAVE();
 }
 
-static void generate_plsql_body( FILE * pout )
+
+static
+void
+generate_plsql_function_body_ext( FILE * pout, idl_function_t * fun )
+{
+  int nr;
+
+  DBUG_ENTER( "generate_plsql_function_body_ext" );
+  DBUG_PRINT( "input", ( "interface: %s; function: %s", _interface.name, fun->name ) );
+
+  generate_plsql_function( pout, fun );
+
+  (void) fprintf( pout, " AS\n\
+\tEXTERNAL LIBRARY %s_lib\n\
+\tNAME \"%s\"\n\
+\tLANGUAGE C", _interface.name, fun->name );
+
+  DBUG_PRINT( "info",
+	      ( "return datatype: %d; # parms: %d",
+		(int) fun->return_value.datatype,
+		(int) fun->num_parameters ) );
+
+  /* PARAMETERS CLAUSE ? */
+  if ( fun->return_value.datatype != C_VOID ||
+       fun->num_parameters > 0 )
+    {
+      (void) fprintf( pout, "\n\
+\tPARAMETERS (\n" );
+
+      for ( nr = 0; nr < fun->num_parameters; nr++ ) 
+	{
+	  (void) fprintf( pout, "\t%s\t%s %s\n",
+			  (nr == 0 ? " " : "," ),
+			  fun->parameters[nr]->name,
+			  get_syntax( fun->parameters[nr]->datatype, C ) ) ;
+	}
+
+      /* RETURN VARIABLE */
+      switch( fun->return_value.datatype )
+	{
+	case C_VOID:
+	  break;
+	  
+	default:
+	  (void) fprintf( pout, "\t%s\tRETURN %s\n",
+			  (nr == 0 ? " " : "," ),
+			  get_syntax( fun->return_value.datatype, C ) ) ;
+	  break;
+	}
+
+      (void) fprintf( pout, "\
+\t)" );
+    }
+
+  (void) fprintf( pout, ";\n\n" );
+
+  DBUG_LEAVE();
+}
+
+
+static
+void
+generate_plsql_body( FILE * pout )
 {
   int i;
+
+  print_generate_comment( pout, "REMARK " );
 
   fprintf( pout, "CREATE OR REPLACE PACKAGE BODY %s IS\n", _interface.name );
   fprintf( pout, "\n" );
@@ -517,17 +597,93 @@ static void generate_plsql_body( FILE * pout )
   fprintf( pout, "/\n" );
 }
 
-void generate_plsql ( void )
+static
+void
+generate_plsql_body_ext( FILE * pout )
+{
+  int i;
+
+  DBUG_ENTER( "generate_plsql_body_ext" );
+
+  print_generate_comment( pout, "REMARK " );
+
+  (void) fprintf( pout, "\
+WHENEVER SQLERROR CONTINUE\n\
+DROP LIBRARY %s_lib\n\
+/\n\
+WHENEVER SQLERROR EXIT FAILURE\n\
+CREATE LIBRARY %s_lib AS '&%s_lib'\n\
+/\n\
+CREATE OR REPLACE PACKAGE BODY %s IS\n\n",
+		  _interface.name,
+		  _interface.name,
+		  _interface.name,
+		  _interface.name );
+
+  for ( i=0; i<_interface.num_functions; i++) {
+    generate_plsql_function_body_ext( pout, _interface.functions[i] );
+  }
+
+  fprintf( pout, "END;\n" );
+  fprintf( pout, "/\n" );
+
+  DBUG_LEAVE();
+}
+
+void
+generate_plsql( void )
 {
   char filename[256];
-  FILE * pout;
+  FILE * pout[4];
+  int nr;
 
-  sprintf( filename, "%s.pls", _interface.name );
-  if ( ( pout = fopen( filename, "w" ) ) == NULL ) {
-    printf( "cannot open file %s - exiting...\n", filename );
-  }
-  generate_plsql_header ( pout );
-  generate_plsql_body ( pout );
+  for ( nr = 0; nr < 4; nr++ )
+    {
+      switch( nr )
+	{
+	case 0:
+	  (void) sprintf( filename, "%s.pks", _interface.name );
+	  break;
+
+	case 1:
+	  (void) sprintf( filename, "%s.pkb", _interface.name );
+	  break;
+
+	case 2:
+	  /* for Oracle 8 external routines */
+	  (void) sprintf( filename, "%s.pke", _interface.name );
+	  break;
+
+	case 3:
+	  (void) sprintf( filename, "%s.pls", _interface.name );
+	  break;
+	}
+
+      if ( ( pout[nr] = fopen( filename, "w" ) ) == NULL ) 
+	{
+	  (void) fprintf( stderr, "cannot open file %s - exiting...\n", filename );
+	  exit( EXIT_FAILURE );
+	}
+    }
+
+  generate_plsql_header( pout[0] );
+  generate_plsql_body( pout[1] );
+  generate_plsql_body_ext( pout[2] );
+
+  /* .pls script call .pks and .pkb */
+  print_generate_comment( pout[3], "REMARK " );
+
+  (void) fprintf( pout[3], "@@ %s.pks\n\
+REMARK Package body using an EPC server.\n\
+@@ %s.pkb\n\
+REMARK Package body using PL/SQL external routines.\n\
+REMARK Uncomment the next line when using PL/SQL external routines (Oracle8 only).\n\
+REMARK @@ %s.pke\n", _interface.name, _interface.name, _interface.name );
+
+  for ( nr = 0; nr < 4; nr++ )
+    {
+      (void) fclose( pout[nr] );
+    }
 }
 
 static void generate_c_parameters( FILE * pout, idl_function_t * fun )
@@ -905,7 +1061,7 @@ static void generate_header ( FILE *pout )
   /* DECLARE THE INTERNAL FUNCTIONS CALLED, BECAUSE THE COMPILER NEEDS THEM!!! */
   /* HOWEVER DO NOT DECLARE EXTERNAL FUNCTIONS WHEN THEY DO NOT NEED TO BE PRINTED */
   for ( i=0; i<_interface.num_functions; i++) {
-    if ( print_external_function )
+    if ( print_external_function != 0 )
       declare_external_function( pout, _interface.functions[i] );
     declare_internal_function( pout, _interface.functions[i] );
   }
@@ -940,7 +1096,7 @@ void generate_c ( const char *include_text )
     printf( "cannot open file %s - exiting...\n", filename );
   }
 
-  if ( !print_external_function )
+  if ( print_external_function == 0 )
     print_external_function = (include_text == NULL);
 
 #ifdef GEN_EPC_IFC_H

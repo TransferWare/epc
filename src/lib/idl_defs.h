@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  2001/09/18 14:34:09  gpaulissen
+ * Oracle 8 external routines added.
+ *
  * Revision 1.4  1998/07/27 15:18:54  gert-jan
  * First release.
  *
@@ -45,9 +48,14 @@
 /* type definitions: make sure they are a double word long in order to avoid 
    alignment problems in structures */
 
-#ifndef DWORD_T
-#define DWORD_T
+#ifndef dword_t_defined
+#define dword_t_defined
 typedef long dword_t;
+#endif
+
+#ifndef string_defined
+#define string_defined
+typedef char *string;
 #endif
 
 /* DATA TYPES */
