@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  1998/07/27 15:21:09  gert-jan
+ * First release.
+ *
  * Revision 1.4  1998/05/06 20:24:02  gpauliss
  * Added support for longs
  *
@@ -40,7 +43,7 @@ int lineno = 1;
 void yyerror( char *s );
 int yyparse( void );
 
-static char *strdup( const char * str )
+static char *STRDUP( const char * str )
 {
 	char *tmp = malloc( strlen(str)+1 );
 	if ( tmp )
@@ -66,7 +69,7 @@ static char *strdup( const char * str )
 "double"				{ yylval.ival = C_DOUBLE; return DOUBLE; }
 "void"					{ yylval.ival = C_VOID; return VOID; }
 
-[A-Za-z][A-Za-z0-9_]*			{ yylval.sval = strdup(yytext); return NAME; }
+[A-Za-z][A-Za-z0-9_]*			{ yylval.sval = STRDUP((const char*)yytext); return NAME; }
 
 [{}(),;]				{ return yytext[0]; }
 
@@ -83,9 +86,13 @@ void yyerror( char *s )
 
 int main ( int argc, char **argv )
 {
-	if ( argc > 1  && (yyin = fopen( argv[1], "r" )) == NULL ) {
+	if ( argc <= 1 ) {
+		fprintf( stderr, "Syntax: %s <input file>\n", argv[0] );
+		exit (-1);
+	}
+	if ( (yyin = fopen( argv[1], "r" )) == NULL ) {
 		perror(argv[1]);
-		exit(1);
+		exit (-1);
 	}
 
 	if ( !yyparse () ) {

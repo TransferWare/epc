@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  1998/07/27 15:21:09  gert-jan
+ * First release.
+ *
  * Revision 1.4  1998/05/06 20:23:43  gpauliss
  * Added support for longs
  *
@@ -35,14 +38,16 @@
 #define C 1
 #define PLSQL 2
 
+typedef dword_t idl_lang_t;
+
 typedef struct {
-	int language;
-	char *syntax;			/* part of the return value/parameter syntax */
+	idl_lang_t language;
+	char *syntax;		/* part of the return value/parameter syntax */
 	char *constant_name;	/* Name of constant */
 } mapping;
 
 typedef struct {
-	int key;
+	dword_t key;
 	mapping mappings[NUM_LANGUAGES];
 } keyword;
 
