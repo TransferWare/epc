@@ -44,7 +44,6 @@ case "$host" in
   AC_MSG_CHECKING(for the Windows PRO*C library)
   for dir in $acx_cv_oracle_home/precomp/lib/msvc $acx_cv_oracle_home
   do
-    set -x
     for base in orasql9 orasql8 sqllib18
     do
       # Windows: ignores case

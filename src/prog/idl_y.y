@@ -14,6 +14,12 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.11  2003/08/18 15:29:55  gpaulissen
+ * - oracle 9i
+ * - syntax error in idl_y.y
+ * - clean html file on make clean
+ * - not null constraint
+ *
  * Revision 1.10  2002/10/28 14:53:05  gpaulissen
  * Using GNU standards.
  *
@@ -87,7 +93,7 @@ yylex( void );
 
 %type <tval> datatype
 %type <mval> parameter_mode
-%type <sval> interface, interface_name, function_name, parameter_name
+%type <sval> interface interface_name function_name parameter_name
 
 %%
 
