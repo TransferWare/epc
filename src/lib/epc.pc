@@ -1,18 +1,21 @@
 /* -*-mode: c-*- */
 /*
- * Filename   		: $RCSfile$
+ * Filename             : $RCSfile$
  *
  * Creation date  : 25-AUG-1997
  *
- * Created by 		: Huub van der Wouden
+ * Created by           : Huub van der Wouden
  *
- * Company    		: Transfer Solutions bv
+ * Company              : Transfer Solutions bv
  *
  * --- Description -------------------------------------------------------
  * EPC functionality that requires interaction with the Oracle database.
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.27  2002/10/31 22:21:20  gpaulissen
+ * Release 3.0.0a
+ *
  * Revision 1.26  2002/01/17 11:46:53  gpaulissen
  * - Call to epc package updated due to changes.
  *
@@ -92,18 +95,38 @@
  *
  */
 
-#include "config.h"
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-	/* skip irrelevant includes during PRO*C precompilation */
+        /* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
+
+/* defined on any system */
 #include <stdio.h>
+
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+
+#if HAVE_ASSERT_H
 #include <assert.h>
+#endif
+
 /*#include <math.h>*/ /* GJP 25-06-2000
                          math.h gives compilation errors on Oracle 8.1.5 on Linux SuSE 6.3 */
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+
+#if HAVE_TIME_H
 #include <time.h>
+#endif
+
 #endif
 
 /* force initialisation of any sqlca struct */
@@ -115,11 +138,11 @@ EXEC SQL INCLUDE "epc_defs.h";  /* epc-specific type definitions */
 
 EXEC SQL END DECLARE SECTION;
 
-	/* skip irrelevant includes during PRO*C precompilation */
+        /* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
-#include "epc_call.h"   /* server-side marshalling and call mechanism */
-#include "epc_dbg.h"  /* trace and debug functionality */
-#include "epc.h"
+#include <epc_call.h>   /* server-side marshalling and call mechanism */
+#include <epc_dbg.h>  /* trace and debug functionality */
+#include <epc.h>
 #endif
 
 /* include dmalloc/ulib as last one */
@@ -143,19 +166,19 @@ receive_request( epc_call_t * call )
  * Receives a clients' request from the specified database pipe
  *
  * return values:
- *		MSG_TIMED_OUT
- *		MSG_TOO_BIG
- *		MSG_INTERRUPTED
- *		RECEIVE_ERROR
- *		DATATYPE_UNKNOWN
- *		OK
- *		any return value from
+ *              MSG_TIMED_OUT
+ *              MSG_TOO_BIG
+ *              MSG_INTERRUPTED
+ *              RECEIVE_ERROR
+ *              DATATYPE_UNKNOWN
+ *              OK
+ *              any return value from
  *              -       set_function
- *		-	get_parameters
+ *              -       get_parameters
  * ----------------------------------------------------------------------*/
 {
 
-		/* declare a volatile struct: thread ready */
+                /* declare a volatile struct: thread ready */
 
 #ifdef SQLCA
 #undef SQLCA
@@ -207,15 +230,15 @@ receive_request( epc_call_t * call )
       break;
     case 0:
       if ( result_pipe_nl == -1 )
-	result_pipe.len = 0;
+        result_pipe.len = 0;
       result_pipe.arr[result_pipe.len] = '\0';
 
       if ( interface_name_nl == -1 )
-	interface_name.len = 0;
+        interface_name.len = 0;
       interface_name.arr[interface_name.len] = '\0';
 
       if ( function_name_nl == -1 )
-	function_name.len = 0;
+        function_name.len = 0;
       function_name.arr[function_name.len] = '\0';
 
       strncpy( call->result_pipe, (char*)result_pipe.arr, sizeof(call->result_pipe) );
@@ -244,8 +267,8 @@ receive_request( epc_call_t * call )
  end_of_receive_request:
   call->epc_error = retval;
   DBUG_PRINT( "output", 
-	      ( "sql code: %ld; epc error: %ld", 
-		(long)call->sqlcode, (long)call->epc_error));
+              ( "sql code: %ld; epc error: %ld", 
+                (long)call->sqlcode, (long)call->epc_error));
   DBUG_LEAVE(); 
   return retval;
 }
@@ -402,8 +425,8 @@ error:
 end_of_epc_handle_request:
 
   DBUG_PRINT( "output", 
-	      ( "sql code: %ld; epc status: %s", 
-		(long)call->sqlcode, get_error_str( call->epc_error ) ) );
+              ( "sql code: %ld; epc status: %s", 
+                (long)call->sqlcode, get_error_str( call->epc_error ) ) );
 
   DBUG_LEAVE();
   return -1;
@@ -444,14 +467,14 @@ epc_handle_requests( epc_info_t *epc_info )
   for ( call.sqlcode = 0; ; call.sqlcode = 0 )
     {    
       if ( epc_handle_request( epc_info, &call ) != 0 )
-	break;
+        break;
     }
 
  end_of_epc_handle_requests:
 
   DBUG_PRINT( "output", 
-	      ( "sql code: %ld; epc status: %s", 
-		(long)call.sqlcode, get_error_str( call.epc_error ) ) );
+              ( "sql code: %ld; epc status: %s", 
+                (long)call.sqlcode, get_error_str( call.epc_error ) ) );
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
   EXEC SQL COMMIT WORK RELEASE;
@@ -491,10 +514,10 @@ epc_done( epc_info_t **epc_info )
   if ( *epc_info != NULL )
     {
       if ( (*epc_info)->interfaces )
-	free( (*epc_info)->interfaces );
+        free( (*epc_info)->interfaces );
 
       if ( (*epc_info)->pipe )
-	free( (*epc_info)->pipe );
+        free( (*epc_info)->pipe );
 
       free( *epc_info );
       *epc_info = NULL;
@@ -518,7 +541,7 @@ epc_set_logon( epc_info_t *epc_info, char *logon )
   else if ( logon == NULL )
     {
       if ( epc_info->logon != NULL )
-	free( epc_info->logon );
+        free( epc_info->logon );
 
       epc_info->logon = NULL;
     }
@@ -526,9 +549,9 @@ epc_set_logon( epc_info_t *epc_info, char *logon )
     {
       epc_info->logon = (char*) realloc( epc_info->logon, strlen(logon) + 1 );
       if ( epc_info->logon == NULL )
-	status = MEMORY_ERROR;
+        status = MEMORY_ERROR;
       else
-	strcpy( epc_info->logon, logon );
+        strcpy( epc_info->logon, logon );
     }
 
   DBUG_PRINT( "output", ( "status: %d", (int)status ) );
@@ -553,7 +576,7 @@ epc_set_pipe( epc_info_t *epc_info, char *pipe )
   else if ( pipe == NULL )
     {
       if ( epc_info->pipe != NULL )
-	free( epc_info->pipe );
+        free( epc_info->pipe );
 
       epc_info->pipe = NULL;
     }
@@ -561,9 +584,9 @@ epc_set_pipe( epc_info_t *epc_info, char *pipe )
     {
       epc_info->pipe = (char*) realloc( epc_info->pipe, strlen(pipe) + 1 );
       if ( epc_info->pipe == NULL )
-	status = MEMORY_ERROR;
+        status = MEMORY_ERROR;
       else
-	strcpy( epc_info->pipe, pipe );
+        strcpy( epc_info->pipe, pipe );
     }
 
   DBUG_PRINT( "output", ( "status: %d", (int)status ) );
@@ -608,33 +631,33 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
     {
       epc_info->num_interfaces++;
       epc_info->interfaces = 
-	(epc_interface_t**)
-	realloc(
-		(void*)epc_info->interfaces,
-		(size_t)(epc_info->num_interfaces * sizeof(epc_interface_t**))
-		);
+        (epc_interface_t**)
+        realloc(
+                (void*)epc_info->interfaces,
+                (size_t)(epc_info->num_interfaces * sizeof(epc_interface_t**))
+                );
 
       if ( epc_info->interfaces == NULL )
-	{
-	  epc_info->num_interfaces--;
-	  status = MEMORY_ERROR;
-	}
+        {
+          epc_info->num_interfaces--;
+          status = MEMORY_ERROR;
+        }
       else
-	{
-	  epc_info->interfaces[epc_info->num_interfaces - 1] = interface;
+        {
+          epc_info->interfaces[epc_info->num_interfaces - 1] = interface;
 
-	  /* sort the functions */
-	  qsort( interface->functions,
-		 interface->num_functions,
-		 sizeof(interface->functions[0]),
-		 cmp_function );
+          /* sort the functions */
+          qsort( interface->functions,
+                 interface->num_functions,
+                 sizeof(interface->functions[0]),
+                 cmp_function );
 
-	  /* sort the interfaces */
-	  qsort( epc_info->interfaces,
-		 epc_info->num_interfaces,
-		 sizeof(epc_info->interfaces[0]),
-		 cmp_interface );
-	}
+          /* sort the interfaces */
+          qsort( epc_info->interfaces,
+                 epc_info->num_interfaces,
+                 sizeof(epc_info->interfaces[0]),
+                 cmp_interface );
+        }
     }
 
   DBUG_PRINT( "output", ( "status: %d", (int)status ) );

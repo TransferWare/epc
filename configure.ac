@@ -31,6 +31,11 @@ AM_C_PROTOTYPES
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_LEX
+if test "$LEX" != flex; then
+  LEX="$SHELL $missing_dir/missing flex"
+  AC_SUBST(LEX_OUTPUT_ROOT, lex.yy)
+  AC_SUBST(LEXLIB, '')
+fi
 AC_PROG_YACC
 AM_PROG_CC_STDC
 AC_LIBTOOL_WIN32_DLL
@@ -39,10 +44,18 @@ AC_CHECK_PROGS([SQLPLUS],[plus80 plus33 plus32])
 AC_CHECK_PROG([PROC],[proc])
 
 # Checks for libraries.
+AC_MSG_CHECKING([whether ORACLE_HOME is set])
+if test -z "$ORACLE_HOME"
+then
+  
+else
+
+fi
+AC_MSG_RESULT()
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h malloc.h stdlib.h string.h])
+AC_CHECK_HEADERS([assert.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
