@@ -21,23 +21,32 @@ GENERATED_FILES      = demo.c demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
+CLEANFILES           = demo.pls_run
+
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
+EXTRA_DIST           = Imakefile $(GENERATED_FILES)
+
+noinst_DATA          = demo.pls_run
 noinst_PROGRAMS      = demo
 demo_SOURCES         = demo.idl main.c
 demo_LDADD           = $(top_builddir)/src/lib/libepc.la 
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-@SUFFIXES@: .c .idl
+@SUFFIXES@: .c .idl .pls_run .pls
 
 .idl.c:
 	$(IDL) $<
 # Before running PRO*C first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
+	@touch $(@:.c=.pls_run)
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
-EXTRA_DIST           = Imakefile $(GENERATED_FILES)
+.pls.pls_run:
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+	@touch $@
+
 
