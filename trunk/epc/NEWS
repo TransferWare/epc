@@ -1,9 +1,36 @@
 EPC NEWS - History of user visible changes.		-*- indented-text -*-
 Copyright (C) 2002 G.J. Paulissen 
 
-New in <version>; <date>; G.J. Paulissen:
-* Implement GNU build system.
+See the end for copying conditions.
 
+Please send DBUG bug reports to g.paulissen@chello.nl.
+
+
+Release 3.0.0
+
+* Build EPC in separate build environment.
+* GNU Programming Standards enforced (ChangeLog, NEWS, etc.).
+* make dist for imake and Autoconf separated.
+* Implement GNU build system.
+* Solved request id 699638: Empty connect string dumps core.
+* Solved request id 692220: public synonyms ts_dbug_send/ts_dbug_recv missing.
+
+
+----------------------------------------------------------------------
+Copyright information:
+
+Copyright (C) 1992, 1993, 1996 Free Software Foundation, Inc.
+
+   Permission is granted to anyone to make or distribute verbatim copies
+   of this document as received, in any medium, provided that the
+   copyright notice and this permission notice are preserved,
+   thus giving the recipient permission to redistribute in turn.
+
+   Permission is granted to distribute modified versions
+   of this document, or of portions of it,
+   under the above conditions, provided also that they
+   carry prominent notices stating who last changed them.
+
 Local Variables:
 fill-column: 72
 End:

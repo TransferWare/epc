@@ -1,0 +1,6 @@
+2003-03-29  Gert-Jan Paulissen  <g.paulissen@chello.nl>
+
+	* idl_prs.c: Request id 692220 public synonyms
+	ts_dbug_send/ts_dbug_recv missing.
+	Now any Oracle error will stop the server.
+
