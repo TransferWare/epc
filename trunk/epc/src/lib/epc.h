@@ -33,7 +33,8 @@ extern
 epc_info_t *
 epc_init( void );
 
-extern void
+extern
+void
 epc_done( epc_info_t **epc_info );
 
 extern
@@ -61,8 +62,11 @@ void
 epc_abort(char *msg );
 
 extern
-void
-epc_disconnect( void );
+epc_error_t
+epc_connect( epc_info_t *epc_info );
 
+extern
+epc_error_t
+epc_disconnect( void );
 
 #endif

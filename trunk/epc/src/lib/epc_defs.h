@@ -1,7 +1,11 @@
 #ifndef EPC_TYPES_H
 #define EPC_TYPES_H
 
-#define MAX_PIPE_NAME_LEN       128  /* must be a multiple of 4 */
+/* Oracle pipe name length is 128.
+   Add 1 for the terminating zerio and round till next multiple of 4.
+ */
+#define MAX_PIPE_NAME_LEN       132  
+#define MAX_MSG_INFO_LEN        (4+MAX_PIPE_NAME_LEN)
 
 #include <idl_defs.h> /* constants used by idl and epc */
 
@@ -24,7 +28,7 @@ typedef struct {
 
 
 typedef struct {
-  char result_pipe[MAX_PIPE_NAME_LEN];
+  char msg_info[MAX_MSG_INFO_LEN];
   char interface_name[MAX_INTERFACE_NAME_LEN];
   char function_name[MAX_FUNC_NAME_LEN];
   long epc_error; /* result of call */
@@ -78,7 +82,11 @@ typedef enum {
   DATATYPE_UNKNOWN = -8,
   PARAMETER_MODE_UNKNOWN = -9,
   FUNCTION_UNKNOWN = -10,
-  INTERFACE_UNKNOWN = -11
+  INTERFACE_UNKNOWN = -11,
+
+  /* connect/disconnect problems */
+  CONNECT_ERROR = -12,
+  DISCONNECT_ERROR = -13
 } epc_error_t;
 
 #endif

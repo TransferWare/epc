@@ -1,5 +1,5 @@
 interface demo
 {
-   void do_system_call ( [in] char* cmd );
+   int do_system_call ( [in] char* cmd );
 }
 

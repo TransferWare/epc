@@ -25,7 +25,7 @@ AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
-bin_PROGRAMS         = demo
+noinst_PROGRAMS         = demo
 demo_SOURCES         = demo.idl main.c
 demo_LDADD           = $(top_builddir)/src/lib/libepc.la 
 
