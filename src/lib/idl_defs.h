@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.8  2004/02/22 17:17:13  gpaulissen
+ * Bug id 901781
+ *
  * Revision 1.7  2002/10/28 14:53:04  gpaulissen
  * Using GNU standards.
  *
@@ -59,6 +62,11 @@
 #ifndef dword_t_defined
 #define dword_t_defined
 typedef long dword_t;
+#endif
+
+#ifndef word_t_defined
+#define word_t_defined
+typedef short word_t;
 #endif
 
 #ifndef string_defined

@@ -58,6 +58,10 @@ typedef struct {
   dword_t first_time; /* first time epc_handle_request() is called */
   dword_t num_interfaces;
   epc_interface_t **interfaces; /* pointing to a list of interfaces */
+#ifndef EPC_INFO_DATA
+#define EPC_INFO_DATA
+#endif
+  EPC_INFO_DATA
 } epc_info_t;
 
 typedef enum {

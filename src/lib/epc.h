@@ -59,7 +59,7 @@ epc_handle_requests( epc_info_t *epc_info );
  
 extern
 void
-epc_abort(char *msg );
+epc_abort( char *msg );
 
 extern
 epc_error_t
@@ -67,6 +67,6 @@ epc_connect( epc_info_t *epc_info );
 
 extern
 epc_error_t
-epc_disconnect( void );
+epc_disconnect( epc_info_t *epc_info );
 
 #endif
