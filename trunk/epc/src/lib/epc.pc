@@ -12,9 +12,12 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
- * Revision 1.11  1998/07/27 15:18:54  gert-jan
- * First release.
+ * Revision 1.12  1998/07/31 16:23:04  gert-jan
+ * Various changes.
  *
+# Revision 1.11  1998/07/27  15:18:54  gert-jan
+# First release.
+#
  * Revision 1.10  1998/05/26 11:06:13  gpauliss
  * Replaced $Source$ by $RCSfile$
  *
@@ -111,7 +114,7 @@ receive_request( epc_call_t * call )
 EXEC SQL INCLUDE sqlca;
 
 	EXEC SQL BEGIN DECLARE SECTION;
-   	int retval = OK;
+   	long retval = OK;
 	varchar result_pipe[MAX_PIPE_NAME_LEN] = { 0, "" };     /* client-specific pipe for results  */
 	short result_pipe_nl; /* null indicator */
 	varchar interface_name[MAX_INTERFACE_NAME_LEN] = { 0, "" };
@@ -120,19 +123,22 @@ EXEC SQL INCLUDE sqlca;
 	short function_name_nl; /* null indicator */
 	EXEC SQL END DECLARE SECTION;
 
-	debug( "entering receive_request\n" );
+	epc_debug( "entering receive_request\n" );
+
+	sqlca.sqlcode = 0;
+	call->sqlcode = 0;
 
 	EXEC SQL WHENEVER SQLERROR GOTO receive_error;
 	EXEC SQL EXECUTE
-   		BEGIN
+	BEGIN
      		:retval := 
-				epc.request_get_header
-				( 
-					:result_pipe:result_pipe_nl
-				,	:interface_name:interface_name_nl
-				,	:function_name:function_name_nl
-				);
-		END;
+			epc.request_get_header
+			( 
+				:result_pipe:result_pipe_nl
+			,	:interface_name:interface_name_nl
+			,	:function_name:function_name_nl
+			);
+	END;
 	END-EXEC;
 
 	switch( retval )
@@ -182,18 +188,21 @@ EXEC SQL INCLUDE sqlca;
 	}
 
 receive_error:
-	debug( "receive_request\nSQLCODE: %d\n", sqlca.sqlcode );
+	call->sqlcode = sqlca.sqlcode;
 	retval = RECEIVE_ERROR;
 
 end_of_receive_request:
-	debug( "leaving receive_request; retval = %d\n", retval );
+	call->epc_error = retval;
+	epc_debug( "receive_request#sql code: %ld\n", (long)call->sqlcode );
+	epc_debug( "receive_request#epc error: %ld\n", (long)call->epc_error );
+	epc_debug( "leaving receive_request\n" );
 	return retval;
 }
 
 
 static
 epc_error_t
-send_result ( epc_error_t status, epc_call_t * call )
+send_result ( epc_call_t * call )
 /* ----------------------------------------------------------------------
  * Packs the result of the call as specified by the call spec and the
  * status of the call, into a message, and sends it through the specified
@@ -215,16 +224,16 @@ send_result ( epc_error_t status, epc_call_t * call )
 
 EXEC SQL INCLUDE sqlca;
 
- 	int i;
-
 #define retval call->epc_error
 
 	EXEC SQL BEGIN DECLARE SECTION;
 	const char *result_pipe = call->result_pipe;
 	EXEC SQL END DECLARE SECTION;
 
-	debug( "entering send_result\n" );
-	debug( "sending result through pipe %s\n", result_pipe );
+	epc_debug( "entering send_result\n" );
+	epc_debug( "sending result through pipe %s\n", result_pipe );
+
+	sqlca.sqlcode = 0;
 		
 	if ( call->epc_error != OK )
 	{
@@ -253,6 +262,8 @@ EXEC SQL INCLUDE sqlca;
 		END-EXEC;
 	}
 
+	call->sqlcode = 0;
+
 	switch( retval )
 	{
 	case 1: /* timed out */
@@ -269,10 +280,13 @@ EXEC SQL INCLUDE sqlca;
 	}
 
 send_error:
+	call->sqlcode = sqlca.sqlcode;
 	retval = SEND_ERROR;
 
 end_of_send_result:
-	debug( "leaving send_result; retval = %d\n", retval );
+	epc_debug( "send_result#sql code: %ld\n", (long)call->sqlcode );
+	epc_debug( "send_result#retval: %ld\n", (long)retval );
+	epc_debug( "leaving send_result\n" );
 	return retval;
 
 #ifdef retval
@@ -343,9 +357,8 @@ EXEC SQL INCLUDE sqlca;
 	char * logon = epc_info->logon;
 	EXEC SQL END DECLARE SECTION;
 	epc_call_t call = CALL_INIT;
-	epc_error_t retval = OK;
 
-	debug( "entering epc_handle_requests\n" );
+	epc_debug( "entering epc_handle_requests\n" );
 
 	/* log on to database */
 	EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_requests;
@@ -357,40 +370,91 @@ EXEC SQL INCLUDE sqlca;
 	if ( request_pipe != NULL ) {
 
 		EXEC SQL EXECUTE
-			BEGIN
+		BEGIN
 				epc.set_request_pipe( :request_pipe );
-			END;
+		END;
 		END-EXEC;
 
 	}
 
-	for( ;; ) { 
+	for( call.sqlcode = 0;; call.sqlcode = 0 ) 
+	{ 
+			/* receive the requests */
+		receive_request( &call );
 
-		switch( retval = receive_request( &call ) ) {
-			case OK:
-				retval = exec_call( &call, epc_info );
-				retval = send_result( retval, &call );
-				debug( "handle_requests: retval = %d\n", retval );
-				break;
+		if ( call.epc_error != OK )
+			goto error;
 
-			default:
-					/* Can not report back to client */
-				debug( "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
-				break;
+			/* do the call */
+		epc_exec_call( &call, epc_info );
+
+		switch ( call.epc_error )
+		{
+		case FUNCTION_UNKNOWN:
+		case INTERFACE_UNKNOWN:
+		case OK:
+			break;
+
+		default:
+			goto error;
+		}
+
+			/* send the result */
+		send_result( &call ); 
+
+		if ( call.epc_error != OK )
+			goto error;
+
+			/* call.epc_error == OK */
+		continue;
+
+	error:
+		fprintf( stderr, "epc_handle_requests#epc status: %s\n", get_error_str( call.epc_error ) );
+
+		switch( call.epc_error )
+		{
+		case MSG_TIMED_OUT:
+		case RECEIVE_ERROR:
+		case SEND_ERROR:
+		case OK:
+			break;
+
+		default:
+			goto end_of_epc_handle_requests;
+			break;
+		}
+
+		fprintf( stderr, "epc_handle_requests#sql code: %ld\n", (long)call.sqlcode );
+
+		switch( call.sqlcode )
+		{
+		case -6556:
+		case -6558:
+		case -6559: /* dbms_pipe errors */
+		case 0:
+			break;
+
+		default:
+			goto end_of_epc_handle_requests;
+			break;
 		}
 	}
 
 end_of_epc_handle_requests:
 
+	epc_debug( "epc_handle_requests#epc status: %s\n", get_error_str( call.epc_error ) );
+	epc_debug( "epc_handle_requests#sql code: %ld\n", (long)call.sqlcode );
+
+	EXEC SQL WHENEVER SQLERROR CONTINUE;
 	EXEC SQL COMMIT WORK RELEASE;
 
-	debug( "leaving epc_handle_requests; retval = %d\n", retval );
-	return retval;
+	epc_debug( "leaving epc_handle_requests\n" );
+	return call.epc_error;
 }
 
 epc_info_t *epc_init( void )
 {
-	epc_info_t *epc_info = malloc( sizeof(epc_info_t) );
+	epc_info_t *epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
 
 	if ( epc_info == NULL )
 		return NULL;
@@ -473,8 +537,8 @@ epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface 
 	epc_info->interfaces = 
 		(epc_interface_t**)
 			realloc(
-				epc_info->interfaces,
-				epc_info->num_interfaces * sizeof(epc_interface_t**)
+				(void*)epc_info->interfaces,
+				(size_t)(epc_info->num_interfaces * sizeof(epc_interface_t**))
 			);
 
 	if ( epc_info->interfaces == NULL )

@@ -7,12 +7,22 @@
  *
  * Company    		: Transfer Solutions bv
  *
+ * Notes		: For strings PRO*C VARCHAR constructs are used.
+ *			  For input then length has to be set to the
+ *			  maximum number of characters to receive. For
+ *			  output the length is the number of characters
+ *			  to send. For ease of use the following invariant
+ *			  will be maintained: str[length] == 0
+ *
  * --- Description -------------------------------------------------------
  * Parsing and code generation routines
  *
  * --- Revision History --------------------------------------------------
  * $Log$
- * Revision 1.7  1998/07/27 15:21:09  gert-jan
+ * Revision 1.8  1998/07/31 16:25:32  gert-jan
+ * Various changes.
+ *
+ * Revision 1.7  1998/07/27  15:21:09  gert-jan
  * First release.
  *
  * Revision 1.6  1998/05/26 14:01:51  gpauliss
@@ -62,12 +72,13 @@
 || Forward declaration of static procedures
 */
 
+static void init_parameter( idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t datatype );
 static mapping *get_mapping( idl_type_t type, idl_lang_t language );
 static char *get_syntax( idl_type_t type, idl_lang_t language );
 static char *get_constant_name( idl_type_t type, idl_lang_t language );
 static void print_formal_parameter( FILE *pout, idl_parameter_t *parm, idl_lang_t lang );
 static void print_actual_parameter( FILE *pout, idl_parameter_t *parm, idl_lang_t lang );
-static void print_variable( FILE *pout, idl_parameter_t *parm, idl_lang_t lang );
+static void print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang );
 static void generate_plsql_parameters( FILE * pout, idl_function_t * fun );
 static void generate_plsql_function( FILE * pout, idl_function_t * fun );
 static void generate_plsql_function_declaration( FILE * pout, idl_function_t * fun );
@@ -75,6 +86,8 @@ static void generate_plsql_header( FILE * pout );
 static void generate_plsql_function_body( FILE * pout, idl_function_t * fun );
 static void generate_plsql_body( FILE * pout );
 static void generate_c_parameters( FILE * pout, idl_function_t * fun );
+static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype );
+static void generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode );
 static void generate_c_function ( FILE * pout, idl_function_t * fun );
 static void print_generate_comment( FILE * pout, char * prefix );
 static void generate_c_source ( FILE * pout );
@@ -140,46 +153,10 @@ void set_interface ( char *name )
 	_interface.num_functions = 0;
 }
 
-void add_function ( char *name, idl_type_t datatype )
+static void init_parameter( idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t datatype )
 {
-	idl_function_t * fun = malloc(sizeof(idl_function_t));
-
-	strcpy( fun->name, name );
-	fun->num_parameters = 0;
-
-		/* add the return value */
-	strcpy( fun->return_value.name, "result" );
-	fun->return_value.datatype = datatype;
-	switch( datatype )
-	{
-	case C_STRING:
-		fun->return_value.size = MAX_STR_VAL_LEN;
-		break;
-
-	case C_VOID:
-	case C_INT:
-	case C_LONG:
-	case C_DOUBLE:
-	case C_FLOAT:
-		fun->return_value.size = 0;
-		break;
-
-	default:
-		fprintf( stderr, "(add_function) Type %ld of function %s unknown.\n", 
-			(long)datatype, name );
-		exit(-1);
-	}
-
-	_interface.functions[_interface.num_functions] = fun;
-	_interface.num_functions++;
-}
-
-void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype )
-{
-	idl_function_t * fun = _interface.functions[_interface.num_functions-1];
-	idl_parameter_t * parm = malloc(sizeof(idl_parameter_t));
-
 	strcpy( parm->name, name );
+	strcpy( parm->proc_name, name );
 
 	parm->mode = mode;
 	switch( mode )
@@ -195,11 +172,11 @@ void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype )
 		exit(-1);
 	}
 
-
 	parm->datatype = datatype;
 	switch( datatype )
 	{
 	case C_STRING:
+		strcat( parm->proc_name, "_vc" );
 		parm->size = MAX_STR_VAL_LEN;
 		break;
 
@@ -216,6 +193,27 @@ void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype )
 			(long)datatype, name );
 		exit(-1);
 	}
+}
+
+void add_function ( char *name, idl_type_t datatype )
+{
+	idl_function_t * fun = (idl_function_t*)malloc(sizeof(idl_function_t));
+
+	strcpy( fun->name, name );
+	fun->num_parameters = 0;
+
+	init_parameter( &fun->return_value, "result", C_IN, datatype );
+
+	_interface.functions[_interface.num_functions] = fun;
+	_interface.num_functions++;
+}
+
+void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype )
+{
+	idl_function_t * fun = _interface.functions[_interface.num_functions-1];
+	idl_parameter_t * parm = (idl_parameter_t*)malloc(sizeof(idl_parameter_t));
+
+	init_parameter( parm, name, mode, datatype );
 
 	fun->parameters[fun->num_parameters] = parm;
 	fun->num_parameters++;
@@ -239,6 +237,7 @@ static mapping *get_mapping( idl_type_t type, idl_lang_t language )
 	}
 	printf( "Type %ld not a valid keyword\n", (long)type );
 	exit(1);
+	return NULL;
 }
 
 static char *get_syntax( idl_type_t type, idl_lang_t language )
@@ -289,7 +288,7 @@ static void print_actual_parameter( FILE *pout, idl_parameter_t *parm, idl_lang_
 }
 
 
-static void print_variable( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
+static void print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
 {
 	switch( lang )
 	{
@@ -300,11 +299,12 @@ static void print_variable( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
 		case C_LONG:
 		case C_FLOAT:
 		case C_DOUBLE:
-			fprintf( pout, "%s %s = 0", get_syntax( parm->datatype, C ), parm->name );
+			fprintf( pout, "%s %s = 0", get_syntax( parm->datatype, C ), parm->proc_name );
 			break;
 
-		case C_STRING:
-			fprintf( pout, "%s %s = NULL", get_syntax( parm->datatype, C ), parm->name );
+		case C_STRING: /* Use the VARCHAR PRO*C construct */
+			fprintf( pout, "VARCHAR %s[%d+1] = { %d, \"\" };\n\tchar *%s = (char*)%s.arr", 
+				parm->proc_name, parm->size, parm->size, parm->name, parm->proc_name );
 			break;
 		}
 		break;
@@ -411,7 +411,7 @@ static void generate_plsql_function_body( FILE * pout, idl_function_t * fun )
 
 	default:
 		fprintf( pout, "\t\t" );
-		print_variable( pout, &fun->return_value, PLSQL );
+		print_variable_definition( pout, &fun->return_value, PLSQL );
 		fprintf( pout, ";\n" );
 		break;
 	}
@@ -493,28 +493,48 @@ static void generate_c_parameters( FILE * pout, idl_function_t * fun )
 	for ( i=0; i<fun->num_parameters; i++) {
 		parm = fun->parameters[i];
 		fprintf( pout, "\t" );
-		print_variable( pout, parm, C );
+		print_variable_definition( pout, parm, C );
 		fprintf( pout, ";\n" );
 	}
-
-	fprintf( pout, "\t%s;\n\n", EXEC_SQL_END_DECLARE_SECTION );
-
-		/* 
-		 * Allocate memory for strings 
-		 */
-	for ( i=0; i<fun->num_parameters; i++) {
-		parm = fun->parameters[i];
-		if ( parm->datatype != C_STRING ) 
-			continue;
-
-		fprintf( pout, "\t%s = (char*)MALLOC(%d);\n", parm->name, parm->size );
-		fprintf( pout, "\tif ( %s == NULL ) goto memory_error;\n", parm->name );
-	}
-
-	fprintf( pout, "\n" );
 }
 
-static void generate_c_function ( FILE * pout, idl_function_t * fun )
+
+static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype )
+{
+	switch( datatype )
+	{
+	case C_INT:
+		fprintf( pout, "\tepc_debug( \"%s= %%d\\n\", (int)%s );\n", name, name ); break;
+	case C_LONG:
+		fprintf( pout, "\tepc_debug( \"%s= %%ld\\n\", (long)%s );\n", name, name ); break;
+	case C_FLOAT:
+		fprintf( pout, "\tepc_debug( \"%s= %%f\\n\", (float)%s );\n", name, name ); break;
+	case C_DOUBLE:
+		fprintf( pout, "\tepc_debug( \"%s= %%lf\\n\", (double)%s );\n", name, name ); break;
+	case C_STRING:
+		fprintf( pout, "\tepc_debug( \"%s= '%%s'\\n\", (char*)%s );\n", name, name ); break;
+	default:
+		fprintf( stderr, "print_c_debug_info#Unknown datatype (%d) for %s\n", datatype, name ); break;
+	}
+}
+
+
+static void generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode )
+{
+	int i;
+
+	for ( i=0; i<fun->num_parameters; i++) {
+		idl_parameter_t * parm = fun->parameters[i];
+
+		if ( parm->mode == mode )
+		{
+			print_c_debug_info( pout, parm->name, parm->datatype );
+		}
+   	}
+}
+
+
+static void generate_c_function( FILE * pout, idl_function_t * fun )
 {
 	int i;
 	int exec_sql_printed = 0;
@@ -557,17 +577,15 @@ static void generate_c_function ( FILE * pout, idl_function_t * fun )
 
 	default:
 		fprintf( pout, "\t" );
-		print_variable( pout, &fun->return_value, C );
+		print_variable_definition( pout, &fun->return_value, C );
 		fprintf( pout, ";\n" );
 		break;
 	}
 
 	/* PARAMETERS */
-	if ( fun->num_parameters > 0 ) {
-	  generate_c_parameters( pout, fun );
-	} else {
-  	  fprintf( pout, "\t%s;\n\n", EXEC_SQL_END_DECLARE_SECTION );
-	}
+	generate_c_parameters( pout, fun );
+
+ 	fprintf( pout, "\t%s;\n\n", EXEC_SQL_END_DECLARE_SECTION );
 
 		/*
 		 * Get the in and in/out parameters
@@ -585,7 +603,7 @@ static void generate_c_function ( FILE * pout, idl_function_t * fun )
 \tEXEC SQL EXECUTE\n\
 \tBEGIN\n" );
 			}
-			fprintf( pout, "\t\tdbms_pipe.unpack_message( :%s );\n", parm->name ); 
+			fprintf( pout, "\t\tdbms_pipe.unpack_message( :%s );\n", parm->proc_name ); 
 		}
    	}
 
@@ -595,10 +613,38 @@ static void generate_c_function ( FILE * pout, idl_function_t * fun )
 \tEXCEPTION\n\
 \t\tWHEN OTHERS THEN :sqlcode := SQLCODE;\n\
 \tEND;\n\
-\tEND-EXEC;\n\n\
-\tif ( sqlcode != 0 ) goto receive_error;\n\n" );
+\tEND-EXEC;\n\n" );
 	}
 
+		/* -----------------------------------------------------------
+		 * Make PRO*C variable a zero-terminated field of length field
+		 * ----------------------------------------------------------- */
+	for ( i=0; i<fun->num_parameters; i++) {
+		idl_parameter_t *parm = fun->parameters[i];
+
+		if ( parm->datatype != C_STRING ) continue;
+
+		switch( parm->mode )
+		{
+		case C_OUT:
+			fprintf( pout, "\tmemset(%s, ' ', %d);\n", parm->name, parm->size );
+			/* !!! do not use break !!! */
+			/* break; */
+
+		case C_IN:
+		case C_INOUT:
+			fprintf( pout, "\t%s.arr[%s.len] = 0;\n", parm->proc_name, parm->proc_name );
+			break;
+		}
+	}
+
+		/* ---------------------------------------------------------------
+		 * Print the in and in/out parameters, including Oracle error code
+		 * --------------------------------------------------------------- */
+	generate_c_debug_info( pout, fun, C_IN );
+	generate_c_debug_info( pout, fun, C_INOUT );
+	print_c_debug_info( pout, "sqlcode", C_LONG );
+	fprintf( pout, "\n\tif ( sqlcode != 0 ) goto receive_error;\n\n" );
 
 		/* ---------------
 		 * THE ACTUAL CALL 
@@ -617,6 +663,18 @@ static void generate_c_function ( FILE * pout, idl_function_t * fun )
 	}
 	fprintf( pout, " );\n\n" );
 
+		/* ------------------------------------------------------
+		 * Let PRO*C variable have the length indicated by strlen
+		 * ------------------------------------------------------ */
+	for ( i=0; i<fun->num_parameters; i++) {
+		idl_parameter_t *parm = fun->parameters[i];
+		if ( ( parm->mode == C_INOUT || parm->mode == C_OUT ) && parm->datatype == C_STRING ) 
+			fprintf( pout, "\t%s.len = strlen(%s);\n", parm->proc_name, parm->name );
+	}
+
+		/* ----------------
+		 * Send the results
+		 * ---------------- */
 	fprintf( pout, "\
 \tEXEC SQL WHENEVER SQLERROR CONTINUE;\n\
 \tEXEC SQL EXECUTE\n\
@@ -668,16 +726,13 @@ end:\n\
 \tcall->epc_error = epc_error;\n\
 \tcall->sqlcode = sqlcode;\n" );
 
-		/* 
-		 * Deallocate memory for strings 
+		/*
+		 * Print the in/out and out parameters, including Oracle error code
 		 */
-	for ( i=0; i<fun->num_parameters; i++) {
-		idl_parameter_t *parm = fun->parameters[i];
-		if ( parm->datatype != C_STRING ) 
-			continue;
-
-		fprintf( pout, "\tif ( %s != NULL ) { FREE( %s ); }\n", parm->name, parm->name );
-	}
+	generate_c_debug_info( pout, fun, C_INOUT );
+	generate_c_debug_info( pout, fun, C_OUT );
+	print_c_debug_info( pout, "sqlcode", C_LONG );
+	print_c_debug_info( pout, "epc_error", C_LONG );
 
 	fprintf( pout, "}\n\n" );
 }
@@ -699,6 +754,7 @@ static void generate_c_source ( FILE * pout )
 	fprintf( pout, "#include <string.h>\n" );
 	fprintf( pout, "#include <stdlib.h>\n" );
 	fprintf( pout, "#include \"epc_defs.h\"\n" );
+	fprintf( pout, "#include \"epc_dbg.h\"\n" );
 	fprintf( pout, "#include \"%s.h\"\n\n", _interface.name );
 	fprintf( pout, "\
 #define SQLCA_STORAGE_CLASS static\n\
@@ -709,10 +765,6 @@ static void generate_c_source ( FILE * pout )
 #undef SQLCA\n\
 #endif\n\
 EXEC SQL INCLUDE sqlca;\n\n" );
-
-		/* define MALLOC and FREE to be overridden by application developers */
-	fprintf( pout, "#ifndef MALLOC\n#define MALLOC(size) malloc(size)\n#endif\n" );
-	fprintf( pout, "#ifndef FREE\n#define FREE(ptr) free(ptr)\n#endif\n" );
 
 		/* function array */
 	fprintf( pout, "\nstatic epc_function_t functions[] = {\n" );
