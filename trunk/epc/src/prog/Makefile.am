@@ -23,7 +23,6 @@ AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
 bin_PROGRAMS         = idl
 idl_SOURCES          = idl_l.l idl_prs.c idl_y.y idl_kwrd.h idl_prs.h idl_y.h yy.h yywrap.c
-idl_LDADD            = -ldbug
 
 AM_YFLAGS            = -d
 

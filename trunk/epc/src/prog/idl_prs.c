@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.27  2003/03/29 18:31:42  gpaulissen
+ * Various fixes
+ *
  * Revision 1.26  2003/03/26 21:47:08  gpaulissen
  * Building the epc
  *
@@ -1091,7 +1094,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     {
       /* call the recv function */
       (void) fprintf( pout, "\
-\tEXEC SQL WHENEVER SQLERROR GOTO ready;\n\
+\tEXEC SQL WHENEVER SQLERROR DO epc_abort(\"-- Oracle error --\");\n\
 \tEXEC SQL EXECUTE\n\
 \tBEGIN\n\
 \t\t%s%s.%s", _interface.name, package_type_str[SKEL_RECV], fun->name );
@@ -1193,7 +1196,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     {
       /* call the send function */
       (void) fprintf( pout, "\
-\tEXEC SQL WHENEVER SQLERROR GOTO ready;\n\
+\tEXEC SQL WHENEVER SQLERROR DO epc_abort(\"-- Oracle error --\");\n\
 \tEXEC SQL EXECUTE\n\
 \tBEGIN\n\
 \t\t%s%s.%s",
@@ -1227,7 +1230,6 @@ EXEC SQL INCLUDE sqlca;\n\n" );
       (void) fprintf( pout, " );\n\
 \tEND;\n\
 \tEND-EXEC;\n\n\
-ready:\n\
 \tsqlcode = sqlca.sqlcode;\n\
 \tswitch ( sqlcode )\n\
 \t{\n\
@@ -1313,6 +1315,7 @@ generate_c_source ( FILE * pout, const char *include_text )
 
   (void) fprintf( pout, "#include <string.h>\n" );
   (void) fprintf( pout, "#include <stdlib.h>\n" );
+  (void) fprintf( pout, "#include <epc.h>\n" );
   (void) fprintf( pout, "#include <epc_defs.h>\n" );
   (void) fprintf( pout, "#include <epc_dbg.h>\n" );
   (void) fprintf( pout, "#include \"%s.h\"\n\n", _interface.name );
