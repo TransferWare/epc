@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.9  2004/12/16 17:49:16  gpaulissen
+REMARK  added dbms_xmlgen.convert for converting HTML entities
+REMARK
 REMARK  Revision 1.8  2004/12/16 16:03:24  gpaulissen
 REMARK  Web services added
 REMARK
@@ -604,6 +607,8 @@ begin
   else
     p_value := l_value;
   end if;
+  p_value :=
+    dbms_xmlgen.convert(xmlData => p_value, flag => dbms_xmlgen.entity_decode);
 end get_response_parameter;
 
 procedure get_response_parameter
