@@ -19,6 +19,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.9  1998/08/02 13:58:26  gjp
+ * Moved declarations of external routines to the interface header file. This reduces the chance of conflicts.
+ *
  * Revision 1.8  1998/07/31 16:25:32  gert-jan
  * Various changes.
  *
@@ -90,6 +93,8 @@ static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype );
 static void generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode );
 static void generate_c_function ( FILE * pout, idl_function_t * fun );
 static void print_generate_comment( FILE * pout, char * prefix );
+static void declare_external_function( FILE * pout, idl_function_t * fun );
+static void declare_internal_function( FILE * pout, idl_function_t * fun );
 static void generate_c_source ( FILE * pout );
 #ifdef GEN_EPC_IFC_H
 static void generate_interface_header ( FILE * pout );
@@ -542,26 +547,6 @@ static void generate_c_function( FILE * pout, idl_function_t * fun )
 	fprintf( pout, "void _%s ( epc_call_t *call )\n", fun->name );
 	fprintf( pout, "{\n" );
 
-	/* DECLARE THE FUNCTION CALLED, BECAUSE THE PRECOMPILER NEEDS IT!!! */
-	fprintf( pout, "\textern %s %s( ", 
-		get_syntax( fun->return_value.datatype, C ),
-		fun->name
-	);
-	if ( fun->num_parameters > 0 ) {
-		for ( i=0; i<fun->num_parameters; i++) {
-			idl_parameter_t * parm = fun->parameters[i];
-
-			print_formal_parameter( pout, parm, C );
-
-			if ( i < fun->num_parameters - 1 )
-				fprintf( pout, ", " );
-		}
-	}
-	else /* 0 parameters */
-		fprintf( pout, "void" );
-	fprintf( pout, " );\n" );
-
-
 		/* 
 		 * VARIABLE TO HOLD RETURN VALUE 
 		 */
@@ -744,6 +729,34 @@ static void print_generate_comment( FILE * pout, char * prefix )
 	fprintf( pout, "%s *******************************/\n\n", prefix );
 }
 
+static void declare_external_function( FILE * pout, idl_function_t * fun )
+{
+	int i;
+
+	fprintf( pout, "extern %s %s( ", 
+		get_syntax( fun->return_value.datatype, C ),
+		fun->name
+	);
+	if ( fun->num_parameters > 0 ) {
+		for ( i=0; i<fun->num_parameters; i++) {
+			idl_parameter_t * parm = fun->parameters[i];
+
+			print_formal_parameter( pout, parm, C );
+
+			if ( i < fun->num_parameters - 1 )
+				fprintf( pout, ", " );
+		}
+	}
+	else /* 0 parameters */
+		fprintf( pout, "void" );
+	fprintf( pout, " );\n" );
+}
+
+static void declare_internal_function( FILE * pout, idl_function_t * fun )
+{
+	fprintf( pout, "extern void _%s( epc_call_t *call );\n", fun->name );
+}
+
 static void generate_c_source ( FILE * pout )
 {
 	int i;
@@ -808,12 +821,14 @@ static void generate_header ( FILE *pout )
 
 	print_generate_comment( pout, "" );
 
-/*	fprintf( pout, "#include \"epc_defs.h\"\n\n" );*/
+#ifdef GEN_EPC_IFC_H
+	fprintf( pout, "#include \"epc_defs.h\"\n\n" );
+#endif
 
-	/* forward references to functions */
+		/* DECLARE THE FUNCTIONS CALLED, BECAUSE THE COMPILER NEEDS THEM!!! */
 	for ( i=0; i<_interface.num_functions; i++) {
-		fun = _interface.functions[i];
-		fprintf( pout, "extern void _%s( epc_call_t *call );\n", fun->name );
+		declare_external_function( pout, _interface.functions[i] );
+		declare_internal_function( pout, _interface.functions[i] );
 	}
 
 		/* interface declaration */
