@@ -28,15 +28,20 @@ dnl
 AC_DEFUN([ACX_PROG_PROC],
 [AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)])dnl
 
-acx_cv_oracle_home=`dirname $PROC`
-acx_cv_oracle_home=`dirname $acx_cv_oracle_home`
+acx_cv_oracle_home="$ORACLE_HOME"
+if test -z "$acx_cv_oracle_home"
+then
+  acx_cv_oracle_home=`dirname $PROC`
+  acx_cv_oracle_home=`dirname $acx_cv_oracle_home`
+fi
 
 AC_MSG_CHECKING(for the full path name of the PRO*C library)
-# set -xv
+#set -x
 PROCLIB=
 case "$host" in
 *-*-cygwin* | *-*-mingw* )
   # Windows
+  AC_MSG_CHECKING(for the Windows PRO*C library)
   for dir in $acx_cv_oracle_home/precomp/lib/msvc $acx_cv_oracle_home
   do
     for file in orasql8.lib sqllib18.lib
@@ -50,6 +55,7 @@ case "$host" in
   ;;
 * )
   # Unix
+  AC_MSG_CHECKING(for the Unix PRO*C library)
   for dir in $acx_cv_oracle_home/lib $acx_cv_oracle_home
   do
     for base in clntsh
@@ -66,7 +72,6 @@ case "$host" in
   ;;
 esac
 acx_save_LIBS="$LIBS"
-set -x
 LIBS="$PROCLIB $LIBS"
 AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library not found)])
 LIBS=$acx_save_LIBS
