@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.11  1998/07/27 15:18:54  gert-jan
+ * First release.
+ *
  * Revision 1.10  1998/05/26 11:06:13  gpauliss
  * Replaced $Source$ by $RCSfile$
  *
@@ -70,6 +73,7 @@ EXEC SQL END DECLARE SECTION;
 #ifndef ORA_PROC
 #include "epc_call.h"   /* server-side marshalling and call mechanism */
 #include "epc_dbg.h"  /* trace and debug functionality */
+#include "epc.h"
 #endif
 
 /* =====================================================================
@@ -78,154 +82,10 @@ EXEC SQL END DECLARE SECTION;
  *
  *======================================================================*/
 
-static
-error_t 
-get_parameters ( call_t * call )
-/* ----------------------------------------------------------------------
- * Gets the function's parameters from the clients' request message,
- * and puts them in the call spec.
- *
- * return values:
- *		DATATYPE_UNKNOWN
- *		OK
- *		any return value from 
- *		-	add_string_parameter
- *		-	add_int_parameter
- *		-	add_float_parameter
- *		-	add_double_parameter
- * ----------------------------------------------------------------------*/
-{
-
-		/* declare a volatile struct: thread ready */
-
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-EXEC SQL INCLUDE sqlca;
-
-	error_t retval = OK;
-
-	EXEC SQL BEGIN DECLARE SECTION;
-	int parameter_mode = 0;
-	short parameter_mode_nl;
-	int parameter_type = 0;
-	short parameter_type_nl;
-	int int_par = 0;
-	short int_par_nl;
-	long long_par = 0;
-	short long_par_nl;
-	float float_par = 0;
-	short float_par_nl;
-	double double_par = 0;
-	short double_par_nl;
-
-		/* GJP 21-JAN-1998 Put maximum number of characters for a VARCHAR2 in array */
-	varchar string_par[MAX_STR_VAL_LEN] = { 0, "" };
-	short string_par_nl;
-	EXEC SQL END DECLARE SECTION;
-
-	debug( "entering get_parameters\n" );
-
-	for ( ; ; ) {
-
-		EXEC SQL WHENEVER SQLERROR GOTO :no_more_parameters;
-
-   		EXEC SQL EXECUTE
-			BEGIN
-				epc.request_get_parameter_info
-				( 
-					:parameter_mode:parameter_mode_nl
-				,	:parameter_type:parameter_type_nl
-				);
-
-				IF	:parameter_mode:parameter_mode_nl IN ( epc.c_in, epc.c_inout )
-				THEN
-   					IF :parameter_type:parameter_type_nl = EPC.C_INT
-   					THEN 
-   						epc.request_get_parameter_value( :int_par:int_par_nl );
-	   				ELSIF :parameter_type:parameter_type_nl = EPC.C_LONG
-   					THEN 
-   						epc.request_get_parameter_value( :long_par:long_par_nl );
-	   				ELSIF :parameter_type:parameter_type_nl = EPC.C_FLOAT
-   					THEN 
-   						epc.request_get_parameter_value( :float_par:float_par_nl );
-   					ELSIF :parameter_type:parameter_type_nl = EPC.C_DOUBLE
-   					THEN 
-	   					epc.request_get_parameter_value( :double_par:double_par_nl );
-   					ELSIF :parameter_type:parameter_type_nl = EPC.C_STRING
-   					THEN 
-   						epc.request_get_parameter_value( :string_par:string_par_nl );
-   					END IF;
-				END IF;
-			END;
-   		END-EXEC;
-
-		if ( parameter_mode_nl == -1 )
-			parameter_mode = 0;
-
-		if ( parameter_type_nl == -1 )
-			parameter_type = 0;
-
-		debug( "Parameter mode: %d; type: %d\n", parameter_mode, parameter_type );
-
-		switch( parameter_type ) {
-			case C_STRING:
-				if ( string_par_nl == -1 )
-					string_par.len = 0;
-				string_par.arr[string_par.len] = '\0';
-				retval = add_string_parameter( call, 
-					(char*)string_par.arr, parameter_mode );
-				break;
-
-			case C_INT:
-				if ( int_par_nl == -1 )
-					int_par = 0;
-				retval = add_int_parameter( call, 
-					int_par, parameter_mode );
-				break;
-
-			case C_LONG:
-				if ( long_par_nl == -1 )
-					long_par = 0;
-				retval = add_long_parameter( call, 
-					long_par, parameter_mode );
-				break;
-
-			case C_FLOAT:
-				if ( float_par_nl == -1 )
-					float_par = 0;
-				retval = add_float_parameter( call, 
-					float_par, parameter_mode );
-				break;
-
-			case C_DOUBLE:
-				if ( double_par_nl == -1 )
-					double_par = 0;
-				retval = add_double_parameter( call, 
-					double_par, parameter_mode );
-				break;
-
-			default:
-				retval = DATATYPE_UNKNOWN;
-		}
-
-		if ( retval != OK )
-			goto end_of_get_parameters;
-	} /* end while */
-
-no_more_parameters:
-    debug( "get_paramaters\nSQLCODE: %d\n", sqlca.sqlcode );
-
-end_of_get_parameters:
-	debug( "leaving get_parameters; retval = %d\n", retval );
-
-	return retval;
-}
 
 static
-error_t
-receive_request( call_t * call )
+epc_error_t
+receive_request( epc_call_t * call )
 /* ----------------------------------------------------------------------
  * Receives a clients' request from the specified database pipe
  *
@@ -254,12 +114,10 @@ EXEC SQL INCLUDE sqlca;
    	int retval = OK;
 	varchar result_pipe[MAX_PIPE_NAME_LEN] = { 0, "" };     /* client-specific pipe for results  */
 	short result_pipe_nl; /* null indicator */
-	varchar interface[MAX_INTERFACE_NAME_LEN] = { 0, "" };
-	short interface_nl; /* null indicator */
+	varchar interface_name[MAX_INTERFACE_NAME_LEN] = { 0, "" };
+	short interface_name_nl; /* null indicator */
    	varchar function_name[MAX_FUNC_NAME_LEN] = { 0, "" };
 	short function_name_nl; /* null indicator */
-	int function_type = 0;
-	short function_type_nl; /* null indicator */
 	EXEC SQL END DECLARE SECTION;
 
 	debug( "entering receive_request\n" );
@@ -271,9 +129,8 @@ EXEC SQL INCLUDE sqlca;
 				epc.request_get_header
 				( 
 					:result_pipe:result_pipe_nl
-				,	:interface:interface_nl
+				,	:interface_name:interface_name_nl
 				,	:function_name:function_name_nl
-				,	:function_type:function_type_nl
 				);
 		END;
 	END-EXEC;
@@ -297,22 +154,20 @@ EXEC SQL INCLUDE sqlca;
 			result_pipe.len = 0;
 		result_pipe.arr[result_pipe.len] = '\0';
 
-		if ( interface_nl == -1 )
-			interface.len = 0;
-		interface.arr[interface.len] = '\0';
+		if ( interface_name_nl == -1 )
+			interface_name.len = 0;
+		interface_name.arr[interface_name.len] = '\0';
 
 		if ( function_name_nl == -1 )
 			function_name.len = 0;
 		function_name.arr[function_name.len] = '\0';
 
-		if ( function_type_nl == -1 ) /* should not happen */
-			function_type = -1;
-
-		retval = set_function( call, (char *) result_pipe.arr, (char *) function_name.arr, function_type );
-		if ( retval != OK )
-			goto end_of_receive_request;
-
-		retval = get_parameters( call );
+		retval = set_function( 
+				  call
+				, (char *) result_pipe.arr
+				, (char *) interface_name.arr
+				, (char *) function_name.arr
+				);
 		if ( retval != OK )
 			goto end_of_receive_request;
 
@@ -327,7 +182,7 @@ EXEC SQL INCLUDE sqlca;
 	}
 
 receive_error:
-    debug( "receive_request\nSQLCODE: %d\n", sqlca.sqlcode );
+	debug( "receive_request\nSQLCODE: %d\n", sqlca.sqlcode );
 	retval = RECEIVE_ERROR;
 
 end_of_receive_request:
@@ -335,103 +190,10 @@ end_of_receive_request:
 	return retval;
 }
 
-static
-error_t
-pack_value ( int type, void * value )
-/* ----------------------------------------------------------------------
- * Pack a value in the message buffer
- *
- * return values:
- *		SEND_ERROR
- *		DATATYPE_UNKNOWN
- *		OK
- * ----------------------------------------------------------------------*/
-{
-
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-EXEC SQL INCLUDE sqlca;
-
-	error_t retval = OK;
-
-	EXEC SQL BEGIN DECLARE SECTION;
-	const int epc_type = type;
-  	char * str_val = "";
-  	int int_val = 0;
-  	long long_val = 0;
-  	float float_val = 0;
-  	double double_val = 0;
-	EXEC SQL END DECLARE SECTION;
-
-	debug( "entering pack_value\n" );
-
-  	switch( type ) {
-  		case C_STRING:
-  			str_val = (char *) value;
-  			debug( "pack_value: str_val = %s\n", str_val );
-  			break;
-		case C_INT:
-			int_val = * (int *) value;
-			debug( "pack_value: int_val = %d\n", int_val );
-			break;
-		case C_LONG:
-			long_val = * (long *) value;
-			debug( "pack_value: long_val = %ld\n", long_val );
-			break;
-		case C_FLOAT:
-			float_val = * (float *) value;
-			debug( "pack_value: float_val = %f\n", float_val );
-			break;
-		case C_DOUBLE:
-			double_val = * (double *) value;
-			debug( "pack_value: double_val = %lf\n", double_val );
-			break;
-	   default:
-			debug( "unknown parameter type %d...\n", type );
-			retval = DATATYPE_UNKNOWN;
-			goto end_of_pack_value;
-	}
-
-		/* Passing a whole block is usually more efficient for Oracle */
-
-	EXEC SQL WHENEVER SQLERROR GOTO send_error;
-  	EXEC SQL EXECUTE
-  	BEGIN
-		IF	:epc_type = epc.c_string
-		THEN
-			epc.result_set_parameter_value( :str_val );
-    		ELSIF	:epc_type = epc.c_int
-  		THEN
-			epc.result_set_parameter_value( :int_val );
-    		ELSIF	:epc_type = epc.c_long
-  		THEN
-			epc.result_set_parameter_value( :long_val );
-		ELSIF	:epc_type = epc.c_float
-		THEN
-			epc.result_set_parameter_value( :float_val );
-		ELSIF	:epc_type = epc.c_double
-		THEN
-			epc.result_set_parameter_value( :double_val );
-		END IF;
-	END;
-	END-EXEC;
-
-		/* everything OK */
-	goto end_of_pack_value;
-
-send_error:
-	retval = SEND_ERROR;
-
-end_of_pack_value:
-	debug( "leaving pack_value; retval = %d\n", retval );
-	return retval;
-}
 
 static
-error_t
-send_result ( error_t status, call_t * call )
+epc_error_t
+send_result ( epc_error_t status, epc_call_t * call )
 /* ----------------------------------------------------------------------
  * Packs the result of the call as specified by the call spec and the
  * status of the call, into a message, and sends it through the specified
@@ -455,53 +217,41 @@ EXEC SQL INCLUDE sqlca;
 
  	int i;
 
+#define retval call->epc_error
+
 	EXEC SQL BEGIN DECLARE SECTION;
-    int retval = OK;
-  	int exec_status;
 	const char *result_pipe = call->result_pipe;
 	EXEC SQL END DECLARE SECTION;
 
 	debug( "entering send_result\n" );
 	debug( "sending result through pipe %s\n", result_pipe );
 		
-	/* First send status, stop if not OK */
-	exec_status = (int) status;
-	debug( "send_result: status = %d\n", exec_status );
+	if ( call->epc_error != OK )
+	{
+		EXEC SQL BEGIN DECLARE SECTION;
+		long epc_error = call->epc_error;
+		long sqlcode = call->sqlcode;
+		EXEC SQL END DECLARE SECTION;
 
-	retval = pack_value( C_INT, &exec_status );
-
-  	if ( status != OK )
-  		retval = status;
-
-	if ( retval != OK )
-		goto end_of_send_result;
-
-  	print_call( call );
-  			
-  	/* SEND OUT OR INOUT PARAMETER VALUES */
-  	for ( i=0; i < call->num_parameters; i++ ) {
-  		if ( call->parameters[i].mode == C_OUT || call->parameters[i].mode == C_INOUT ) {
-  			debug( "send_result: sending parameter value\n" );
-			retval = pack_value( call->parameters[i].type, call->parameters[i].value );
-			if ( retval != OK )
-				goto end_of_send_result;
-		}
-	}
-
-	/* SEND FUNCTION RETURN VALUE IF THERE IS ONE */
-	if ( call->return_value.type != C_VOID ) {
-		debug( "send_result: sending return value\n" );
-		retval = pack_value( call->return_value.type, call->return_value.value );
-		if ( retval != OK )
-			goto end_of_send_result;
-	}
-	
-	EXEC SQL WHENEVER SQLERROR GOTO send_error;
-	EXEC SQL EXECUTE
-	   BEGIN
-			:retval := DBMS_PIPE.SEND_MESSAGE( :result_pipe );
+		EXEC SQL WHENEVER SQLERROR GOTO send_error;
+		EXEC SQL EXECUTE
+		BEGIN
+			dbms_pipe.reset_buffer;
+			dbms_pipe.pack_message( :epc_error );
+			dbms_pipe.pack_message( :sqlcode );
+			:retval := dbms_pipe.send_message( :result_pipe );
 		END;
-	END-EXEC;
+		END-EXEC;
+	}
+	else
+	{
+		EXEC SQL WHENEVER SQLERROR GOTO send_error;
+		EXEC SQL EXECUTE
+		BEGIN
+			:retval := dbms_pipe.send_message( :result_pipe );
+		END;
+		END-EXEC;
+	}
 
 	switch( retval )
 	{
@@ -524,12 +274,16 @@ send_error:
 end_of_send_result:
 	debug( "leaving send_result; retval = %d\n", retval );
 	return retval;
+
+#ifdef retval
+#undef retval
+#endif
 }
 
 
 static
 char *
-get_error_str( error_t err )
+get_error_str( epc_error_t err )
 {
 	switch( err ) {
 		case OK:
@@ -550,6 +304,8 @@ get_error_str( error_t err )
 			return "DATATYPE_UNKNOWN";
 		case FUNCTION_UNKNOWN:
 			return "FUNCTION_UNKNOWN";
+		case INTERFACE_UNKNOWN:
+			return "INTERFACE_UNKNOWN";
 		case PARAMETER_MODE_UNKNOWN:
 			return "PARAMETER_MODE_UNKNOWN";
 		case SEND_ERROR:
@@ -565,8 +321,8 @@ get_error_str( error_t err )
  *
  *======================================================================*/
  
-error_t
-EPC_handle_requests( char *pipe )
+epc_error_t
+epc_handle_requests( epc_info_t *epc_info )
 /* ----------------------------------------------------------------------
  * Handles all requests received over the specified database pipe:
  * - receives a request message
@@ -583,16 +339,23 @@ EPC_handle_requests( char *pipe )
 EXEC SQL INCLUDE sqlca;
 
 	EXEC SQL BEGIN DECLARE SECTION;
-	char * request_pipe = pipe;
+	char * request_pipe = epc_info->pipe;
+	char * logon = epc_info->logon;
 	EXEC SQL END DECLARE SECTION;
-	call_t call = CALL_INIT;
-	error_t retval = OK;
+	epc_call_t call = CALL_INIT;
+	epc_error_t retval = OK;
 
-	debug( "entering EPC_handle_requests\n" );
+	debug( "entering epc_handle_requests\n" );
+
+	/* log on to database */
+	EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_requests;
+	EXEC SQL CONNECT :logon;
+
+	printf( "epc listener started - logon %s, pipe %s\n\n", 
+		logon, (request_pipe?request_pipe:"(null)") );
 
 	if ( request_pipe != NULL ) {
 
-		EXEC SQL WHENEVER SQLERROR GOTO end_of_EPC_handle_requests;
 		EXEC SQL EXECUTE
 			BEGIN
 				epc.set_request_pipe( :request_pipe );
@@ -605,29 +368,123 @@ EXEC SQL INCLUDE sqlca;
 
 		switch( retval = receive_request( &call ) ) {
 			case OK:
-				retval = exec_call( &call );
+				retval = exec_call( &call, epc_info );
 				retval = send_result( retval, &call );
 				debug( "handle_requests: retval = %d\n", retval );
 				break;
 
-			case FUNCTION_UNKNOWN:
-			case DATATYPE_UNKNOWN:
-				/* message has the wrong format!? - notify client as well */
-				debug( "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
-				retval = send_result( retval, &call );
-				break;
-
 			default:
-				/* Can not report back to client */
+					/* Can not report back to client */
 				debug( "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
 				break;
 		}
-
-		free_call( &call );
 	}
 
-end_of_EPC_handle_requests:
-	debug( "leaving EPC_handle_requests; retval = %d\n", retval );
+end_of_epc_handle_requests:
+
+	EXEC SQL COMMIT WORK RELEASE;
+
+	debug( "leaving epc_handle_requests; retval = %d\n", retval );
 	return retval;
+}
+
+epc_info_t *epc_init( void )
+{
+	epc_info_t *epc_info = malloc( sizeof(epc_info_t) );
+
+	if ( epc_info == NULL )
+		return NULL;
+
+	epc_info->logon = NULL;
+	epc_info->pipe = NULL;
+	epc_info->num_interfaces = 0;
+	epc_info->interfaces = NULL;
+
+	return epc_info;
+}
+
+void epc_done( epc_info_t **epc_info )
+{
+	if ( *epc_info == NULL )
+		return;
+
+	if ( (*epc_info)->interfaces )
+		free( (*epc_info)->interfaces );
+
+	if ( (*epc_info)->pipe )
+		free( (*epc_info)->pipe );
+
+	free( *epc_info );
+	*epc_info = NULL;
+}
+
+epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
+{
+	if ( epc_info == NULL )
+		return	MEMORY_ERROR;
+
+	if ( logon == NULL )
+	{
+		if ( epc_info->logon != NULL )
+			free( epc_info->logon );
+
+		epc_info->logon = NULL;
+		return OK;
+	}
+
+	epc_info->logon = (char*) realloc( epc_info->logon, strlen(logon) + 1 );
+	if ( epc_info->logon == NULL )
+		return	MEMORY_ERROR;
+
+	strcpy( epc_info->logon, logon );
+
+	return OK;
+}
+
+epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
+{
+	if ( epc_info == NULL )
+		return	MEMORY_ERROR;
+
+	if ( pipe == NULL )
+	{
+		if ( epc_info->pipe != NULL )
+			free( epc_info->pipe );
+
+		epc_info->pipe = NULL;
+		return OK;
+	}
+
+	epc_info->pipe = (char*) realloc( epc_info->pipe, strlen(pipe) + 1 );
+	if ( epc_info->pipe == NULL )
+		return	MEMORY_ERROR;
+
+	strcpy( epc_info->pipe, pipe );
+
+	return OK;
+}
+
+epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
+{
+	if ( epc_info == NULL )
+		return	MEMORY_ERROR;
+
+	epc_info->num_interfaces++;
+	epc_info->interfaces = 
+		(epc_interface_t**)
+			realloc(
+				epc_info->interfaces,
+				epc_info->num_interfaces * sizeof(epc_interface_t**)
+			);
+
+	if ( epc_info->interfaces == NULL )
+	{
+		epc_info->num_interfaces--;
+		return	MEMORY_ERROR;
+	}
+	
+	epc_info->interfaces[epc_info->num_interfaces - 1] = interface;
+
+	return OK;
 }
 

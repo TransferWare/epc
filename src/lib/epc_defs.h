@@ -1,18 +1,17 @@
 #ifndef _EPC_TYPES_H_
 #define _EPC_TYPES_H_
 
-#define MAX_PIPE_NAME_LEN	255
-#define MAX_FUNC_NAME_LEN	255
-#define MAX_INTERFACE_NAME_LEN	255
-#define MAX_STR_VAL_LEN		4096
-#define MAX_FUNCTIONS		100
-#define MAX_PARAMETERS		20
+#define MAX_PIPE_NAME_LEN	128  /* must be a multiple of 4 */
 
 #include "idl_defs.h"  /* constants used by idl and epc */
 
+/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * make sure all structs are double word (4 bytes) aligned 
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+
 typedef struct {
-	int mode;
-	int type;
+	idl_mode_t mode;
+	idl_type_t type;
 	union {
 		int	ival;
 		long	lval;
@@ -21,23 +20,39 @@ typedef struct {
 		char *	sval;
 	} uval;
 	void *value;	/* points to one of the union members above */
-} parameter_t;
+} epc_parameter_t;
 
 typedef struct {
 	char result_pipe[MAX_PIPE_NAME_LEN];
+	char interface_name[MAX_INTERFACE_NAME_LEN];
 	char function_name[MAX_FUNC_NAME_LEN];
-	parameter_t return_value;	/* return value is considered a parameter */
-	int num_parameters;
-	parameter_t parameters[MAX_PARAMETERS];
-} call_t;
+	long epc_error; /* result of call */
+	long sqlcode;   /* sqlcode of call */
+} epc_call_t;
 
-#define CALL_INIT { "", "", { 0 }, 0, { { 0 } } }
+#define CALL_INIT { "", "", "", OK, 0 }
 
 typedef struct {
 	char *name;
-	int type;
-	void (*function) ( call_t * );
-} function_t;
+	idl_type_t type;
+	void (*function) ( epc_call_t * );
+} epc_function_t;
+
+typedef struct {
+	char *name;
+	dword_t num_functions;
+	epc_function_t *functions;
+} epc_interface_t;
+
+/*
+ * epc_info_t: general info for running an EPC server
+ */
+typedef struct {
+	char *logon;
+	char *pipe;
+	dword_t num_interfaces;
+	epc_interface_t **interfaces; /* pointing to a list of interfaces */
+} epc_info_t;
 
 typedef enum {
 	OK = 0,
@@ -60,7 +75,8 @@ typedef enum {
 		/* illegal values in message */
 	DATATYPE_UNKNOWN = -8,
 	PARAMETER_MODE_UNKNOWN = -9,
-	FUNCTION_UNKNOWN = -10
-} error_t;
+	FUNCTION_UNKNOWN = -10,
+	INTERFACE_UNKNOWN = -11
+} epc_error_t;
 
 #endif

@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  1998/07/27 15:21:09  gert-jan
+ * First release.
+ *
  * Revision 1.4  1998/05/06 20:24:03  gpauliss
  * Added support for longs
  *
@@ -80,7 +83,7 @@ function_list:
 function:
 		datatype 
 		function_name 
-			{ add_function( $2, $1 ); }
+		{ add_function( $2, $1 ); }
 		'(' parameter_list ')' ';'
 
 	;
@@ -106,7 +109,7 @@ parameter_list:
 
 parameter:
 		parameter_mode datatype parameter_name
-			{ add_parameter( $3, $1, $2 ); }
+		{ add_parameter( $3, $1, $2 ); }
 	;
 
 parameter_mode:

@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.4  1998/07/27 15:21:09  gert-jan
+ * First release.
+ *
  * Revision 1.3  1998/05/06 20:23:44  gpauliss
  * Added support for longs
  *
@@ -33,32 +36,36 @@
 #ifndef _IDL_PRS_H
 #define _IDL_PRS_H
 
-#define MAXLEN 31
+#ifndef  _IDL_DEFS_H_
+#include "idl_defs.h"
+#define  _IDL_DEFS_H_
+#endif
 
 typedef struct {
-	char name[MAXLEN];
-	int mode;
-	int datatype;
-} parameter;
+	char name[MAX_PARM_NAME_LEN];
+	idl_mode_t mode;
+	idl_type_t datatype;
+	dword_t size;
+} idl_parameter_t;
 
 typedef struct {
-	char name[MAXLEN];
-	int datatype;
-	int num_parameters;
-	parameter * parameters[MAXLEN];
-} function;
+	char name[MAX_FUNC_NAME_LEN];
+	idl_parameter_t return_value;
+	dword_t num_parameters;
+	idl_parameter_t * parameters[MAX_PARAMETERS];
+} idl_function_t;
 
 typedef struct {
-	char name[MAXLEN];
-	int num_functions;
-	function * functions[MAXLEN];
-} interface;
+	char name[MAX_INTERFACE_NAME_LEN];
+	dword_t num_functions;
+	idl_function_t * functions[MAX_FUNCTIONS];
+} idl_interface_t;
 
 void set_interface ( char *name );
-void add_function ( char *name, int datatype );
-void add_parameter ( char *name, int mode, int datatype );
+void add_function ( char *name, idl_type_t datatype );
+void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype );
 
-void generate_plsql ();
-void generate_c ();
+void generate_plsql ( void );
+void generate_c ( void );
 
 #endif
