@@ -21,7 +21,7 @@ AUTOMAKE_OPTIONS     = ansi2knr
 
 MOSTLYCLEANFILES     = epc.c
 
-AM_CPPFLAGS          = -I$(top_srcdir)/src/lib
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib -I$(includedir)
 
 include_HEADERS      = epc.h epc_defs.h epc_dbg.h idl_defs.h
 
@@ -36,7 +36,7 @@ libepc_la_SOURCES    = lsnr.c epc.c epc_call.c epc_dbg.c epc_call.h
 ## - 2:0:0 due to adding epc_info to epc_disconnect
 
 libepc_la_LDFLAGS     = -no-undefined -version-info 2:0:0
-libepc_la_LIBADD      = @PROCLIB@
+libepc_la_LIBADD      = @PROCLIB@ $(libdir)/libdbug.la
 
 EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc
 

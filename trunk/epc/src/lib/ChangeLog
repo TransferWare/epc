@@ -1,3 +1,11 @@
+2004-03-12  Gert-Jan Paulissen  <g.paulissen@chello.nl>
+	
+	* epc.pc: [ 901781 ] CTRL-C kills EPC listener but not the session.
+	osnsui/osncui added.
+	* Makefile.am: added -I$(includedir) to AM_CPPFLAGS and
+	$(libdir)/libdbug.la to libepc_la_LIBADD in order to shorten the
+	confgure command.
+
 2003-03-29  Gert-Jan Paulissen  <g.paulissen@chello.nl>
 
 	* epc.pc: Request id 699638 Empty connect string dumps core.

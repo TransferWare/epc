@@ -13,6 +13,12 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.37  2004/03/12 16:30:17  gpaulissen
+ * 915081	The EPC idl compiler fails during build of the demo
+ * 901781	CTRL-C kills EPC listener but not the session
+ * 891761	-v option crashes
+ * 699638	Empty connect string dumps core
+ *
  * Revision 1.36  2004/03/07 10:43:06  gpaulissen
  * oneway bug with parameters solved
  *
@@ -213,17 +219,18 @@ EXEC SQL END DECLARE SECTION;
  *======================================================================*/
 
 /*
+  [ 901781 ] CTRL-C kills EPC listener but not the session
+
   GJP 21-02-2004
   Both osnsui() and osncui() are hidden functions on Windows.
   However they seem to work exactly the same as on Unix platforms.
-  These functions
 */
 
 
 /* user side interrupt set */
 extern
 dword_t
-osnsui( dword_t *handlp, void (*astp)(char *ctx), char *ctx );
+osnsui( dword_t *handlp, void (*astp)(char *ctx), epc_info_t *ctx );
 /*
 ** osnsui: Operating System dependent Network Set User-side Interrupt.
 **         Add an interrupt handling procedure astp.
@@ -237,7 +244,7 @@ osnsui( dword_t *handlp, void (*astp)(char *ctx), char *ctx );
 
 /* user side interrupt clear */
 extern
-word_t
+dword_t
 osncui( dword_t handle );
 /*
 ** osncui: Operating System dependent Clear User-side Interrupt.
@@ -258,6 +265,10 @@ osncui( dword_t handle );
 EXEC SQL BEGIN DECLARE SECTION;
 static sql_context interrupt_context;
 EXEC SQL END DECLARE SECTION;
+
+/* Can not supply epc_info to standard signal handlers 
+   so supply a global */
+static epc_info_t *interrupt_epc_info = NULL;
 
 static
 int
@@ -575,28 +586,13 @@ reset_signal_handlers( const int idx )
   set_signal_handlers( idx );
 }
 
-static
-void
-handle_signal( int signo )
-{
-  set_signal_handlers( 1 );
-
-  (void) fprintf( stderr, "Received signal %d\n", signo );
-
-  G_signo = signo;
-
-  reset_signal_handlers( 1 );
-}
-
 /*
 ** User interrupt handler template.
 */
 static
 void
-handle_interrupt(char *epc_info_ptr)
+handle_interrupt(epc_info_t *epc_info)
 {
-  epc_info_t *epc_info = (epc_info_t*)epc_info_ptr;
-
   EXEC SQL BEGIN DECLARE SECTION;
   const char *pipe = epc_info->pipe;
   EXEC SQL END DECLARE SECTION;
@@ -620,6 +616,21 @@ handle_interrupt(char *epc_info_ptr)
   DBUG_PRINT( "info", ( "sqlca.sqlcode: %ld", (long)sqlca.sqlcode ) );
 
   DBUG_LEAVE();
+}
+
+static
+void
+handle_signal( int signo )
+{
+  set_signal_handlers( 1 );
+
+  (void) fprintf( stderr, "Received signal %d\n", signo );
+
+  handle_interrupt(interrupt_epc_info);
+
+  G_signo = signo;
+
+  reset_signal_handlers( 1 );
 }
 
 /*
@@ -679,7 +690,7 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
   EXEC SQL CONTEXT USE DEFAULT;
 
   /* set up my user interrupt handler */
-  (void) osnsui(&handle, handle_interrupt, (char *)epc_info);
+  (void) osnsui(&handle, handle_interrupt, epc_info);
 
   EXEC SQL EXECUTE
   BEGIN
@@ -1091,7 +1102,7 @@ epc_connect( epc_info_t *epc_info )
   } else {
 
     /* log on to database */
-    EXEC SQL WHENEVER SQLERROR STOP;
+    EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
     EXEC SQL CONTEXT USE DEFAULT;
 
@@ -1103,7 +1114,10 @@ epc_connect( epc_info_t *epc_info )
 
     EXEC SQL CONNECT :logon;
 
+    interrupt_epc_info = epc_info;
+
     printf( "Connected to database....\n" );
+    epc_info->connected = TRUE;
 
     set_signal_handlers( 0 );
 
@@ -1126,41 +1140,45 @@ epc_disconnect( epc_info_t *epc_info )
 
   DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
-  (void) printf( "Disconnecting from database....\n" );
-
   reset_signal_handlers( 0 );
 
-  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  if ( epc_info->connected == TRUE ) {
 
-  switch ( G_signo )
-    {
-    case 0:
-      EXEC SQL CONTEXT USE :interrupt_context;
+    (void) printf( "Disconnecting from database....\n" );
 
-      EXEC SQL COMMIT WORK RELEASE;
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
 
-      EXEC SQL CONTEXT USE DEFAULT;
+    switch ( G_signo )
+      {
+      case 0:
+        EXEC SQL CONTEXT USE :interrupt_context;
 
-      EXEC SQL COMMIT WORK RELEASE;
-      break;
+        EXEC SQL COMMIT WORK RELEASE;
 
-    default:
-      EXEC SQL CONTEXT USE :interrupt_context;
+        EXEC SQL CONTEXT USE DEFAULT;
 
-      EXEC SQL ROLLBACK RELEASE;
+        EXEC SQL COMMIT WORK RELEASE;
+        break;
 
-      EXEC SQL CONTEXT USE DEFAULT;
+      default:
+        EXEC SQL CONTEXT USE :interrupt_context;
 
-      EXEC SQL ROLLBACK RELEASE;
+        EXEC SQL ROLLBACK RELEASE;
+
+        EXEC SQL CONTEXT USE DEFAULT;
+
+        EXEC SQL ROLLBACK RELEASE;
+      }
+
+    EXEC SQL CONTEXT FREE :interrupt_context;
+
+    if ( sqlca.sqlcode != 0 ) {
+      status = DISCONNECT_ERROR;
     }
 
-  EXEC SQL CONTEXT FREE :interrupt_context;
+    (void) printf( "Disconnected from database....\n" );
 
-  if ( sqlca.sqlcode != 0 ) {
-    status = DISCONNECT_ERROR;
   }
-
-  (void) printf( "Disconnected from database....\n" );
 
   DBUG_LEAVE();
 
@@ -1184,6 +1202,7 @@ epc_init( void )
   if ( epc_info != NULL )
     {
       epc_info->logon = NULL;
+      epc_info->connected = FALSE;
       epc_info->pipe = NULL;
       epc_info->first_time = 1;
       epc_info->num_interfaces = 0;

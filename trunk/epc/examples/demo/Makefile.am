@@ -25,14 +25,14 @@ CLEANFILES           = demo.pls_run
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
 
 EXTRA_DIST           = Imakefile $(GENERATED_FILES)
 
 noinst_DATA          = demo.pls_run
 noinst_PROGRAMS      = demo
 demo_SOURCES         = demo.idl main.c
-demo_LDADD           = $(top_builddir)/src/lib/libepc.la 
+demo_LDADD           = $(top_builddir)/src/lib/libepc.la
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
