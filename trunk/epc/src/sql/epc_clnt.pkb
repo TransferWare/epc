@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.4  2004/10/15 13:53:40  gpaulissen
+REMARK  XML added
+REMARK
 REMARK  Revision 1.3  2004/05/21 15:04:35  gpaulissen
 REMARK  Eerste implementatie
 REMARK
@@ -29,8 +32,8 @@ CONNECTION_METHOD_UTL_TCP constant connection_method_subtype := 2;
 -- types
 type epc_info_rectype is record (
   interface_name epc.interface_name_subtype,
-  connection_method connection_method_subtype,
-  request_pipe epc.pipe_name_subtype,
+  connection_method connection_method_subtype default CONNECTION_METHOD_DBMS_PIPE,
+  request_pipe epc.pipe_name_subtype default 'epc_request_pipe',
   tcp_connection utl_tcp.connection,
   msg varchar2(4000),
   doc xmltype, /* output */
@@ -259,10 +262,14 @@ is
   e_send_error exception;
 begin
   dbms_pipe.reset_buffer;
+  dbms_output.put_line('msg protocol: ' || c_msg_protocol);
   dbms_pipe.pack_message( c_msg_protocol );
   g_msg_seq := g_msg_seq + 1;
   if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
+  dbms_output.put_line('msg seq: ' || g_msg_seq);
   dbms_pipe.pack_message( g_msg_seq );
+  dbms_output.put_line('soap request: ' || substr(p_soap_request, 1, 200));
+  dbms_pipe.pack_message( p_soap_request );
   if p_oneway = 0
   then
     if g_result_pipe is null
@@ -321,14 +328,15 @@ procedure send_request
 is
 begin
   epc_info_tab(p_epc_key).msg :=
-'SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance"
-xmlns:xsd="http://www.w3.org/1999/XMLSchema"'
+'<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
 ||'<SOAP-ENV:Body><'
 ||p_method_name
 ||' xmlns="'
 ||epc_info_tab(p_epc_key).interface_name
-||'" SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">'
+||'">'
 ||epc_info_tab(p_epc_key).msg
 ||'</'
 ||p_method_name
@@ -392,12 +400,12 @@ procedure check_fault(p_doc in out nocopy xmltype) as
   fault_code   varchar2(256);
   fault_string varchar2(32767);
 begin
-   fault_node := p_doc.extract('/soap:Fault',
+   fault_node := p_doc.extract('/SOAP-ENV:Fault',
      'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/');
    if (fault_node is not null) then
-     fault_code := fault_node.extract('/soap:Fault/faultcode/child::text()',
+     fault_code := fault_node.extract('/SOAP-ENV:Fault/faultcode/child::text()',
        'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/').getstringval();
-     fault_string := fault_node.extract('/soap:Fault/faultstring/child::text()',
+     fault_string := fault_node.extract('/SOAP-ENV:Fault/faultstring/child::text()',
        'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/').getstringval();
      raise_application_error(-20000, fault_code || ' - ' || fault_string);
    end if;
@@ -415,7 +423,7 @@ begin
   end if;
   epc_info_tab(p_epc_key).doc := xmltype.createxml( epc_info_tab(p_epc_key).msg );
   epc_info_tab(p_epc_key).doc :=
-    epc_info_tab(p_epc_key).doc.extract('/soap:Envelope/soap:Body/child::node()',
+    epc_info_tab(p_epc_key).doc.extract('/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()',
       'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"');
   show_envelope(epc_info_tab(p_epc_key).doc.getstringval());
   check_fault(epc_info_tab(p_epc_key).doc);

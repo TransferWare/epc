@@ -15,21 +15,27 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-noinst_DATA      = epc.pls epc.html epc.pls_run
+noinst_DATA      = epc.pks epc.pkb epc.html epc.pks_run epc.pkb_run
+noinst_DATA     += epc_clnt.pks epc_clnt.pkb epc_clnt.html epc_clnt.pks_run epc_clnt.pkb_run
+noinst_DATA     += epc_srvr.pks epc_srvr.pkb epc_srvr.html epc_srvr.pks_run epc_srvr.pkb_run
 
 MOSTLYCLEANFILES = epc.html
 
-CLEANFILES       = *.pls_run pod*.tmp
+CLEANFILES       = *.pk?_run pod*.tmp
 
 EXTRA_DIST       = epc.html epc.pls
 
-@SUFFIXES@: .pls .html .pls_run
+@SUFFIXES@: .pks .pkb .html .pks_run .pkb_run
 
-.pls.pls_run:
+.pks.pks_run:
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
 	@touch $@
 
-.pls.html:
+.pkb.pkb_run:
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+	@touch $@
+
+.pks.html:
 	sed 's/-- =pod/=pod/g;s/-- =cut/=cut/g' $? | @PERL@ -S pod2html --outfile=$@
 
 

@@ -2,31 +2,46 @@
 #include <config.h>
 #endif
 
+#include <stdlib.h>
+
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
+#ifdef HAVE_ASSERT_H
+#include <assert.h>
+#endif
+
 #include <dbug.h>
 
+#include <oratypes.h>
+#include <oraxml.h>
+
 #include "epc_xml.h"
+#define string_defined
+#include "epc_defs.h"
 
 /* SAX callback functions */
 
 static
 sword
-start_document(void *ctx);
+start_document(void *epc_xml_ctx_ptr);
 
 static
 sword
-end_document(void *ctx);
+end_document(void *epc_xml_ctx_ptr);
 
 static
 sword
-start_element(void *ctx, const oratext *name, 
+start_element(void *epc_xml_ctx_ptr, const oratext *name, 
               const struct xmlnodes *attrs);
 static
 sword
-end_element(void *ctx, const oratext *name);
+end_element(void *epc_xml_ctx_ptr, const oratext *name);
 
 static
 sword
-element_content(void *ctx, const oratext *ch, size_t len);
+element_content(void *epc_xml_ctx_ptr, const oratext *ch, size_t len);
 
 static
 void
@@ -36,11 +51,17 @@ static
 void
 lookup_function( const char *function_name, epc_info_t *epc_info, epc_call_t *epc_call );
 
+/* GLOBAL functions */
+
 unsigned int
-epc_xml_init( struct xmlctx **xmlctx, void *ctx )
+epc_xml_init( struct xmlctx **xmlctx, epc_xml_ctx_t *epc_xml_ctx_ptr )
 {
   uword ecode = 0;
-  const xmlsaxcb saxcb = {
+  /* GJP 15-10-2004 
+     The saxcb structure must be globally allocated at least for Oracle 8i.
+     Removing the static keyword leads to coredumps on Windows
+  */
+  static const xmlsaxcb saxcb = {
     start_document,
     end_document,
     start_element,
@@ -52,10 +73,11 @@ epc_xml_init( struct xmlctx **xmlctx, void *ctx )
 
   *xmlctx = xmlinit(&ecode, (const oratext *) 0,
                     (void (*)(void *, const oratext *, uword)) 0,
-                    (void *) 0, &saxcb, (void *) 0,
-                    (const xmlmemcb *) 0, ctx,
+                    (void *) 0, &saxcb, (void *) epc_xml_ctx_ptr,
+                    (const xmlmemcb *) 0, NULL,
                     (const oratext *) 0);
 
+  DBUG_PRINT("info", ("xmlctx: %p", *xmlctx));
   DBUG_LEAVE();
 
   return ecode;
@@ -67,6 +89,7 @@ epc_xml_done( struct xmlctx **xmlctx )
   uword ecode = 0;
 
   DBUG_ENTER("epc_xml_done");
+  DBUG_PRINT("info", ("xmlctx: %p", *xmlctx));
 
   ecode = xmlterm(*xmlctx);                        /* terminate XML package */
   *xmlctx = NULL;
@@ -83,17 +106,22 @@ epc_xml_parse( struct xmlctx *xmlctx, const char *buf, const size_t len )
   ub4 flags = XML_FLAG_DISCARD_WHITESPACE; /* | XML_FLAG_VALIDATE;*/
 
   DBUG_ENTER("epc_xml_parse");
+  DBUG_PRINT("info", ("xmlctx: %p", xmlctx));
+  DBUG_PRINT("input", ("buf: %*.*s", len, len, buf));
 
   ecode = xmlparsebuf(xmlctx, (oratext *) buf, len, (oratext *) 0, flags);
 
+  DBUG_PRINT("output", ("ecode: %lu", (unsigned long)ecode));
   DBUG_LEAVE();
 
   return ecode;
 }
 
+/* LOCAL functions */
+
 static
 sword
-start_document(void *ctx)
+start_document(void *epc_xml_ctx_ptr)
 {
   dbug_enter(__FILE__, "document", __LINE__, NULL);
 
@@ -102,44 +130,161 @@ start_document(void *ctx)
 
 static
 sword
-end_document(void *ctx)
+end_document(void *epc_xml_ctx_ptr)
 {
-  dbug_leave(__LINE__, NULL);
+  epc_xml_ctx_t *epc_xml_ctx = (epc_xml_ctx_t *)epc_xml_ctx_ptr;
+  epc_call_t *epc_call = (epc_call_t *)epc_xml_ctx->epc_call;
+  int nr;
 
-  return 0;
-}
+  dbug_print(__LINE__, "info", "method: %s", (epc_call->function != NULL ? epc_call->function->name : "(null)"));
 
-static
-sword
-start_element(void *ctx, const oratext *name, 
-             const struct xmlnodes *attrs)
-{
-  oratext *elem = (oratext *) name;
-  size_t len = strlen((const char*)name);
-
-  dbug_enter(__FILE__, elem, __LINE__, NULL);
-
-  if ( len >= 4 && strncmp((const char *)&elem[len - 4], "Body", 4) == 0 )
+  if (epc_call->function != NULL)
     {
-      /* Body */
-      if ( attrs != NULL ) {
-        size_t idx;
-        xmlnode *attr;
-
-        for ( idx = 0; idx < numAttributes(attrs); idx++ )
-          {
-            attr = getAttributeIndex(attrs, idx);
-            dbug_print(__LINE__, "info", "attribute %s: %s", (char*)getAttrName(attr), (char*)getAttrValue(attr));
-          }
-      }
+      for (nr = 0; nr < epc_call->function->num_parameters; nr++)
+        {
+          dbug_print(__LINE__, "info", "argument %d; name: %s",
+                     nr, 
+                     epc_call->function->parameters[nr].name);
+        }
     }
 
+  dbug_leave(__LINE__, NULL);
+
   return 0;
 }
 
 static
 sword
-end_element(void *ctx, const oratext *name)
+start_element(void *epc_xml_ctx_ptr, const oratext *name, 
+              const struct xmlnodes *attrs)
+{
+  epc_xml_ctx_t *epc_xml_ctx = (epc_xml_ctx_t *)epc_xml_ctx_ptr;
+  epc_info_t *epc_info = epc_xml_ctx->epc_info;
+  epc_call_t *epc_call = epc_xml_ctx->epc_call;
+  char element_type = 0; /* (B)ody, (M)ethod, (A)rgument */
+  const size_t len = strlen((const char*)name);
+  char *interface_name = NULL, *function_name = NULL, *argument_name = NULL;
+
+  dbug_enter(__FILE__, (char*)name, __LINE__, NULL);
+
+  if ( len >= 4 && strncmp((const char *)&name[len - 4], "Body", 4) == 0 )
+    {
+      dbug_print(__LINE__, "info", "Setting body");
+      element_type = 'B';
+    }
+  else 
+    {
+      if ( epc_call->function == NULL )
+        {
+          dbug_print(__LINE__, "info", "method: %s", (char*)name);
+
+          function_name = (char *)name;
+          element_type = 'M';
+        }
+      else
+        {
+          dbug_print(__LINE__, "info", "argument: %s", (char*)name);
+
+          argument_name = (char *)name;
+          element_type = 'A';
+        }
+
+      if ( attrs != NULL ) 
+        {
+          size_t idx;
+          xmlnode *attr;
+          dword_t nr;
+
+          for ( idx = 0; idx < numAttributes(attrs); idx++ )
+            {
+              attr = getAttributeIndex(attrs, idx);
+
+              switch(element_type)
+                {
+                case 'M': /* new method */
+                  /* namespace is the interface name */
+                  if ( strcmp((char*)getAttrName(attr), "xmlns") == 0 )
+                    {
+                      interface_name = (char*)getAttrValue(attr);
+                      lookup_interface( interface_name, epc_info, epc_call );
+                      lookup_function( function_name, epc_info, epc_call );
+
+                      /* nullify all parameters */
+
+                      if ( epc_call->interface != NULL &&
+                           epc_call->function != NULL )
+                        {
+                          for ( nr = 0; nr < epc_call->function->num_parameters; nr++)
+                            switch(epc_call->function->parameters[nr].type)
+                              {
+                              case C_STRING:
+                                *((char*)epc_call->function->parameters[nr].data) = '\0';
+                                break;
+      
+                              case C_INT:
+                                *((int*)epc_call->function->parameters[nr].data) = 0;
+                                break;
+
+                              case C_LONG:
+                                *((long*)epc_call->function->parameters[nr].data) = 0L;
+                                break;
+
+                              case C_FLOAT:
+                                *((float*)epc_call->function->parameters[nr].data) = 0;
+                                break;
+
+                              case C_DOUBLE:
+                                *((double*)epc_call->function->parameters[nr].data) = 0;
+                                break;
+                          
+                              case C_VOID: /* impossible */
+                                assert( epc_call->function->parameters[nr].type != C_VOID );
+                                break;
+
+                              default: 
+                                assert( epc_call->function->parameters[nr].type >= C_DATATYPE_MIN &&
+                                        epc_call->function->parameters[nr].type <= C_DATATYPE_MAX );
+                              }
+                        }
+                    }
+                  break;
+                  
+                case 'A': /* new argument */
+                  /* get next in or inout argument */
+                  for (nr = epc_xml_ctx->num_parameters; nr < epc_call->function->num_parameters; nr++)
+                    {
+                      if (epc_call->function->parameters[nr].mode != C_OUT) /* in or in/out */
+                        {
+                          break; /* found */
+                        }
+                    }
+
+                  assert( nr < epc_call->function->num_parameters ); /* should be found */
+                  if ( nr >= epc_call->function->num_parameters )
+                    {
+                      epc_call->epc_error = PARAMETER_UNKNOWN;
+                    }
+                  else 
+                    {
+                      epc_xml_ctx->num_parameters = nr + 1; /* next time: search from next parameter */
+                    }
+                  break;
+
+                case 'B': /* new body */
+                default:
+                  break;
+                }
+              dbug_print(__LINE__, "info", "attribute %s: %s", (char*)getAttrName(attr), (char*)getAttrValue(attr));
+            }
+        }
+    }
+
+  return epc_call->epc_error == OK ? 0 : 1;
+}
+
+static
+sword
+end_element(void *epc_xml_ctx_ptr, const oratext *name)
 {
   dbug_leave(__LINE__, NULL);
 
@@ -148,9 +293,55 @@ end_element(void *ctx, const oratext *name)
 
 static
 sword
-element_content(void *ctx, const oratext *ch, size_t len)
+element_content(void *epc_xml_ctx_ptr, const oratext *ch, size_t len)
 {
-  dbug_print(__LINE__, "info", "%*s", len, (char *)ch);
+  epc_xml_ctx_t *epc_xml_ctx = (epc_xml_ctx_t *)epc_xml_ctx_ptr;
+  epc_call_t *epc_call = epc_xml_ctx->epc_call;
+  const dword_t nr = epc_xml_ctx->num_parameters - 1;
+
+  assert( epc_call != NULL );
+  assert( epc_call->function != NULL );
+  assert( nr >= 0 && nr < epc_call->function->num_parameters );
+  assert( epc_call->function->parameters[nr].mode != C_OUT); /* in or in/out */
+
+  dbug_print(__LINE__, "info", "element content: %*s", len, (char *)ch);
+
+  switch(epc_call->function->parameters[nr].type)
+    {
+    case C_STRING:
+      assert( len <= epc_call->function->parameters[nr].size );
+      if ( len > epc_call->function->parameters[nr].size )
+        {
+          len = epc_call->function->parameters[nr].size;
+        }
+      (void) strncpy( (char*)epc_call->function->parameters[nr].data, (char*)ch, len );
+      ((char*)epc_call->function->parameters[nr].data)[len] = '\0';
+      break;
+      
+    case C_INT:
+      *((int*)epc_call->function->parameters[nr].data) = (int)strtol(ch, NULL, 10);
+      break;
+
+    case C_LONG:
+      *((long*)epc_call->function->parameters[nr].data) = strtol(ch, NULL, 10);
+      break;
+
+    case C_FLOAT:
+      *((float*)epc_call->function->parameters[nr].data) = strtof(ch, NULL);
+      break;
+
+    case C_DOUBLE:
+      *((double*)epc_call->function->parameters[nr].data) = strtod(ch, NULL);
+      break;
+                          
+    case C_VOID: /* impossible */
+      assert( epc_call->function->parameters[nr].type != C_VOID );
+      break;
+
+    default: 
+      assert( epc_call->function->parameters[nr].type >= C_DATATYPE_MIN &&
+              epc_call->function->parameters[nr].type <= C_DATATYPE_MAX );
+    }
 
   return 0;
 }
@@ -211,7 +402,7 @@ lookup_function( const char *function_name, epc_info_t *epc_info, epc_call_t *ep
   if ( epc_call->function == NULL )
     {
       /* interface not found */
-      fprintf( stderr, "ERROR: function %s not found\n", function_name );
+      fprintf( stderr, "ERROR: function '%s' not found\n", function_name );
       epc_call->epc_error = FUNCTION_UNKNOWN;
     }
 }

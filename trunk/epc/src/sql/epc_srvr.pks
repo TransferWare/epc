@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.3  2004/10/15 13:53:40  gpaulissen
+REMARK  XML added
+REMARK
 REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
 REMARK  Interface changed
 REMARK
@@ -80,38 +83,42 @@ procedure get_connection_info
 );
 
 /**
--- Set the request receive timeout.
+-- Set the response send timeout.
 -- 
--- @param p_epc_key               The key
--- @param p_request_recv_timeout  The request receive timeout
+-- @param p_epc_key                The key
+-- @param p_response_send_timeout  The response send timeout
 */
-procedure set_request_recv_timeout
+procedure set_response_send_timeout
 (
   p_epc_key in epc_key_subtype
-, p_request_recv_timeout in pls_integer
+, p_response_send_timeout in pls_integer
 );
 
 /**
 -- Receive a request.
 -- 
--- @param p_epc_key   Needed for the connection info
--- @param p_msg_info  The message information
+-- @param p_epc_key      Needed for the connection info
+-- @param p_msg_request  The XML describing the request
+-- @param p_msg_info     The message information
 */
 procedure recv_request
 ( 
   p_epc_key in epc_key_subtype
+, p_msg_request out varchar2
 , p_msg_info out epc_srvr.msg_info_subtype
 );
 
 /**
 -- Send a response.
 -- 
--- @param p_epc_key   Needed for the connection info
--- @param p_msg_info  The message information
+-- @param p_epc_key       Needed for the connection info
+-- @param p_msg_response  The XML describing the response
+-- @param p_msg_info      The message information as received by recv_request
 */
 procedure send_response
 ( 
   p_epc_key in epc_key_subtype
+, p_msg_response in varchar2
 , p_msg_info in epc_srvr.msg_info_subtype
 );
 
@@ -121,12 +128,12 @@ procedure send_response
 -- pipes are used to receive the request, the session can not 
 -- easily be interrupted by a user defined interrupt (for example a CTRL-C).
 -- The way to do this, is to start a second session in the server which waits
--- for a user defined interrupt (osnsui call). Then recv_request_interrupt 
+-- for a user defined interrupt (osnsui call). Then send_request_interrupt 
 -- will send database pipe message to the main server session.
 --
 -- @param p_epc_key   Needed for connection info
 */
-procedure recv_request_interrupt
+procedure send_request_interrupt
 (
   p_epc_key in epc_key_subtype
 );

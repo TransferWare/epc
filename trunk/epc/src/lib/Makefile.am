@@ -27,11 +27,13 @@ include_HEADERS      = epc.h epc_defs.h epc_dbg.h idl_defs.h
 
 lib_LTLIBRARIES      = libepc.la
 
-libepc_la_SOURCES    = lsnr.c epc.pc epc_dbg.c
+libepc_la_SOURCES    = lsnr.c epc.pc epc_dbg.c epc_xml.c epc_xml.h
 
-noinst_PROGRAMS      = xml
+noinst_PROGRAMS      = xml sax
 
-xml_SOURCES          = SAXSample.c
+xml_SOURCES          = xml.c ## epc.pc epc_xml.c epc_xml.h
+
+sax_SOURCES          = SAXSample.c
 
 ##
 ## History of interface versions:

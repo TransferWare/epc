@@ -69,6 +69,7 @@ ACX_PROG_XML
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([assert.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
+AC_CHECK_HEADERS([sqlproto.h sqlcpr.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -77,6 +78,8 @@ AC_C_CONST
 AC_FUNC_MALLOC
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([strstr strdup])
+LIBS="-ldbug $LIBS"
+AC_CHECK_FUNC([dbug_enter],[],[AC_MSG_ERROR(dbug_enter not found)])
 
 # This is necessary so that .o files in LIBOBJS are also built via
 # the ANSI2KNR-filtering rules.
