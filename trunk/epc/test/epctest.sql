@@ -4,6 +4,9 @@ set trimspool on
 set verify off
 define N = &&1
 
+whenever sqlerror exit failure
+whenever oserror exit failure
+
 alter session set nls_numeric_characters = '.,';
 
 execute epctest.nothing1;
