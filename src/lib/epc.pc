@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.9  1998/05/19 19:31:46  gpauliss
+ * Used ANSI C syntax for EPC_handle_requests
+ *
  * Revision 1.8  1998/05/06 20:20:12  gpauliss
  * Added support for longs
  *
@@ -560,10 +563,7 @@ get_error_str( error_t err )
  *======================================================================*/
  
 error_t
-EPC_handle_requests( request_pipe )
-EXEC SQL BEGIN DECLARE SECTION;
-char * request_pipe;
-EXEC SQL END DECLARE SECTION;
+EPC_handle_requests( char *pipe )
 /* ----------------------------------------------------------------------
  * Handles all requests received over the specified database pipe:
  * - receives a request message
@@ -579,6 +579,9 @@ EXEC SQL END DECLARE SECTION;
 
 EXEC SQL INCLUDE sqlca;
 
+	EXEC SQL BEGIN DECLARE SECTION;
+	char * request_pipe = pipe;
+	EXEC SQL END DECLARE SECTION;
 	call_t call = CALL_INIT;
 	error_t retval = OK;
 
