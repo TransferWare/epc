@@ -54,6 +54,7 @@ typedef struct {
  */
 typedef struct {
   char *logon;
+  dword_t connected;
   char *pipe;
   dword_t first_time; /* first time epc_handle_request() is called */
   dword_t num_interfaces;

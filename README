@@ -7,7 +7,9 @@ EPC itself consists of the library, libepc.la, an IDL compiler and
 the headers installed in `/usr/local/include'.
 
 The EPC toolkit depends on the package DBUG
-(see www.sourceforge.net/projects/transferware). 
+(see www.sourceforge.net/projects/transferware). This should be
+installed into the same lib and bin directories as EPC (e.g. use same
+prefix when installing).
 
 DOCUMENTATION
 =============
@@ -37,9 +39,7 @@ the MinGW compiler.
 
 An example for Windows:
 
-./configure --prefix=c:/usr/local CPPFLAGS="-Ic:/usr/local/include" \
-  LDFLAGS="-Lc:/usr/local/lib -ldbug" ORACLE_HOME=c:/oracle/ora81 \
-  CC="gcc -mno-cygwin"
+./configure --prefix=c:/usr/local ORACLE_HOME=c:/oracle/ora81 CC="gcc -mno-cygwin"
 
 Local Variables:
 fill-column: 72

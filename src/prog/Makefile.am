@@ -19,10 +19,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
 
 bin_PROGRAMS         = idl
 idl_SOURCES          = idl_l.l idl_prs.c idl_y.y idl_kwrd.h idl_prs.h yy.h yywrap.c
+idl_LDADD            = $(libdir)/libdbug.la
 
 AM_YFLAGS            = -d
 

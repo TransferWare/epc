@@ -1,0 +1,5 @@
+2004-03-12  Gert-Jan Paulissen  <g.paulissen@chello.nl>
+
+	* Makefile.am: added -I$(includedir) to AM_CPPFLAGS in order to
+	shorten the confgure command.
+
