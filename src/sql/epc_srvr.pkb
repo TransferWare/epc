@@ -4,6 +4,11 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.2  2004/10/21 10:37:08  gpaulissen
+REMARK  * make lint
+REMARK  * error reporting enhanced
+REMARK  * oneway functions enhanced
+REMARK
 REMARK  Revision 1.1  2004/10/15 13:53:40  gpaulissen
 REMARK  XML added
 REMARK
@@ -100,8 +105,13 @@ begin
       dbms_pipe.unpack_message(l_msg_protocol);
       dbms_pipe.unpack_message(l_msg_seq);
       dbms_pipe.unpack_message(p_msg_request);
-      dbms_pipe.unpack_message(l_result_pipe);
-      p_msg_info := to_char(l_msg_seq, 'FM000X') || l_result_pipe;
+      if dbms_pipe.next_item_type != 0
+      then
+        dbms_pipe.unpack_message(l_result_pipe);
+        p_msg_info := to_char(l_msg_seq, 'FM000X') || l_result_pipe;
+      else
+        p_msg_info := null;
+      end if;
     elsif l_retval = 1
     then
       raise epc.e_msg_timed_out;

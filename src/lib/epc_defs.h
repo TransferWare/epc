@@ -83,22 +83,25 @@ typedef enum {
   RECEIVE_ERROR = -4,
   SEND_ERROR = -5,
 
+  /* message could not be parsed */
+  PARSE_ERROR = -6,
+
   /* error during execution of function requested */
-  EXEC_ERROR = -6,
+  EXEC_ERROR = -7,
 
   /* could not allocate a value */
-  MEMORY_ERROR = -7,
+  MEMORY_ERROR = -8,
 
   /* illegal values in message */
-  DATATYPE_UNKNOWN = -8,
-  PARAMETER_MODE_UNKNOWN = -9,
-  PARAMETER_UNKNOWN = -10,
-  FUNCTION_UNKNOWN = -11,
-  INTERFACE_UNKNOWN = -12,
+  DATATYPE_UNKNOWN = -9,
+  PARAMETER_MODE_UNKNOWN = -10,
+  PARAMETER_UNKNOWN = -11,
+  FUNCTION_UNKNOWN = -12,
+  INTERFACE_UNKNOWN = -13,
 
   /* connect/disconnect problems */
-  CONNECT_ERROR = -13,
-  DISCONNECT_ERROR = -14
+  CONNECT_ERROR = -14,
+  DISCONNECT_ERROR = -15
 } epc__error_t;
 
 #endif
