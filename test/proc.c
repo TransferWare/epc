@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 
-void proc01 ( char *i_par1, char *io_par2, char *o_par3 )
+char *proc01 ( char *i_par1, char *io_par2, char *o_par3 )
 {
 	printf( "proc01\ni_par1: %s\nio_par2: %s\n", i_par1, io_par2 );
 	strcpy( io_par2, "hjfgeljaujfd" );
 	strcpy( o_par3, "dfgfhahfmkghjfvsbvfhjfgeljaujfd" );
 	printf( "io_par2: %s\no_par3: %s\n\n", io_par2, o_par3 );
+	return "abcd";
 }
 
 int proc02 ( int *io_par1, int *o_par2, int i_par3 )
@@ -34,4 +35,9 @@ float proc04 ( float i_par1, float *io_par2, float *o_par3 )
 	*o_par3 = -1.88;
 	printf( "proc04\nio_par2: %f; o_par3: %f\n", *io_par2, *o_par3 );
 	return 33.45;
+}
+
+void nothing( void )
+{
+	;
 }
