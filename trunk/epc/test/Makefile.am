@@ -17,8 +17,8 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = epctest.c epctest.h epctest.pc epctest.pkb epctest.pke epctest.pks epctest.pls
-GENERATED_FILES     += str.c str.h str.pc str.pkb str.pke str.pks str.pls
+GENERATED_FILES      = epctest.c epctest.h epctest.c epctest.pkb epctest.pke epctest.pks epctest.pls
+GENERATED_FILES     += str.c str.h str.c str.pkb str.pke str.pks str.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
@@ -36,9 +36,8 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
 .idl.c:
 	$(IDL) $<
-# Before running PRO*C first compile the package
+# first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
-	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
 EXTRA_DIST           = epctest.ref epctest.sql str.sql
 
