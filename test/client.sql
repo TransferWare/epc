@@ -1,10 +1,15 @@
+rem $Header$
+rem
+rem Parameters:
+rem 1 - count of loops
+rem
+
 set serveroutput on size 1000000
-set verify off
+set verify off feedback off
 
 declare
-  v_request_pipe varchar2(128) := epc.get_request_pipe;
-  c_result_pipe constant varchar2(128) := dbms_pipe.unique_session_name;
-  c_msg_protocol constant integer := 3;
+  v_request_pipe epc.pipe_name_t := epc.get_request_pipe;
+  c_result_pipe constant epc.pipe_name_t := dbms_pipe.unique_session_name;
   v_send_wait_time pls_integer := 10;
   v_receive_wait_time pls_integer := 10;
 
@@ -12,9 +17,6 @@ declare
 
   send_error exception;
   recv_error exception;
-  exec_error exception;
-  sql_error exception;
-  wrong_protocol exception;
 
   procedure request_set_header
   (
@@ -24,12 +26,11 @@ declare
   )
   is
   begin
-    dbms_pipe.reset_buffer;
-    dbms_pipe.pack_message( c_msg_protocol );
     dbms_pipe.pack_message( i_interface );
     dbms_pipe.pack_message( i_routine_name );
-    if i_oneway = 0
-    then
+    if i_oneway != 0 then
+      dbms_pipe.pack_message( 'N/A' );
+    else
       dbms_pipe.pack_message( c_result_pipe );
     end if;
   end request_set_header;
@@ -37,8 +38,6 @@ declare
   procedure request_perform_routine( i_oneway in binary_integer default 0 )
   is
     v_result binary_integer;
-    exec_status binary_integer;
-    sqlcode binary_integer;
   begin
     dbms_pipe.purge( c_result_pipe );
 
@@ -59,22 +58,6 @@ declare
           then
             raise recv_error;
           end if;
-
-          /* Get the execution status */
-          dbms_pipe.unpack_message( exec_status );
-          if exec_status < 0
-          then
-            raise exec_error;
-          end if;
-
-          /* get the sql code */
-          dbms_pipe.unpack_message( sqlcode );
-          if sqlcode = 0
-          then
-            null;
-          else
-            raise sql_error;
-          end if;
         end if;
 
         exit retry_loop; /* OK */
@@ -87,11 +70,6 @@ declare
         then
           dbms_output.put_line( 'send_error' );
           null;
-        when sql_error
-        then
-          dbms_output.put_line( '(epc.request_perform_routine) ' ||
-                                'sqlcode: ' || to_char(sqlcode) );
-          raise exec_error;
       end;
 
       exit retry_loop; /* temporarily */
@@ -121,12 +99,12 @@ declare
   end proc01;
 
   function proc02(
-    io_par1 in out binary_integer,
-    o_par2 out binary_integer,
-    i_par3 in binary_integer )
-  return binary_integer
+    io_par1 in out epc.int_t,
+    o_par2 out epc.int_t,
+    i_par3 in epc.int_t )
+  return epc.int_t
   is
-    result BINARY_INTEGER;
+    result epc.int_t;
   BEGIN
     request_set_header( 'epctest', 'int proc02( [out] int io_par1, [out] int o_par2, [out] int i_par3 )', 0 );
     dbms_pipe.pack_message( io_par1 );
@@ -142,12 +120,12 @@ declare
   end proc02;
 
   function proc03(
-    o_par1 out double precision,
-    i_par2 in double precision,
-    io_par3 in out double precision )
-  return double precision
+    o_par1 out epc.double_t,
+    i_par2 in epc.double_t,
+    io_par3 in out epc.double_t )
+  return epc.double_t
   is
-    result DOUBLE PRECISION;
+    result epc.double_t;
   BEGIN
     request_set_header( 'epctest', 'double proc03( [out] double o_par1, [out] double i_par2, [out] double io_par3 )', 0 );
     dbms_pipe.pack_message( i_par2 );
@@ -163,12 +141,12 @@ declare
   end proc03;
 
   function proc04( 
-    i_par1 in float,
-    io_par2 in out float,
-    o_par3 out float )
-  return float
+    i_par1 in epc.float_t,
+    io_par2 in out epc.float_t,
+    o_par3 out epc.float_t )
+  return epc.float_t
   is
-    result FLOAT;
+    result EPC.FLOAT_T;
   BEGIN
     request_set_header( 'epctest', 'float proc04( [out] float i_par1, [out] float io_par2, [out] float o_par3 )', 0 );
     dbms_pipe.pack_message( i_par1 );
