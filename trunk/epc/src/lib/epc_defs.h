@@ -20,54 +20,54 @@
  * make sure all structs are double word (4 bytes) aligned 
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-typedef struct epc_parameter {
+typedef struct epc__parameter {
   char *name;
   idl_mode_t mode;
   idl_type_t type;
   dword_t size; /* for a string including the terminating zero */
   void *data;
-} epc_parameter_t;
+} epc__parameter_t;
 
-struct epc_call;
+struct epc__call;
 
-typedef struct epc_function {
+typedef struct epc__function {
   char *name;
-  void (*function)( struct epc_function * );
+  void (*function)( struct epc__function * );
   dword_t oneway;
   dword_t num_parameters;
-  epc_parameter_t *parameters;
-} epc_function_t;
+  epc__parameter_t *parameters;
+} epc__function_t;
 
-typedef struct epc_interface {
+typedef struct epc__interface {
   char *name;
   dword_t num_functions;
-  epc_function_t *functions;
-} epc_interface_t;
+  epc__function_t *functions;
+} epc__interface_t;
 
 /*
- * epc_info_t: general info for running an EPC server
+ * epc__info_t: general info for running an EPC server
  */
-typedef struct epc_info {
+typedef struct epc__info {
   char *logon;
   dword_t connected;
   char *pipe;
   dword_t num_interfaces;
-  epc_interface_t **interfaces; /* pointing to a list of interfaces */
+  epc__interface_t **interfaces; /* pointing to a list of interfaces */
   struct sqlca *sqlca; /* SQLCA area */
   void *xml_info;
-} epc_info_t;
+} epc__info_t;
 
-typedef struct epc_call {
+typedef struct epc__call {
   char msg_info[MSG_INFO_SIZE];
   char msg_request[MSG_REQUEST_SIZE];
   char msg_response[MSG_RESPONSE_SIZE];
-  epc_interface_t *interface;
-  epc_function_t *function;
-  long epc_error; /* result of call */
+  epc__interface_t *interface;
+  epc__function_t *function;
+  long epc__error; /* result of call */
   long errcode;   /* error code returned by transport medium */
-} epc_call_t;
+} epc__call_t;
 
-#define EPC_CALL_INIT { "", "", "", NULL, NULL, OK, 0L }
+#define EPC__CALL_INIT { "", "", "", NULL, NULL, OK, 0L }
 
 typedef enum {
   OK = 0,
@@ -97,6 +97,6 @@ typedef enum {
   /* connect/disconnect problems */
   CONNECT_ERROR = -13,
   DISCONNECT_ERROR = -14
-} epc_error_t;
+} epc__error_t;
 
 #endif

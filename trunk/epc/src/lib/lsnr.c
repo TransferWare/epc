@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.7  2004/10/19 14:35:09  gpaulissen
+ * epc_ -> epc__
+ *
  * Revision 1.6  2004/10/18 15:17:33  gpaulissen
  * XML enabling of EPC
  *
@@ -81,7 +84,7 @@ const char vcid[] = "$Id$";
 #endif
 
 #include <epc.h>
-#include <epc_dbg.h>
+#include <dbug.h>
 
 #ifndef  ORA_PROC    /* skip during precompiling */
 # if defined(HAVE_SQLPROTO_H) && HAVE_SQLPROTO_H
@@ -115,15 +118,15 @@ version( void )
 }
 
 
-epc_error_t
-epc_main( int argc, char **argv, epc_interface_t *epc_interface )
+epc__error_t
+epc__main( int argc, char **argv, epc__interface_t *epc_interface )
 {
-  return epc_list_main( argc, argv, epc_interface, NULL );
+  return epc__list_main( argc, argv, epc_interface, NULL );
 }
 
 
-epc_error_t
-epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
+epc__error_t
+epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
 {
 #if defined(HASULIB) && HASULIB != 0
   unsigned int chk = AllocStartCheckPoint();
@@ -131,15 +134,15 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
   char *logon = NULL;
   char *request_pipe = NULL;
   int nr;
-  epc_info_t *epc_info = NULL;
-  epc_error_t ret;
+  epc__info_t *epc__info = NULL;
+  epc__error_t ret;
   char *dbug_options = "";
   extern
-    epc_error_t
-    epc_recv_request_pipe( epc_info_t *epc_info, epc_call_t *epc_call );
+    epc__error_t
+    epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call );
   extern
-    epc_error_t
-    epc_send_response_pipe( epc_info_t * epc_info, epc_call_t * epc_call );
+    epc__error_t
+    epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call );
 
   /* process command line parameters */
   for ( nr = 0; nr < argc; nr++ ) 
@@ -196,17 +199,17 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
           break;
                         
         case 1:
-          epc_info = epc_init();
-          if ( epc_info == NULL )
+          epc__info = epc__init();
+          if ( epc__info == NULL )
             ret = MEMORY_ERROR;
           break;
 
         case 2:
-          ret = epc_set_logon( epc_info, logon );
+          ret = epc__set_logon( epc__info, logon );
           break;
 
         case 3:
-          ret = epc_set_pipe( epc_info, request_pipe );
+          ret = epc__set_pipe( epc__info, request_pipe );
           break;
 
         case 4:
@@ -216,19 +219,19 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
             va_start( ap, epc_interface );
             for ( ; ret == OK && epc_interface != NULL; )
               {
-                ret = epc_add_interface( epc_info, epc_interface );
-                epc_interface = va_arg(ap, epc_interface_t *);
+                ret = epc__add_interface( epc__info, epc_interface );
+                epc_interface = va_arg(ap, epc__interface_t *);
               }
             va_end( ap );
           }
           break;
 
         case 5:
-          ret = epc_connect( epc_info );
+          ret = epc__connect( epc__info );
           break;
 
         case 6:
-          ret = epc_handle_requests( epc_info, epc_recv_request_pipe, epc_send_response_pipe );
+          ret = epc__handle_requests( epc__info, epc_recv_request_pipe, epc_send_response_pipe );
           break;
         }
     }
@@ -237,14 +240,14 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
     {
     case 6:
     case 5:
-      ret = epc_disconnect( epc_info );
+      ret = epc__disconnect( epc__info );
       /* no break */
 
     case 4:
     case 3:
     case 2:
     case 1:
-      epc_done( &epc_info );
+      epc__done( &epc__info );
       /* no break */
 
     case 0:

@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.45  2004/10/19 14:35:08  gpaulissen
+ * epc_ -> epc__
+ *
  * Revision 1.44  2004/10/18 15:17:33  gpaulissen
  * XML enabling of EPC
  *
@@ -44,7 +47,7 @@
  * oneway bug with parameters solved
  *
  * Revision 1.35  2004/02/23 15:59:28  gpaulissen
- * sqlca is a member of epc_info structure
+ * sqlca is a member of epc__info structure
  *
  * Revision 1.34  2004/02/22 17:16:20  gpaulissen
  * interrupt_get_request_header added
@@ -215,7 +218,7 @@ EXEC SQL INCLUDE sqlca;
 
 /* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
-#include <epc_dbg.h>  /* trace and debug functionality */
+#include <dbug.h>
 #include <epc.h>
 #endif
 
@@ -250,7 +253,7 @@ EXEC SQL END DECLARE SECTION;
 /* user side interrupt set */
 extern
 dword_t
-osnsui( dword_t *handlp, void (*astp)(epc_info_t *ctx), epc_info_t *ctx );
+osnsui( dword_t *handlp, void (*astp)(epc__info_t *ctx), epc__info_t *ctx );
 /*
 ** osnsui: Operating System dependent Network Set User-side Interrupt.
 **         Add an interrupt handling procedure astp.
@@ -291,11 +294,11 @@ EXEC SQL END DECLARE SECTION;
 */
 static
 void
-handle_interrupt(epc_info_t *epc_info)
+handle_interrupt(epc__info_t *epc__info)
 {
   DBUG_ENTER( "handle_interrupt" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
 
@@ -318,23 +321,23 @@ handle_interrupt(epc_info_t *epc_info)
 /*
   GJP 23-02-2004
   Use the global sqlca structure for handle_interrupt() and 
-  epc_info->sqlca for other routines.
+  epc__info->sqlca for other routines.
 */
 
-epc_error_t
-epc_connect( epc_info_t *epc_info )
+epc__error_t
+epc__connect( epc__info_t *epc__info )
 {
   EXEC SQL BEGIN DECLARE SECTION;
-  char *logon = epc_info->logon;
-  char * request_pipe = epc_info->pipe;
+  char *logon = epc__info->logon;
+  char * request_pipe = epc__info->pipe;
   short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
   EXEC SQL END DECLARE SECTION;
-  epc_error_t status = OK;
+  epc__error_t status = OK;
   int nr;
 
-  DBUG_ENTER( "epc_connect" );
+  DBUG_ENTER( "epc__connect" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   if ( logon == NULL ) 
     {
@@ -343,20 +346,20 @@ epc_connect( epc_info_t *epc_info )
     } 
   else 
     {
-      if ( epc_info->sqlca == NULL )
+      if ( epc__info->sqlca == NULL )
         {
-          epc_info->sqlca = (struct sqlca *)malloc( sizeof(*(epc_info->sqlca)) );
+          epc__info->sqlca = (struct sqlca *)malloc( sizeof(*(epc__info->sqlca)) );
 
-          assert( sizeof(*(epc_info->sqlca)) == sizeof(struct sqlca) );
+          assert( sizeof(*(epc__info->sqlca)) == sizeof(struct sqlca) );
 
           /* initialize */
-          *(epc_info->sqlca) = sqlca;
+          *(epc__info->sqlca) = sqlca;
         }
 
-#define sqlca (*(epc_info->sqlca))
+#define sqlca (*(epc__info->sqlca))
 
       /* log on to database */
-      EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
       EXEC SQL CONTEXT USE DEFAULT;
 
@@ -369,14 +372,14 @@ epc_connect( epc_info_t *epc_info )
       EXEC SQL CONNECT :logon;
 
       printf( "Connected to database....\n" );
-      epc_info->connected = TRUE;
+      epc__info->connected = 1;
     
-      epc_set_handle_interrupt(handle_interrupt, epc_info);
-      epc_set_signal_handlers( 0 );
+      epc__set_handle_interrupt(handle_interrupt, epc__info);
+      epc__set_signal_handlers( 0 );
 
       fflush( stdout ); /* flush because of DBUG package */
 
-      EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
       for ( nr = 0; nr < 2; nr++ )
         {
@@ -412,26 +415,26 @@ epc_connect( epc_info_t *epc_info )
   return status;
 }
 
-epc_error_t
-epc_disconnect( epc_info_t *epc_info )
+epc__error_t
+epc__disconnect( epc__info_t *epc__info )
 {
-  epc_error_t status = OK;
+  epc__error_t status = OK;
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
 
-  DBUG_ENTER( "epc_disconnect" );
+  DBUG_ENTER( "epc__disconnect" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  epc_reset_signal_handlers( 0 );
+  epc__reset_signal_handlers( 0 );
 
-  if ( epc_info->connected == TRUE ) {
+  if ( epc__info->connected != 0 ) {
 
     (void) printf( "Disconnecting from database....\n" );
 
     EXEC SQL WHENEVER SQLERROR CONTINUE;
 
-    switch ( epc_get_signo() )
+    switch ( epc__get_signo() )
       {
       case 0:
         EXEC SQL CONTEXT USE :interrupt_context;
@@ -469,8 +472,8 @@ epc_disconnect( epc_info_t *epc_info )
 }
 
 
-epc_error_t
-epc_recv_request_pipe( epc_info_t *epc_info, epc_call_t *epc_call )
+epc__error_t
+epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
      /* ----------------------------------------------------------------------
       * Receives a clients' request from the specified database pipe
       *
@@ -489,11 +492,11 @@ epc_recv_request_pipe( epc_info_t *epc_info, epc_call_t *epc_call )
   dword_t handle;
   EXEC SQL BEGIN DECLARE SECTION;
   long retval = OK;
-  char *msg_info = epc_call->msg_info;
+  char *msg_info = epc__call->msg_info;
   /* STRING(n) is s C-like character of size n (including terminating zero) */
   EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1); /* client-specific pipe for results  */
   short msg_info_nl; /* null indicator */
-  char *msg_request = epc_call->msg_request;
+  char *msg_request = epc__call->msg_request;
   EXEC SQL VAR msg_request IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
   short msg_request_nl; /* null indicator */
   const int msg_timed_out = MSG_TIMED_OUT;
@@ -504,19 +507,19 @@ epc_recv_request_pipe( epc_info_t *epc_info, epc_call_t *epc_call )
 
   DBUG_ENTER( "receive_request" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   sqlca.sqlcode = 0;
-  epc_call->errcode = 0;
+  epc__call->errcode = 0;
 
   /* All exceptions should be handled within the PL/SQL block hence 
      this default. */
-  EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
   EXEC SQL CONTEXT USE DEFAULT;
 
   /* set up my user interrupt handler */
-  (void) osnsui(&handle, handle_interrupt, epc_info);
+  (void) osnsui(&handle, handle_interrupt, epc__info);
 
   EXEC SQL EXECUTE
   declare
@@ -557,40 +560,40 @@ epc_recv_request_pipe( epc_info_t *epc_info, epc_call_t *epc_call )
       DBUG_PRINT( "info", ( "msg_info: %s", msg_info ) );
 
 #ifndef DBUG_OFF
-      epc_call_print( epc_call );
+      epc__call_print( epc__call );
 #endif
     }
 
-  epc_call->epc_error = retval;
+  epc__call->epc__error = retval;
   DBUG_PRINT( "output", 
               ( "retval: %ld; error code: %ld; epc error: %ld", 
-                retval, (long)epc_call->errcode, (long)epc_call->epc_error));
+                retval, (long)epc__call->errcode, (long)epc__call->epc__error));
 
   DBUG_LEAVE(); 
   return retval;
 }
 
 
-epc_error_t
-epc_send_response_pipe( epc_info_t * epc_info, epc_call_t * epc_call )
+epc__error_t
+epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 {
   DBUG_ENTER( "send_response" );
 
-  epc_call->epc_error = OK;
+  epc__call->epc__error = OK;
 
-  if ( epc_call->function != NULL && epc_call->function->oneway == 0 )
+  if ( epc__call->function != NULL && epc__call->function->oneway == 0 )
     {
       EXEC SQL BEGIN DECLARE SECTION;
-      char *msg_info = epc_call->msg_info;
+      char *msg_info = epc__call->msg_info;
       EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-      char *msg_response = epc_call->msg_response;
+      char *msg_response = epc__call->msg_response;
       EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
       EXEC SQL END DECLARE SECTION;
 
       sqlca.sqlcode = 0;
-      epc_call->errcode = 0;
+      epc__call->errcode = 0;
 
-      EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
       EXEC SQL CONTEXT USE DEFAULT;
 
@@ -608,10 +611,10 @@ epc_send_response_pipe( epc_info_t * epc_info, epc_call_t * epc_call )
 
   DBUG_PRINT( "output", 
               ( "error code: %ld; epc error: %ld", 
-                (long)epc_call->errcode, (long)epc_call->epc_error ) );
+                (long)epc__call->errcode, (long)epc__call->epc__error ) );
 
   DBUG_LEAVE();
 
-  return epc_call->epc_error;
+  return epc__call->epc__error;
 }
 

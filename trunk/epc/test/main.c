@@ -5,5 +5,5 @@
 
 int main( int argc, char **argv )
 {
-  return epc_list_main( argc, argv, &ifc_str, &ifc_epctest, NULL );
+  return epc__list_main( argc, argv, &ifc_str, &ifc_epctest, NULL );
 }
