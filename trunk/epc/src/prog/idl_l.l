@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.16  2002/10/31 22:21:20  gpaulissen
+ * Release 3.0.0a
+ *
  * Revision 1.15  2002/10/28 14:53:04  gpaulissen
  * Using GNU standards.
  *
@@ -79,6 +82,11 @@ int lineno = 1;
 void yyerror( char *s );
 int yyparse( void );
 
+/* assume strdup() is NOT there */
+#ifndef HAVE_STRDUP
+#define HAVESTRDUP 0
+#endif
+
 #if !HAVE_STRDUP
 
 static
@@ -101,6 +109,11 @@ strdup( const char * str )
 
 #endif
 
+
+/* assume strstr() is there */
+#ifndef HAVE_STRSTR
+#define HAVE_STRSTR 1
+#endif
 
 #if !HAVE_STRSTR
 
