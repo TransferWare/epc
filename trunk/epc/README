@@ -13,8 +13,10 @@ prefix when installing).
 
 DOCUMENTATION
 =============
+- doc/c/index.html
 - doc/epcman.doc
-- doc/epcman.html
+- doc/sql/index.html
+- utils/empty_pipes.html
 
 INSTALLATION
 ============
