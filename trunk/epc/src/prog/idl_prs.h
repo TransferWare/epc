@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.9  2004/10/20 13:34:06  gpaulissen
+ * make lint
+ *
  * Revision 1.8  2002/10/28 14:53:05  gpaulissen
  * Using GNU standards.
  *
@@ -50,26 +53,26 @@
 
 #include <idl_defs.h>
 
-typedef struct {
-  char name[MAX_PARM_NAME_LEN];
-  char proc_name[MAX_PARM_NAME_LEN+4];
+typedef /*@only@*/ struct {
+  /*@unique@*/ char name[MAX_PARM_NAME_LEN];
+  /*@unique@*/ char proc_name[MAX_PARM_NAME_LEN+4];
   idl_mode_t mode;
   idl_type_t datatype;
   dword_t size;
 } idl_parameter_t;
 
-typedef struct {
-  char name[MAX_FUNC_NAME_LEN];
+typedef /*@only@*/ struct {
+  /*@unique@*/ char name[MAX_FUNC_NAME_LEN];
   idl_parameter_t return_value;
   int oneway;
   dword_t num_parameters;
-  idl_parameter_t * parameters[MAX_PARAMETERS];
+  idl_parameter_t *parameters[MAX_PARAMETERS];
 } idl_function_t;
 
 typedef struct {
-  char name[MAX_INTERFACE_NAME_LEN];
+  /*@unique@*/ char name[MAX_INTERFACE_NAME_LEN];
   dword_t num_functions;
-  idl_function_t * functions[MAX_FUNCTIONS];
+  idl_function_t *functions[MAX_FUNCTIONS];
 } idl_interface_t;
 
 

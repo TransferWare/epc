@@ -1,19 +1,22 @@
 %{
 
 /*
- * Filename   		: $RCSfile$
+ * Filename             : $RCSfile$
  *
- * Creation date  	: 25-JUN-1997
+ * Creation date        : 25-JUN-1997
  *
- * Created by 		: Huub van der Wouden
+ * Created by           : Huub van der Wouden
  *
- * Company    		: Transfer Solutions bv
+ * Company              : Transfer Solutions bv
  *
  * --- Description -------------------------------------------------------
  * IDL language specification
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.12  2004/10/20 13:34:06  gpaulissen
+ * make lint
+ *
  * Revision 1.11  2003/08/18 15:29:55  gpaulissen
  * - oracle 9i
  * - syntax error in idl_y.y
@@ -66,6 +69,13 @@ extern
 int
 yylex( void );
 
+/*@-badflag@*/
+/*@-type@*/
+/*@-mustfreefresh@*/
+/*@-predboolint@*/
+/*@-usedef@*/
+/*@-boolops@*/
+
 %}
 
 
@@ -100,75 +110,75 @@ yylex( void );
 interface: INTERFACE interface_name interface_body;
 
 interface_name:
-		NAME	 { set_interface( $1 ); }
-	;
+                NAME     { set_interface( $1 ); }
+        ;
 
 interface_body:
-		'{' function_list '}'
-	;
+                '{' function_list '}'
+        ;
 
 function_list:
-		/* empty */
-	|	function_list function
-	;
+                /* empty */
+        |       function_list function
+        ;
 
 function:
-		datatype 
-		function_name 
-		{ add_function( $2, $1.datatype, 0 ); }
-		'(' parameter_list ')' ';'
-	|       ONEWAY
-		VOID
-		function_name 
-		{ add_function( $3, $2.datatype, 1 ); }
-		'(' in_parameter_list ')' ';'
+                datatype 
+                function_name 
+                { add_function( $2, $1.datatype, 0 ); }
+                '(' parameter_list ')' ';'
+        |       ONEWAY
+                VOID
+                function_name 
+                { add_function( $3, $2.datatype, 1 ); }
+                '(' in_parameter_list ')' ';'
 
-	;
+        ;
 
 datatype:
-		STRING
-	|	INT
-	|	LONG
-	|	FLOAT
-	|	DOUBLE
-	|	VOID
-	;
+                STRING
+        |       INT
+        |       LONG
+        |       FLOAT
+        |       DOUBLE
+        |       VOID
+        ;
 
 function_name:
-		NAME
-	;
+                NAME
+        ;
 
 parameter_list:
-		/* empty */
-	|	parameter 
-	|	parameter_list ',' parameter
-	;
+                /* empty */
+        |       parameter 
+        |       parameter_list ',' parameter
+        ;
 
 parameter:
-		parameter_mode datatype parameter_name
-		{ add_parameter( $3, $1, $2.datatype, $2.size ); }
-	;
+                parameter_mode datatype parameter_name
+                { add_parameter( $3, $1, $2.datatype, $2.size ); }
+        ;
 
 parameter_mode:
-		IN
-	|	OUT
-	|	INOUT
-	;
+                IN
+        |       OUT
+        |       INOUT
+        ;
 
 parameter_name:
-		NAME
-	;
+                NAME
+        ;
 
 in_parameter_list:
-		/* empty */
-	|	in_parameter 
-	|	in_parameter_list ',' parameter
-	;
+                /* empty */
+        |       in_parameter 
+        |       in_parameter_list ',' parameter
+        ;
 
 in_parameter:
-		IN datatype parameter_name
-		{ add_parameter( $3, $1, $2.datatype, $2.size ); }
-	;
+                IN datatype parameter_name
+                { add_parameter( $3, $1, $2.datatype, $2.size ); }
+        ;
 
 
 
