@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.4  1998/02/17 20:26:59  gpauliss
+ * Changed EPC interface
+ *
  * Revision 1.3  1998/02/03 12:55:56  gpauliss
  * Modified EPC_handle_requests for return type and wrong fprintf.
  *
@@ -110,7 +113,7 @@ EXEC SQL INCLUDE sqlca;
 
    		EXEC SQL EXECUTE
 			BEGIN
-				epc.get_parameter_info
+				epc.request_get_parameter_info
 				( 
 					:parameter_mode:parameter_mode_nl
 				,	:parameter_type:parameter_type_nl
@@ -120,16 +123,16 @@ EXEC SQL INCLUDE sqlca;
 				THEN
    					IF :parameter_type:parameter_type_nl = EPC.C_INT
    					THEN 
-   						epc.get_parameter_value( :int_par:int_par_nl );
+   						epc.request_get_parameter_value( :int_par:int_par_nl );
 	   				ELSIF :parameter_type:parameter_type_nl = EPC.C_FLOAT
    					THEN 
-   						epc.get_parameter_value( :float_par:float_par_nl );
+   						epc.request_get_parameter_value( :float_par:float_par_nl );
    					ELSIF :parameter_type:parameter_type_nl = EPC.C_DOUBLE
    					THEN 
-	   					epc.get_parameter_value( :double_par:double_par_nl );
+	   					epc.request_get_parameter_value( :double_par:double_par_nl );
    					ELSIF :parameter_type:parameter_type_nl = EPC.C_STRING
    					THEN 
-   						epc.get_parameter_value( :string_par:string_par_nl );
+   						epc.request_get_parameter_value( :string_par:string_par_nl );
    					END IF;
 				END IF;
 			END;
@@ -174,7 +177,6 @@ EXEC SQL INCLUDE sqlca;
 				break;
 
 			default:
-				fprintf( stderr, "unknown parameter type %d...\n", parameter_type);
 				retval = DATATYPE_UNKNOWN;
 		}
 
@@ -183,7 +185,7 @@ EXEC SQL INCLUDE sqlca;
 	} /* end while */
 
 no_more_parameters:
-    fprintf( stderr, "get_paramaters\nSQLCODE: %d\n", sqlca.sqlcode );
+    debug( "get_paramaters\nSQLCODE: %d\n", sqlca.sqlcode );
 
 end_of_get_parameters:
 	debug( "leaving get_parameters; retval = %d\n", retval );
@@ -193,11 +195,7 @@ end_of_get_parameters:
 
 static
 error_t
-receive_request( pipe, call )
-EXEC SQL BEGIN DECLARE SECTION;
-char * pipe;
-EXEC SQL END DECLARE SECTION;
-call_t * call;
+receive_request( call_t * call )
 /* ----------------------------------------------------------------------
  * Receives a clients' request from the specified database pipe
  *
@@ -209,7 +207,7 @@ call_t * call;
  *		DATATYPE_UNKNOWN
  *		OK
  *		any return value from
- *		-	set_function
+ *              -       set_function
  *		-	get_parameters
  * ----------------------------------------------------------------------*/
 {
@@ -240,10 +238,9 @@ EXEC SQL INCLUDE sqlca;
 	EXEC SQL EXECUTE
    		BEGIN
      		:retval := 
-				epc.get_function
+				epc.request_get_header
 				( 
-					:pipe
-				,	:result_pipe:result_pipe_nl
+					:result_pipe:result_pipe_nl
 				,	:interface:interface_nl
 				,	:function_name:function_name_nl
 				,	:function_type:function_type_nl
@@ -300,7 +297,7 @@ EXEC SQL INCLUDE sqlca;
 	}
 
 receive_error:
-    fprintf( stderr, "receive_request\nSQLCODE: %d\n", sqlca.sqlcode );
+    debug( "receive_request\nSQLCODE: %d\n", sqlca.sqlcode );
 	retval = RECEIVE_ERROR;
 
 end_of_receive_request:
@@ -357,7 +354,7 @@ EXEC SQL INCLUDE sqlca;
 			debug( "pack_value: double_val = %lf\n", double_val );
 			break;
 	   default:
-			fprintf( stderr, "unknown parameter type %d...\n", type);
+			debug( "unknown parameter type %d...\n", type );
 			retval = DATATYPE_UNKNOWN;
 			goto end_of_pack_value;
 	}
@@ -369,16 +366,16 @@ EXEC SQL INCLUDE sqlca;
   		BEGIN
 			IF		:epc_type = epc.c_string
 			THEN
-				epc.send_parameter_value( :str_val );
+				epc.result_set_parameter_value( :str_val );
     		ELSIF	:epc_type = epc.c_int
   			THEN
-				epc.send_parameter_value( :int_val );
+				epc.result_set_parameter_value( :int_val );
 			ELSIF	:epc_type = epc.c_float
 			THEN
-				epc.send_parameter_value( :float_val );
+				epc.result_set_parameter_value( :float_val );
 			ELSIF	:epc_type = epc.c_double
 			THEN
-				epc.send_parameter_value( :double_val );
+				epc.result_set_parameter_value( :double_val );
 			END IF;
 		END;
 	END-EXEC;
@@ -531,7 +528,10 @@ get_error_str( error_t err )
  *======================================================================*/
  
 error_t
-EPC_handle_requests( char * request_pipe )
+EPC_handle_requests( request_pipe )
+EXEC SQL BEGIN DECLARE SECTION;
+char * request_pipe;
+EXEC SQL END DECLARE SECTION;
 /* ----------------------------------------------------------------------
  * Handles all requests received over the specified database pipe:
  * - receives a request message
@@ -541,14 +541,31 @@ EPC_handle_requests( char * request_pipe )
  * - sends back the results
  * ----------------------------------------------------------------------*/
 {
+#ifdef SQLCA
+#undef SQLCA
+#endif
+
+EXEC SQL INCLUDE sqlca;
+
 	call_t call = CALL_INIT;
 	error_t retval = OK;
 
 	debug( "entering EPC_handle_requests\n" );
 
+	if ( request_pipe != NULL ) {
+
+		EXEC SQL WHENEVER SQLERROR GOTO end_of_EPC_handle_requests;
+		EXEC SQL EXECUTE
+			BEGIN
+				epc.set_request_pipe( :request_pipe );
+			END;
+		END-EXEC;
+
+	}
+
 	for( ;; ) { 
 
-		switch( retval = receive_request( request_pipe, &call ) ) {
+		switch( retval = receive_request( &call ) ) {
 			case OK:
 				retval = exec_call( &call );
 				retval = send_result( retval, &call );
@@ -558,13 +575,13 @@ EPC_handle_requests( char * request_pipe )
 			case FUNCTION_UNKNOWN:
 			case DATATYPE_UNKNOWN:
 				/* message has the wrong format!? - notify client as well */
-				fprintf( stderr, "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
+				debug( "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
 				retval = send_result( retval, &call );
 				break;
 
 			default:
 				/* Can not report back to client */
-				fprintf( stderr, "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
+				debug( "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
 				break;
 		}
 
