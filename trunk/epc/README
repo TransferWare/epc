@@ -40,7 +40,7 @@ An example for Windows:
 
 ./configure CPPFLAGS="-Ic:/usr/local/mingw32/include" \
 LDFLAGS="-Lc:/usr/local/mingw32/lib" ORACLE_HOME="c:/oracle/ora81" \
-CC="gcc -mno-cygwin" --prefix=c:/usr/local 
+CC="gcc -mno-cygwin" --prefix=c:/usr/local/mingw32
 
 Local Variables:
 fill-column: 72

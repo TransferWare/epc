@@ -824,11 +824,24 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
         {
           dword_t nr;
 
-          (void) snprintf (epc__call->msg_response,
-                           MAX_MSG_RESPONSE_LEN + 1,
-                           SOAP_HEADER_START "<%sResponse xmlns='%s'>",
-                           epc__call->function->name,
-                           epc__call->interface->name);
+          if ( epc__call->inline_namespace[0] != '\0' )
+            {
+              (void) snprintf (epc__call->msg_response,
+                               MAX_MSG_RESPONSE_LEN + 1,
+                               SOAP_HEADER_START "<%s:%sResponse xmlns:%s='%s'>",
+                               epc__call->inline_namespace,
+                               epc__call->function->name,
+                               epc__call->inline_namespace,
+                               epc__call->interface->name);
+            }
+          else
+            {
+              (void) snprintf (epc__call->msg_response,
+                               MAX_MSG_RESPONSE_LEN + 1,
+                               SOAP_HEADER_START "<%sResponse xmlns='%s'>",
+                               epc__call->function->name,
+                               epc__call->interface->name);
+            }
 
           for (nr = 0; nr < epc__call->function->num_parameters; nr++)
             {
@@ -909,10 +922,21 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
                 }
             }
 
-          (void) snprintf (epc__call->msg_response, MAX_MSG_RESPONSE_LEN + 1,
-                           "%s</%sResponse>" SOAP_HEADER_END,
-                           epc__call->msg_response,
-                           epc__call->function->name);
+          if ( epc__call->inline_namespace[0] != '\0' )
+            {          
+              (void) snprintf (epc__call->msg_response, MAX_MSG_RESPONSE_LEN + 1,
+                               "%s</%s:%sResponse>" SOAP_HEADER_END,
+                               epc__call->msg_response,
+                               epc__call->inline_namespace,
+                               epc__call->function->name);
+            }
+          else
+            {
+              (void) snprintf (epc__call->msg_response, MAX_MSG_RESPONSE_LEN + 1,
+                               "%s</%sResponse>" SOAP_HEADER_END,
+                               epc__call->msg_response,
+                               epc__call->function->name);
+            }
         }
     }
 

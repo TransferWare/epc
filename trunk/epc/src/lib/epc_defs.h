@@ -13,6 +13,7 @@
 #define MSG_REQUEST_SIZE        (MAX_MSG_REQUEST_LEN+1+1)       /* MAX_MSG_REQUEST_LEN+1 rounded till next multiple of 4 */
 #define MAX_MSG_RESPONSE_LEN    4082
 #define MSG_RESPONSE_SIZE       (MAX_MSG_RESPONSE_LEN+1+1)      /* MAX_MSG_RESPONSE_LEN+1 rounded till next multiple of 4 */
+#define INLINE_NAMESPACE_SIZE   32
 
 #include <idl_defs.h>           /* constants used by idl and epc */
 
@@ -72,6 +73,7 @@ typedef struct epc__call
   char msg_response[MSG_RESPONSE_SIZE];
   /*@temp@ *//*@null@ */ epc__interface_t *interface;
   /*@temp@ *//*@null@ */ epc__function_t *function;
+  char inline_namespace[INLINE_NAMESPACE_SIZE]; /* ns1 in xmlns:ns1="<interface>" */
   long epc__error;              /* result of call */
   long errcode;                 /* error code returned by transport medium */
 } epc__call_t;
