@@ -8,8 +8,8 @@ set serveroutput on size 1000000
 set verify off feedback off
 
 declare
-  v_request_pipe epc.pipe_name_t := epc.get_request_pipe;
-  c_result_pipe constant epc.pipe_name_t := dbms_pipe.unique_session_name;
+  v_request_pipe epc.pipe_name_subtype := 'EPC_REQUEST_PIPE';
+  c_result_pipe constant epc.pipe_name_subtype := dbms_pipe.unique_session_name;
   v_send_wait_time pls_integer := 10;
   v_receive_wait_time pls_integer := 10;
 
@@ -78,12 +78,12 @@ declare
   end request_perform_routine;
 
   function proc01(
-    i_par1 in varchar2,
-    io_par2 in out varchar2,
-    o_par3 out varchar2 )
+    i_par1 in epc.string_subtype,
+    io_par2 in out epc.string_subtype,
+    o_par3 out epc.string_subtype )
   return varchar2
   is
-    result varchar2(2000);
+    result epc.string_subtype;
   begin
     request_set_header( 'epctest', 'string proc01( [out] string i_par1, [out] string io_par2, [out] string o_par3 )', 0 );
     dbms_pipe.pack_message( i_par1 );
@@ -99,12 +99,12 @@ declare
   end proc01;
 
   function proc02(
-    io_par1 in out epc.int_t,
-    o_par2 out epc.int_t,
-    i_par3 in epc.int_t )
-  return epc.int_t
+    io_par1 in out epc.int_subtype,
+    o_par2 out epc.int_subtype,
+    i_par3 in epc.int_subtype )
+  return epc.int_subtype
   is
-    result epc.int_t;
+    result epc.int_subtype;
   BEGIN
     request_set_header( 'epctest', 'int proc02( [out] int io_par1, [out] int o_par2, [out] int i_par3 )', 0 );
     dbms_pipe.pack_message( io_par1 );
@@ -120,12 +120,12 @@ declare
   end proc02;
 
   function proc03(
-    o_par1 out epc.double_t,
-    i_par2 in epc.double_t,
-    io_par3 in out epc.double_t )
-  return epc.double_t
+    o_par1 out epc.double_subtype,
+    i_par2 in epc.double_subtype,
+    io_par3 in out epc.double_subtype )
+  return epc.double_subtype
   is
-    result epc.double_t;
+    result epc.double_subtype;
   BEGIN
     request_set_header( 'epctest', 'double proc03( [out] double o_par1, [out] double i_par2, [out] double io_par3 )', 0 );
     dbms_pipe.pack_message( i_par2 );
@@ -141,12 +141,12 @@ declare
   end proc03;
 
   function proc04( 
-    i_par1 in epc.float_t,
-    io_par2 in out epc.float_t,
-    o_par3 out epc.float_t )
-  return epc.float_t
+    i_par1 in epc.float_subtype,
+    io_par2 in out epc.float_subtype,
+    o_par3 out epc.float_subtype )
+  return epc.float_subtype
   is
-    result EPC.FLOAT_T;
+    result epc.float_subtype;
   BEGIN
     request_set_header( 'epctest', 'float proc04( [out] float i_par1, [out] float io_par2, [out] float o_par3 )', 0 );
     dbms_pipe.pack_message( i_par1 );

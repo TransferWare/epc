@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.6  2004/10/18 15:17:33  gpaulissen
+ * XML enabling of EPC
+ *
  * Revision 1.5  2004/10/15 20:41:32  gpaulissen
  * XML namespace bugs solved.
  *
@@ -131,6 +134,12 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
   epc_info_t *epc_info = NULL;
   epc_error_t ret;
   char *dbug_options = "";
+  extern
+    epc_error_t
+    epc_recv_request_pipe( epc_info_t *epc_info, epc_call_t *epc_call );
+  extern
+    epc_error_t
+    epc_send_response_pipe( epc_info_t * epc_info, epc_call_t * epc_call );
 
   /* process command line parameters */
   for ( nr = 0; nr < argc; nr++ ) 
@@ -219,7 +228,7 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
           break;
 
         case 6:
-          ret = epc_handle_requests( epc_info );
+          ret = epc_handle_requests( epc_info, epc_recv_request_pipe, epc_send_response_pipe );
           break;
         }
     }
@@ -259,7 +268,7 @@ void
 help( char *procname )
 {
   (void) printf( "\
-Syntax: %s -# <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
+Syntax: %s -D <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n\
         D       set dbug options\n\

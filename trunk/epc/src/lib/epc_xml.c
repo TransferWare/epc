@@ -17,9 +17,21 @@
 #include <oratypes.h>
 #include <oraxml.h>
 
-#include "epc_xml.h"
 #define string_defined
-#include "epc_defs.h"
+#include <epc_xml.h>
+
+/* This structure contains the context while parsing an XML document */
+typedef struct {
+  struct epc_info *epc_info;
+  struct epc_call *epc_call;
+  long num_parameters; /* number of in or in/out parameters parsed yet */
+} epc_xml_ctx_t;
+
+typedef struct {
+  epc_xml_ctx_t epc_xml_ctx;
+  xmlsaxcb saxcb;
+  xmlctx *xmlctx;
+} xml_info_t;
 
 /* SAX callback functions */
 
@@ -54,45 +66,56 @@ lookup_function( const char *function_name, epc_info_t *epc_info, epc_call_t *ep
 /* GLOBAL functions */
 
 unsigned int
-epc_xml_init( struct xmlctx **xmlctx, epc_xml_ctx_t *epc_xml_ctx_ptr )
+epc_xml_init( epc_info_t *epc_info )
 {
   uword ecode = 0;
-  /* GJP 15-10-2004 
-     The saxcb structure must be globally allocated at least for Oracle 8i.
-     Removing the static keyword leads to coredumps on Windows
-  */
-  static const xmlsaxcb saxcb = {
+  const xmlsaxcb saxcb = {
     start_document,
     end_document,
     start_element,
     end_element,
     element_content
   };
+  xml_info_t *xml_info;
 
   DBUG_ENTER("epc_xml_init");
 
-  *xmlctx = xmlinit(&ecode, (const oratext *) 0,
-                    (void (*)(void *, const oratext *, uword)) 0,
-                    (void *) 0, &saxcb, (void *) epc_xml_ctx_ptr,
-                    (const xmlmemcb *) 0, NULL,
-                    (const oratext *) 0);
+  epc_info->xml_info = malloc(sizeof(xml_info_t));
 
-  DBUG_PRINT("info", ("xmlctx: %p", *xmlctx));
+  assert ( epc_info->xml_info != NULL );
+
+  xml_info = (xml_info_t *)epc_info->xml_info;
+
+  xml_info->epc_xml_ctx.epc_info = epc_info;
+  xml_info->epc_xml_ctx.epc_call = NULL;
+  xml_info->epc_xml_ctx.num_parameters = 0L;
+
+  xml_info->saxcb = saxcb;
+  
+  xml_info->xmlctx = xmlinit(&ecode, (const oratext *) 0,
+                             (void (*)(void *, const oratext *, uword)) 0,
+                             (void *) 0, &xml_info->saxcb, (void *) &xml_info->epc_xml_ctx,
+                             (const xmlmemcb *) 0, NULL,
+                             (const oratext *) 0);
+
+  DBUG_PRINT("info", ("xmlctx: %p", xml_info->xmlctx));
   DBUG_LEAVE();
 
   return ecode;
 }
 
 unsigned int
-epc_xml_done( struct xmlctx **xmlctx )
+epc_xml_done( epc_info_t *epc_info )
 {
   uword ecode = 0;
+  xml_info_t *xml_info = (xml_info_t *)epc_info->xml_info;
 
   DBUG_ENTER("epc_xml_done");
-  DBUG_PRINT("info", ("xmlctx: %p", *xmlctx));
+  DBUG_PRINT("info", ("xmlctx: %p", xml_info->xmlctx));
 
-  ecode = xmlterm(*xmlctx);                        /* terminate XML package */
-  *xmlctx = NULL;
+  ecode = xmlterm(xml_info->xmlctx);                        /* terminate XML package */
+  free(xml_info);
+  epc_info->xml_info = NULL;
 
   DBUG_LEAVE();
 
@@ -100,16 +123,18 @@ epc_xml_done( struct xmlctx **xmlctx )
 }
 
 unsigned int
-epc_xml_parse( struct xmlctx *xmlctx, const char *buf, const size_t len )
+epc_xml_parse( epc_info_t *epc_info, epc_call_t *epc_call, const char *buf, const size_t len )
 {
   uword ecode = 0;
   ub4 flags = XML_FLAG_DISCARD_WHITESPACE; /* | XML_FLAG_VALIDATE;*/
+  xml_info_t *xml_info = (xml_info_t *)epc_info->xml_info;
 
   DBUG_ENTER("epc_xml_parse");
-  DBUG_PRINT("info", ("xmlctx: %p", xmlctx));
+  DBUG_PRINT("info", ("xmlctx: %p", xml_info->xmlctx));
   DBUG_PRINT("input", ("buf: %*.*s", len, len, buf));
 
-  ecode = xmlparsebuf(xmlctx, (oratext *) buf, len, (oratext *) 0, flags);
+  xml_info->epc_xml_ctx.epc_call = epc_call;
+  ecode = xmlparsebuf(xml_info->xmlctx, (oratext *) buf, len, (oratext *) 0, flags);
 
   DBUG_PRINT("output", ("ecode: %lu", (unsigned long)ecode));
   DBUG_LEAVE();
@@ -129,6 +154,7 @@ start_document(void *epc_xml_ctx_ptr)
   epc_call->interface = NULL;
   epc_call->function = NULL;
   epc_call->epc_error = OK;
+  epc_xml_ctx->num_parameters = 0;
 
   dbug_enter(__FILE__, "document", __LINE__, NULL);
 
@@ -246,8 +272,7 @@ start_element(void *epc_xml_ctx_ptr, const oratext *name,
                                 *((double*)epc_call->function->parameters[nr].data) = 0;
                                 break;
                           
-                              case C_VOID: /* impossible */
-                                assert( epc_call->function->parameters[nr].type != C_VOID );
+                              case C_VOID:
                                 break;
 
                               default: 
@@ -325,10 +350,10 @@ element_content(void *epc_xml_ctx_ptr, const oratext *ch, size_t len)
   switch(epc_call->function->parameters[nr].type)
     {
     case C_STRING:
-      assert( len <= epc_call->function->parameters[nr].size );
-      if ( len > epc_call->function->parameters[nr].size )
+      assert( len < epc_call->function->parameters[nr].size );
+      if ( len >= epc_call->function->parameters[nr].size )
         {
-          len = epc_call->function->parameters[nr].size;
+          len = epc_call->function->parameters[nr].size - 1;
         }
       (void) strncpy( (char*)epc_call->function->parameters[nr].data, (char*)ch, len );
       ((char*)epc_call->function->parameters[nr].data)[len] = '\0';

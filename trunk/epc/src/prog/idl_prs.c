@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.32  2004/10/18 15:17:33  gpaulissen
+ * XML enabling of EPC
+ *
  * Revision 1.31  2004/10/15 13:53:40  gpaulissen
  * XML added
  *
@@ -383,6 +386,41 @@ get_constant_name( const idl_type_t type, const idl_lang_t language )
   return get_mapping( type, language )->constant_name;
 }
 
+static
+char *
+get_size( const idl_parameter_t *idl_parameter )
+{
+  static char size_str[100] = "";
+
+  switch( idl_parameter->datatype )
+    {
+    case C_STRING:
+      (void) snprintf(size_str, sizeof(size_str), "%ld+1", (long)idl_parameter->size);
+      break;
+
+    case C_VOID:
+      (void) snprintf(size_str, sizeof(size_str), "0");
+      break;
+
+    case C_INT:
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(int)");
+      break;
+
+    case C_LONG:
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(long)");
+      break;
+
+    case C_DOUBLE:
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(double)");
+      break;
+
+    case C_FLOAT:
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(float)");
+      break;
+    }
+
+  return size_str;
+}
 
 static
 void
@@ -1604,17 +1642,17 @@ EXEC SQL END DECLARE SECTION;\n" );
       (void) fprintf( pout, "\nstatic epc_parameter_t %s_parameters[] = {\n", fun->name );
       for ( pnr = 0; pnr < fun->num_parameters; pnr++ )
         {
-          (void) fprintf( pout, "  { \"%s\", %s, %s, %ld, NULL },\n",
+          (void) fprintf( pout, "  { \"%s\", %s, %s, %s, NULL },\n",
                           fun->parameters[pnr]->name,
                           get_constant_name( fun->parameters[pnr]->mode, C ), 
                           get_constant_name( fun->parameters[pnr]->datatype, C ),
-                          fun->parameters[pnr]->size );
+                          get_size( fun->parameters[pnr] ) );
         }
-      (void) fprintf( pout, "  { \"%s\", %s, %s, %ld, NULL }\n", 
+      (void) fprintf( pout, "  { \"%s\", %s, %s, %s, NULL }\n", 
                       fun->return_value.name,
                       get_constant_name( fun->return_value.mode, C ), 
                       get_constant_name( fun->return_value.datatype, C ),
-                      fun->return_value.size );
+                      get_size( &fun->return_value ) );
       (void) fprintf( pout, "};\n" );
   }
 

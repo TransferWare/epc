@@ -10,7 +10,7 @@ set verify off
 declare
   subtype pipe_name_t is varchar2(128);
 
-  v_request_pipe constant pipe_name_t := epc.get_request_pipe;
+  v_request_pipe constant pipe_name_t := 'EPC_REQUEST_PIPE';
   v_result_pipe pipe_name_t;
   v_send_wait_time pls_integer := 10;
   v_receive_wait_time pls_integer := 10;
@@ -102,10 +102,10 @@ declare
 
   procedure proc01
   is
-    i_par1 varchar2(2000);
-    io_par2 varchar2(2000);
-    o_par3 varchar2(2000);
-    v_result varchar2(2000);
+    i_par1 epc.string_subtype;
+    io_par2 epc.string_subtype;
+    o_par3 epc.string_subtype;
+    v_result epc.string_subtype;
   begin
 --/*DBUG*/    dbms_output.put_line( 'proc01' );
 
@@ -123,10 +123,10 @@ declare
 
   procedure proc02
   is
-    io_par1 epc.int_t;
-    o_par2 epc.int_t;
-    i_par3 epc.int_t;
-    v_result epc.int_t;
+    io_par1 epc.int_subtype;
+    o_par2 epc.int_subtype;
+    i_par3 epc.int_subtype;
+    v_result epc.int_subtype;
   begin
 --/*DBUG*/    dbms_output.put_line( 'proc02' );
 
@@ -144,10 +144,10 @@ declare
 
   procedure proc03
   is
-    o_par1 epc.double_t;
-    i_par2 epc.double_t;
-    io_par3 epc.double_t;
-    v_result epc.double_t;
+    o_par1 epc.double_subtype;
+    i_par2 epc.double_subtype;
+    io_par3 epc.double_subtype;
+    v_result epc.double_subtype;
   begin
 --/*DBUG*/    dbms_output.put_line( 'proc03' );
 
@@ -165,10 +165,10 @@ declare
 
   procedure proc04
   is
-    i_par1 epc.float_t;
-    io_par2 epc.float_t;
-    o_par3 epc.float_t;
-    v_result epc.float_t;
+    i_par1 epc.float_subtype;
+    io_par2 epc.float_subtype;
+    o_par3 epc.float_subtype;
+    v_result epc.float_subtype;
   begin
 --/*DBUG*/    dbms_output.put_line( 'proc04' );
 

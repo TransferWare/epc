@@ -3,9 +3,16 @@
 
 /* Oracle pipe name length is 128.
    Add 1 for the terminating zero and round till next multiple of 4.
+   msg_info contains pipe name and the message sequence number as a 4 
+   character hexadecimal string.
  */
-#define MAX_PIPE_NAME_LEN       132  
+#define MAX_PIPE_NAME_LEN       128 
 #define MAX_MSG_INFO_LEN        (4+MAX_PIPE_NAME_LEN)
+#define MSG_INFO_SIZE           (MAX_MSG_INFO_LEN+1+3)
+#define MAX_MSG_REQUEST_LEN     4046
+#define MSG_REQUEST_SIZE        (MAX_MSG_REQUEST_LEN+1+1) /* MAX_MSG_REQUEST_LEN+1 rounded till next multiple of 4 */
+#define MAX_MSG_RESPONSE_LEN    4082
+#define MSG_RESPONSE_SIZE       (MAX_MSG_RESPONSE_LEN+1+1) /* MAX_MSG_RESPONSE_LEN+1 rounded till next multiple of 4 */
 
 #include <idl_defs.h> /* constants used by idl and epc */
 
@@ -14,10 +21,10 @@
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 typedef struct epc_parameter {
-  char name[MAX_PARM_NAME_LEN];
+  char *name;
   idl_mode_t mode;
   idl_type_t type;
-  dword_t size;
+  dword_t size; /* for a string including the terminating zero */
   void *data;
 } epc_parameter_t;
 
@@ -44,21 +51,23 @@ typedef struct epc_info {
   char *logon;
   dword_t connected;
   char *pipe;
-  dword_t first_time; /* first time epc_handle_request() is called */
   dword_t num_interfaces;
   epc_interface_t **interfaces; /* pointing to a list of interfaces */
   struct sqlca *sqlca; /* SQLCA area */
+  void *xml_info;
 } epc_info_t;
 
 typedef struct epc_call {
-  char msg_info[MAX_MSG_INFO_LEN];
+  char msg_info[MSG_INFO_SIZE];
+  char msg_request[MSG_REQUEST_SIZE];
+  char msg_response[MSG_RESPONSE_SIZE];
   epc_interface_t *interface;
   epc_function_t *function;
   long epc_error; /* result of call */
-  long sqlcode;   /* sql error code */
+  long errcode;   /* error code returned by transport medium */
 } epc_call_t;
 
-#define CALL_INIT { "", NULL, NULL, OK, 0L }
+#define EPC_CALL_INIT { "", "", "", NULL, NULL, OK, 0L }
 
 typedef enum {
   OK = 0,
