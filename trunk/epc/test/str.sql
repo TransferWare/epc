@@ -1,3 +1,14 @@
+SET DEFINE ON
+
+PROMPT 1 - Number of times for a strcpy
+PROMPT &&1
+
+DEFINE NR = &&1
+
+SET FEEDBACK OFF VERIFY OFF 
+
+SET SERVEROUTPUT ON
+
 VAR str10 VARCHAR2(10);
 VAR str20 VARCHAR2(20);
 VAR str30 VARCHAR2(30);
@@ -12,57 +23,98 @@ BEGIN
 END;
 /
 
-EXEC :num := str.strlen( :str10 );
+EXECUTE :num := str.strlen( :str10 );
 
+PROMPT Test 1
 PRINT num
 
-EXEC :num := str.strlen( :str20 );
+EXECUTE :num := str.strlen( :str20 );
 
+PROMPT Test 2
 PRINT num
 
-REM Should raise an exception
-EXEC :num := str.strlen( :str30 );
+REM Should raise an exception (epc.exec_error)
+BEGIN
+  :num := str.strlen( :str30 );
+EXCEPTION
+  WHEN epc.exec_error
+  THEN
+    NULL;
+END;
+/
 
+PROMPT Test 3
 PRINT num
 
-EXEC str.strcpy1( :str30, :str10 );
+EXECUTE str.strcpy1( :str30, :str10 );
 
+PROMPT Test 4
 PRINT str30
 
+PROMPT Test 5
 PRINT str10
 
-REM Should raise an exception
-EXEC str.strcpy1( :str10, :str30 );
+REM Should raise an exception (epc.exec_error)
+BEGIN
+  str.strcpy1( :str10, :str30 );
+EXCEPTION
+  WHEN epc.exec_error
+  THEN
+    NULL;
+END;
+/
 
+PROMPT Test 6
 PRINT str10
 
-REM Should raise an exception since '' is equal to NULL
-EXEC str.strcat( :str100, :str10 ); 
+REM Should raise an exception (epc.exec_error) since '' is equal to NULL
+BEGIN
+  str.strcat( :str100, :str10 );
+EXCEPTION
+  WHEN epc.illegal_null_value
+  THEN
+    NULL;
+END;
+/
 
+PROMPT Test 7
 PRINT str100
 
-EXEC :str100 := ' '; str.strcat( :str100, :str20 );
+REM Should raise an exception (epc.exec_error) since '' is equal to NULL
+BEGIN
+  :str100 := ' ';
+  str.strcat( :str100, :str20 );
+END;
+/
 
+PROMPT Test 8
 PRINT str100
+PRINT str20
 
 SET TIMING ON
 
 UNDEFINE N
 
-PROMPT Performance test doing &&N number of strcpy1 calls
+PROMPT Performance test doing &&NR number of strcpy1 calls
 BEGIN
-        FOR     v_nr IN 1..&&N
-	LOOP
-		str.strcpy1( :str30, :str10 );
-	END LOOP;
+        FOR     v_nr IN 1..&&NR
+        LOOP
+                str.strcpy1( :str30, :str10 );
+        END LOOP;
 END;
 /
 
-PROMPT Performance test doing &&N number of strcpy2 calls
+PROMPT Performance test doing &&NR number of strcpy2 calls
 BEGIN
-        FOR     v_nr IN 1..&&N
-	LOOP
-		str.strcpy2( :str30, :str10 );
-	END LOOP;
+        FOR     v_nr IN 1..&&NR
+        LOOP
+                str.strcpy2( :str30, :str10 );
+        END LOOP;
 END;
 /
+
+SET TIMING OFF
+
+UNDEFINE 1
+UNDEFINE NR
+SET FEEDBACK ON VERIFY ON
