@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.34  2004/02/22 17:16:20  gpaulissen
+ * interrupt_get_request_header added
+ *
  * Revision 1.33  2003/08/19 15:55:57  gpaulissen
  * - enhanced searching for sqlplus
  * - enhanced signal handling
@@ -76,9 +79,9 @@
  * Revision 1.12  1998/07/31 16:23:04  gert-jan
  * Various changes.
  *
-# Revision 1.11  1998/07/27  15:18:54  gert-jan
-# First release.
-#
+ # Revision 1.11  1998/07/27  15:18:54  gert-jan
+ # First release.
+ #
  * Revision 1.10  1998/05/26 11:06:13  gpauliss
  * Replaced RCS keyword Source by RCSfile
  *
@@ -119,7 +122,7 @@
 #include <config.h>
 #endif
 
-        /* skip irrelevant includes during PRO*C precompilation */
+/* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
 
 /* defined on any system */
@@ -153,8 +156,29 @@
 
 #endif
 
-/* force initialisation of any sqlca struct */
+/* include sqlca.h even though it has been included already */
+#ifdef SQLCA
+#undef SQLCA
+#endif
+
+/* declare a structure */
+#ifdef SQLCA_NONE 
+#undef SQLCA_NONE 
+#endif
+
+#ifdef SQLCA_STORAGE_CLASS
+#undef SQLCA_STORAGE_CLASS
+#endif
+
+/* a static sqlca only */
+#define SQLCA_STORAGE_CLASS static
+
+/* force initialisation of the static sqlca struct */
+#ifndef SQLCA_INIT
 #define SQLCA_INIT
+#endif
+
+EXEC SQL INCLUDE sqlca;
 
 EXEC SQL BEGIN DECLARE SECTION;
 
@@ -162,7 +186,7 @@ EXEC SQL INCLUDE "epc_defs.h";  /* epc-specific type definitions */
 
 EXEC SQL END DECLARE SECTION;
 
-        /* skip irrelevant includes during PRO*C precompilation */
+/* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
 #include <epc_call.h>   /* server-side marshalling and call mechanism */
 #include <epc_dbg.h>  /* trace and debug functionality */
@@ -182,7 +206,56 @@ EXEC SQL END DECLARE SECTION;
  *
  *======================================================================*/
 
-static int G_signo = 0;
+/*
+  GJP 21-02-2004
+  Both osnsui() and osncui() are hidden functions on Windows.
+  However they seem to work exactly the same as on Unix platforms.
+  These functions
+*/
+
+
+/* user side interrupt set */
+extern
+dword_t
+osnsui( dword_t *handlp, void (*astp)(char *ctx), char *ctx );
+/*
+** osnsui: Operating System dependent Network Set User-side Interrupt.
+**         Add an interrupt handling procedure astp.
+**         Whenever a user interrupt(such as a ^C) occurs, call astp
+**         with argument ctx. Put in *handlp handle for this
+**         handler so that it may be cleared with osncui.
+**         Note that there may be many handlers; each should
+**         be cleared using osncui. An error code is
+**         returned if an error occurs.
+*/
+
+/* user side interrupt clear */
+extern
+word_t
+osncui( dword_t handle );
+/*
+** osncui: Operating System dependent Clear User-side Interrupt.
+**         Clear the specified handler. The argument is the
+**         handle obtained from osnsui. An error code is
+**         returned if an error occurs.
+*/
+
+
+/*
+  GJP 22-02-2004
+  In order to be able to interrupt epc.get_request_header()
+  a different session (and a different context) is used.
+  In a interrupt handler epc.interrupt_get_request_header()
+  is invoked.
+*/
+
+EXEC SQL BEGIN DECLARE SECTION;
+static sql_context interrupt_context;
+EXEC SQL END DECLARE SECTION;
+
+static
+int
+G_signo = 0;
 
 static
 void
@@ -271,7 +344,7 @@ signal_str( int signo )
   switch ( signo )
     {
 #ifdef SIGHUP
-      case SIGHUP: return "SIGHUP";
+    case SIGHUP: return "SIGHUP";
 #endif
 #ifdef SIGINT
     case SIGINT: return "SIGINT";
@@ -384,7 +457,7 @@ set_signal_handlers( const int idx )
       case SIGHUP: break;
 #endif
 #ifdef SIGINT
-      case SIGINT: break;
+      case SIGINT: continue; /* GJP 21-02-2004 Handled by handle_interrupt() */
 #endif
 #ifdef SIGQUIT
       case SIGQUIT: break;
@@ -504,46 +577,61 @@ handle_signal( int signo )
 
   (void) fprintf( stderr, "Received signal %d\n", signo );
 
-  switch( G_signo = signo )
-    {
-    default:
-      /* GJP 18-09-2003 The only way to stop while in a dbms_pipe.receive() loop 
-         is to disconnect AND exit */
-      epc_disconnect(); 
-      exit(EXIT_SUCCESS);
-      break;
-    }
+  G_signo = signo;
 
   reset_signal_handlers( 1 );
 }
 
+/*
+** User interrupt handler template.
+*/
+void handle_interrupt(char *epc_info_ptr)
+{
+  epc_info_t *epc_info = (epc_info_t*)epc_info_ptr;
+
+  EXEC SQL BEGIN DECLARE SECTION;
+  const char *pipe = epc_info->pipe;
+  EXEC SQL END DECLARE SECTION;
+
+  DBUG_ENTER( "handle_interrupt" );
+
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+
+  /* Use the interrupt context */
+  EXEC SQL CONTEXT USE :interrupt_context;
+
+  EXEC SQL EXECUTE
+    BEGIN
+    epc.interrupt_request_get_header( :pipe );
+  END;
+  END-EXEC;
+
+  DBUG_PRINT( "info", ( "sqlca.sqlcode: %ld", (long)sqlca.sqlcode ) );
+
+  DBUG_LEAVE();
+}
+
 static
 epc_error_t
-receive_request( epc_call_t * call )
-/* ----------------------------------------------------------------------
- * Receives a clients' request from the specified database pipe
- *
- * return values:
- *              MSG_TIMED_OUT
- *              MSG_TOO_BIG
- *              MSG_INTERRUPTED
- *              RECEIVE_ERROR
- *              DATATYPE_UNKNOWN
- *              OK
- *              any return value from
- *              -       set_function
- *              -       get_parameters
- * ----------------------------------------------------------------------*/
+receive_request( epc_info_t *epc_info, epc_call_t *call )
+     /* ----------------------------------------------------------------------
+      * Receives a clients' request from the specified database pipe
+      *
+      * return values:
+      *              MSG_TIMED_OUT
+      *              MSG_TOO_BIG
+      *              MSG_INTERRUPTED
+      *              RECEIVE_ERROR
+      *              DATATYPE_UNKNOWN
+      *              OK
+      *              any return value from
+      *              -       set_function
+      *              -       get_parameters
+      * ----------------------------------------------------------------------*/
 {
-
-                /* declare a volatile struct: thread ready */
-
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-  EXEC SQL INCLUDE sqlca;
-
+  dword_t handle;
   EXEC SQL BEGIN DECLARE SECTION;
   long retval = OK;
   varchar msg_info[MAX_MSG_INFO_LEN] = { 0, "" };     /* client-specific pipe for results  */
@@ -560,6 +648,10 @@ receive_request( epc_call_t * call )
 
   DBUG_ENTER( "receive_request" );
 
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+
+  DBUG_PRINT( "info", ( "dbug_level: %d", dbug_level ) );
+
   sqlca.sqlcode = 0;
   call->sqlcode = 0;
 
@@ -567,29 +659,36 @@ receive_request( epc_call_t * call )
      this default. */
   EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
+  EXEC SQL CONTEXT USE DEFAULT;
+
+  /* set up my user interrupt handler */
+  (void) osnsui(&handle, handle_interrupt, (char *)epc_info);
+
   EXEC SQL EXECUTE
-  BEGIN
+    BEGIN
     epc.request_get_header
     ( 
-      :msg_info:msg_info_nl
-    , :interface_name:interface_name_nl
-    , :function_name:function_name_nl
-    );
+     :msg_info:msg_info_nl
+     , :interface_name:interface_name_nl
+     , :function_name:function_name_nl
+     );
   EXCEPTION
     WHEN epc.msg_timed_out
     THEN
-      :retval := :msg_timed_out;
-    WHEN epc.msg_too_big
+    :retval := :msg_timed_out;
+  WHEN epc.msg_too_big
     THEN
-      :retval := :msg_too_big;
-    WHEN epc.msg_interrupted
+    :retval := :msg_too_big;
+  WHEN epc.msg_interrupted
     THEN
-      :retval := :msg_interrupted;
-    WHEN OTHERS
+    :retval := :msg_interrupted;
+  WHEN OTHERS
     THEN
-      :retval := :receive_error;
+    :retval := :receive_error;
   END;
   END-EXEC;
+
+  (void) osncui(handle);
 
   if ( retval == OK )
     {
@@ -621,6 +720,7 @@ receive_request( epc_call_t * call )
   DBUG_PRINT( "output", 
               ( "retval: %ld; sql code: %ld; epc error: %ld", 
                 retval, (long)call->sqlcode, (long)call->epc_error));
+
   DBUG_LEAVE(); 
   return retval;
 }
@@ -672,21 +772,15 @@ get_error_str( epc_error_t err )
 
 long
 epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
-/* ----------------------------------------------------------------------
- * Handles a single request received over the specified database pipe:
- * - receives a request message
- * - unpacks the specifications of the requested call
- * - executes the call
- * - packs status and results of the call
- * - sends back the results
- * ----------------------------------------------------------------------*/
+     /* ----------------------------------------------------------------------
+      * Handles a single request received over the specified database pipe:
+      * - receives a request message
+      * - unpacks the specifications of the requested call
+      * - executes the call
+      * - packs status and results of the call
+      * - sends back the results
+      * ----------------------------------------------------------------------*/
 {
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-  EXEC SQL INCLUDE sqlca;
-
   EXEC SQL BEGIN DECLARE SECTION;
   char * request_pipe = epc_info->pipe;
   short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
@@ -695,17 +789,21 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
 
   DBUG_ENTER( "epc_handle_request" );
 
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+
   if ( epc_info->first_time != 0 ) {
 
     EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
+    EXEC SQL CONTEXT USE DEFAULT;
+
     EXEC SQL EXECUTE
-    BEGIN
+      BEGIN
       IF ( :request_pipe:request_pipe_nl IS NOT NULL )
       THEN
-        epc.set_request_pipe( :request_pipe );
-      END IF;
-      epc.purge( epc.get_request_pipe );
+      epc.set_request_pipe( :request_pipe );
+    END IF;
+    epc.purge( epc.get_request_pipe );
     END;
     END-EXEC;
 
@@ -715,7 +813,7 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
   do
     {
       /* receive the request */
-      receive_request( call );
+      receive_request( epc_info, call );
 
       if ( call->epc_error != OK )
         break;
@@ -766,24 +864,20 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
 
 epc_error_t
 epc_handle_requests( epc_info_t *epc_info )
-/* ----------------------------------------------------------------------
- * Handles all requests received over the specified database pipe:
- * - receives a request message
- * - unpacks the specifications of the requested call
- * - executes the call
- * - packs status and results of the call
- * - sends back the results
- * ----------------------------------------------------------------------*/
+     /* ----------------------------------------------------------------------
+      * Handles all requests received over the specified database pipe:
+      * - receives a request message
+      * - unpacks the specifications of the requested call
+      * - executes the call
+      * - packs status and results of the call
+      * - sends back the results
+      * ----------------------------------------------------------------------*/
 {
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-  EXEC SQL INCLUDE sqlca;
-
   epc_call_t call = CALL_INIT;
 
   DBUG_ENTER( "epc_handle_requests" );
+
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
   for ( call.sqlcode = 0; G_signo == 0; call.sqlcode = 0 )
     {    
@@ -814,6 +908,8 @@ epc_init( void )
 
   epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
 
+  DBUG_PRINT( "info", ( "epc_info: %p", (void*)epc_info ) );
+
   if ( epc_info != NULL )
     {
       epc_info->logon = NULL;
@@ -831,6 +927,8 @@ void
 epc_done( epc_info_t **epc_info )
 {
   DBUG_ENTER( "epc_done" );
+
+  DBUG_PRINT( "input", ( "*epc_info: %p", (void*)*epc_info ) );
 
   if ( *epc_info != NULL )
     {
@@ -853,6 +951,8 @@ epc_set_logon( epc_info_t *epc_info, char *logon )
   epc_error_t status = OK;
 
   DBUG_ENTER( "epc_set_logon" );
+
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
   if ( epc_info == NULL )
     {
@@ -888,6 +988,8 @@ epc_set_pipe( epc_info_t *epc_info, char *pipe )
 
   DBUG_ENTER( "epc_set_pipe" );
 
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+
   if ( epc_info == NULL )
     {
       status = MEMORY_ERROR;
@@ -914,8 +1016,9 @@ epc_set_pipe( epc_info_t *epc_info, char *pipe )
   return( status );
 }
 
+/* Used in epc_call.c */
 int
-cmp_function( const void *par1, const void *par2 )
+epc_cmp_function( const void *par1, const void *par2 )
 {
   epc_function_t *fnc1 = (epc_function_t *) par1;
   epc_function_t *fnc2 = (epc_function_t *) par2;
@@ -923,8 +1026,9 @@ cmp_function( const void *par1, const void *par2 )
   return strcmp( fnc1->name, fnc2->name );
 }
 
+/* Used in epc_call.c */
 int
-cmp_interface( const void *par1, const void *par2 )
+epc_cmp_interface( const void *par1, const void *par2 )
 {
   epc_interface_t *ifc1 = *((epc_interface_t **) par1);
   epc_interface_t *ifc2 = *((epc_interface_t **) par2);
@@ -938,6 +1042,8 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
   epc_error_t status = OK;
 
   DBUG_ENTER( "epc_add_interface" );
+
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
   if ( epc_info == NULL )
     {
@@ -966,13 +1072,13 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
           qsort( interface->functions,
                  interface->num_functions,
                  sizeof(interface->functions[0]),
-                 cmp_function );
+                 epc_cmp_function );
 
           /* sort the interfaces */
           qsort( epc_info->interfaces,
                  epc_info->num_interfaces,
                  sizeof(epc_info->interfaces[0]),
-                 cmp_interface );
+                 epc_cmp_interface );
         }
     }
 
@@ -993,41 +1099,36 @@ epc_abort( char *msg )
   sqlglm(err_msg, &buf_len, &msg_len);
   (void) printf("%.*s\n", msg_len, err_msg);
 
-  epc_disconnect();
-
   exit(EXIT_FAILURE);
 }
 
 epc_error_t
 epc_connect( epc_info_t *epc_info )
 {
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-#ifdef SQLCA_NONE
-#undef SQLCA_NONE
-#endif
-
-/* force initialisation of any sqlca struct */
-#ifndef SQLCA_INIT
-#define SQLCA_INIT
-#endif
-
-  EXEC SQL INCLUDE sqlca;
-
   EXEC SQL BEGIN DECLARE SECTION;
-  char * logon = epc_info->logon;
+  char *logon = epc_info->logon;
   EXEC SQL END DECLARE SECTION;
   epc_error_t status = OK;
+
+  DBUG_ENTER( "epc_connect" );
+
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
   if ( logon == NULL ) {
     printf( "ERROR: No connect string specified.\n" );
     status = CONNECT_ERROR;
   } else {
-        
+
     /* log on to database */
-    EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+    EXEC SQL WHENEVER SQLERROR STOP;
+
+    EXEC SQL CONTEXT USE DEFAULT;
+
+    EXEC SQL CONNECT :logon;
+
+    EXEC SQL CONTEXT ALLOCATE :interrupt_context;
+
+    EXEC SQL CONTEXT USE :interrupt_context;
 
     EXEC SQL CONNECT :logon;
 
@@ -1037,45 +1138,60 @@ epc_connect( epc_info_t *epc_info )
 
     fflush( stdout ); /* flush because of DBUG package */
   }
+
+  DBUG_LEAVE();
+
   return status;
 }
 
 epc_error_t
-epc_disconnect( void )
+epc_disconnect( epc_info_t *epc_info )
 {
-#ifdef SQLCA
-#undef SQLCA
-#endif
-
-#ifdef SQLCA_NONE
-#undef SQLCA_NONE
-#endif
-
-/* force initialisation of any sqlca struct */
-#ifndef SQLCA_INIT
-#define SQLCA_INIT
-#endif
-
-  EXEC SQL INCLUDE sqlca;
-
   epc_error_t status = OK;
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
+
+  DBUG_ENTER( "epc_disconnect" );
+
+  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
   (void) printf( "Disconnecting from database....\n" );
 
   reset_signal_handlers( 0 );
 
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+
   switch ( G_signo )
     {
     case 0:
+      EXEC SQL CONTEXT USE :interrupt_context;
+
+      EXEC SQL COMMIT WORK RELEASE;
+
+      EXEC SQL CONTEXT USE DEFAULT;
+
       EXEC SQL COMMIT WORK RELEASE;
       break;
+
     default:
+      EXEC SQL CONTEXT USE :interrupt_context;
+
+      EXEC SQL ROLLBACK RELEASE;
+
+      EXEC SQL CONTEXT USE DEFAULT;
+
       EXEC SQL ROLLBACK RELEASE;
     }
 
+  EXEC SQL CONTEXT FREE :interrupt_context;
+
+  if ( sqlca.sqlcode != 0 ) {
+    status = DISCONNECT_ERROR;
+  }
+
   (void) printf( "Disconnected from database....\n" );
 
-  return sqlca.sqlcode == 0 ? status : DISCONNECT_ERROR;
+  DBUG_LEAVE();
+
+  return status;
 }
