@@ -6,6 +6,15 @@ See the end for copying conditions.
 Please send DBUG bug reports to g.paulissen@chello.nl.
 
 
+Release 4.0.0
+
+* Solved request id 849475: configure script problem
+* Solved request id 901781: CTRL-C kills EPC listener but not the session
+* Solved request id 915081: The EPC idl compiler fails during build of the demo
+* imake support obsoleted.
+* LGPL license applied instead of GPL license.
+
+
 Release 3.0.0
 
 * Build EPC in separate build environment.
