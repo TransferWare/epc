@@ -15,12 +15,5 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-noinst_PROGRAMS = epc
-
-epc_SOURCES = epc.pls
-
-epc$(EXEEXT): epc.pls
-	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @$<
-
-EXTRA_DIST           = Imakefile epcman.doc EPC-optimize.doc epcman.htm
+EXTRA_DIST           = epcman.doc EPC-optimize.doc epcman.htm
 
