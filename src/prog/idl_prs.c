@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.40  2005/01/03 12:26:42  gpaulissen
+ * Release 4.4.0
+ *
  * Revision 1.39  2004/12/28 12:18:10  gpaulissen
  * Test on Amazon
  *
@@ -163,6 +166,14 @@
 #define EPC_PREFIX "_epc_"
 
 /*
+  GJP 03-01-2005 
+  Do not define local variables anymore. 
+  Bounds checking is disabled.
+*/
+
+#define PLSQL_CHECK_BOUNDS 0
+
+/*
 || Forward declaration of static procedures
 */
 
@@ -310,7 +321,7 @@ init_parameter ( /*@out@ */ idl_parameter_t * parm, char *name,
 
 
 void
-add_function (char *name, idl_type_t datatype, const int oneway)
+add_function (const char *name, const idl_type_t datatype, const dword_t size, const int oneway)
 {
   _interface.functions[_interface.num_functions] =
     (idl_function_t *) malloc (sizeof (idl_function_t));
@@ -324,7 +335,7 @@ add_function (char *name, idl_type_t datatype, const int oneway)
   _interface.functions[_interface.num_functions]->num_parameters = 0;
 
   init_parameter (&_interface.functions[_interface.num_functions]->
-                  return_value, "return", C_OUT, datatype, MAX_STR_VAL_LEN);
+                  return_value, "return", C_OUT, datatype, size);
 
   _interface.num_functions++;
 
@@ -355,14 +366,14 @@ static
 /*@notnull@*/
 /*@observer@*/
 mapping *
-get_mapping (const idl_type_t type, const idl_lang_t language)
+get_mapping (const dword_t key, const idl_lang_t language)
 {
   size_t i, j;
   const size_t num_keywords = sizeof (keywords) / sizeof (keyword);
 
   for (i = 0; i < num_keywords; i++)
     {
-      if (keywords[i].key == type)
+      if (keywords[i].key == key)
         {
           for (j = 0; j < NUM_LANGUAGES; j++)
             {
@@ -372,11 +383,11 @@ get_mapping (const idl_type_t type, const idl_lang_t language)
                 }
             }
           (void) fprintf (stderr, "No mapping for %ld in language %ld\n",
-                          type, language);
+                          key, language);
           exit (EXIT_FAILURE);
         }
     }
-  fprintf (stderr, "Type %ld not a valid keyword\n", (long) type);
+  fprintf (stderr, "Key %ld not a valid keyword\n", (long) key);
   exit (EXIT_FAILURE);
 }
 
@@ -384,18 +395,18 @@ get_mapping (const idl_type_t type, const idl_lang_t language)
 static
 /*@observer@*/
 char *
-get_syntax (const idl_type_t type, const idl_lang_t language)
+get_syntax (const dword_t key, const idl_lang_t language)
 {
-  return get_mapping (type, language)->syntax;
+  return get_mapping (key, language)->syntax;
 }
 
 
 static
 /*@observer@*/
 char *
-get_constant_name (const idl_type_t type, const idl_lang_t language)
+get_constant_name (const dword_t key, const idl_lang_t language)
 {
-  return get_mapping (type, language)->constant_name;
+  return get_mapping (key, language)->constant_name;
 }
 
 static
@@ -493,6 +504,8 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
 {
   DBUG_ENTER ("print_variable_definition");
 
+  assert( parm->datatype != C_VOID ); /* impossible */
+
   switch (lang)
     {
     case C:
@@ -517,6 +530,8 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
                           parm->proc_name,
                           get_syntax (parm->datatype, C), parameter_nr);
           break;
+        case C_VOID:
+          break;
         }
       break;
 
@@ -534,6 +549,8 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
         case C_XML:
         case C_STRING:
           (void) fprintf (pout, "l_%s VARCHAR2(%ld)", parm->name, parm->size);
+          break;
+        case C_VOID:
           break;
         }
       if (parm->mode == C_IN || parm->mode == C_INOUT)
@@ -651,6 +668,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
   generate_plsql_function (pout, fun);
   (void) fprintf (pout, "\n  IS\n");
 
+#if PLSQL_CHECK_BOUNDS != 0
   /* define local variables for all parameters: needed for bounds checking */
   for (nr = 0; nr < fun->num_parameters; nr++)
     {
@@ -660,6 +678,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
       print_variable_definition (pout, parm, PLSQL, (int) nr);
       (void) fprintf (pout, ";\n");
     }
+#endif
 
   /* RETURN VARIABLE */
   if (fun->return_value.datatype != C_VOID)
@@ -680,11 +699,19 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
       parm = fun->parameters[nr];
 
       if (parm->mode != C_OUT)
+#if PLSQL_CHECK_BOUNDS != 0
         (void) fprintf (pout,
                         "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, l_%s);\n",
                         parm->name,
                         get_constant_name (parm->datatype, PLSQL),
                         parm->name);
+#else
+        (void) fprintf (pout,
+                        "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s);\n",
+                        parm->name,
+                        get_constant_name (parm->datatype, PLSQL),
+                        parm->name);
+#endif
     }
 
   (void) fprintf (pout,
@@ -702,11 +729,21 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
       parm = fun->parameters[nr];
       if (parm->mode != C_IN)
         {
+#if PLSQL_CHECK_BOUNDS != 0
           (void) fprintf (pout,
                           "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n    %s := l_%s;\n",
                           parm->name,
                           get_constant_name (parm->datatype, PLSQL),
-                          parm->name, parm->name, parm->name);
+                          parm->name,
+                          parm->name,
+                          parm->name);
+#else
+          (void) fprintf (pout,
+                          "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n",
+                          parm->name,
+                          get_constant_name (parm->datatype, PLSQL),
+                          parm->name);
+#endif
         }
     }
 

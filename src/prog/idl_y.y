@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.16  2005/01/03 12:26:43  gpaulissen
+ * Release 4.4.0
+ *
  * Revision 1.15  2004/12/28 12:18:11  gpaulissen
  * Test on Amazon
  *
@@ -133,12 +136,12 @@ function_list:
 function:
                 datatype 
                 function_name 
-                { add_function( $2, $1.datatype, 0 ); }
+                { add_function( $2, $1.datatype, $1.size, 0 ); }
                 '(' parameter_list ')' ';'
         |       ONEWAY
                 VOID
                 function_name 
-                { add_function( $3, $2.datatype, 1 ); }
+                { add_function( $3, $2.datatype, $2.size, 1 ); }
                 '(' in_parameter_list ')' ';'
 
         ;

@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.7  2005/01/03 12:26:44  gpaulissen
+REMARK  Release 4.4.0
+REMARK
 REMARK  Revision 1.6  2004/12/28 12:18:11  gpaulissen
 REMARK  Test on Amazon
 REMARK
@@ -38,6 +41,10 @@ create or replace package epc is
 -- @headcom
 */
 
+/* 
+|| SUBTYPES
+*/
+
 /* see $EPC_HOME/src/lib/idl_defs.h */
 subtype interface_name_subtype is varchar2(32);
 subtype namespace_subtype is varchar2(128);
@@ -54,6 +61,31 @@ subtype double_subtype is double precision;
 subtype string_subtype is varchar2(32767);
 subtype xml_subtype is varchar2(32767);
 
+/* 
+|| CONSTANTS
+*/
+
+"xmlns:SOAP-ENV" constant varchar2(1000) := 
+  'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
+
+SOAP_HEADER_START constant varchar2(1000) :=
+  '<?xml version="1.0" encoding="UTF-8"?>'
+  ||'<SOAP-ENV:Envelope'
+  ||' '
+  ||'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+  ||' '
+  ||'xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
+  ||' '
+  ||"xmlns:SOAP-ENV"
+  ||' '
+  ||'xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+  ||' '
+  ||'SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"'
+  ||'>'
+  ||'<SOAP-ENV:Body>';
+
+SOAP_HEADER_END constant varchar2(1000) := 
+  '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
 /* 
 || EXCEPTIONS
@@ -104,9 +136,17 @@ return data_type_subtype;
 function data_type_double
 return data_type_subtype;
 
-/* 
-|| Connection related functions/procedures.
+/**
+-- Print XML data.
+--
+-- Pretty prints an XML message using DBMS_OUTPUT.
+-- 
+-- @param p_msg  XML message.
 */
+procedure print
+(
+  p_msg in varchar2
+);
 
 end epc;
 /

@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.13  2005/01/03 12:26:44  gpaulissen
+REMARK  Release 4.4.0
+REMARK
 REMARK  Revision 1.12  2004/12/28 12:51:14  gpaulissen
 REMARK  Test on Amazon
 REMARK
@@ -49,28 +52,6 @@ REMARK
 REMARK
 
 create or replace package body epc_clnt as
-
-"xmlns:SOAP-ENV" constant varchar2(1000) := 
-  'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
-
-SOAP_HEADER_START constant varchar2(1000) :=
-  '<?xml version="1.0" encoding="UTF-8"?>'
-  ||'<SOAP-ENV:Envelope'
-  ||' '
-  ||'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-  ||' '
-  ||'xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
-  ||' '
-  ||"xmlns:SOAP-ENV"
-  ||' '
-  ||'xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
-  ||' '
-  ||'SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"'
-  ||'>'
-  ||'<SOAP-ENV:Body>';
-
-SOAP_HEADER_END constant varchar2(1000) := 
-  '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
 subtype connection_method_subtype is pls_integer;
 
@@ -453,33 +434,6 @@ begin
   );
 end send_request_utl_http;
 
-procedure show_envelope(p_msg in varchar2) 
-is
-  l_idx pls_integer;
-  l_len pls_integer;
-  l_end pls_integer;
-begin
-  l_idx := 1;
-  l_len := length(p_msg);
-
-  while (l_idx <= l_len)
-  loop
-    l_end := instr(p_msg, ' ', l_idx + 60);
-    if l_end = 0
-    then
-      l_end := l_idx + 60;
-    end if;
-
-    while l_idx + 255 < l_end
-    loop
-      dbms_output.put_line(substr(p_msg, l_idx, 255));
-      l_idx := l_idx + 255;
-    end loop;
-    dbms_output.put_line(substr(p_msg, l_idx, l_end - l_idx));
-    l_idx := l_end;
-  end loop;
-end show_envelope;
-
 function get_method_name
 (
   p_epc_key in epc_key_subtype
@@ -522,7 +476,7 @@ procedure send_request
 is
 begin
   epc_info_tab(p_epc_key).msg :=
-SOAP_HEADER_START
+epc.SOAP_HEADER_START
 ||'<'
 ||get_method_name(p_epc_key, p_method_name)
 ||' '
@@ -534,11 +488,11 @@ SOAP_HEADER_START
 ||'</'
 ||get_method_name(p_epc_key, p_method_name)
 ||'>'
-||SOAP_HEADER_END;
+||epc.SOAP_HEADER_END;
 
   epc_info_tab(p_epc_key).doc := 
     xmltype.createxml( epc_info_tab(p_epc_key).msg );
-  -- show_envelope(epc_info_tab(p_epc_key).doc.getstringval());
+  -- epc.print(epc_info_tab(p_epc_key).doc.getstringval());
 
   if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
@@ -627,19 +581,19 @@ procedure check_fault(p_doc in out nocopy xmltype) as
   fault_code   varchar2(256);
   fault_string varchar2(32767);
 begin
-   fault_node := p_doc.extract('/SOAP-ENV:Fault', "xmlns:SOAP-ENV");
+   fault_node := p_doc.extract('/SOAP-ENV:Fault', epc."xmlns:SOAP-ENV");
    if (fault_node is not null) then
      fault_code := 
        fault_node.extract
        (
          '/SOAP-ENV:Fault/faultcode/child::text()'
-       , "xmlns:SOAP-ENV"
+       , epc."xmlns:SOAP-ENV"
        ).getstringval();
      fault_string := 
        fault_node.extract
        (
          '/SOAP-ENV:Fault/faultstring/child::text()'
-       , "xmlns:SOAP-ENV"
+       , epc."xmlns:SOAP-ENV"
        ).getstringval();
      raise_application_error(-20000, fault_code || ' - ' || fault_string);
    end if;
@@ -661,8 +615,8 @@ begin
   epc_info_tab(p_epc_key).doc := xmltype.createxml( epc_info_tab(p_epc_key).msg );
   epc_info_tab(p_epc_key).doc :=
     epc_info_tab(p_epc_key).doc.extract('/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()',
-      "xmlns:SOAP-ENV");
-  -- show_envelope(epc_info_tab(p_epc_key).doc.getstringval());
+      epc."xmlns:SOAP-ENV");
+  -- epc.print(epc_info_tab(p_epc_key).doc.getstringval());
   check_fault(epc_info_tab(p_epc_key).doc);
 end recv_response;
 
