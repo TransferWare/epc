@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.17  1999/10/20 10:55:20  gpaulissen
+ * Clean up return pipe when send fails.
+ *
  * Revision 1.16  1999/08/26 12:34:54  gpaulissen
  * Added DBUG info
  *
@@ -254,48 +257,72 @@ EXEC SQL INCLUDE sqlca;
 		long sqlcode = call->sqlcode;
 		EXEC SQL END DECLARE SECTION;
 
-		EXEC SQL WHENEVER SQLERROR GOTO send_error;
+		EXEC SQL WHENEVER SQLERROR CONTINUE;
 		EXEC SQL EXECUTE
 		BEGIN
 			dbms_pipe.reset_buffer;
 			dbms_pipe.pack_message( :epc_error );
 			dbms_pipe.pack_message( :sqlcode );
 			:retval := dbms_pipe.send_message( :result_pipe );
+		EXCEPTION
+			WHEN	OTHERS
+			THEN
+				:retval := SQLCODE;
 		END;
 		END-EXEC;
 	}
 	else
 	{
-		EXEC SQL WHENEVER SQLERROR GOTO send_error;
+		EXEC SQL WHENEVER SQLERROR CONTINUE;
 		EXEC SQL EXECUTE
 		BEGIN
 			:retval := dbms_pipe.send_message( :result_pipe );
+		EXCEPTION
+			WHEN	OTHERS
+			THEN
+				:retval := SQLCODE;
 		END;
 		END-EXEC;
 	}
 
-	call->sqlcode = 0;
+	/* save last sqlcode */
+	call->sqlcode = sqlca.sqlcode;
 
 	switch( retval )
 	{
-	case 1: /* timed out */
-		retval = MSG_TIMED_OUT;
-		goto end_of_send_result;
-	case 3: /* interrupted */;
-		retval = MSG_INTERRUPTED;
-		goto end_of_send_result;
 	case 0: /* OK */
 		retval = OK;
-		goto end_of_send_result;
-	default:
-		break; /* goto send_error */
+		break;
+	case 1: /* dbms_pipe.send_message return value: timed out */
+		retval = MSG_TIMED_OUT;
+		break;
+	case 3: /* dbms_pipe.send_message return value: interrupted */;
+		retval = MSG_INTERRUPTED;
+		break;
+	default: /* SQLCODE: negative */
+		retval = SEND_ERROR;
+		break;
 	}
 
-send_error:
-	call->sqlcode = sqlca.sqlcode;
-	retval = SEND_ERROR;
+	if ( retval != OK )
+	{
+		/*
+		|| An error has occurred while sending the result: purge the result
+		|| pipe for subsequent calls . Ignore any errors.
+		*/
 
-end_of_send_result:
+		EXEC SQL WHENEVER SQLERROR CONTINUE;
+		EXEC SQL EXECUTE
+		BEGIN
+			dbms_pipe.purge( :result_pipe );
+		EXCEPTION
+			WHEN	OTHERS
+			THEN
+				NULL;
+		END;
+		END-EXEC;
+	}
+	
 	DBUG_PRINT( "output", 
 		    ("sql code: %ld; retval: %ld", 
 		     (long)call->sqlcode, (long)retval) );
