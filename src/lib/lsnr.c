@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  2003/06/08 16:28:20  gpaulissen
+ * GNU build system for ts_dbug
+ *
  * Revision 1.2  2003/04/10 19:50:27  gpaulissen
  * Update
  *
@@ -52,10 +55,6 @@ const char vcid[] = "$Id$";
 /* defined an any system */
 #include <stdio.h>
 
-#if HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -94,33 +93,9 @@ const char vcid[] = "$Id$";
 
 /* declarations */
 
-/* general signal handler */
-static
-void
-handle_signal( int signo );
-
-
 static
 void
 help( char *procname );
-
-
-static
-void
-set_signal_handlers( void )
-{
-  DBUG_ENTER( "set_signal_handlers" );
-
-  signal( SIGINT, handle_signal );
-  signal( SIGABRT, handle_signal );
-  signal( SIGILL, handle_signal );
-  signal( SIGSEGV, handle_signal );
-  signal( SIGTERM, handle_signal );
-#ifdef WIN32
-  signal( SIGBREAK, handle_signal );
-#endif
-  DBUG_LEAVE();
-}
 
 
 static
@@ -237,24 +212,20 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
           break;
                         
         case 1:
-          set_signal_handlers ();
-          break;
-        
-        case 2:
           epc_info = epc_init();
           if ( epc_info == NULL )
             ret = MEMORY_ERROR;
           break;
 
-        case 3:
+        case 2:
           ret = epc_set_logon( epc_info, logon );
           break;
 
-        case 4:
+        case 3:
           ret = epc_set_pipe( epc_info, request_pipe );
           break;
 
-        case 5:
+        case 4:
           {
             va_list ap;
 
@@ -268,6 +239,10 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
           }
           break;
 
+        case 5:
+          ret = epc_connect( epc_info );
+          break;
+
         case 6:
           ret = epc_handle_requests( epc_info );
           break;
@@ -276,14 +251,18 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
 
   switch( nr-1 ) /* last correct step */
     {
+    case 6:
     case 5:
+      ret = epc_disconnect();
+      /* no break */
+
     case 4:
     case 3:
     case 2:
+    case 1:
       epc_done( &epc_info );
       /* no break */
 
-    case 1:
     case 0:
       dbug_done();
       break;
@@ -296,7 +275,7 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
   (void) AllocStopCheckPoint(chk);
 #endif
 
-  return OK;
+  return ret;
 }
 
 
@@ -316,14 +295,3 @@ Flags:\n\
         v       display the EPC listener version\n\
 ", procname );
 }
-
-
-static
-void
-handle_signal( int signo )
-{
-  (void) printf( "Signal %d received\n", signo );
-  epc_disconnect();
-}
-
-

@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.32  2003/06/08 16:28:20  gpaulissen
+ * GNU build system for ts_dbug
+ *
  * Revision 1.31  2003/04/10 19:50:26  gpaulissen
  * Update
  *
@@ -121,6 +124,10 @@
 #include <stdlib.h>
 #endif
 
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 #if HAVE_STRING_H
 #include <string.h>
 #endif
@@ -170,6 +177,285 @@ EXEC SQL END DECLARE SECTION;
  *
  *======================================================================*/
 
+static int G_signo = 0;
+
+static
+void
+handle_signal( int signo )
+{
+  G_signo = signo;
+}
+
+static
+char *
+signal_str( int signo )
+{
+  switch ( signo )
+    {
+#ifdef SIGHUP
+      case SIGHUP: return "SIGHUP";
+#endif
+#ifdef SIGINT
+    case SIGINT: return "SIGINT";
+#endif
+#ifdef SIGQUIT
+    case SIGQUIT: return "SIGQUIT";
+#endif
+#ifdef SIGILL
+    case SIGILL: return "SIGILL";
+#endif
+#ifdef SIGTRAP
+    case SIGTRAP: return "SIGTRAP";
+#endif
+#ifdef SIGABRT
+    case SIGABRT: return "SIGABRT";
+#endif
+#ifdef SIGEMT
+    case SIGEMT: return "SIGEMT";
+#endif
+#ifdef SIGFPE
+    case SIGFPE: return "SIGFPE";
+#endif
+#ifdef SIGBUS
+    case SIGBUS: return "SIGBUS";
+#endif
+#ifdef SIGSEGV
+    case SIGSEGV: return "SIGSEGV";
+#endif
+#ifdef SIGSYS
+    case SIGSYS: return "SIGSYS";
+#endif
+#ifdef SIGPIPE
+    case SIGPIPE: return "SIGPIPE";
+#endif
+#ifdef SIGALRM
+    case SIGALRM: return "SIGALRM";
+#endif
+#ifdef SIGTERM
+    case SIGTERM: return "SIGTERM";
+#endif
+#ifdef SIGURG
+    case SIGURG: return "SIGURG";
+#endif
+#ifdef SIGSTOP
+    case SIGSTOP: return "SIGSTOP";
+#endif
+#ifdef SIGTSTP
+    case SIGTSTP: return "SIGTSTP";
+#endif
+#ifdef SIGCONT
+    case SIGCONT: return "SIGCONT";
+#endif
+#ifdef SIGCHLD
+    case SIGCHLD: return "SIGCHLD";
+#endif
+#ifdef SIGTTIN
+    case SIGTTIN: return "SIGTTIN";
+#endif
+#ifdef SIGTTOU
+    case SIGTTOU: return "SIGTTOU";
+#endif
+#ifdef SIGIO
+    case SIGIO: return "SIGIO";
+#endif
+#ifdef SIGXCPU
+    case SIGXCPU: return "SIGXCPU";
+#endif
+#ifdef SIGXFSZ
+    case SIGXFSZ: return "SIGXFSZ";
+#endif
+#ifdef SIGVTALRM
+    case SIGVTALRM: return "SIGVTALRM";
+#endif
+#ifdef SIGPROF
+    case SIGPROF: return "SIGPROF";
+#endif
+#ifdef SIGWINCH
+    case SIGWINCH: return "SIGWINCH";
+#endif
+#ifdef SIGLOST
+    case SIGLOST: return "SIGLOST";
+#endif
+#ifdef SIGUSR1
+    case SIGUSR1: return "SIGUSR1";
+#endif
+#ifdef SIGUSR2
+    case SIGUSR2: return "SIGUSR2";
+#endif
+#ifdef SIGBREAK
+    case SIGBREAK: return "SIGBREAK";
+#endif
+    default:
+      return "Unknown signal";
+    }
+  return NULL;
+}
+
+#define MAX_SIGNO 32
+
+static struct {
+  void (*func)(int);
+} signal_handler_info[MAX_SIGNO] = {
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal },
+  { handle_signal }
+};
+
+static
+void
+set_signal_handlers( void )
+{
+  int nr;
+
+  DBUG_ENTER( "set_signal_handlers" );
+
+  for ( nr = 0; nr < MAX_SIGNO; nr++ ) {
+    switch( nr )
+      {
+#ifdef SIGHUP
+      case SIGHUP: break;
+#endif
+#ifdef SIGINT
+      case SIGINT: break;
+#endif
+#ifdef SIGQUIT
+      case SIGQUIT: break;
+#endif
+#ifdef SIGILL
+      case SIGILL: break;
+#endif
+#ifdef SIGTRAP
+      case SIGTRAP: break;
+#endif
+#ifdef SIGABRT
+      case SIGABRT: break;
+#endif
+#ifdef SIGEMT
+      case SIGEMT: break;
+#endif
+#ifdef SIGFPE
+      case SIGFPE: break;
+#endif
+#ifdef SIGBUS
+      case SIGBUS: break;
+#endif
+#ifdef SIGSEGV
+      case SIGSEGV: break;
+#endif
+#ifdef SIGSYS
+      case SIGSYS: break;
+#endif
+#ifdef SIGPIPE
+      case SIGPIPE: break;
+#endif
+#ifdef SIGALRM
+      case SIGALRM: break;
+#endif
+#ifdef SIGTERM
+      case SIGTERM: break;
+#endif
+#ifdef SIGURG
+      case SIGURG: break;
+#endif
+#ifdef SIGSTOP
+      case SIGSTOP: break;
+#endif
+#ifdef SIGTSTP
+      case SIGTSTP: break;
+#endif
+#ifdef SIGCONT
+      case SIGCONT: break;
+#endif
+#ifdef SIGCHLD
+      case SIGCHLD: break;
+#endif
+#ifdef SIGTTIN
+      case SIGTTIN: break;
+#endif
+#ifdef SIGTTOU
+      case SIGTTOU: break;
+#endif
+#ifdef SIGIO
+      case SIGIO: break;
+#endif
+#ifdef SIGXCPU
+      case SIGXCPU: break;
+#endif
+#ifdef SIGXFSZ
+      case SIGXFSZ: break;
+#endif
+#ifdef SIGVTALRM
+      case SIGVTALRM: break;
+#endif
+#ifdef SIGPROF
+      case SIGPROF: break;
+#endif
+#ifdef SIGWINCH
+      case SIGWINCH: break;
+#endif
+#ifdef SIGLOST
+      case SIGLOST: break;
+#endif
+#ifdef SIGUSR1
+      case SIGUSR1: break;
+#endif
+#ifdef SIGUSR2
+      case SIGUSR2: break;
+#endif
+#ifdef SIGBREAK
+      case SIGBREAK: break;
+#endif
+      default:
+        continue; /* not a known signal */
+      }
+
+    DBUG_PRINT( "info", ( "handler for signal %d (%s): %p", 
+                          nr,
+                          signal_str(nr),
+                          (void*) signal_handler_info[nr].func ) );
+
+    /* store old handler */
+    signal_handler_info[nr].func = signal( nr, signal_handler_info[nr].func );
+  }
+
+  DBUG_LEAVE();
+}
+
+static
+void
+reset_signal_handlers( void )
+{
+  set_signal_handlers();
+}
 
 static
 epc_error_t
@@ -200,12 +486,16 @@ receive_request( epc_call_t * call )
 
   EXEC SQL BEGIN DECLARE SECTION;
   long retval = OK;
-  varchar result_pipe[MAX_PIPE_NAME_LEN] = { 0, "" };     /* client-specific pipe for results  */
-  short result_pipe_nl; /* null indicator */
+  varchar msg_info[MAX_MSG_INFO_LEN] = { 0, "" };     /* client-specific pipe for results  */
+  short msg_info_nl; /* null indicator */
   varchar interface_name[MAX_INTERFACE_NAME_LEN] = { 0, "" };
   short interface_name_nl; /* null indicator */
   varchar function_name[MAX_FUNC_NAME_LEN] = { 0, "" };
   short function_name_nl; /* null indicator */
+  const int msg_timed_out = MSG_TIMED_OUT;
+  const int msg_too_big = MSG_TOO_BIG;
+  const int msg_interrupted = MSG_INTERRUPTED;
+  const int receive_error = RECEIVE_ERROR;
   EXEC SQL END DECLARE SECTION;
 
   DBUG_ENTER( "receive_request" );
@@ -213,38 +503,39 @@ receive_request( epc_call_t * call )
   sqlca.sqlcode = 0;
   call->sqlcode = 0;
 
+  /* All exceptions should be handled withing the PL/SQL hence 
+     this default. */
   EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
   EXEC SQL EXECUTE
   BEGIN
     epc.request_get_header
     ( 
-      :result_pipe:result_pipe_nl
+      :msg_info:msg_info_nl
     , :interface_name:interface_name_nl
     , :function_name:function_name_nl
-    , :retval
     );
+  EXCEPTION
+    WHEN epc.msg_timed_out
+    THEN
+      :retval := :msg_timed_out;
+    WHEN epc.msg_too_big
+    THEN
+      :retval := :msg_too_big;
+    WHEN epc.msg_interrupted
+    THEN
+      :retval := :msg_interrupted;
+    WHEN OTHERS
+    THEN
+      :retval := :receive_error;
   END;
   END-EXEC;
 
-  switch( retval )
+  if ( retval == OK )
     {
-    case 1: 
-      retval = MSG_TIMED_OUT; 
-      goto end_of_receive_request;
-      break;
-    case 2: 
-      retval = MSG_TOO_BIG; 
-      goto end_of_receive_request;
-      break;
-    case 3: 
-      retval = MSG_INTERRUPTED; 
-      goto end_of_receive_request;
-      break;
-    case 0:
-      if ( result_pipe_nl == -1 )
-        result_pipe.len = 0;
-      result_pipe.arr[result_pipe.len] = '\0';
+      if ( msg_info_nl == -1 )
+        msg_info.len = 0;
+      msg_info.arr[msg_info.len] = '\0';
 
       if ( interface_name_nl == -1 )
         interface_name.len = 0;
@@ -254,38 +545,25 @@ receive_request( epc_call_t * call )
         function_name.len = 0;
       function_name.arr[function_name.len] = '\0';
 
-      strncpy( call->result_pipe, (char*)result_pipe.arr, sizeof(call->result_pipe) );
-      call->result_pipe[sizeof(call->result_pipe)-1] = 0;
-      strncpy( call->interface_name, (char*)interface_name.arr, sizeof(call->interface_name) );
+      (void) strncpy( call->msg_info, (char*)msg_info.arr, sizeof(call->msg_info) );
+      call->msg_info[sizeof(call->msg_info)-1] = 0;
+      (void) strncpy( call->interface_name, (char*)interface_name.arr, sizeof(call->interface_name) );
       call->interface_name[sizeof(call->interface_name)-1] = 0;
-      strncpy( call->function_name, (char*)function_name.arr, sizeof(call->function_name) );
+      (void) strncpy( call->function_name, (char*)function_name.arr, sizeof(call->function_name) );
       call->function_name[sizeof(call->function_name)-1] = 0;
 
 #ifndef DBUG_OFF
       print_call( call );
 #endif
-      goto end_of_receive_request;
-      break;
-
-    default:
-      /* ?? */
-      retval = RECEIVE_ERROR;
-      goto end_of_receive_request;
     }
 
- receive_error:
-  call->sqlcode = sqlca.sqlcode;
-  retval = RECEIVE_ERROR;
-
- end_of_receive_request:
   call->epc_error = retval;
   DBUG_PRINT( "output", 
-              ( "sql code: %ld; epc error: %ld", 
-                (long)call->sqlcode, (long)call->epc_error));
+              ( "retval: %ld; sql code: %ld; epc error: %ld", 
+                retval, (long)call->sqlcode, (long)call->epc_error));
   DBUG_LEAVE(); 
   return retval;
 }
-
 
 static
 char *
@@ -317,6 +595,10 @@ get_error_str( epc_error_t err )
       return "PARAMETER_MODE_UNKNOWN";
     case SEND_ERROR:
       return "SEND_ERROR";
+    case CONNECT_ERROR:
+      return "CONNECT_ERROR";
+    case DISCONNECT_ERROR:
+      return "DISCONNECT_ERROR";
     default:
       return "Unknown error";
     }
@@ -370,35 +652,25 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
     epc_info->first_time = 0;
   }
 
-  /* receive the request */
-  receive_request( call );
-
-  if ( call->epc_error != OK )
-    goto error;
-
-  /* do the call */
-  epc_exec_call( call, epc_info );
-
-  switch ( call->epc_error )
+  do
     {
-    case FUNCTION_UNKNOWN:
-    case INTERFACE_UNKNOWN:
-    case OK:
-      break;
+      /* receive the request */
+      receive_request( call );
 
-    default:
-      goto error;
+      if ( call->epc_error != OK )
+        break;
+
+      /* do the call */
+      epc_exec_call( call, epc_info );
+
+      if ( !( call->epc_error == FUNCTION_UNKNOWN ||
+              call->epc_error == INTERFACE_UNKNOWN ||
+              call->epc_error == OK ) )
+        break;
+
+      retval = 0;
     }
-
-  if ( call->epc_error != OK )
-    goto error;
-
-  /* call->epc_error == OK */
-  retval = 0;
-  goto end_of_epc_handle_request;
-
-error:
-  DBUG_PRINT( "info", ( "epc status: %s", get_error_str( call->epc_error ) ) );
+  while (0); /* loop is used only to be able to break out earlier */
 
   switch( call->epc_error )
     {
@@ -406,40 +678,31 @@ error:
     case RECEIVE_ERROR:
     case SEND_ERROR:
     case OK:
+      switch( call->sqlcode )
+        {
+        case -6556:
+        case -6558:
+        case -6559: /* dbms_pipe errors */
+        case 0:
+          retval = 0;
+          break;
+
+        default:
+          break;
+        }
       break;
 
     default:
-      goto end_of_epc_handle_request;
       break;
     }
-
-  DBUG_PRINT( "info", ( "sql code: %ld", (long)call->sqlcode ) );
-  
-  switch( call->sqlcode )
-    {
-    case -6556:
-    case -6558:
-    case -6559: /* dbms_pipe errors */
-    case 0:
-      break;
-
-    default:
-      goto end_of_epc_handle_request;
-      break;
-    }
-  retval = 0;
-  goto end_of_epc_handle_request;
-
-end_of_epc_handle_request:
 
   DBUG_PRINT( "output", 
-              ( "sql code: %ld; epc status: %s", 
-                (long)call->sqlcode, get_error_str( call->epc_error ) ) );
-
+              ( "retval: %ld; sql code: %ld; epc status: %s", 
+                retval, (long)call->sqlcode, get_error_str( call->epc_error ) ) );
   DBUG_LEAVE();
+
   return retval;
 }
-
 
 epc_error_t
 epc_handle_requests( epc_info_t *epc_info )
@@ -458,43 +721,29 @@ epc_handle_requests( epc_info_t *epc_info )
 
   EXEC SQL INCLUDE sqlca;
 
-  EXEC SQL BEGIN DECLARE SECTION;
-  char * logon = epc_info->logon;
-  EXEC SQL END DECLARE SECTION;
   epc_call_t call = CALL_INIT;
 
   DBUG_ENTER( "epc_handle_requests" );
 
-  if ( logon == NULL ) {
-    printf( "ERROR: No connect string specified.\n" );
-    exit( EXIT_FAILURE );
-  } else {
-    /* log on to database */
-    EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+  for ( call.sqlcode = 0; G_signo == 0; call.sqlcode = 0 )
+    {    
+      if ( epc_handle_request( epc_info, &call ) != 0 )
+        break;
+    }
 
-    EXEC SQL CONNECT :logon;
+  if ( G_signo != 0 ) 
+    {
+      (void) printf( "Signal %d received\n", G_signo );
+    }
 
-    printf( "Connected to database....\n" );
-    fflush( stdout ); /* flush because of DBUG package */
-
-    for ( call.sqlcode = 0; ; call.sqlcode = 0 )
-      {    
-        if ( epc_handle_request( epc_info, &call ) != 0 )
-          break;
-      }
-
-    DBUG_PRINT( "output", 
-                ( "sql code: %ld; epc status: %s", 
-                  (long)call.sqlcode, get_error_str( call.epc_error ) ) );
-
-    EXEC SQL WHENEVER SQLERROR CONTINUE;
-    EXEC SQL COMMIT WORK RELEASE;
-  }
+  DBUG_PRINT( "output", 
+              ( "sql code: %ld; epc status: %s", 
+                (long)call.sqlcode, get_error_str( call.epc_error ) ) );
 
   DBUG_LEAVE();
+
   return call.epc_error;
 }
-
 
 epc_info_t *
 epc_init( void )
@@ -518,7 +767,6 @@ epc_init( void )
   return epc_info;
 }
 
-
 void
 epc_done( epc_info_t **epc_info )
 {
@@ -538,7 +786,6 @@ epc_done( epc_info_t **epc_info )
 
   DBUG_LEAVE();
 }
-
 
 epc_error_t
 epc_set_logon( epc_info_t *epc_info, char *logon )
@@ -574,7 +821,6 @@ epc_set_logon( epc_info_t *epc_info, char *logon )
   return( status );
 }
 
-
 epc_error_t
 epc_set_pipe( epc_info_t *epc_info, char *pipe )
 {
@@ -608,7 +854,6 @@ epc_set_pipe( epc_info_t *epc_info, char *pipe )
   return( status );
 }
 
-
 int
 cmp_function( const void *par1, const void *par2 )
 {
@@ -618,7 +863,6 @@ cmp_function( const void *par1, const void *par2 )
   return strcmp( fnc1->name, fnc2->name );
 }
 
-
 int
 cmp_interface( const void *par1, const void *par2 )
 {
@@ -627,7 +871,6 @@ cmp_interface( const void *par1, const void *par2 )
 
   return strcmp( ifc1->name, ifc2->name );
 }
-
 
 epc_error_t
 epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
@@ -679,7 +922,6 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
   return( status );
 }
 
-
 void
 epc_abort( char *msg )
 {
@@ -694,8 +936,48 @@ epc_abort( char *msg )
   epc_disconnect();
 }
 
+epc_error_t
+epc_connect( epc_info_t *epc_info )
+{
+#ifdef SQLCA
+#undef SQLCA
+#endif
 
-void
+#ifdef SQLCA_NONE
+#undef SQLCA_NONE
+#endif
+
+/* force initialisation of any sqlca struct */
+#ifndef SQLCA_INIT
+#define SQLCA_INIT
+#endif
+
+  EXEC SQL INCLUDE sqlca;
+
+  EXEC SQL BEGIN DECLARE SECTION;
+  char * logon = epc_info->logon;
+  EXEC SQL END DECLARE SECTION;
+  epc_error_t status = OK;
+
+  set_signal_handlers();
+
+  if ( logon == NULL ) {
+    printf( "ERROR: No connect string specified.\n" );
+    status = CONNECT_ERROR;
+  } else {
+        
+    /* log on to database */
+    EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+
+    EXEC SQL CONNECT :logon;
+
+    printf( "Connected to database....\n" );
+    fflush( stdout ); /* flush because of DBUG package */
+  }
+  return status;
+}
+
+epc_error_t
 epc_disconnect( void )
 {
 #ifdef SQLCA
@@ -713,11 +995,22 @@ epc_disconnect( void )
 
   EXEC SQL INCLUDE sqlca;
 
-  (void) printf( "Disconnected from database\n" );
+  epc_error_t status = OK;
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
-  EXEC SQL ROLLBACK RELEASE;
 
-  (void) printf( "Exit epc listener....\n" );
-  exit( EXIT_FAILURE );
+  switch ( G_signo )
+    {
+    case 0:
+      EXEC SQL COMMIT WORK RELEASE;
+      break;
+    default:
+      EXEC SQL ROLLBACK RELEASE;
+    }
+
+  (void) printf( "Disconnected from database\n" );
+
+  reset_signal_handlers();
+
+  return sqlca.sqlcode == 0 ? status : DISCONNECT_ERROR;
 }
