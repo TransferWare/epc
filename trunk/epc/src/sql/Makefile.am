@@ -21,5 +21,7 @@ epc.html: epc.pls
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
 	sed 's/-- =pod/=pod/g;s/-- =cut/=cut/g' $? | @PERL@ -S pod2html --outfile=$@
 
+MOSTLYCLEANFILES = epc.html
+
 EXTRA_DIST           = Imakefile epc.html
 
