@@ -17,27 +17,27 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-MOSTLYCLEANFILES     = demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
+GENERATED_FILES      = demo.c demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
+
+MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
 bin_PROGRAMS         = demo
-demo_SOURCES         = demo.c demo.h main.c
+demo_SOURCES         = demo.idl main.c
 demo_LDADD           = $(top_builddir)/src/lib/libepc.la 
 
-$(top_builddir)/src/prog/idl$(EXEEXT):
-	cd `dirname $@` && make
+IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-demo.pc: demo.idl $(top_builddir)/src/prog/idl$(EXEEXT)
-	$(top_builddir)/src/prog/idl $<
-	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @demo.pls
+@SUFFIXES@: .c .idl
 
-@SUFFIXES@: .c .pc
+.idl.c:
+	$(IDL) $<
+# Before running PRO*C first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
+	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
-.pc.c:
-	@PROC@ @PROCINCLUDES@ @PROCFLAGS@ iname=$< oname=$@
-
-EXTRA_DIST           = Imakefile demo.pks demo.pkb demo.pke demo.pls demo.pc demo.idl
+EXTRA_DIST           = Imakefile $(GENERATED_FILES)
 

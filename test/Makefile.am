@@ -17,27 +17,40 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+GENERATED_FILES      = epctest.c epctest.h epctest.pc epctest.pkb epctest.pke epctest.pks epctest.pls
+GENERATED_FILES     += str.c str.h str.pc str.pkb str.pke str.pks str.pls
+
+MOSTLYCLEANFILES     = $(GENERATED_FILES)
+
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
-noinst_PROGRAMS      = epctest
-epctest_SOURCES      = epctest.c epctest.h proc.c main.c str.c str.h
+check_PROGRAMS       = epctest
+epctest_SOURCES      = epctest.idl str.idl proc.c main.c
 epctest_LDADD        = $(top_builddir)/src/lib/libepc.la
 
-epctest.h epctest.pc: epctest.idl $(top_builddir)/src/prog/idl$(EXEEXT)
-	$(top_builddir)/src/prog/idl $<
-	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @epctest.pls
+IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-str.h str.pc: str.idl $(top_builddir)/src/prog/idl$(EXEEXT)
-	$(top_builddir)/src/prog/idl $<
-	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @str.pls
+@SUFFIXES@: .c .idl
 
-@SUFFIXES@: .c .pc
+.idl.c:
+	$(IDL) $<
+# Before running PRO*C first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
+	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
-.pc.c:
-	@PROC@ @PROCINCLUDES@ @PROCFLAGS@ iname=$< oname=$@
+EXTRA_DIST           = Imakefile epctest.ref epctest.sql str.sql
 
-EXTRA_DIST           = Imakefile epctest.ref epctest.idl epctest.sql
+TESTS = test1
 
+EPCTEST = ./epctest
+DIFF = diff
 
+test1: $(top_srcdir)/test/epctest.sql
+	@$(EPCTEST) -d -u$(USERID) 1>epctest.log &
+	@sleep 20
+	@echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< 1
+	@pid=`ps | grep epctest | grep -v grep |  awk '{ print $$1; }'`; kill "$$pid"
+	@$(DIFF) epctest.lis $(top_srcdir)/test/epctest.ref
+	@echo : > $@

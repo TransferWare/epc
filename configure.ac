@@ -41,6 +41,15 @@ AM_INIT_AUTOMAKE
 AM_C_PROTOTYPES
 
 # Checks for programs.
+# Checks for programs.
+AC_PATH_PROG([PERL],[perl])
+case x$PERL in
+x)
+	# No Perl avaliable: stop
+	AC_MSG_ERROR([Perl must be available in \$PATH.])
+	;;
+esac
+dnl AC_ARG_VAR(PERL,[The program name of Perl.])
 AC_PROG_CC
 AM_PROG_LEX
 if test "$LEX" != flex; then
