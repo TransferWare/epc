@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.7  2004/10/20 13:34:05  gpaulissen
+ * make lint
+ *
  * Revision 1.6  2002/10/28 14:53:04  gpaulissen
  * Using GNU standards.
  *
@@ -45,13 +48,13 @@ typedef dword_t idl_lang_t;
 
 typedef struct {
   idl_lang_t language;
-  char *syntax;         /* part of the return value/parameter syntax */
-  char *constant_name;  /* Name of constant */
+  /*@observer@*/ char *syntax;         /* part of the return value/parameter syntax */
+  /*@observer@*/ char *constant_name;  /* Name of constant */
 } mapping;
 
 typedef struct {
   dword_t key;
-  mapping mappings[NUM_LANGUAGES];
+  /*@observer@*/ mapping mappings[NUM_LANGUAGES];
 } keyword;
 
 extern keyword keywords[];

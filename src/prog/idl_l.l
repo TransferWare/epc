@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.19  2004/10/20 13:34:05  gpaulissen
+ * make lint
+ *
  * Revision 1.18  2004/04/06 11:19:09  gpaulissen
  * \r added as character to ignore
  *
@@ -155,7 +158,7 @@ strstr( const char *s1, const char *s2 )
 
 #endif
 
-static char *include_text = NULL;
+/*@null@*/ /*@only@*/ static char *include_text = NULL;
 static int size = 0;
 
 static
@@ -174,6 +177,33 @@ add_include_text( char *line )
       size += strlen(line)+1;
     }
 }
+
+/*@-nullassign@*/
+/*@-predboolint@*/
+/*@-boolops@*/
+/*@-unrecog@*/
+/*@-onlytrans@*/
+/*@-type@*/
+/*@-unreachable@*/
+/*@-mustfreeonly@*/
+/*@-unqualifiedtrans@*/
+/*@-branchstate@*/
+/*@-nullderef@*/
+/*@-predboolothers@*/
+/*@-nullstate@*/
+/*@-statictrans@*/
+/*@-globstate@*/
+/*@-casebreak@*/
+/*@-nullret@*/
+/*@-warnposixheaders@*/
+/*@-nullassign@*/
+/*@-compmempass@*/
+/*@-nullpass@*/
+/*@-mustfreefresh@*/
+/*@-compdef@*/
+/*@-observertrans@*/
+/*@-dependenttrans@*/
+/*@-exportlocal@*/
 
 %}
 

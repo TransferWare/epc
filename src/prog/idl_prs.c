@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.34  2004/10/20 13:34:05  gpaulissen
+ * make lint
+ *
  * Revision 1.33  2004/10/19 14:35:09  gpaulissen
  * epc_ -> epc__
  *
@@ -215,7 +218,9 @@ keyword keywords[] = {
   }
 };
 
-int print_external_function = 0; /* print extern <function> in header */
+static
+int
+print_external_function = 0; /* print extern <function> in header */
 
 /*
 || Global functions
@@ -226,7 +231,7 @@ set_interface( char *name )
 {
   DBUG_ENTER( "set_interface" );
 
-  /*assert( strlen(name) < sizeof(_interface.name) ); /* beware of the trailing '\0' */
+  assert( strlen(name) < sizeof(_interface.name) ); /* beware of the trailing '\0' */
   (void) strcpy( _interface.name, name );
   _interface.num_functions = 0;
 
@@ -235,7 +240,7 @@ set_interface( char *name )
 
 static
 void
-init_parameter( idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
+init_parameter( /*@out@*/ idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
 {
   DBUG_ENTER( "init_parameter" );
 
@@ -286,18 +291,18 @@ init_parameter( idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t d
 void
 add_function( char *name, idl_type_t datatype, const int oneway )
 {
-  idl_function_t * fun = (idl_function_t*)malloc(sizeof(idl_function_t));
+  _interface.functions[_interface.num_functions] = (idl_function_t*)malloc(sizeof(idl_function_t));
 
   DBUG_ENTER( "add_function" );
 
-  assert( strlen(name) < sizeof(fun->name) ); /* beware of the trailing '\0' */
-  (void) strcpy( fun->name, name );
-  fun->oneway = oneway;
-  fun->num_parameters = 0;
+  assert( _interface.functions[_interface.num_functions] != NULL );
+  assert( strlen(name) < sizeof(_interface.functions[_interface.num_functions]->name) ); /* beware of the trailing '\0' */
+  (void) strcpy( _interface.functions[_interface.num_functions]->name, name );
+  _interface.functions[_interface.num_functions]->oneway = oneway;
+  _interface.functions[_interface.num_functions]->num_parameters = 0;
 
-  init_parameter( &fun->return_value, "result", C_OUT, datatype, MAX_STR_VAL_LEN );
+  init_parameter( &_interface.functions[_interface.num_functions]->return_value, "result", C_OUT, datatype, MAX_STR_VAL_LEN );
 
-  _interface.functions[_interface.num_functions] = fun;
   _interface.num_functions++;
 
   DBUG_LEAVE();
@@ -312,6 +317,7 @@ add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
 
   DBUG_ENTER( "add_parameter" );
 
+  assert( parm != NULL );
   init_parameter( parm, name, mode, datatype, size );
 
   fun->parameters[fun->num_parameters] = parm;
@@ -322,11 +328,13 @@ add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
 
 
 static
+/*@notnull@*/
+/*@observer@*/
 mapping *
 get_mapping( const idl_type_t type, const idl_lang_t language )
 {
-  int i, j;
-  const int num_keywords = sizeof(keywords) / sizeof(keyword);
+  size_t i, j;
+  const size_t num_keywords = sizeof(keywords) / sizeof(keyword);
 
   for ( i=0; i<num_keywords; i++ ) {
     if ( keywords[i].key == type ) {
@@ -341,12 +349,11 @@ get_mapping( const idl_type_t type, const idl_lang_t language )
   }
   fprintf( stderr, "Type %ld not a valid keyword\n", (long)type );
   exit( EXIT_FAILURE );
-
-  return NULL;
 }
 
 
 static
+/*@observer@*/
 char *
 get_syntax( const idl_type_t type, const idl_lang_t language )
 {
@@ -355,6 +362,7 @@ get_syntax( const idl_type_t type, const idl_lang_t language )
 
 
 static
+/*@observer@*/
 char *
 get_constant_name( const idl_type_t type, const idl_lang_t language )
 {
@@ -362,6 +370,7 @@ get_constant_name( const idl_type_t type, const idl_lang_t language )
 }
 
 static
+/*@observer@*/
 char *
 get_size( const idl_parameter_t *idl_parameter )
 {
@@ -378,19 +387,19 @@ get_size( const idl_parameter_t *idl_parameter )
       break;
 
     case C_INT:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(int)");
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_int_t)");
       break;
 
     case C_LONG:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(long)");
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_long_t)");
       break;
 
     case C_DOUBLE:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(double)");
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_double_t)");
       break;
 
     case C_FLOAT:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(float)");
+      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_float_t)");
       break;
     }
 
@@ -515,7 +524,7 @@ static
 void
 generate_plsql_function( FILE * pout, idl_function_t * fun )
 {
-  int nr, nr_actual_parameters /* for a SEND and RECV less parameters */;
+  dword_t nr, nr_actual_parameters /* for a SEND and RECV less parameters */;
 
   DBUG_ENTER( "generate_plsql_function" );
 
@@ -584,7 +593,7 @@ static
 void
 generate_plsql_header( FILE * pout )
 {
-  int nr;
+  dword_t nr;
   DBUG_ENTER( "generate_plsql_header" );
 
   print_generate_comment( pout, "REMARK " );
@@ -609,53 +618,9 @@ generate_plsql_header( FILE * pout )
 
 static
 void
-print_function_signature( FILE *pout, idl_function_t *fun )
-{
-  int nr;
-  const idl_lang_t language = C;
-  int tot_length = 0, length;
-
-  DBUG_ENTER( "print_function_signature" );
-
-  length = fprintf( pout, "%s%s %s",
-                    ( fun->oneway != 0 ? "oneway " : "" ),
-                    get_syntax( fun->return_value.datatype, language ),
-                    fun->name );
-  if ( length >= 0 )
-    tot_length += length;
-
-  for ( nr = 0; nr < fun->num_parameters; nr++ )
-    {
-      length = fprintf( pout, "%s[%s] %s %s",
-                        ( nr == 0 ? "( " : ", " ),
-                        ( fun->parameters[nr]->mode == C_IN ?
-                          "in" :
-                          ( fun->parameters[nr]->mode == C_INOUT ?
-                            "inout" :
-                            "out" ) ),
-                        get_syntax( fun->parameters[nr]->datatype, language ),
-                        fun->parameters[nr]->name );
-      if ( length >= 0 )
-        tot_length += length;
-    }
-
-  if ( nr > 0 )
-    {
-      length = fprintf( pout, "%s", " )" );
-      if ( length >= 0 )
-        tot_length += length;
-    }
-
-  assert( tot_length < MAX_FUNC_NAME_LEN );
-
-  DBUG_LEAVE();
-}
-
-static
-void
 generate_plsql_function_body( FILE * pout, idl_function_t * fun )
 {
-  int nr;
+  dword_t nr;
   idl_parameter_t * parm;
 
   DBUG_ENTER( "generate_plsql_function_body" );
@@ -668,7 +633,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun )
   if ( fun->return_value.datatype != C_VOID )
     {
       (void) fprintf( pout, "    " );
-      print_variable_definition( pout, &fun->return_value, PLSQL, fun->num_parameters );
+      print_variable_definition( pout, &fun->return_value, PLSQL, (int)fun->num_parameters );
       (void) fprintf( pout, ";\n" );
     }
 
@@ -736,7 +701,7 @@ static
 void
 generate_plsql_function_body_ext( FILE * pout, idl_function_t * fun )
 {
-  int nr;
+  dword_t nr;
 
   DBUG_ENTER( "generate_plsql_function_body_ext" );
   DBUG_PRINT( "input", ( "interface: %s; function: %s", _interface.name, fun->name ) );
@@ -795,7 +760,7 @@ static
 void
 generate_plsql_body( FILE * pout )
 {
-  int nr;
+  dword_t nr;
 
   DBUG_ENTER( "generate_plsql_body" );
 
@@ -828,7 +793,7 @@ static
 void
 generate_plsql_body_ext( FILE * pout )
 {
-  int nr;
+  dword_t nr;
 
   DBUG_ENTER( "generate_plsql_body_ext" );
 
@@ -861,9 +826,9 @@ CREATE OR REPLACE PACKAGE BODY %s IS\n\n",
 void
 generate_plsql( void )
 {
-  char filename[256];
+  char filename[256] = "";
 #define NR_PLSQL_FILES 4
-  FILE * pout[NR_PLSQL_FILES];
+  FILE *pout;
   int nr;
 
   DBUG_ENTER( "generate_plsql" );
@@ -873,27 +838,27 @@ generate_plsql( void )
       switch( nr )
         {
         case 0:
-          (void) sprintf( filename, "%s.pks", _interface.name );
+          (void) snprintf( filename, sizeof(filename), "%s.pks", _interface.name );
           break;
 
         case 1:
-          (void) sprintf( filename, "%s.pkb", _interface.name );
+          (void) snprintf( filename, sizeof(filename), "%s.pkb", _interface.name );
           break;
 
         case 2:
           /* for Oracle 8 external routines */
-          (void) sprintf( filename, "%s.pke", _interface.name );
+          (void) snprintf( filename, sizeof(filename), "%s.pke", _interface.name );
           break;
 
         case 3:
-          (void) sprintf( filename, "%s.pls", _interface.name );
+          (void) snprintf( filename, sizeof(filename), "%s.pls", _interface.name );
           break;
 
         default:
           assert( nr >= 0 && nr < 4 );
         }
 
-      if ( ( pout[nr] = fopen( filename, "w" ) ) == NULL ) 
+      if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
         {
           goto open_error;
         }
@@ -901,25 +866,38 @@ generate_plsql( void )
         {
           (void) fprintf( stdout, "Creating %s\n", filename );
         }
-    }
 
-  generate_plsql_header( pout[0] );
-  generate_plsql_body( pout[1] );
-  generate_plsql_body_ext( pout[2] );
+      switch( nr )
+        {
+        case 0:
+          generate_plsql_header( pout );
+          break;
 
-  /* .pls script call .pks and .pkb */
-  print_generate_comment( pout[3], "REMARK " );
+        case 1:
+          generate_plsql_body( pout );
+          break;
 
-  (void) fprintf( pout[3], "@@ %s.pks\n\
+        case 2:
+          generate_plsql_body_ext( pout );
+          break;
+
+        case 3:
+          /* .pls script call .pks and .pkb */
+          print_generate_comment( pout, "REMARK " );
+
+          (void) fprintf( pout, "@@ %s.pks\n\
 REMARK Package body using an EPC server.\n\
 @@ %s.pkb\n\
 REMARK Package body using PL/SQL external routines.\n\
 REMARK Uncomment the next line when using PL/SQL external routines (Oracle8 only).\n\
 REMARK @@ %s.pke\n", _interface.name, _interface.name, _interface.name );
+          break;
 
-  for ( nr = 0; nr < NR_PLSQL_FILES; nr++ )
-    {
-      (void) fclose( pout[nr] );
+        default:
+          assert( nr >= 0 && nr < 4 );
+        }
+
+      (void) fclose( pout );
     }
 
   DBUG_LEAVE();
@@ -936,7 +914,7 @@ static
 void
 generate_c_parameters( FILE * pout, idl_function_t * fun )
 {
-  int nr;
+  dword_t nr;
   idl_parameter_t * parm;
 
   DBUG_ENTER( "generate_c_parameters" );
@@ -948,7 +926,7 @@ generate_c_parameters( FILE * pout, idl_function_t * fun )
   for ( nr = 0; nr < fun->num_parameters; nr++ ) {
     parm = fun->parameters[nr];
     (void) fprintf( pout, "  " );
-    print_variable_definition( pout, parm, C, nr );
+    print_variable_definition( pout, parm, C, (int)nr );
     (void) fprintf( pout, ";\n" );
   }
 
@@ -987,7 +965,7 @@ static
 void
 generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode )
 {
-  int nr;
+  dword_t nr;
   idl_parameter_t *parm;
 
   DBUG_ENTER( "generate_c_debug_info" );
@@ -1015,8 +993,7 @@ static
 void
 generate_c_function( FILE * pout, idl_function_t * fun )
 {
-  int nr, nr_actual_parameters;
-  int exec_sql_printed = 0;
+  dword_t nr;
 
   DBUG_ENTER( "generate_c_function" );
 
@@ -1033,7 +1010,7 @@ generate_c_function( FILE * pout, idl_function_t * fun )
 
     default:
       (void) fprintf( pout, "  " );
-      print_variable_definition( pout, &fun->return_value, C, fun->num_parameters );
+      print_variable_definition( pout, &fun->return_value, C, (int)fun->num_parameters );
       (void) fprintf( pout, ";\n" );
       break;
     }
@@ -1119,7 +1096,7 @@ static
 void
 declare_external_function( FILE * pout, idl_function_t * fun )
 {
-  int nr;
+  dword_t nr;
 
   DBUG_ENTER( "declare_external_function" );
 
@@ -1159,9 +1136,9 @@ declare_internal_function( FILE * pout, idl_function_t * fun )
 
 static
 void
-generate_c_source ( FILE * pout, const char *include_text )
+generate_c_source ( FILE * pout, /*@null@*/ const char *include_text )
 {
-  int fnr /* function number */, pnr /* parameter number */;
+  dword_t fnr /* function number */, pnr /* parameter number */;
   idl_function_t * fun;
 
   DBUG_ENTER( "generate_c_source" );
@@ -1209,7 +1186,6 @@ generate_c_source ( FILE * pout, const char *include_text )
     {
       fun = _interface.functions[fnr];
       (void) fprintf( pout, "%s { \"%s", ( fnr > 0 ? "," : " " ), fun->name );
-      /*print_function_signature( pout, fun );*/
       (void) fprintf( pout, "\",\n    %s%s, %ld, %ld, %s_parameters }\n", 
                       EPC_PREFIX,
                       fun->name,
@@ -1240,7 +1216,7 @@ static
 void
 generate_header( FILE *pout )
 {
-  int nr;
+  dword_t nr;
 
   DBUG_ENTER( "generate_header" );
 
@@ -1270,11 +1246,11 @@ generate_c( const char *include_text )
   DBUG_ENTER( "generate_c" );
 
   if ( print_external_function == 0 )
-    print_external_function = (include_text == NULL);
+    print_external_function = (include_text == NULL ? 1 : 0);
 
   /* Create header file */
 
-  (void) sprintf( filename, "%s.h", _interface.name );
+  (void) snprintf( filename, sizeof(filename), "%s.h", _interface.name );
   if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
     {
       goto open_error;
@@ -1286,7 +1262,7 @@ generate_c( const char *include_text )
       (void) fclose( pout );
     }
 
-  (void) sprintf( filename, "%s.c", _interface.name );
+  (void) snprintf( filename, sizeof(filename), "%s.c", _interface.name );
 
   if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
     {
