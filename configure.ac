@@ -38,13 +38,13 @@ if test "$LEX" != flex; then
 fi
 AC_PROG_YACC
 AM_PROG_CC_STDC
-## Disable shared library building on Windows
-## because using the Oracle import library results in linker warnings
-#case "$host" in
-#*-*-cygwin* | *-*-mingw* )
-#  AC_DISABLE_SHARED
-#  ;;
-#esac
+# Disable shared library building on Windows
+# because using the Oracle import library results in linker warnings
+case "$host" in
+*-*-cygwin* | *-*-mingw* )
+  AC_DISABLE_SHARED
+  ;;
+esac
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
