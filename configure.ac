@@ -18,7 +18,7 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[3.0.0],[g.paulissen@chello.nl])
+AC_INIT([epc],[3.1.0],[g.paulissen@chello.nl])
 
 # version check
 if test -f "$srcdir/VERSION"
