@@ -1,7 +1,7 @@
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
- * Creation date  : 25-JUN-1997
+ * Creation date	: 25-JUN-1997
  *
  * Created by 		: Huub van der Wouden
  *
@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/05/06 20:23:43  gpauliss
+ * Added support for longs
+ *
  * Revision 1.2  1998/02/19 16:42:06  gpauliss
  * Using dos filename conventions (8.3)
  *
@@ -32,9 +35,10 @@
 /* DATA TYPES */
 #define C_STRING 1
 #define C_INT 2
-#define C_FLOAT 3
-#define C_DOUBLE 4
-#define C_VOID 5
+#define C_LONG 3
+#define C_FLOAT 4
+#define C_DOUBLE 5
+#define C_VOID 6
 
 /* PARAMETER MODES */
 #define C_IN 101

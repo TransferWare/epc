@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.4  1998/05/06 20:24:03  gpauliss
+ * Added support for longs
+ *
  * Revision 1.3  1998/02/19 16:42:31  gpauliss
  * Using dos filename conventions (8.3)
  *
@@ -48,6 +51,7 @@ extern int yylex( void );
 %token <ival> VOID 
 %token <ival> STRING 
 %token <ival> INT 
+%token <ival> LONG
 %token <ival> FLOAT
 %token <ival> DOUBLE
 
@@ -84,6 +88,7 @@ function:
 datatype:
 		STRING
 	|	INT
+	|	LONG
 	|	FLOAT
 	|	DOUBLE
 	|	VOID

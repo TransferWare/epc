@@ -1,5 +1,5 @@
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
  * Creation date  : 25-JUN-1997
  *
@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.4  1998/05/06 20:23:43  gpauliss
+ * Added support for longs
+ *
  * Revision 1.3  1998/02/19 16:42:07  gpauliss
  * Using dos filename conventions (8.3)
  *
