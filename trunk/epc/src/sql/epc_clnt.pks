@@ -1,9 +1,13 @@
+/*
 REMARK
 REMARK  $Header$
 REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.8  2004/12/16 17:50:31  gpaulissen
+REMARK  REMARK blocks commented for PLDoc
+REMARK
 REMARK  Revision 1.7  2004/12/16 16:03:24  gpaulissen
 REMARK  Web services added
 REMARK
@@ -27,8 +31,9 @@ REMARK  New interface for epc
 REMARK
 REMARK
 REMARK
+*/
 
-create or replace package epc_clnt as
+create or replace package epc_clnt is
 /**
 --
 -- This package is used to implement the client side of RPC like functionality
@@ -51,6 +56,8 @@ create or replace package epc_clnt as
 --    a) epc_clnt.recv_response
 -- 5) Unmarshall the message
 --    a) epc_clnt.get_response_parameter (for all OUT and IN OUT parameters)
+--
+-- @headcom
 */
 
 subtype epc_key_subtype is binary_integer;

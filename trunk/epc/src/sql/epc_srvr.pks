@@ -1,9 +1,13 @@
+/*
 REMARK
 REMARK  $Header$
 REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.4  2004/12/16 17:50:31  gpaulissen
+REMARK  REMARK blocks commented for PLDoc
+REMARK
 REMARK  Revision 1.3  2004/10/15 13:53:40  gpaulissen
 REMARK  XML added
 REMARK
@@ -15,8 +19,9 @@ REMARK  New interface for epc
 REMARK
 REMARK
 REMARK
+*/
 
-create or replace package epc_srvr as
+create or replace package epc_srvr is
 /**
 --
 -- This package is used to implement the server side of RPC like functionality
@@ -36,6 +41,8 @@ create or replace package epc_srvr as
 -- 3) Process the message (no Oracle calls needed)
 -- 4) Send the response
 --    a) epc_srvr.send_response
+--
+-- @headcom
 */
 
 subtype epc_key_subtype is binary_integer;
