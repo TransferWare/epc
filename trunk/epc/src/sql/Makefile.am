@@ -15,13 +15,21 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-noinst_DATA = epc.pls epc.html
-
-epc.html: epc.pls
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
-	sed 's/-- =pod/=pod/g;s/-- =cut/=cut/g' $? | @PERL@ -S pod2html --outfile=$@
+noinst_DATA      = epc.pls epc.html epc.pls_run
 
 MOSTLYCLEANFILES = epc.html
 
-EXTRA_DIST           = Imakefile epc.html epc.pls
+CLEANFILES       = *.pls_run pod*.tmp
+
+EXTRA_DIST       = Imakefile epc.html epc.pls
+
+@SUFFIXES@: .pls .html .pls_run
+
+.pls.pls_run:
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+	@touch $@
+
+.pls.html:
+	sed 's/-- =pod/=pod/g;s/-- =cut/=cut/g' $? | @PERL@ -S pod2html --outfile=$@
+
 
