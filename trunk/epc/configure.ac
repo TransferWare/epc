@@ -66,8 +66,9 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
 AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile] dnl
-                [Makefile config/Makefile test/Makefile])dnl
-#AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile utils/Makefile])dnl
+                [Makefile config/Makefile test/Makefile] dnl
+                [examples/Makefile examples/demo/Makefile])dnl
+#AC_CONFIG_FILES([doc/Makefile utils/Makefile])dnl
 
 AC_OUTPUT
 
