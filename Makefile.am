@@ -21,15 +21,31 @@ MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 ACLOCAL			= aclocal -I $(ac_aux_dir)
 
+dist: doc
+
+generated_html_dirs     = doc/sql doc/c
+
+doc: $(generated_html_dirs)
+
 docdir			= $(top_builddir)/utils
 
-html:
+doc:
 	@echo Making $@ in $(docdir)
 	@cd $(docdir) && make $@
 
-dist-hook:
-	for file in $(AUX_DIST) $(AUX_DIST_EXTRA); do \
-	  cp $$file $(distdir)/$$file; \
-	done
+FORCE = force
 
-EXTRA_DIST              = VERSION
+force: ;
+
+PLDOC = pldoc.bat
+
+doc/sql: $(FORCE)
+	@mkdir -p $@
+	@$(PLDOC) -d $@ -doctitle EPC $(top_srcdir)/src/sql/*.pks
+
+DOXYGEN = doxygen
+
+doc/c: $(top_srcdir)/Doxyfile
+	@$(DOXYGEN) $<
+
+EXTRA_DIST              = VERSION $(generated_html_dirs)
