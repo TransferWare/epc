@@ -19,6 +19,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.11  1999/08/26 12:35:04  gpaulissen
+ * Added DBUG info
+ *
  * Revision 1.10  1998/08/02 15:17:40  gjp
  * Removed obsolete local variable fun in generate_header.
  *
@@ -512,15 +515,15 @@ static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype )
 	switch( datatype )
 	{
 	case C_INT:
-		fprintf( pout, "\tepc_debug( \"%s= %%d\\n\", (int)%s );\n", name, name ); break;
+		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%d\", (int)%s ) );\n", name, name ); break;
 	case C_LONG:
-		fprintf( pout, "\tepc_debug( \"%s= %%ld\\n\", (long)%s );\n", name, name ); break;
+		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%ld\", (long)%s ) );\n", name, name ); break;
 	case C_FLOAT:
-		fprintf( pout, "\tepc_debug( \"%s= %%f\\n\", (float)%s );\n", name, name ); break;
+		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%f\", (float)%s ) );\n", name, name ); break;
 	case C_DOUBLE:
-		fprintf( pout, "\tepc_debug( \"%s= %%lf\\n\", (double)%s );\n", name, name ); break;
+		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%lf\", (double)%s ) );\n", name, name ); break;
 	case C_STRING:
-		fprintf( pout, "\tepc_debug( \"%s= '%%s'\\n\", (char*)%s );\n", name, name ); break;
+		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= '%%s'\", (char*)%s ) );\n", name, name ); break;
 	default:
 		fprintf( stderr, "print_c_debug_info#Unknown datatype (%d) for %s\n", datatype, name ); break;
 	}

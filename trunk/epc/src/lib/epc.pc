@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.16  1999/08/26 12:34:54  gpaulissen
+ * Added DBUG info
+ *
  * Revision 1.15  1998/11/27 14:04:01  gjp
  * Added debugging.
  *
@@ -132,7 +135,7 @@ EXEC SQL INCLUDE sqlca;
 	short function_name_nl; /* null indicator */
 	EXEC SQL END DECLARE SECTION;
 
-	epc_debug( "entering receive_request\n" );
+	DBUG_ENTER( "receive_request" );
 
 	sqlca.sqlcode = 0;
 	call->sqlcode = 0;
@@ -177,16 +180,16 @@ EXEC SQL INCLUDE sqlca;
 			function_name.len = 0;
 		function_name.arr[function_name.len] = '\0';
 
-		retval = set_function( 
-				  call
-				, (char *) result_pipe.arr
-				, (char *) interface_name.arr
-				, (char *) function_name.arr
-				);
-		if ( retval != OK )
-			goto end_of_receive_request;
+		strncpy( call->result_pipe, (char*)result_pipe.arr, sizeof(call->result_pipe) );
+		call->result_pipe[sizeof(call->result_pipe)-1] = 0;
+		strncpy( call->interface_name, (char*)interface_name.arr, sizeof(call->interface_name) );
+		call->interface_name[sizeof(call->interface_name)-1] = 0;
+		strncpy( call->function_name, (char*)function_name.arr, sizeof(call->function_name) );
+		call->function_name[sizeof(call->function_name)-1] = 0;
 
+#ifndef DBUG_OFF
 		print_call( call );
+#endif
 		goto end_of_receive_request;
 		break;
 
@@ -202,10 +205,10 @@ receive_error:
 
 end_of_receive_request:
 	call->epc_error = retval;
-	epc_debug( "receive_request#sql code: %ld\n", (long)call->sqlcode );
-	epc_debug( "receive_request#epc error: %ld\n", (long)call->epc_error );
-	epc_debug( "leaving receive_request\n" );
-	return retval;
+	DBUG_PRINT( "output", 
+		    ("sql code: %ld; epc error: %ld", 
+		     (long)call->sqlcode, (long)call->epc_error) );
+	DBUG_RETURN( retval );
 }
 
 
@@ -239,8 +242,8 @@ EXEC SQL INCLUDE sqlca;
 	const char *result_pipe = call->result_pipe;
 	EXEC SQL END DECLARE SECTION;
 
-	epc_debug( "entering send_result\n" );
-	epc_debug( "sending result through pipe %s\n", result_pipe );
+	DBUG_ENTER( "send_result" );
+	DBUG_PRINT( "input", ("sending result through pipe %s", result_pipe ) );
 
 	sqlca.sqlcode = 0;
 		
@@ -293,10 +296,10 @@ send_error:
 	retval = SEND_ERROR;
 
 end_of_send_result:
-	epc_debug( "send_result#sql code: %ld\n", (long)call->sqlcode );
-	epc_debug( "send_result#retval: %ld\n", (long)retval );
-	epc_debug( "leaving send_result\n" );
-	return retval;
+	DBUG_PRINT( "output", 
+		    ("sql code: %ld; retval: %ld", 
+		     (long)call->sqlcode, (long)retval) );
+	DBUG_RETURN( retval );
 
 #ifdef retval
 #undef retval
@@ -367,7 +370,7 @@ EXEC SQL INCLUDE sqlca;
 
 	static int first_time = 1;
 
-	epc_debug( "entering epc_handle_request\n" );
+	DBUG_ENTER( "epc_handle_request" );
 
 	if ( first_time && request_pipe != NULL ) {
 
@@ -408,11 +411,10 @@ EXEC SQL INCLUDE sqlca;
 		goto error;
 
 		/* call->epc_error == OK */
-	epc_debug( "leaving epc_handle_request\n" );
-	return	0;
+	DBUG_RETURN( 0 );
 
 error:
-	fprintf( stderr, "epc_handle_request#epc status: %s\n", get_error_str( call->epc_error ) );
+	DBUG_PRINT( "info", ( "epc status: %s", get_error_str( call->epc_error ) ) );
 
 	switch( call->epc_error )
 	{
@@ -427,7 +429,7 @@ error:
 		break;
 	}
 
-	fprintf( stderr, "epc_handle_request#sql code: %ld\n", (long)call->sqlcode );
+	DBUG_PRINT( "info", ( "sql code: %ld", (long)call->sqlcode ) );
 
 	switch( call->sqlcode )
 	{
@@ -442,16 +444,15 @@ error:
 		break;
 	}
 
-	epc_debug( "leaving epc_handle_request\n" );
-	return 0;
+	DBUG_RETURN( 0 );
 
 end_of_epc_handle_request:
 
-	epc_debug( "epc_handle_request#epc status: %s\n", get_error_str( call->epc_error ) );
-	epc_debug( "epc_handle_request#sql code: %ld\n", (long)call->sqlcode );
+	DBUG_PRINT( "output", 
+		    ("sql code: %ld; epc status: %s", 
+		     (long)call->sqlcode, get_error_str( call->epc_error ) ) );
 
-	epc_debug( "leaving epc_handle_request\n" );
-	return -1;
+	DBUG_RETURN( -1 );
 }
 
  
@@ -477,14 +478,11 @@ EXEC SQL INCLUDE sqlca;
 	EXEC SQL END DECLARE SECTION;
 	epc_call_t call = CALL_INIT;
 
-	epc_debug( "entering epc_handle_requests\n" );
+	DBUG_ENTER( "epc_handle_requests" );
 
 	/* log on to database */
 	EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_requests;
 	EXEC SQL CONNECT :logon;
-
-	printf( "epc listener started - logon %s, pipe %s\n\n", 
-		logon, (epc_info->pipe?epc_info->pipe:"(null)") );
 
 	for( call.sqlcode = 0; ; call.sqlcode = 0 ) 
 	{ 
@@ -494,21 +492,21 @@ EXEC SQL INCLUDE sqlca;
 
 end_of_epc_handle_requests:
 
-	epc_debug( "epc_handle_requests#epc status: %s\n", get_error_str( call.epc_error ) );
-	epc_debug( "epc_handle_requests#sql code: %ld\n", (long)call.sqlcode );
+	DBUG_PRINT( "output", 
+		    ("sql code: %ld; epc status: %s", 
+		     (long)call.sqlcode, get_error_str( call.epc_error ) ) );
 
 	EXEC SQL WHENEVER SQLERROR CONTINUE;
 	EXEC SQL COMMIT WORK RELEASE;
 
-	epc_debug( "leaving epc_handle_requests\n" );
-	return call.epc_error;
+	DBUG_RETURN( call.epc_error );
 }
 
 epc_info_t *epc_init( void )
 {
 	epc_info_t *epc_info = NULL;
 
-	epc_debug( "Entering epc_init\n" );
+	DBUG_ENTER( "epc_init" );
 
 	epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
 
@@ -520,14 +518,12 @@ epc_info_t *epc_init( void )
 		epc_info->interfaces = NULL;
 	}
 
-	epc_debug( "Leaving epc_init\n" );
-
-	return epc_info;
+	DBUG_RETURN( epc_info );
 }
 
 void epc_done( epc_info_t **epc_info )
 {
-	epc_debug( "Entering epc_done\n" );
+	DBUG_ENTER( "epc_done" );
 
 	if ( *epc_info != NULL )
 	{
@@ -541,14 +537,14 @@ void epc_done( epc_info_t **epc_info )
 		*epc_info = NULL;
 	}
 
-	epc_debug( "Leaving epc_done\n" );
+	DBUG_VOID_RETURN;
 }
 
 epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
 {
 	epc_error_t status = OK;
 
-	epc_debug( "Entering epc_set_logon\n" );
+	DBUG_ENTER( "epc_set_logon" );
 
 	if ( epc_info == NULL )
 	{
@@ -570,16 +566,16 @@ epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
 			strcpy( epc_info->logon, logon );
 	}
 
-	epc_debug( "Leaving epc_set_logon; status: %d\n", (int)status );
+	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
 
-	return status;
+	DBUG_RETURN( status );
 }
 
 epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
 {
 	epc_error_t status = OK;
 
-	epc_debug( "Entering epc_set_pipe\n" );
+	DBUG_ENTER( "epc_set_pipe" );
 
 	if ( epc_info == NULL )
 	{
@@ -601,16 +597,16 @@ epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
 			strcpy( epc_info->pipe, pipe );
 	}
 
-	epc_debug( "Leaving epc_set_pipe; status: %d\n", (int)status );
+	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
 
-	return status;
+	DBUG_RETURN( status );
 }
 
 epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
 {
 	epc_error_t status = OK;
 
-	epc_debug( "Entering epc_add_interface\n" );
+	DBUG_ENTER( "epc_add_interface" );
 
 	if ( epc_info == NULL )
 	{
@@ -637,8 +633,7 @@ epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface 
 		}
 	}
 
-	epc_debug( "Leaving epc_add_interface; status: %d\n", (int)status );
+	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
 
-	return status;
+	DBUG_RETURN( status );
 }
-
