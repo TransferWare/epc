@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.17  2004/02/22 17:14:14  gpaulissen
+ * bug id 891761
+ *
  * Revision 1.16  2002/10/31 22:21:20  gpaulissen
  * Release 3.0.0a
  *
@@ -250,34 +253,7 @@ static
 char *
 version( void )
 {
-  enum keyword {
-    NAME_KW,
-    REVISION_KW
-  } step_no;
-  static char str[2][100] = { "$Name$", "$Revision$" };
-  char *instr[2] = { "Name: ", "Revision: " };
-  char *found = NULL;
-
-  for ( step_no = NAME_KW;
-	( found == NULL || *found == '\0' ) && step_no <= REVISION_KW;
-	step_no++ )
-    {
-      found = strstr( str[step_no], instr[step_no] );
-
-      if ( found != NULL )
-	{
-	  char *space;
-
-	  found += strlen( instr[step_no] );
-
-	  space = strstr( found, " " );
-
-	  if ( space != NULL )
-	    *space = '\0';
-	}
-    }
-
-  return found != NULL ? found : "";
+  return PACKAGE_VERSION;
 }
 
 static

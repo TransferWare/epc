@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.4  2004/02/22 17:14:14  gpaulissen
+ * bug id 891761
+ *
  * Revision 1.3  2003/06/08 16:28:20  gpaulissen
  * GNU build system for ts_dbug
  *
@@ -102,34 +105,7 @@ static
 char *
 version( void )
 {
-  enum keyword {
-    NAME_KW,
-    REVISION_KW
-  } step_no;
-  static const char str[2][100] = { "$Name$", "$Revision$" };
-  char *instr[2] = { "Name: ", "Revision: " };
-  char *found = NULL;
-
-  for ( step_no = NAME_KW;
-        ( found == NULL || *found == '\0' ) && step_no <= REVISION_KW;
-        step_no++ )
-    {
-      found = strstr( str[step_no], instr[step_no] );
-
-      if ( found != NULL )
-        {
-          char *space;
-
-          found += strlen( instr[step_no] );
-
-          space = strstr( found, " " );
-
-          if ( space != NULL )
-            *space = '\0';
-        }
-    }
-
-  return found != NULL ? found : "";
+  return PACKAGE_VERSION;
 }
 
 
@@ -253,7 +229,7 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
     {
     case 6:
     case 5:
-      ret = epc_disconnect();
+      ret = epc_disconnect( epc_info );
       /* no break */
 
     case 4:
