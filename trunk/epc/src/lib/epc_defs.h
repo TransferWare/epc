@@ -1,9 +1,9 @@
-#ifndef _EPC_TYPES_H_
-#define _EPC_TYPES_H_
+#ifndef EPC_TYPES_H
+#define EPC_TYPES_H
 
-#define MAX_PIPE_NAME_LEN	128  /* must be a multiple of 4 */
+#define MAX_PIPE_NAME_LEN       128  /* must be a multiple of 4 */
 
-#include "idl_defs.h"  /* constants used by idl and epc */
+#include <idl_defs.h> /* constants used by idl and epc */
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * make sure all structs are double word (4 bytes) aligned 
@@ -13,13 +13,13 @@ typedef struct {
   idl_mode_t mode;
   idl_type_t type;
   union {
-    int	ival;
-    long	lval;
-    double	dval;
-    float	fval;
-    char *	sval;
+    int ival;
+    long        lval;
+    double      dval;
+    float       fval;
+    char *      sval;
   } uval;
-  void *value;	/* points to one of the union members above */
+  void *value;  /* points to one of the union members above */
 } epc_parameter_t;
 
 

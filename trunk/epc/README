@@ -1,0 +1,16 @@
+-*- indented-text -*-
+
+This is `EPC', the External Procedure Call toolkit. It is used to invoke
+external procedures from Oracle PL/SQL.
+
+EPC itself consists of the library, libts_epc.la, an IDL compiler and
+the headers installed in `/usr/local/include/ulib'.
+
+Installation is described in INSTALL. Installation using imake is
+described in README.imake.
+
+The documentation is doc/epcman.doc or doc/epcman.html.
+
+Local Variables:
+fill-column: 72
+End:

@@ -1,17 +1,23 @@
+#ifndef IDL_KWRD_H
+#define IDL_KWRD_H
+
 /*
- * Filename   		: $RCSfile$
+ * Filename             : $RCSfile$
  *
  * Creation date  : 25-JUN-1997
  *
- * Created by 		: Huub van der Wouden
+ * Created by           : Huub van der Wouden
  *
- * Company    		: Transfer Solutions bv
+ * Company              : Transfer Solutions bv
  *
  * --- Description -------------------------------------------------------
  * Keyword definitions for IDL parsing and code generation
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.6  2002/10/28 14:53:04  gpaulissen
+ * Using GNU standards.
+ *
  * Revision 1.5  1998/07/27 15:21:09  gert-jan
  * First release.
  *
@@ -29,10 +35,7 @@
  *
  */
 
-#ifndef _IDL_KWRD_H_
-#define _IDL_KWRD_H_
-
-#include "idl_defs.h"
+#include <idl_defs.h>
 
 #define NUM_LANGUAGES 2
 #define C 1
@@ -41,14 +44,14 @@
 typedef dword_t idl_lang_t;
 
 typedef struct {
-	idl_lang_t language;
-	char *syntax;		/* part of the return value/parameter syntax */
-	char *constant_name;	/* Name of constant */
+  idl_lang_t language;
+  char *syntax;         /* part of the return value/parameter syntax */
+  char *constant_name;  /* Name of constant */
 } mapping;
 
 typedef struct {
-	dword_t key;
-	mapping mappings[NUM_LANGUAGES];
+  dword_t key;
+  mapping mappings[NUM_LANGUAGES];
 } keyword;
 
 extern keyword keywords[];

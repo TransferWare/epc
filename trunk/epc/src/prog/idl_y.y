@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.10  2002/10/28 14:53:05  gpaulissen
+ * Using GNU standards.
+ *
  * Revision 1.9  2001/01/24 16:29:10  gpaulissen
  * Release 2.0.0
  *
@@ -45,11 +48,17 @@
  */
 
 #include <stdio.h>
+
 #include "idl_defs.h"
 #include "idl_prs.h"
 
-extern void yyerror( char *s );
-extern int yylex( void );
+extern
+void
+yyerror( char *s );
+
+extern
+int
+yylex( void );
 
 %}
 
