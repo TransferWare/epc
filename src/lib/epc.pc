@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.36  2004/03/07 10:43:06  gpaulissen
+ * oneway bug with parameters solved
+ *
  * Revision 1.35  2004/02/23 15:59:28  gpaulissen
  * sqlca is a member of epc_info structure
  *
@@ -601,6 +604,7 @@ handle_interrupt(char *epc_info_ptr)
   DBUG_ENTER( "handle_interrupt" );
 
   DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "info", ( "pipe: %s", (pipe == NULL ? "null" : pipe) ) );
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
 
@@ -608,7 +612,7 @@ handle_interrupt(char *epc_info_ptr)
   EXEC SQL CONTEXT USE :interrupt_context;
 
   EXEC SQL EXECUTE
-    BEGIN
+  BEGIN
     epc.interrupt_request_get_header( :pipe );
   END;
   END-EXEC;
@@ -678,13 +682,13 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
   (void) osnsui(&handle, handle_interrupt, (char *)epc_info);
 
   EXEC SQL EXECUTE
-    BEGIN
+  BEGIN
     epc.request_get_header
     ( 
-     :msg_info:msg_info_nl
-     , :interface_name:interface_name_nl
-     , :function_name:function_name_nl
-     );
+      :msg_info:msg_info_nl
+    , :interface_name:interface_name_nl
+    , :function_name:function_name_nl
+    );
   EXCEPTION
     WHEN epc.msg_timed_out
     THEN
@@ -811,12 +815,12 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
     EXEC SQL CONTEXT USE DEFAULT;
 
     EXEC SQL EXECUTE
-      BEGIN
+    BEGIN
       IF ( :request_pipe:request_pipe_nl IS NOT NULL )
       THEN
-      epc.set_request_pipe( :request_pipe );
-    END IF;
-    epc.purge( epc.get_request_pipe );
+        epc.set_request_pipe( :request_pipe );
+      END IF;
+      epc.purge( epc.get_request_pipe );
     END;
     END-EXEC;
 
