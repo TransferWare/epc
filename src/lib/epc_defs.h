@@ -20,19 +20,11 @@ typedef struct {
   void *data;
 } epc_parameter_t;
 
-typedef struct {
-  char msg_info[MAX_MSG_INFO_LEN];
-  char interface_name[MAX_INTERFACE_NAME_LEN];
-  char function_name[MAX_FUNC_NAME_LEN];
-  long epc_error; /* result of call */
-  long sqlcode;   /* sql error code */
-} epc_call_t;
-
-#define CALL_INIT { "", "", "", OK, 0L }
+struct epc_call;
 
 typedef struct epc_function {
   char *name;
-  void (*function)( epc_call_t *, struct epc_function * );
+  void (*function)( struct epc_call *, struct epc_function * );
   dword_t oneway;
   dword_t num_parameters;
   epc_parameter_t *parameters;
@@ -56,6 +48,16 @@ typedef struct {
   epc_interface_t **interfaces; /* pointing to a list of interfaces */
   struct sqlca *sqlca; /* SQLCA area */
 } epc_info_t;
+
+typedef struct epc_call {
+  char msg_info[MAX_MSG_INFO_LEN];
+  epc_interface_t *interface;
+  epc_function_t *function;
+  long epc_error; /* result of call */
+  long sqlcode;   /* sql error code */
+} epc_call_t;
+
+#define CALL_INIT { "", NULL, NULL, OK, 0L }
 
 typedef enum {
   OK = 0,
