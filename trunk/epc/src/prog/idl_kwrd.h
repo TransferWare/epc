@@ -12,12 +12,11 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.2  1998/02/03 10:04:36  gpauliss
+ * - Changed mapping structure for clearer code generation.
+ *
  * Revision 1.1  1998/01/25 15:20:21  gpauliss
  * Initial revision
- *
- * Revision 1.1  1997/07/10 14:33:58  hgwouden
- * Initial revision
- *
  *
  */
 
@@ -32,7 +31,8 @@
 
 typedef struct {
 	int language;
-	char * value;
+	char *syntax;			/* part of the return value/parameter syntax */
+	char *constant_name;	/* Name of constant */
 } mapping;
 
 typedef struct {
@@ -40,22 +40,6 @@ typedef struct {
 	mapping mappings[NUM_LANGUAGES];
 } keyword;
 
-keyword keywords[] = {
-	{ C_VOID, 	  { C, 		"void" } },
-	{ C_INT,		{ { C, 		"int" },
-					  { PLSQL, "number" } } },
-	{ C_FLOAT,	{ { C,		"float" },
-					  { PLSQL, "number" } } },
-	{ C_DOUBLE,	{ { C,		"double" },
-					  { PLSQL, "number" } } },
-	{ C_STRING,	{ { C,		"char *" },
-					  { PLSQL, "varchar2" } } },
-	{ C_IN,		{ { C,		"" },
-					  { PLSQL, "in" } } },
-	{ C_OUT,		{ { C,		"*" },
-					  { PLSQL, "out" } } },
-	{ C_INOUT,	{ { C,		"*" },
-					  { PLSQL, "in out" } } },
-};
+extern keyword keywords[];
 
 #endif
