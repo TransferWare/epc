@@ -13,7 +13,8 @@
  * make sure all structs are double word (4 bytes) aligned 
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-typedef struct {
+typedef struct epc_parameter {
+  char name[MAX_PARM_NAME_LEN];
   idl_mode_t mode;
   idl_type_t type;
   dword_t size;
@@ -24,13 +25,13 @@ struct epc_call;
 
 typedef struct epc_function {
   char *name;
-  void (*function)( struct epc_call *, struct epc_function * );
+  void (*function)( struct epc_function * );
   dword_t oneway;
   dword_t num_parameters;
   epc_parameter_t *parameters;
 } epc_function_t;
 
-typedef struct {
+typedef struct epc_interface {
   char *name;
   dword_t num_functions;
   epc_function_t *functions;
@@ -39,7 +40,7 @@ typedef struct {
 /*
  * epc_info_t: general info for running an EPC server
  */
-typedef struct {
+typedef struct epc_info {
   char *logon;
   dword_t connected;
   char *pipe;
@@ -80,12 +81,13 @@ typedef enum {
   /* illegal values in message */
   DATATYPE_UNKNOWN = -8,
   PARAMETER_MODE_UNKNOWN = -9,
-  FUNCTION_UNKNOWN = -10,
-  INTERFACE_UNKNOWN = -11,
+  PARAMETER_UNKNOWN = -10,
+  FUNCTION_UNKNOWN = -11,
+  INTERFACE_UNKNOWN = -12,
 
   /* connect/disconnect problems */
-  CONNECT_ERROR = -12,
-  DISCONNECT_ERROR = -13
+  CONNECT_ERROR = -13,
+  DISCONNECT_ERROR = -14
 } epc_error_t;
 
 #endif

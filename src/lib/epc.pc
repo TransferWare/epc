@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.42  2004/10/15 13:53:40  gpaulissen
+ * XML added
+ *
  * Revision 1.41  2004/05/21 15:07:51  gpaulissen
  * SOAP messages
  *
@@ -204,18 +207,18 @@
 
 EXEC SQL INCLUDE sqlca;
 
+/* skip irrelevant includes during PRO*C precompilation */
+#ifndef ORA_PROC
+#include <epc_dbg.h>  /* trace and debug functionality */
+#include <epc_xml.h>
+#include <epc.h>
+#endif
+
 EXEC SQL BEGIN DECLARE SECTION;
 
 EXEC SQL INCLUDE "epc_defs.h";  /* epc-specific type definitions */
 
 EXEC SQL END DECLARE SECTION;
-
-/* skip irrelevant includes during PRO*C precompilation */
-#ifndef ORA_PROC
-#include <epc_dbg.h>  /* trace and debug functionality */
-#include <epc.h>
-#include <epc_xml.h>
-#endif
 
 /* include dmalloc/ulib as last one */
 #if defined(HASDMALLOC) && HASDMALLOC != 0
@@ -268,9 +271,9 @@ osncui( dword_t handle );
 
 /*
   GJP 22-02-2004
-  In order to be able to interrupt epc.get_request_header()
+  In order to be able to interrupt epc_srvr.recv_request()
   a different session (and a different context) is used.
-  In a interrupt handler epc.interrupt_get_request_header()
+  In a interrupt handler epc_srvr.send_request_interrupt()
   is invoked.
 */
 
@@ -605,23 +608,20 @@ static
 void
 handle_interrupt(epc_info_t *epc_info)
 {
-  EXEC SQL BEGIN DECLARE SECTION;
-  const char *pipe = epc_info->pipe;
-  EXEC SQL END DECLARE SECTION;
-
   DBUG_ENTER( "handle_interrupt" );
 
   DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
-  DBUG_PRINT( "info", ( "pipe: %s", (pipe == NULL ? "null" : pipe) ) );
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
 
   /* Use the interrupt context */
   EXEC SQL CONTEXT USE :interrupt_context;
 
+  DBUG_PRINT( "info", ( "context switched" ) );
+
   EXEC SQL EXECUTE
   BEGIN
-    epc.interrupt_request_get_header( :pipe );
+    epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
   END;
   END-EXEC;
 
@@ -664,8 +664,12 @@ print_call ( epc_call_t * call )
   DBUG_PRINT( "input", ( "msg info: '%s'", call->msg_info) );
   DBUG_PRINT( "input", 
               ( "interface: '%s'; function: '%s'", 
-                (call->interface_name ? call->interface_name->name : "(null)"), 
-                (call->function_name ? call->function_name->name : "(null)") ) );
+                (call != NULL && call->interface != NULL && call->interface->name != NULL 
+                 ? call->interface->name
+                 : "(null)"), 
+                (call != NULL && call->function != NULL && call->function->name != NULL
+                 ? call->function->name 
+                 : "(null)") ) );
   DBUG_PRINT( "input", ( "status: %ld; SQL code: %ld", (long)call->epc_error, (long)call->sqlcode) );
   DBUG_LEAVE();
 }
@@ -701,18 +705,16 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
   const int receive_error = RECEIVE_ERROR;
   EXEC SQL END DECLARE SECTION;
   struct xmlctx *xmlctx = NULL;
-  epc_xml_ctx_t epc_xml_ctx = { epc_info, call };
+  epc_xml_ctx_t epc_xml_ctx = { epc_info, call, 0 };
 
   DBUG_ENTER( "receive_request" );
 
   DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
-  DBUG_PRINT( "info", ( "dbug_level: %d", dbug_level ) );
-
   sqlca.sqlcode = 0;
   call->sqlcode = 0;
 
-  /* All exceptions should be handled withing the PL/SQL hence 
+  /* All exceptions should be handled within the PL/SQL block hence 
      this default. */
   EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
@@ -722,42 +724,17 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
   (void) osnsui(&handle, handle_interrupt, epc_info);
 
   EXEC SQL EXECUTE
-  DECLARE
-    retval          pls_integer;
-    v_msg_protocol  pls_integer;
-    v_msg_seq       pls_integer;
-    v_result_pipe   epc.pipe_name_t := null;
+  declare
   begin
-    retval := dbms_pipe.receive_message( epc.get_request_pipe );
-    if retval = 0 /* OK */
-    then
-      dbms_pipe.unpack_message( v_msg_protocol );
-      dbms_pipe.unpack_message( v_msg_seq );
-      dbms_pipe.unpack_message( :msg_request:msg_request_nl );
-      dbms_pipe.unpack_message( v_result_pipe );
-      /* strip the space as a result of to_char(..., '000X') */
-      :msg_info:msg_info_nl := ltrim(to_char(v_msg_seq, '000X')) || v_result_pipe;
-    elsif retval = 1
-    then
-      raise epc.msg_timed_out;
-    elsif retval = 2
-    then
-      raise epc.msg_too_big;
-    elsif retval = 3
-    then
-      raise epc.msg_interrupted;
-    else
-      /* ?? */
-      raise value_error;
-    end if;
+    epc_srvr.recv_request(epc_srvr.get_epc_key, :msg_request:msg_request_nl, :msg_info:msg_info_nl);
   exception
-    when epc.msg_timed_out
+    when epc.e_msg_timed_out
     then
       :retval := :msg_timed_out;
-    when epc.msg_too_big
+    when epc.e_msg_too_big
     then
       :retval := :msg_too_big;
-    when epc.msg_interrupted
+    when epc.e_msg_interrupted
     then
       :retval := :msg_interrupted;
     when others
@@ -768,22 +745,34 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
 
   (void) osncui(handle);
 
+  DBUG_PRINT( "info", ( "retval: %ld", retval ) );
+
   if ( retval == OK )
     {
       if ( msg_request_nl == -1 )
         msg_request.len = 0;
+
+      assert(msg_request.len < sizeof(msg_request.arr)); /* arr including terminating zero */
+
       msg_request.arr[msg_request.len] = '\0';
+
+      if ( msg_info_nl == -1 )
+        msg_info.len = 0;
+
+      assert(msg_info.len < sizeof(msg_info.arr)); /* arr including terminating zero */
+
+      msg_info.arr[msg_info.len] = '\0';
+
+      epc_xml_init( &xmlctx, &epc_xml_ctx );
+      epc_xml_parse( xmlctx, (const char*)msg_request.arr, msg_request.len );
+      epc_xml_done( &xmlctx );
+
+      (void) strncpy( call->msg_info, (char*)msg_info.arr, sizeof(call->msg_info) );
+      call->msg_info[sizeof(call->msg_info)-1] = 0;
 
 #ifndef DBUG_OFF
       print_call( call );
 #endif
-
-      epc_xml_init( &xmlctx, epc_info );
-      epc_xml_parse( xmlctx, (const char*)msg_request.arr, msg_request.len );
-      epc_xml_done( &xml_ctx );
-
-      (void) strncpy( call->msg_info, (char*)msg_info.arr, sizeof(call->msg_info) );
-      call->msg_info[sizeof(call->msg_info)-1] = 0;
     }
 
   call->epc_error = retval;
@@ -819,6 +808,8 @@ get_error_str( epc_error_t err )
       return "DATATYPE_UNKNOWN";
     case FUNCTION_UNKNOWN:
       return "FUNCTION_UNKNOWN";
+    case PARAMETER_UNKNOWN:
+      return "PARAMETER_UNKNOWN";
     case INTERFACE_UNKNOWN:
       return "INTERFACE_UNKNOWN";
     case PARAMETER_MODE_UNKNOWN:
@@ -856,30 +847,130 @@ epc_cmp_interface( const void *par1, const void *par2 )
 
 static
 epc_error_t
-epc_exec_call( epc_info_t * epc_info, epc_call_t * call )
+epc_exec_call( epc_info_t * epc_info, epc_call_t * epc_call )
 {
   DBUG_ENTER( "epc_exec_call" );
 
-  call->epc_error = OK;
+  epc_call->epc_error = OK;
 
-  if ( call->function == NULL )
+  if ( epc_call->function != NULL )
     {
-      /* function not found */
-      fprintf( stderr, "ERROR: function '%s' not found\n", call->function_name );
-      call->epc_error = FUNCTION_UNKNOWN;
-    }
-  else
-    {
-      (*call->function->function) ( call );
+      EXEC SQL BEGIN DECLARE SECTION;
+      varchar msg_info[MAX_MSG_INFO_LEN] = { 0, "" };     /* client-specific pipe for results  */
+      short msg_info_nl; /* null indicator */
+      varchar msg_response[MAX_STR_VAL_LEN] = { 0, "" };
+      short msg_response_nl; /* null indicator */
+      EXEC SQL END DECLARE SECTION;
+      dword_t nr;
+
+      (*epc_call->function->function) ( epc_call->function );
+
+      sqlca.sqlcode = 0;
+      epc_call->sqlcode = 0;
+
+      (void) snprintf((char*)msg_response.arr, 
+                      sizeof(msg_response.arr), 
+                      "<?xml version='1.0' encoding='UTF-8'?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' \
+xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' \
+xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' \
+xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
+<SOAP-ENV:Body><%sResponse>", epc_call->function->name);
+
+      for ( nr = 0; nr < epc_call->function->num_parameters; nr++ )
+        {
+          if ( epc_call->function->parameters[nr].mode != C_IN )
+            {
+              (void) snprintf((char*)msg_response.arr, 
+                              sizeof(msg_response.arr), 
+                              "%s<%s>", 
+                              (char*)msg_response.arr, 
+                              epc_call->function->parameters[nr].name);
+
+              switch(epc_call->function->parameters[nr].type)
+                {
+                case C_STRING:
+                  (void) snprintf((char*)msg_response.arr, 
+                                  sizeof(msg_response.arr), 
+                                  "%s%s", 
+                                  (char*)msg_response.arr, 
+                                  (char*)epc_call->function->parameters[nr].data);
+                  break;
+      
+                case C_INT:
+                  (void) snprintf((char*)msg_response.arr, 
+                                  sizeof(msg_response.arr), 
+                                  "%s%d", 
+                                  (char*)msg_response.arr, 
+                                  *((int*)epc_call->function->parameters[nr].data));
+                  break;
+
+                case C_LONG:
+                  (void) snprintf((char*)msg_response.arr, 
+                                  sizeof(msg_response.arr), 
+                                  "%s%ld", 
+                                  (char*)msg_response.arr, 
+                                  *((long*)epc_call->function->parameters[nr].data));
+                  break;
+
+                case C_FLOAT:
+                  (void) snprintf((char*)msg_response.arr, 
+                                  sizeof(msg_response.arr), 
+                                  "%s%f",
+                                  (char*)msg_response.arr, 
+                                  (double)(*((float*)epc_call->function->parameters[nr].data)));
+                  break;
+                  
+                case C_DOUBLE:
+                  (void) snprintf((char*)msg_response.arr, 
+                                  sizeof(msg_response.arr), 
+                                  "%s%f", 
+                                  (char*)msg_response.arr, 
+                                  *((double*)epc_call->function->parameters[nr].data));
+                  break;
+                          
+                case C_VOID: /* impossible */
+                  assert( epc_call->function->parameters[nr].type != C_VOID );
+                  break;
+
+                default: 
+                  assert( epc_call->function->parameters[nr].type >= C_DATATYPE_MIN &&
+                          epc_call->function->parameters[nr].type <= C_DATATYPE_MAX );
+
+                }
+
+              (void) snprintf((char*)msg_response.arr, sizeof(msg_response.arr), "%s</%s>", 
+                              (char*)msg_response.arr, epc_call->function->parameters[nr].name);
+            }
+        }
+
+      (void) snprintf((char*)msg_response.arr, sizeof(msg_response.arr), 
+                      "%s</%sResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>", 
+                      (char*)msg_response.arr, epc_call->function->name);
+
+      msg_response.len = strlen((char*)msg_response.arr);
+
+      DBUG_PRINT( "info", ( "msg_response: %s", (char*)msg_response.arr ) );
+
+      EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+
+      EXEC SQL CONTEXT USE DEFAULT;
+
+      EXEC SQL EXECUTE
+      declare
+      begin
+        epc_srvr.send_response(epc_srvr.get_epc_key, :msg_response:msg_response_nl, :msg_info:msg_info_nl);
+      end;
+      END-EXEC;
     }
 
   DBUG_PRINT( "output", 
               ( "sql code: %ld; epc error: %ld", 
-                (long)call->sqlcode, (long)call->epc_error ) );
+                (long)epc_call->sqlcode, (long)epc_call->epc_error ) );
 
   DBUG_LEAVE();
 
-  return call->epc_error;
+  return epc_call->epc_error;
 }
 
 /* =====================================================================
@@ -916,13 +1007,18 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
     EXEC SQL CONTEXT USE DEFAULT;
 
     EXEC SQL EXECUTE
-    BEGIN
-      IF ( :request_pipe:request_pipe_nl IS NOT NULL )
-      THEN
-        epc.set_request_pipe( :request_pipe );
-      END IF;
-      epc.purge( epc.get_request_pipe );
-    END;
+    declare
+      l_pipe_name epc.pipe_name_subtype;
+      l_epc_key epc_srvr.epc_key_subtype;
+    begin
+      l_epc_key := epc_srvr.register;
+      if ( :request_pipe:request_pipe_nl is not null )
+      then
+        epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
+      end if;
+      epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
+      dbms_pipe.purge( l_pipe_name );
+    end;
     END-EXEC;
 
     epc_info->first_time = 0;
@@ -1189,7 +1285,7 @@ epc_connect( epc_info_t *epc_info )
     printf( "Connected to database....\n" );
     epc_info->connected = TRUE;
 
-    set_signal_handlers( 0 );
+    /*set_signal_handlers( 0 );*/
 
     fflush( stdout ); /* flush because of DBUG package */
   }
@@ -1210,7 +1306,7 @@ epc_disconnect( epc_info_t *epc_info )
 
   DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
 
-  reset_signal_handlers( 0 );
+  /*reset_signal_handlers( 0 );*/
 
   if ( epc_info->connected == TRUE ) {
 

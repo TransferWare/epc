@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.5  2004/10/15 13:53:40  gpaulissen
+REMARK  XML added
+REMARK
 REMARK  Revision 1.4  2004/05/21 15:04:34  gpaulissen
 REMARK  Eerste implementatie
 REMARK
@@ -204,7 +207,9 @@ procedure set_request_parameter
 -- 
 -- @param p_epc_key      Connection info can be retrieved by the key
 -- @param p_method_name  The method name
--- @param p_oneway       Must we wait on a response? (0 = NO)
+-- @param p_oneway       Is the procedure call a oneway call,
+                         i.e. do we NOT wait on a response? 
+                         0 means we wait on a response.
 */
 procedure send_request
 ( 

@@ -1,21 +1,18 @@
 #ifndef EPC_XML_H
 #define EPC_XML_H 1
 
-#include <oratypes.h>
-#include <oraxml.h>
-
-/* string defined in both oratypes.h and in idl_defs.h */
-#define string_defined 1
-#include "epc_defs.h"
-
+/* This structure contains the context while parsing an XML document */
 typedef struct {
-  epc_info_t *epc_info;
-  epc_call_t *epc_call;
+  struct epc_info *epc_info;
+  struct epc_call *epc_call;
+  long num_parameters; /* number of in or in/out parameters parsed yet */
 } epc_xml_ctx_t;
+
+struct xmlctx;
 
 extern
 unsigned int
-epc_xml_init( struct xmlctx **xmlctx, void *ctx );
+epc_xml_init( struct xmlctx **xmlctx, epc_xml_ctx_t *epc_xml_ctx );
 
 extern
 unsigned int

@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.31  2004/10/15 13:53:40  gpaulissen
+ * XML added
+ *
  * Revision 1.30  2004/03/28 15:32:25  gpaulissen
  * Generate C code only.
  *
@@ -174,62 +177,62 @@ static char *package_type_str[] = { "", "_recv", "_send" };
 #define NR_PACKAGE_TYPE (sizeof(package_type_str)/sizeof(package_type_str[0]))
 
 /*
-|| Global variables
+|| Global variables. See epc.pks
 */
 keyword keywords[] = {
   { C_VOID,     
     {   
       { C,      "void",         "C_VOID" },
-      { PLSQL,  "",             "epc.c_void" }
+      { PLSQL,  "??",             "??" }
     }
   },
   { C_INT,      
     {   
       { C,      "idl_int_t",    "C_INT" },
-      { PLSQL,  "epc.int_t",    "epc.c_int" }
+      { PLSQL,  "epc.int_subtype",    "epc.data_type_int" }
     }
   },
   { C_LONG,     
     {   
       { C,      "idl_long_t",   "C_LONG" },
-      { PLSQL,  "epc.long_t",   "epc.c_long" }
+      { PLSQL,  "epc.long_subtype",   "epc.data_type_long" }
     }
   },
   { C_FLOAT,    
     {   
       { C,      "idl_float_t",  "C_FLOAT" },
-      { PLSQL,  "epc.float_t",  "epc.c_float" }
+      { PLSQL,  "epc.float_subtype",  "epc.data_type_float" }
     }
   },
   { C_DOUBLE,   
     {   
       { C,      "idl_double_t", "C_DOUBLE" },
-      { PLSQL,  "epc.double_t", "epc.c_double" }
+      { PLSQL,  "epc.double_subtype", "epc.data_type_double" }
     }
   },
   { C_STRING,   
     {
       /* string is a typedef */
       { C,      "idl_string_t", "C_STRING" },
-      { PLSQL,  "VARCHAR2",     "epc.c_string" }
+      { PLSQL,  "epc.string_subtype",     "epc.data_type_string" }
     }
   },
   { C_IN,
     {
       { C,      "",             "C_IN" },
-      { PLSQL,  "IN",           "epc.c_in" }
+      { PLSQL,  "IN",           "??epc.c_in" }
     }
   },
   { C_OUT,
     {
       { C,      "*",            "C_OUT" },
-      { PLSQL,  "OUT",          "epc.c_out" } 
+      { PLSQL,  "OUT",          "??epc.c_out" } 
     }
   },
   { C_INOUT,
     {
       { C,      "*",            "C_INOUT" },
-      { PLSQL,  "IN OUT",       "epc.c_inout" }
+      { PLSQL,  "IN OUT",       "??epc.c_inout" }
     }
   }
 };
@@ -342,7 +345,7 @@ add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
 
 static
 mapping *
-get_mapping( idl_type_t type, idl_lang_t language )
+get_mapping( const idl_type_t type, const idl_lang_t language )
 {
   int i, j;
   const int num_keywords = sizeof(keywords) / sizeof(keyword);
@@ -367,7 +370,7 @@ get_mapping( idl_type_t type, idl_lang_t language )
 
 static
 char *
-get_syntax( idl_type_t type, idl_lang_t language )
+get_syntax( const idl_type_t type, const idl_lang_t language )
 {
   return get_mapping( type, language )->syntax;
 }
@@ -670,7 +673,7 @@ generate_plsql_function( FILE * pout, idl_function_t * fun, const int package_ty
 
   if ( package_type == STUB && fun->return_value.datatype != C_VOID )
     {
-      (void) fprintf( pout, " RETURN %s", get_syntax( fun->return_value.datatype, PLSQL ) );
+      (void) fprintf( pout, "\n  RETURN %s", get_syntax( fun->return_value.datatype, PLSQL ) );
     }
 
   DBUG_LEAVE();
@@ -804,7 +807,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
   if ( exists_plsql_function( fun, package_type ) != 0 )
     {
       generate_plsql_function( pout, fun, package_type );
-      (void) fprintf( pout, " IS\n" );
+      (void) fprintf( pout, "\n  IS\n" );
 
       /* RETURN VARIABLE */
       if ( package_type == STUB && fun->return_value.datatype != C_VOID )
@@ -820,33 +823,55 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
         {
         case STUB:
           /* SETUP OF CLIENT SIDE FUNCTION CALL */
-          (void) fprintf( pout, "    epc.request_set_header( '%s', '", 
-                          _interface.name );
-          print_function_signature( pout, fun );
-          (void) fprintf( pout, "', %ld );\n", fun->oneway );
+          (void) fprintf( pout, 
+                          "    epc_clnt.new_request(g_epc_key);\n" );
 
           for ( nr = 0; nr < fun->num_parameters; nr++ ) {
             parm = fun->parameters[nr];
 
             if ( parm->mode != C_OUT )
-              (void) fprintf( pout, "    epc.request_set_parameter( %s );\n", parm->name );
+              (void) fprintf( pout, 
+                              "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s);\n", 
+                              parm->name, 
+                              get_constant_name(parm->datatype, PLSQL), 
+                              parm->name );
           }
 
-          (void) fprintf( pout, "    epc.request_perform_routine( %ld );\n", fun->oneway );
+          (void) fprintf( pout, 
+                          "    epc_clnt.send_request(g_epc_key, '%s', %ld);\n",
+                          fun->name,
+                          fun->oneway );
+
+          if ( fun->oneway == 0 )
+            {
+              (void) fprintf( pout, 
+                              "    epc_clnt.recv_response(g_epc_key);\n" );
+            }
 
           /* GET THE RESULTS */
           for ( nr = 0; nr < fun->num_parameters; nr++ ) 
             {
               parm = fun->parameters[nr];
-              if ( parm->mode != C_IN ) {
-                (void) fprintf( pout, "    epc.receive_get_parameter( %s );\n", parm->name );
-              }
+              if ( parm->mode != C_IN ) 
+                {
+                  (void) fprintf( pout, 
+                                  "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n", 
+                                  parm->name, 
+                                  get_constant_name(parm->datatype, PLSQL), 
+                                  parm->name );
+                }
             }
 
           if ( fun->return_value.datatype != C_VOID ) 
             {
-              (void) fprintf( pout, "    epc.receive_get_parameter( %s );\n", fun->return_value.name );
-              (void) fprintf( pout, "    RETURN %s;\n", fun->return_value.name );
+              (void) fprintf( pout, 
+                              "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n", 
+                              fun->return_value.name,
+                              get_constant_name(fun->return_value.datatype, PLSQL),
+                              fun->return_value.name );
+              (void) fprintf( pout, 
+                              "    RETURN %s;\n", 
+                              fun->return_value.name );
             }
           break;
 
@@ -1031,7 +1056,8 @@ generate_plsql_body( FILE * pout )
       if ( !do_print )
         continue;
 
-      (void) fprintf( pout, "CREATE OR REPLACE PACKAGE BODY %s%s IS\n",
+      (void) fprintf( pout, "CREATE OR REPLACE PACKAGE BODY %s%s IS\n\n\
+  g_epc_key epc_clnt.epc_key_subtype;\n\n",
                       _interface.name, package_type_str[package_type] );
       (void) fprintf( pout, "\n" );
 
@@ -1040,7 +1066,9 @@ generate_plsql_body( FILE * pout )
           generate_plsql_function_body( pout, _interface.functions[nr], package_type );
         }
 
-      (void) fprintf( pout, "END;\n" );
+      (void) fprintf( pout, "BEGIN\n\
+  g_epc_key := epc_clnt.register('%s');\n\
+END;\n", _interface.name );
       (void) fprintf( pout, "/\n\n" );
     }
 
@@ -1244,7 +1272,7 @@ generate_c_function( FILE * pout, idl_function_t * fun )
 
   DBUG_ENTER( "generate_c_function" );
 
-  (void) fprintf( pout, "void %s%s ( epc_call_t *call, epc_function_t *function )\n", EPC_PREFIX, fun->name );
+  (void) fprintf( pout, "void %s%s ( epc_function_t *function )\n", EPC_PREFIX, fun->name );
   (void) fprintf( pout, "{\n" );
 
 #if GENERATE_PROC != 0
@@ -1519,7 +1547,7 @@ declare_internal_function( FILE * pout, idl_function_t * fun )
 {
   DBUG_ENTER( "declare_internal_function" );
 
-  (void) fprintf( pout, "extern void %s%s( epc_call_t *call, epc_function_t *function );\n", EPC_PREFIX, fun->name );
+  (void) fprintf( pout, "extern void %s%s( epc_function_t *function );\n", EPC_PREFIX, fun->name );
 
   DBUG_LEAVE();
 }
@@ -1576,12 +1604,14 @@ EXEC SQL END DECLARE SECTION;\n" );
       (void) fprintf( pout, "\nstatic epc_parameter_t %s_parameters[] = {\n", fun->name );
       for ( pnr = 0; pnr < fun->num_parameters; pnr++ )
         {
-          (void) fprintf( pout, "  { %s, %s, %ld, NULL },\n", 
+          (void) fprintf( pout, "  { \"%s\", %s, %s, %ld, NULL },\n",
+                          fun->parameters[pnr]->name,
                           get_constant_name( fun->parameters[pnr]->mode, C ), 
                           get_constant_name( fun->parameters[pnr]->datatype, C ),
                           fun->parameters[pnr]->size );
         }
-      (void) fprintf( pout, "  { %s, %s, %ld, NULL }\n", 
+      (void) fprintf( pout, "  { \"%s\", %s, %s, %ld, NULL }\n", 
+                      fun->return_value.name,
                       get_constant_name( fun->return_value.mode, C ), 
                       get_constant_name( fun->return_value.datatype, C ),
                       fun->return_value.size );
@@ -1593,8 +1623,8 @@ EXEC SQL END DECLARE SECTION;\n" );
   for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) 
     {
       fun = _interface.functions[fnr];
-      (void) fprintf( pout, "%s { \"", ( fnr > 0 ? "," : " " ) );
-      print_function_signature( pout, fun );
+      (void) fprintf( pout, "%s { \"%s", ( fnr > 0 ? "," : " " ), fun->name );
+      /*print_function_signature( pout, fun );*/
       (void) fprintf( pout, "\",\n    %s%s, %ld, %ld, %s_parameters }\n", 
                       EPC_PREFIX,
                       fun->name,
