@@ -44,11 +44,15 @@ case "$host" in
   AC_MSG_CHECKING(for the Windows PRO*C library)
   for dir in $acx_cv_oracle_home/precomp/lib/msvc $acx_cv_oracle_home
   do
-    for file in orasql8.lib sqllib18.lib
+    for base in orasql8 sqllib18
     do
       # Windows: ignores case
-      PROCLIB=`find $dir \( -name \*.lib -o -name \*.LIB \) | grep -i $file 2>/dev/null`
-      test -z "$PROCLIB" || break
+      PROCLIB=`find $dir \( -name \*.lib -o -name \*.LIB \) | grep -i $base. 2>/dev/null`
+      if test -n "$PROCLIB"
+      then
+        PROCLIB="-L`dirname $PROCLIB` -l$base"
+        break;
+      fi
     done
     test -z "$PROCLIB" || break
   done

@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "epc.h"
+#include <epc.h>
 #include "epctest.h"
 #include "str.h"
 
