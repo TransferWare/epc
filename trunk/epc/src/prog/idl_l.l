@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.22  2004/12/28 12:18:10  gpaulissen
+ * Test on Amazon
+ *
  * Revision 1.21  2004/12/20 13:29:16  gpaulissen
  * make lint
  *
@@ -222,7 +225,7 @@ end_comment     "*/"
 start_include   "%{"
 end_include     "%}"
 
-namespace       ["][^"]+["]
+string          "char"[ \t]*"*"|"string"
 
 %%
 
@@ -253,7 +256,10 @@ namespace       ["][^"]+["]
 <NORMAL>"[inout]"			{ DBUG_PRINT( "info", ("<NORMAL>\"[inout]\" '%s'", yytext));
                                           yylval.mval = C_INOUT; return INOUT; }
 
-<NORMAL>"char"[ \t]*"*"			{ DBUG_PRINT( "info", ("<NORMAL>\"char\"[ \\t]*\"*\" '%s'", yytext));
+<NORMAL>"xml"				{ DBUG_PRINT( "info", ("<NORMAL>\"xml\" '%s'", yytext));
+                                          yylval.tval.datatype = C_XML; yylval.tval.size = MAX_STR_VAL_LEN;
+                                          return XML; }
+<NORMAL>{string}			{ DBUG_PRINT( "info", ("<NORMAL>{string} '%s'", yytext));
                                           yylval.tval.datatype = C_STRING; yylval.tval.size = MAX_STR_VAL_LEN;
                                           return STRING; }
 <NORMAL>"char["[0-9]+"]"		{ DBUG_PRINT( "info", ("<NORMAL>\"char[\"[0-9]+\"]\" '%s'", yytext));
@@ -274,12 +280,6 @@ namespace       ["][^"]+["]
 
 <NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT( "info", ("<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
                                           yylval.sval = strdup((const char*)yytext); return NAME; }
-
-<NORMAL>{namespace}			{ DBUG_PRINT( "info", ("<NORMAL>{namespace} '%s'", yytext));
-					  /* strip " at begin and end */
-                                          yylval.sval = strdup((const char*)yytext+1); 
-					  yylval.sval[strlen(yylval.sval)-1] = '\0';
-					  return NAMESPACE; }
 
 <NORMAL>[{}(),;]			{ DBUG_PRINT( "info", ("<NORMAL>[{}(),;] '%s'", yytext));
                                           return yytext[0]; }

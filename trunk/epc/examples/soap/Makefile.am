@@ -19,14 +19,16 @@ MAINTAINERCLEANFILES = Makefile.in
 
 GENERATED_FILES      = qotd.c qotd.h qotd.c qotd.pkb \
                        qotd.pke qotd.pks qotd.pls
+GENERATED_FILES     += aws.c aws.h aws.c aws.pkb \
+                       aws.pke aws.pks aws.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
-CLEANFILES           = qotd.pls_run
+CLEANFILES           = qotd.pls_run aws.pls_run
 
 EXTRA_DIST           = 
 
-noinst_DATA          = qotd.pls_run
+noinst_DATA          = qotd.pls_run aws.pls_run
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 

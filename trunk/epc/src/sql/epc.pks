@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.6  2004/12/28 12:18:11  gpaulissen
+REMARK  Test on Amazon
+REMARK
 REMARK  Revision 1.5  2004/12/16 18:43:08  gpaulissen
 REMARK  generated HTML added
 REMARK
@@ -37,6 +40,7 @@ create or replace package epc is
 
 /* see $EPC_HOME/src/lib/idl_defs.h */
 subtype interface_name_subtype is varchar2(32);
+subtype namespace_subtype is varchar2(128);
 subtype method_name_subtype is varchar2(512);
 subtype parameter_name_subtype is varchar2(32);
 subtype data_type_subtype is pls_integer;
@@ -47,7 +51,9 @@ subtype int_subtype is integer;
 subtype long_subtype is integer;
 subtype float_subtype is float;
 subtype double_subtype is double precision;
-subtype string_subtype is varchar2(4096);
+subtype string_subtype is varchar2(32767);
+subtype xml_subtype is varchar2(32767);
+
 
 /* 
 || EXCEPTIONS
@@ -61,6 +67,12 @@ e_msg_too_big        exception;
 e_msg_interrupted    exception;
 
 /*ORA-06558 is raised if the message buffer overflows (currently 4096 bytes)*/
+
+/**
+-- Get the xml data type constant.
+*/
+function data_type_xml
+return data_type_subtype;
 
 /**
 -- Get the string data type constant.

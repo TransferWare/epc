@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.10  2004/12/28 12:18:11  gpaulissen
+REMARK  Test on Amazon
+REMARK
 REMARK  Revision 1.9  2004/12/16 18:43:08  gpaulissen
 REMARK  generated HTML added
 REMARK
@@ -35,6 +38,8 @@ REMARK
 REMARK
 REMARK
 */
+
+set define off
 
 create or replace package epc_clnt is
 /**
@@ -209,6 +214,40 @@ procedure set_response_recv_timeout
 );
 
 /**
+-- Set the namespace.
+--
+-- The namespace for an interface is initially equal to the interface name.
+-- For Web services this may need to be overridden.
+-- The namespace is added as an attribute to the method element, e.g.
+-- &lt;METHOD xmlns="NAMESPACE"&gt;
+-- 
+-- @param p_epc_key    The key
+-- @param p_namespace  The new namespace
+*/
+procedure set_namespace
+(
+  p_epc_key in epc_key_subtype
+, p_namespace in varchar2
+);
+
+/**
+-- Set the inline namespace.
+--
+-- The inline namespace for an interface is the prefix for the method name.
+-- The default inline namespace is ns1. For Web services this may need to be overridden.
+-- The namespace is added as an attribute to the method element, e.g.
+-- &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
+-- 
+-- @param p_epc_key           The key
+-- @param p_inline_namespace  The new inline namespace
+*/
+procedure set_inline_namespace
+(
+  p_epc_key in epc_key_subtype
+, p_inline_namespace in varchar2
+);
+
+/**
 -- Start a new request
 -- 
 -- @param p_epc_key    The key
@@ -316,3 +355,5 @@ procedure get_response_parameter
 
 end epc_clnt;
 /
+
+set define on

@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.13  2004/12/28 12:18:11  gpaulissen
+ * Test on Amazon
+ *
  * Revision 1.12  2004/12/20 13:29:16  gpaulissen
  * make lint
  *
@@ -83,7 +86,6 @@ typedef /*@only@ */ struct
 typedef struct
 {
   /*@unique@ */ char name[MAX_INTERFACE_NAME_LEN];
-  /*@unique@ */ char namespace[MAX_NAMESPACE_LEN];
   dword_t num_functions;
   idl_function_t *functions[MAX_FUNCTIONS];
 } idl_interface_t;
@@ -91,15 +93,12 @@ typedef struct
 
 extern void set_interface (char *name);
 
-/*@-exportlocal@*/
-extern void set_namespace (char *namespace);
-
 extern void add_function (char *name, idl_type_t datatype, const int oneway);
 
 extern
   void
 add_parameter (char *name, idl_mode_t mode, idl_type_t datatype,
-	       dword_t size);
+               dword_t size);
 
 extern void generate_plsql (void);
 
