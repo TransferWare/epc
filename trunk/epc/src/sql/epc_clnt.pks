@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.12  2005/01/03 12:59:04  gpaulissen
+REMARK  Release 4.4.0
+REMARK
 REMARK  Revision 1.11  2005/01/03 12:56:27  gpaulissen
 REMARK  Release 4.4.0
 REMARK
@@ -357,4 +360,3 @@ procedure get_response_parameter
 end epc_clnt;
 /
 
-set define on
