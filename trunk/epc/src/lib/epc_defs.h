@@ -8,7 +8,7 @@
 #define MAX_FUNCTIONS		100
 #define MAX_PARAMETERS		20
 
-#include "idl_const.h"  /* constants used by idl and epc */
+#include "idl_defs.h"  /* constants used by idl and epc */
 
 typedef struct {
 	int mode;

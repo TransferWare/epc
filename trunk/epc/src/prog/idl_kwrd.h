@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/02/19 16:42:07  gpauliss
+ * Using dos filename conventions (8.3)
+ *
  * Revision 1.2  1998/02/03 10:04:36  gpauliss
  * - Changed mapping structure for clearer code generation.
  *
@@ -20,10 +23,10 @@
  *
  */
 
-#ifndef _IDL_KEYWORDS_H_
-#define _IDL_KEYWORDS_H_
+#ifndef _IDL_KWRD_H_
+#define _IDL_KWRD_H_
 
-#include "idl_const.h"
+#include "idl_defs.h"
 
 #define NUM_LANGUAGES 2
 #define C 1

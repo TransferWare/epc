@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.2  1998/02/19 16:42:09  gpauliss
+ * Using dos filename conventions (8.3)
+ *
  * Revision 1.1  1998/01/25 15:20:22  gpauliss
  * Initial revision
  *
@@ -24,8 +27,8 @@
  *
  */
 
-#ifndef _IDL_PARSE_H
-#define _IDL_PARSE_H
+#ifndef _IDL_PRS_H
+#define _IDL_PRS_H
 
 #define MAXLEN 31
 

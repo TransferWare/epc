@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  1998/02/19 16:41:06  gpauliss
+ * Using dos filename conventions (8.3)
+ *
  * Revision 1.4  1998/02/17 20:26:59  gpauliss
  * Changed EPC interface
  *
@@ -44,14 +47,14 @@
 
 EXEC SQL BEGIN DECLARE SECTION;
 
-EXEC SQL INCLUDE "epc_types.h";  /* epc-specific type definitions */
+EXEC SQL INCLUDE "epc_defs.h";  /* epc-specific type definitions */
 
 EXEC SQL END DECLARE SECTION;
 
 	/* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
 #include "epc_call.h"   /* server-side marshalling and call mechanism */
-#include "epc_debug.h"  /* trace and debug functionality */
+#include "epc_dbg.h"  /* trace and debug functionality */
 #endif
 
 /* =====================================================================

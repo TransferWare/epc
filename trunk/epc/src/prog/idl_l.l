@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/02/19 16:42:30  gpauliss
+ * Using dos filename conventions (8.3)
+ *
  * Revision 1.2  1998/02/03 10:06:21  gpauliss
  * - Added strdup because it is not an ANSI C function.
  * - String parameter (char *) may contain whitespace instead of only one space.
@@ -25,9 +28,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "y.tab.h"
-#include "idl_const.h"
-#include "idl_parse.h"
+#include "idl_y.h"
+#include "idl_defs.h"
+#include "idl_prs.h"
 
 int lineno = 1;
 
