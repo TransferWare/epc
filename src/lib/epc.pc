@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/02/03 12:55:56  gpauliss
+ * Modified EPC_handle_requests for return type and wrong fprintf.
+ *
  * Revision 1.2  1998/02/03 09:59:22  gpauliss
  * - Free up memory when needed
  * - Changed message protocol
@@ -527,7 +530,7 @@ get_error_str( error_t err )
  *
  *======================================================================*/
  
-void
+error_t
 EPC_handle_requests( char * request_pipe )
 /* ----------------------------------------------------------------------
  * Handles all requests received over the specified database pipe:
@@ -564,9 +567,6 @@ EPC_handle_requests( char * request_pipe )
 				fprintf( stderr, "ERROR in receiving message: '%s'\n", get_error_str( retval ) );
 				break;
 		}
-
-		if ( retval != OK )
-			fprintf( "EPC_handle_requests; retval = %d\n", retval );
 
 		free_call( &call );
 	}
