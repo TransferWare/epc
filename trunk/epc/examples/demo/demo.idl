@@ -1,5 +1,5 @@
 interface demo
 {
-   void system ( [in] char * cmd );
+   void system ( [in] char* cmd );
 }
 
