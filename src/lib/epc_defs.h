@@ -31,7 +31,7 @@ typedef struct {
   long sqlcode;   /* sql error code */
 } epc_call_t;
 
-#define CALL_INIT { "", "", "", OK, NULL }
+#define CALL_INIT { "", "", "", OK, 0L }
 
 typedef struct {
   char *name;

@@ -15,106 +15,28 @@ dnl
 # Look for the Oracle PRO*C compiler. 
 # Sets/updates the following variables:
 # - PROC          the full path name of the PRO*C compiler
-# - PROCLIB       its associated library to
-# - CPPFLAGS      the directory of the PRO*C prototype header is added
-# - PROCFLAGS     PRO*C compiler flags
-# - PROCINCLUDES  PRO*C compiler includes
-
-# Note: PROC command line options
-# 
-# Pro*C/C++: Release 8.1.7.0.0 - Production on Zo Dec 1 18:04:36 2002
-# 
-# (c) Copyright 2000 Oracle Corporation.  All rights reserved.
-# 
-# Standaardwaarden voor optie komen uit: C:\oracle\ora81\precomp\admin\pcscfg.cfg
-# 
-# Naam van optie Huidige waarde Beschrijving
-# -------------------------------------------------------------------------------
-# auto_connect   nee            Automatische verbinding met ops$ account
-#                               toestaan.
-# char_map       charz          Toewijzing van tekenarrays en -strings.
-# close_on_commitnee            Sluit alle cursors bij COMMIT.
-# code           ansi_c         Het type code dat moet worden gegenereerd.
-# comp_charset   multi_byte     Het tekensettype dat de C-compiler ondersteunt.
-# config         default        Het systeemconfiguratiebestand met een ander
-#                               overschrijven.
-# cpp_suffix     *geen*         De standaard C++ bestandsnaamsuffix
-#                               overschrijven.
-# dbms           native         v6/v7/v8 compatibiliteitsmodus.
-# def_sqlcode    nee            Een '#define SQLCODE sqlca.sqlcode' macro
-#                               genereren.
-# define         WIN32_LEAN_AND_Een preprocessorsymbool definiÙren.
-# duration       transaction    Vastpintijdsduur voor objecten in de cache
-#                               instellen.
-# dynamic        oracle         Dynamische SQL-semantiek van Oracle of ANSI
-#                               opgeven.
-# errors         ja             Of er foutberichten naar de terminal worden
-#                               verzonden.
-# errtype        *geen*         Naam van het lijstbestand voor fouten in
-#                               INTYPE-bestanden.
-# fips           none           FIPS-vlagmarkering van gebruik dat niet voldoet
-#                               aan ANSI.
-# header         *geen*         Bestandsextensie opgeven voor reeds
-#                               gecompileerde kopteksten.
-# hold_cursor    nee            Het blokkeren van cursors in de cursorcache
-#                               beheren.
-# iname          *geen*         De naam van het invoerbestand.
-# include        *geen*         Directorypaden voor ingesloten bestanden.
-# intype         *geen*         De naam van het invoerbestand voor
-#                               type-informatie.
-# lines          nee            #line-instructies aan de gegenereerde code
-#                               toevoegen.
-# lname          *geen*         Standaardnaam lijstbestand overschrijven.
-# ltype          none           De hoeveelheid gegevens die in het lijstbestand
-#                               is gegenereerd.
-# maxliteral     1024           Maximumlengte van een gegenereerde
-#                               tekstconstante in een string.
-# maxopencursors 10             Maximumaantal open cursors in cache.
-# mode           oracle         Code in overeenstemming met Oracle- of
-#                               ANSI-regels.
-# nls_char       *geen*         Tekenvariabelen voor een bepaalde taal opgeven.
-# nls_local      nee            Uitvoering van NLS-tekensemantiek besturen.
-# objects        ja             Objecttypen ondersteunen.
-# oname          *geen*         De naam van het uitvoerbestand.
-# oraca          nee            Het gebruik van ORACA besturen.
-# pagelen        80             De paginalengte van het lijstbestand.
-# parse          none           Ontleding van niet-SQL-code besturen.
-# prefetch       1              Het aantal rijen in de prefetch-buffer als de
-#                               cursortijd OPEN is.
-# release_cursor nee            Vrijgave van cursors uit de cursorcache
-#                               besturen.
-# select_error   ja             Vlagmarkering van selectiefouten besturen.
-# sqlcheck       syntax         Hoeveelheid compilatieijd voor SQL-controle.
-# sys_include    *geen*         Directory voor systeemkoptekstbestanden.
-# threads        nee            Duidt op een MultiThreaded-toepassing.
-# type_code      oracle         Oracle- of ANSI-typecodes voor dynamische SQL
-#                               gebruiken.
-# unsafe_null    nee            Een NULL-ophaalbewerking zonder
-#                               indicatorvariabele toestaan.
-# userid         *geen*         Een gebruikersnaam/wachtwoord [@dbname]
-#                               verbindingsstring.
-# varchar        nee            Gebruik van impliciete VARCHAR-structuren
-#                               toestaan.
-# version        recent         Welke versie van een object moet worden
-#                               teruggegeven.
-# 
+# - PROCLIB       its associated library (-L<libclntsh directory> -lclntsh for Unix)
+# - PROCFLAGS     PRO*C compiler flags.
+#                 The -D.. flags of CPPFLAGS are converted into define=..
+# - PROCINCLUDES  PRO*C compiler includes including directory
+#                 of the PRO*C prototype header.
+#                 The -I flags of CPPFLAGS are converted into include=..
 
 #AC_DEFUN([ACX_PROG_PROC],
 #[AC_REQUIRE(AC_CANONICAL_HOST)dnl
 
 AC_DEFUN([ACX_PROG_PROC],
-[AC_ARG_VAR([PROC], [Oracle PRO*C compiler command])dnl
-AC_ARG_VAR([USERID], [Oracle connect string])dnl
-AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)])dnl
+[AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)])dnl
 
 acx_cv_oracle_home=`dirname $PROC`
 acx_cv_oracle_home=`dirname $acx_cv_oracle_home`
 
+AC_MSG_CHECKING(for the full path name of the PRO*C library)
+# set -xv
+PROCLIB=
 case "$host" in
 *-*-cygwin* | *-*-mingw* )
-  AC_MSG_CHECKING(for the full path name of the PRO*C library)
-  # set -xv
-  PROCLIB=
+  # Windows
   for dir in $acx_cv_oracle_home/precomp/lib/msvc $acx_cv_oracle_home
   do
     for file in orasql8.lib sqllib18.lib
@@ -125,13 +47,29 @@ case "$host" in
     done
     test -z "$PROCLIB" || break
   done
-  LIBS="$PROCLIB $LIBS"
-  AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library not found)])
-  AC_MSG_RESULT($PROCLIB)
   ;;
-* ) 
+* )
+  # Unix
+  for dir in $acx_cv_oracle_home/lib $acx_cv_oracle_home
+  do
+    for base in clntsh
+    do
+      PROCLIB=`find $dir -name lib$base.\* 2>/dev/null`
+      if test -n "$PROCLIB"
+      then
+        PROCLIB="-L`dirname $PROCLIB` -l$base"
+        break;
+      fi
+    done
+    test -z "$PROCLIB" || break
+  done
   ;;
 esac
+acx_save_LIBS="$LIBS"
+LIBS="$PROCLIB $LIBS"
+AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library not found)])
+LIBS=$acx_save_LIBS
+AC_MSG_RESULT($PROCLIB)
 AC_SUBST(PROCLIB)
 
 AC_MSG_CHECKING(for the PRO*C prototype header)
@@ -146,21 +84,26 @@ do
   done
   test -z "$acx_cv_protohdr" || break
 done
+
+acx_save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I`dirname $acx_cv_protohdr` $CPPFLAGS"
 acx_cv_protohdr=`basename $acx_cv_protohdr`
-AC_MSG_RESULT($acx_cv_protohdr)
 AC_CHECK_HEADERS([sqlcpr.h sqlproto.h], [break], [AC_MSG_ERROR(PRO*C prototype header not found)])
-for f in $CPPFLAGS
+AC_MSG_RESULT($acx_cv_protohdr)
+
+set dummy $CPPFLAGS
+for f
 do
   case $f in
-  "-I*" )
-    PROCINCLUDES="$PROCINCLUDES `echo $f | sed -e 's/-I/INCLUDE=/g'`"
+  -I*)
+    PROCINCLUDES="$PROCINCLUDES `echo $f | sed -e 's/-I/include=/g'`"
     ;;
-  "-D*" )
-    PROCFLAGS="$PROCFLAGS `echo $f | sed -e 's/-D/DEFINE=/g'`"
+  -D*)
+    PROCFLAGS="$PROCFLAGS `echo $f | sed -e 's/-D/define=/g'`"
     ;;
   esac
 done
+CPPFLAGS="$acx_save_CPPFLAGS"
 AC_SUBST(PROCINCLUDES)
 PROCFLAGS="$PROCFLAGS code=ansi_c parse=none sqlcheck=full userid=\$(USERID)"
 AC_SUBST(PROCFLAGS)
