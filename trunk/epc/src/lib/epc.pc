@@ -12,6 +12,10 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.24  2000/08/14 13:47:39  gpaulissen
+ * * Added -v command line option for version info.
+ * * Updated build support.
+ *
  * Revision 1.23  2000/07/07 12:14:55  gpaulissen
  * Release 1.6.3
  *
@@ -80,6 +84,9 @@
  *
  *
  */
+
+#include "config.h"
+
 	/* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
 #include <stdio.h>
@@ -105,6 +112,13 @@ EXEC SQL END DECLARE SECTION;
 #include "epc_call.h"   /* server-side marshalling and call mechanism */
 #include "epc_dbg.h"  /* trace and debug functionality */
 #include "epc.h"
+#endif
+
+/* include dmalloc/ulib as last one */
+#if defined(HASDMALLOC) && HASDMALLOC != 0
+#include <dmalloc.h>
+#elif defined(HASULIB) && HASULIB != 0
+#include <u_alloc.h>
 #endif
 
 /* =====================================================================
