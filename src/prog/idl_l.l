@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.18  2004/04/06 11:19:09  gpaulissen
+ * \r added as character to ignore
+ *
  * Revision 1.17  2004/02/22 17:14:14  gpaulissen
  * bug id 891761
  *
@@ -238,6 +241,8 @@ end_include     "%}"
 <NORMAL>[ \t]+			        { DBUG_PRINT( "info", ("<NORMAL>[ \\t]+ '%s'", yytext)); }
 
 <NORMAL>\n			        { DBUG_PRINT( "info", ("<NORMAL>\\n")); lineno++; }
+
+<NORMAL>\r				;
 
 <NORMAL>.				yyerror("invalid character");
 
