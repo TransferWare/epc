@@ -1,0 +1,5 @@
+interface demo
+{
+   void system ( [in] char * cmd );
+}
+
