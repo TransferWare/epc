@@ -21,6 +21,28 @@
 #define epc_abort ts_epc_abort
 #define epc_disconnect ts_epc_disconnect
 
+typedef void (*epc_handle_interrupt_t)(epc_info_t*);
+
+extern
+void
+epc_set_signal_handlers( const int idx );
+
+extern
+void
+epc_reset_signal_handlers( const int idx );
+
+extern
+void
+epc_call_print ( epc_call_t * call );
+
+extern
+int
+epc_get_signo(void);
+
+extern
+void
+epc_set_handle_interrupt(epc_handle_interrupt_t handle_interrupt, epc_info_t *epc_info);
+
 extern
 epc_error_t
 epc_main( int argc, char **argv, epc_interface_t * );
@@ -51,11 +73,16 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface );
 
 extern
 long
-epc_handle_request( epc_info_t *epc_info, epc_call_t *call );
+epc_handle_request( epc_info_t *epc_info, 
+                    epc_call_t *call,
+                    epc_error_t (*recv_request)( epc_info_t *, epc_call_t * ),
+                    epc_error_t (*send_response)( epc_info_t *, epc_call_t * ));
 
 extern
 epc_error_t
-epc_handle_requests( epc_info_t *epc_info );
+epc_handle_requests( epc_info_t *epc_info,
+                     epc_error_t (*recv_request)( epc_info_t *, epc_call_t * ),
+                     epc_error_t (*send_response)( epc_info_t *, epc_call_t * ) );
  
 extern
 void

@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.11  2004/10/18 15:17:33  gpaulissen
+ * XML enabling of EPC
+ *
  * Revision 1.10  2004/05/21 15:07:51  gpaulissen
  * SOAP messages
  *
@@ -56,7 +59,7 @@
 /* The function name might also be the function signature */
 #define MAX_FUNC_NAME_LEN       512  /* must be a multiple of 4 */
 #define MAX_INTERFACE_NAME_LEN  32   /* must be a multiple of 4 */
-#define MAX_STR_VAL_LEN         3999 /* excluding terminating zero */
+#define MAX_STR_VAL_LEN         4000 /* excluding terminating zero */
 #define MAX_FUNCTIONS           100
 #define MAX_PARAMETERS          20
 

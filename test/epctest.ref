@@ -19,9 +19,9 @@ io_par3: 13478.54754
 proc04
 i_par1: 232367.44
 io_par2: 1234.99999
-result: 33.4500007629395
-io_par2: 33.9900016784668
-o_par3: -1.87999999523163
+result: 33.450001
+io_par2: 33.990002
+o_par3: -1.88
 Performance test doing a null block
 Performance test doing 1000 number of calls doing nothing with results returned.
 Performance test doing 1000 number of calls doing nothing without results returned.

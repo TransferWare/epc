@@ -51,7 +51,7 @@ EPCTEST = ./epctest
 DIFF = diff -w
 
 test1: $(srcdir)/epctest.sql $(FORCE)
-	$(EPCTEST) -d -u$(USERID) 1>$@.server.log 2>&1 &
+	$(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1 &
 	sleep 20
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 2>&1 | tee $@.client.log
 	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
