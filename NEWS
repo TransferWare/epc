@@ -1,9 +1,18 @@
 EPC NEWS - History of user visible changes.		-*- indented-text -*-
-Copyright (C) 2002 G.J. Paulissen 
+Copyright (C) 2002, 2003, 2004 G.J. Paulissen 
 
 See the end for copying conditions.
 
-Please send DBUG bug reports to g.paulissen@chello.nl.
+Please send EPC bug reports to g.paulissen@chello.nl.
+
+
+Release 4.2.0
+
+* SOAP message layout implemented.
+* epc_* functions renamed to epc__*
+* Support enhanced for several interfaces running at the same time using a
+  different server.
+* Support for TCP/IP added.
 
 
 Release 4.0.0
