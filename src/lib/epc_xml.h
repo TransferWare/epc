@@ -12,16 +12,13 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
 
 #define SOAP_HEADER_END "</SOAP-ENV:Body></SOAP-ENV:Envelope>"
 
-extern
-unsigned int
-epc__xml_init( /*@temp@*/ epc__info_t *epc__info );
+extern unsigned int epc__xml_init ( /*@temp@ */ epc__info_t * epc__info);
+
+extern unsigned int epc__xml_done (epc__info_t * epc__info);
 
 extern
-unsigned int
-epc__xml_done( epc__info_t *epc__info );
-
-extern
-unsigned int
-epc__xml_parse( epc__info_t *epc__info, epc__call_t *epc__call, const char *buf, const size_t len );
+  unsigned int
+epc__xml_parse (epc__info_t * epc__info, epc__call_t * epc__call,
+		const char *buf, const size_t len);
 
 #endif

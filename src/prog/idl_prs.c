@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.36  2004/10/21 11:54:32  gpaulissen
+ * indent *.c *.h
+ *
  * Revision 1.35  2004/10/21 11:02:40  gpaulissen
  * length checking added to PL/SQL
  *
@@ -122,13 +125,13 @@
 #endif
 
 #if HAVE_MALLOC_H
-#include <malloc.h> 
+#include <malloc.h>
 #endif
 
-#include <stdio.h> 
+#include <stdio.h>
 
 #if HAVE_STRING_H
-#include <string.h> 
+#include <string.h>
 #endif
 
 #if HAVE_STDLIB_H
@@ -164,113 +167,112 @@ static idl_interface_t _interface;
 || Global variables. See epc.pks
 */
 keyword keywords[] = {
-  { C_VOID,     
-    {   
-      { C,      "void",         "C_VOID" },
-      { PLSQL,  "??",             "??" }
+  {C_VOID,
+   {
+    {C, "void", "C_VOID"},
+    {PLSQL, "??", "??"}
     }
-  },
-  { C_INT,      
-    {   
-      { C,      "idl_int_t",    "C_INT" },
-      { PLSQL,  "epc.int_subtype",    "epc.data_type_int" }
+   },
+  {C_INT,
+   {
+    {C, "idl_int_t", "C_INT"},
+    {PLSQL, "epc.int_subtype", "epc.data_type_int"}
     }
-  },
-  { C_LONG,     
-    {   
-      { C,      "idl_long_t",   "C_LONG" },
-      { PLSQL,  "epc.long_subtype",   "epc.data_type_long" }
+   },
+  {C_LONG,
+   {
+    {C, "idl_long_t", "C_LONG"},
+    {PLSQL, "epc.long_subtype", "epc.data_type_long"}
     }
-  },
-  { C_FLOAT,    
-    {   
-      { C,      "idl_float_t",  "C_FLOAT" },
-      { PLSQL,  "epc.float_subtype",  "epc.data_type_float" }
+   },
+  {C_FLOAT,
+   {
+    {C, "idl_float_t", "C_FLOAT"},
+    {PLSQL, "epc.float_subtype", "epc.data_type_float"}
     }
-  },
-  { C_DOUBLE,   
-    {   
-      { C,      "idl_double_t", "C_DOUBLE" },
-      { PLSQL,  "epc.double_subtype", "epc.data_type_double" }
+   },
+  {C_DOUBLE,
+   {
+    {C, "idl_double_t", "C_DOUBLE"},
+    {PLSQL, "epc.double_subtype", "epc.data_type_double"}
     }
-  },
-  { C_STRING,   
-    {
-      /* string is a typedef */
-      { C,      "idl_string_t", "C_STRING" },
-      { PLSQL,  "epc.string_subtype",     "epc.data_type_string" }
+   },
+  {C_STRING,
+   {
+    /* string is a typedef */
+    {C, "idl_string_t", "C_STRING"},
+    {PLSQL, "epc.string_subtype", "epc.data_type_string"}
     }
-  },
-  { C_IN,
-    {
-      { C,      "",             "C_IN" },
-      { PLSQL,  "IN",           "??epc.c_in" }
+   },
+  {C_IN,
+   {
+    {C, "", "C_IN"},
+    {PLSQL, "IN", "??epc.c_in"}
     }
-  },
-  { C_OUT,
-    {
-      { C,      "*",            "C_OUT" },
-      { PLSQL,  "OUT",          "??epc.c_out" } 
+   },
+  {C_OUT,
+   {
+    {C, "*", "C_OUT"},
+    {PLSQL, "OUT", "??epc.c_out"}
     }
-  },
-  { C_INOUT,
-    {
-      { C,      "*",            "C_INOUT" },
-      { PLSQL,  "IN OUT",       "??epc.c_inout" }
+   },
+  {C_INOUT,
+   {
+    {C, "*", "C_INOUT"},
+    {PLSQL, "IN OUT", "??epc.c_inout"}
     }
-  }
+   }
 };
 
-static
-int
-print_external_function = 0; /* print extern <function> in header */
+static int print_external_function = 0;	/* print extern <function> in header */
 
 /*
 || Global functions
 */
 
 void
-set_interface( char *name )
+set_interface (char *name)
 {
-  DBUG_ENTER( "set_interface" );
+  DBUG_ENTER ("set_interface");
 
-  assert( strlen(name) < sizeof(_interface.name) ); /* beware of the trailing '\0' */
-  (void) strcpy( _interface.name, name );
+  assert (strlen (name) < sizeof (_interface.name));	/* beware of the trailing '\0' */
+  (void) strcpy (_interface.name, name);
   _interface.num_functions = 0;
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
-static
-void
-init_parameter( /*@out@*/ idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
+static void
+init_parameter ( /*@out@ */ idl_parameter_t * parm, char *name,
+		idl_mode_t mode, idl_type_t datatype, dword_t size)
 {
-  DBUG_ENTER( "init_parameter" );
+  DBUG_ENTER ("init_parameter");
 
-  assert( strlen(name) < sizeof(parm->name) ); /* beware of the trailing '\0' */
-  (void) strcpy( parm->name, name );
-  assert( strlen(name) < sizeof(parm->proc_name) ); /* beware of the trailing '\0' */
-  (void) strcpy( parm->proc_name, name );
+  assert (strlen (name) < sizeof (parm->name));	/* beware of the trailing '\0' */
+  (void) strcpy (parm->name, name);
+  assert (strlen (name) < sizeof (parm->proc_name));	/* beware of the trailing '\0' */
+  (void) strcpy (parm->proc_name, name);
 
   parm->mode = mode;
-  switch( mode )
+  switch (mode)
     {
     case C_IN:
     case C_INOUT:
     case C_OUT:
       break;
-      
+
     default:
-      (void) fprintf( stderr, "(add_parameter) Mode %ld of parameter %s unknown.\n", 
-                      (long)mode, name );
-      exit( EXIT_FAILURE );
+      (void) fprintf (stderr,
+		      "(add_parameter) Mode %ld of parameter %s unknown.\n",
+		      (long) mode, name);
+      exit (EXIT_FAILURE);
     }
 
   parm->datatype = datatype;
-  switch( datatype )
+  switch (datatype)
     {
     case C_STRING:
-      /*                strcat( parm->proc_name, "_vc" );*/ /* GJP 8-1-2000 VARCHAR is not used anymore */
+      /*                strcat( parm->proc_name, "_vc" ); *//* GJP 8-1-2000 VARCHAR is not used anymore */
       parm->size = size;
       break;
 
@@ -283,50 +285,54 @@ init_parameter( /*@out@*/ idl_parameter_t *parm, char *name, idl_mode_t mode, id
       break;
 
     default:
-      (void) fprintf( stderr, "(add_parameter) Type %ld of parameter %s unknown.\n", 
-                      (long)datatype, name );
-      exit( EXIT_FAILURE );
+      (void) fprintf (stderr,
+		      "(add_parameter) Type %ld of parameter %s unknown.\n",
+		      (long) datatype, name);
+      exit (EXIT_FAILURE);
     }
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
 void
-add_function( char *name, idl_type_t datatype, const int oneway )
+add_function (char *name, idl_type_t datatype, const int oneway)
 {
-  _interface.functions[_interface.num_functions] = (idl_function_t*)malloc(sizeof(idl_function_t));
+  _interface.functions[_interface.num_functions] =
+    (idl_function_t *) malloc (sizeof (idl_function_t));
 
-  DBUG_ENTER( "add_function" );
+  DBUG_ENTER ("add_function");
 
-  assert( _interface.functions[_interface.num_functions] != NULL );
-  assert( strlen(name) < sizeof(_interface.functions[_interface.num_functions]->name) ); /* beware of the trailing '\0' */
-  (void) strcpy( _interface.functions[_interface.num_functions]->name, name );
+  assert (_interface.functions[_interface.num_functions] != NULL);
+  assert (strlen (name) < sizeof (_interface.functions[_interface.num_functions]->name));	/* beware of the trailing '\0' */
+  (void) strcpy (_interface.functions[_interface.num_functions]->name, name);
   _interface.functions[_interface.num_functions]->oneway = oneway;
   _interface.functions[_interface.num_functions]->num_parameters = 0;
 
-  init_parameter( &_interface.functions[_interface.num_functions]->return_value, "result", C_OUT, datatype, MAX_STR_VAL_LEN );
+  init_parameter (&_interface.functions[_interface.num_functions]->
+		  return_value, "result", C_OUT, datatype, MAX_STR_VAL_LEN);
 
   _interface.num_functions++;
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
 void
-add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
+add_parameter (char *name, idl_mode_t mode, idl_type_t datatype, dword_t size)
 {
-  idl_function_t * fun = _interface.functions[_interface.num_functions-1];
-  idl_parameter_t * parm = (idl_parameter_t*)malloc(sizeof(idl_parameter_t));
+  idl_function_t *fun = _interface.functions[_interface.num_functions - 1];
+  idl_parameter_t *parm =
+    (idl_parameter_t *) malloc (sizeof (idl_parameter_t));
 
-  DBUG_ENTER( "add_parameter" );
+  DBUG_ENTER ("add_parameter");
 
-  assert( parm != NULL );
-  init_parameter( parm, name, mode, datatype, size );
+  assert (parm != NULL);
+  init_parameter (parm, name, mode, datatype, size);
 
   fun->parameters[fun->num_parameters] = parm;
   fun->num_parameters++;
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
@@ -334,970 +340,958 @@ static
 /*@notnull@*/
 /*@observer@*/
 mapping *
-get_mapping( const idl_type_t type, const idl_lang_t language )
+get_mapping (const idl_type_t type, const idl_lang_t language)
 {
   size_t i, j;
-  const size_t num_keywords = sizeof(keywords) / sizeof(keyword);
+  const size_t num_keywords = sizeof (keywords) / sizeof (keyword);
 
-  for ( i=0; i<num_keywords; i++ ) {
-    if ( keywords[i].key == type ) {
-      for ( j=0; j<NUM_LANGUAGES; j++ ) {
-        if ( keywords[i].mappings[j].language == language ) {
-          return &keywords[i].mappings[j];
-        }
-      }
-      (void) fprintf( stderr, "No mapping for %ld in language %ld\n", type, language );
-      exit( EXIT_FAILURE );
+  for (i = 0; i < num_keywords; i++)
+    {
+      if (keywords[i].key == type)
+	{
+	  for (j = 0; j < NUM_LANGUAGES; j++)
+	    {
+	      if (keywords[i].mappings[j].language == language)
+		{
+		  return &keywords[i].mappings[j];
+		}
+	    }
+	  (void) fprintf (stderr, "No mapping for %ld in language %ld\n",
+			  type, language);
+	  exit (EXIT_FAILURE);
+	}
     }
-  }
-  fprintf( stderr, "Type %ld not a valid keyword\n", (long)type );
-  exit( EXIT_FAILURE );
+  fprintf (stderr, "Type %ld not a valid keyword\n", (long) type);
+  exit (EXIT_FAILURE);
 }
 
 
 static
 /*@observer@*/
 char *
-get_syntax( const idl_type_t type, const idl_lang_t language )
+get_syntax (const idl_type_t type, const idl_lang_t language)
 {
-  return get_mapping( type, language )->syntax;
+  return get_mapping (type, language)->syntax;
 }
 
 
 static
 /*@observer@*/
 char *
-get_constant_name( const idl_type_t type, const idl_lang_t language )
+get_constant_name (const idl_type_t type, const idl_lang_t language)
 {
-  return get_mapping( type, language )->constant_name;
+  return get_mapping (type, language)->constant_name;
 }
 
 static
 /*@observer@*/
 char *
-get_size( const idl_parameter_t *idl_parameter )
+get_size (const idl_parameter_t * idl_parameter)
 {
   static char size_str[100] = "";
 
-  switch( idl_parameter->datatype )
+  switch (idl_parameter->datatype)
     {
     case C_STRING:
-      (void) snprintf(size_str, sizeof(size_str), "%ld+1", (long)idl_parameter->size);
+      (void) snprintf (size_str, sizeof (size_str), "%ld+1",
+		       (long) idl_parameter->size);
       break;
 
     case C_VOID:
-      (void) snprintf(size_str, sizeof(size_str), "0");
+      (void) snprintf (size_str, sizeof (size_str), "0");
       break;
 
     case C_INT:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_int_t)");
+      (void) snprintf (size_str, sizeof (size_str), "sizeof(idl_int_t)");
       break;
 
     case C_LONG:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_long_t)");
+      (void) snprintf (size_str, sizeof (size_str), "sizeof(idl_long_t)");
       break;
 
     case C_DOUBLE:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_double_t)");
+      (void) snprintf (size_str, sizeof (size_str), "sizeof(idl_double_t)");
       break;
 
     case C_FLOAT:
-      (void) snprintf(size_str, sizeof(size_str), "sizeof(idl_float_t)");
+      (void) snprintf (size_str, sizeof (size_str), "sizeof(idl_float_t)");
       break;
     }
 
   return size_str;
 }
 
-static
-void
-print_formal_parameter( FILE *pout,
-                        const char *name,
-                        const idl_mode_t mode,
-                        const idl_type_t datatype,
-                        const idl_lang_t lang )
+static void
+print_formal_parameter (FILE * pout,
+			const char *name,
+			const idl_mode_t mode,
+			const idl_type_t datatype, const idl_lang_t lang)
 {
-  DBUG_ENTER( "print_formal_parameter" );
+  DBUG_ENTER ("print_formal_parameter");
 
-  switch( lang )
+  switch (lang)
     {
     case C:
-      (void) fprintf( pout, "%s %s%s",
-                      get_syntax( datatype, lang ),
-                      ( mode != C_IN && datatype != C_STRING ? "*" : "" ),
-                      name );
+      (void) fprintf (pout, "%s %s%s",
+		      get_syntax (datatype, lang),
+		      (mode != C_IN && datatype != C_STRING ? "*" : ""),
+		      name);
       break;
 
     case PLSQL:
-      (void) fprintf( pout, "%s %s %s", 
-                      name, 
-                      get_syntax( mode, lang ),
-                      get_syntax( datatype, lang ) );
+      (void) fprintf (pout, "%s %s %s",
+		      name,
+		      get_syntax (mode, lang), get_syntax (datatype, lang));
       break;
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-print_actual_parameter( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
+static void
+print_actual_parameter (FILE * pout, idl_parameter_t * parm, idl_lang_t lang)
 {
-  DBUG_ENTER( "print_actual_parameter" );
+  DBUG_ENTER ("print_actual_parameter");
 
-  switch( lang )
+  switch (lang)
     {
     case C:
-      (void) fprintf( pout, "%s%s",
-                      ( parm->mode == C_IN && parm->datatype != C_STRING ? "*" : "" ),
-                      parm->name );
+      (void) fprintf (pout, "%s%s",
+		      (parm->mode == C_IN
+		       && parm->datatype != C_STRING ? "*" : ""), parm->name);
       break;
     case PLSQL:
-      (void) fprintf( pout, "%s", 
-                      parm->name );
+      (void) fprintf (pout, "%s", parm->name);
       break;
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang, const int parameter_nr  )
+static void
+print_variable_definition (FILE * pout, idl_parameter_t * parm,
+			   idl_lang_t lang, const int parameter_nr)
 {
-  DBUG_ENTER( "print_variable_definition" );
+  DBUG_ENTER ("print_variable_definition");
 
-  switch( lang )
+  switch (lang)
     {
     case C:
-      switch( parm->datatype )
-        {
-        case C_INT:
-        case C_LONG:
-        case C_FLOAT:
-        case C_DOUBLE:
-          (void) fprintf( pout,
-                          "%s *%s = (%s *)function->parameters[%d].data",
-                          get_syntax( parm->datatype, C ),
-                          parm->proc_name,
-                          get_syntax( parm->datatype, C ),
-                          parameter_nr );
-          break;
+      switch (parm->datatype)
+	{
+	case C_INT:
+	case C_LONG:
+	case C_FLOAT:
+	case C_DOUBLE:
+	  (void) fprintf (pout,
+			  "%s *%s = (%s *)function->parameters[%d].data",
+			  get_syntax (parm->datatype, C),
+			  parm->proc_name,
+			  get_syntax (parm->datatype, C), parameter_nr);
+	  break;
 
-        case C_STRING:
-          (void) fprintf( pout,
-                          "%s %s = (%s)function->parameters[%d].data", 
-                          get_syntax( parm->datatype, C ),
-                          parm->proc_name,
-                          get_syntax( parm->datatype, C ),
-                          parameter_nr );
-          break;
-        }
+	case C_STRING:
+	  (void) fprintf (pout,
+			  "%s %s = (%s)function->parameters[%d].data",
+			  get_syntax (parm->datatype, C),
+			  parm->proc_name,
+			  get_syntax (parm->datatype, C), parameter_nr);
+	  break;
+	}
       break;
 
     case PLSQL:
-      switch( parm->datatype )
-        {
-        case C_INT:
-        case C_LONG:
-        case C_FLOAT:
-        case C_DOUBLE:
-          (void) fprintf( pout, "l_%s %s", 
-                          parm->name, 
-                          get_syntax( parm->datatype, PLSQL ) );
-          break;
-          
-        case C_STRING:
-          (void) fprintf( pout, "l_%s VARCHAR2(%ld)", 
-                          parm->name, 
-                          parm->size );
-          break;
-        }
-      if ( parm->mode == C_IN || parm->mode == C_INOUT )
-        {
-          (void) fprintf( pout, " := %s", 
-                          parm->name );
-        }
+      switch (parm->datatype)
+	{
+	case C_INT:
+	case C_LONG:
+	case C_FLOAT:
+	case C_DOUBLE:
+	  (void) fprintf (pout, "l_%s %s",
+			  parm->name, get_syntax (parm->datatype, PLSQL));
+	  break;
+
+	case C_STRING:
+	  (void) fprintf (pout, "l_%s VARCHAR2(%ld)", parm->name, parm->size);
+	  break;
+	}
+      if (parm->mode == C_IN || parm->mode == C_INOUT)
+	{
+	  (void) fprintf (pout, " := %s", parm->name);
+	}
       break;
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_function( FILE * pout, idl_function_t * fun )
+static void
+generate_plsql_function (FILE * pout, idl_function_t * fun)
 {
-  dword_t nr, nr_actual_parameters /* for a SEND and RECV less parameters */;
+  dword_t nr, nr_actual_parameters /* for a SEND and RECV less parameters */ ;
 
-  DBUG_ENTER( "generate_plsql_function" );
+  DBUG_ENTER ("generate_plsql_function");
 
-  if ( fun->return_value.datatype != C_VOID )
+  if (fun->return_value.datatype != C_VOID)
     {
-      (void) fprintf( pout, "  FUNCTION %s", fun->name );
+      (void) fprintf (pout, "  FUNCTION %s", fun->name);
     }
   else
     {
-      (void) fprintf( pout, "  PROCEDURE %s", fun->name );
+      (void) fprintf (pout, "  PROCEDURE %s", fun->name);
     }
 
   /* PARAMETERS */
-  for ( nr = nr_actual_parameters = 0; nr < fun->num_parameters; nr++ ) 
+  for (nr = nr_actual_parameters = 0; nr < fun->num_parameters; nr++)
     {
-      (void) fprintf( pout, "%s    ", ( nr_actual_parameters++ == 0 ? "(\n" : ",\n" ) );
-      print_formal_parameter( pout,
-                              fun->parameters[nr]->name,
-                              fun->parameters[nr]->mode,
-                              fun->parameters[nr]->datatype,
-                              PLSQL );
+      (void) fprintf (pout, "%s    ",
+		      (nr_actual_parameters++ == 0 ? "(\n" : ",\n"));
+      print_formal_parameter (pout, fun->parameters[nr]->name,
+			      fun->parameters[nr]->mode,
+			      fun->parameters[nr]->datatype, PLSQL);
     }
 
-  if ( nr_actual_parameters > 0 ) 
+  if (nr_actual_parameters > 0)
     {
-      (void) fprintf( pout, "\n  )" );
+      (void) fprintf (pout, "\n  )");
     }
 
-  if ( fun->return_value.datatype != C_VOID )
+  if (fun->return_value.datatype != C_VOID)
     {
-      (void) fprintf( pout, "\n  RETURN %s", get_syntax( fun->return_value.datatype, PLSQL ) );
+      (void) fprintf (pout, "\n  RETURN %s",
+		      get_syntax (fun->return_value.datatype, PLSQL));
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_function_declaration( FILE * pout, idl_function_t * fun )
+static void
+generate_plsql_function_declaration (FILE * pout, idl_function_t * fun)
 {
-  DBUG_ENTER( "generate_plsql_function_declaration" );
+  DBUG_ENTER ("generate_plsql_function_declaration");
 
-  generate_plsql_function( pout, fun );
-  (void) fprintf( pout, ";\n\n" );
+  generate_plsql_function (pout, fun);
+  (void) fprintf (pout, ";\n\n");
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-print_generate_comment( FILE * pout, char * prefix )
+static void
+print_generate_comment (FILE * pout, char *prefix)
 {
-  DBUG_ENTER( "print_generate_comment" );
+  DBUG_ENTER ("print_generate_comment");
 
-  (void) fprintf( pout, "%s/*******************************\n", prefix );
-  (void) fprintf( pout, "%s ** Generated by EPC compiler **\n", prefix );
-  (void) fprintf( pout, "%s *******************************/\n\n", prefix );
+  (void) fprintf (pout, "%s/*******************************\n", prefix);
+  (void) fprintf (pout, "%s ** Generated by EPC compiler **\n", prefix);
+  (void) fprintf (pout, "%s *******************************/\n\n", prefix);
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_header( FILE * pout )
+static void
+generate_plsql_header (FILE * pout)
 {
   dword_t nr;
-  DBUG_ENTER( "generate_plsql_header" );
+  DBUG_ENTER ("generate_plsql_header");
 
-  print_generate_comment( pout, "REMARK " );
+  print_generate_comment (pout, "REMARK ");
 
   /* do not print an empty package */
-  if ( _interface.num_functions > 0 )
+  if (_interface.num_functions > 0)
     {
-      (void) fprintf( pout, "CREATE OR REPLACE PACKAGE %s IS\n\n",
-                      _interface.name );
-    
-      for ( nr = 0; nr < _interface.num_functions; nr++ ) 
-        {
-          generate_plsql_function_declaration( pout, _interface.functions[nr] );
-        }
+      (void) fprintf (pout, "CREATE OR REPLACE PACKAGE %s IS\n\n",
+		      _interface.name);
 
-      (void) fprintf( pout, "END %s;\n/\n\n", _interface.name );
+      for (nr = 0; nr < _interface.num_functions; nr++)
+	{
+	  generate_plsql_function_declaration (pout,
+					       _interface.functions[nr]);
+	}
+
+      (void) fprintf (pout, "END %s;\n/\n\n", _interface.name);
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_function_body( FILE * pout, idl_function_t * fun )
+static void
+generate_plsql_function_body (FILE * pout, idl_function_t * fun)
 {
   dword_t nr;
-  idl_parameter_t * parm;
+  idl_parameter_t *parm;
 
-  DBUG_ENTER( "generate_plsql_function_body" );
+  DBUG_ENTER ("generate_plsql_function_body");
 
-  generate_plsql_function( pout, fun );
-  (void) fprintf( pout, "\n  IS\n" );
+  generate_plsql_function (pout, fun);
+  (void) fprintf (pout, "\n  IS\n");
 
   /* define local variables for all parameters: needed for bounds checking */
-  for ( nr = 0; nr < fun->num_parameters; nr++ ) {
-    parm = fun->parameters[nr];
-
-    (void) fprintf( pout, "    " );
-    print_variable_definition( pout, parm, PLSQL, (int)nr );
-    (void) fprintf( pout, ";\n" );
-  }
-
-  /* RETURN VARIABLE */
-  if ( fun->return_value.datatype != C_VOID )
+  for (nr = 0; nr < fun->num_parameters; nr++)
     {
-      (void) fprintf( pout, "    " );
-      print_variable_definition( pout, &fun->return_value, PLSQL, (int)fun->num_parameters );
-      (void) fprintf( pout, ";\n" );
+      parm = fun->parameters[nr];
+
+      (void) fprintf (pout, "    ");
+      print_variable_definition (pout, parm, PLSQL, (int) nr);
+      (void) fprintf (pout, ";\n");
     }
 
-  (void) fprintf( pout, "  BEGIN\n" );
+  /* RETURN VARIABLE */
+  if (fun->return_value.datatype != C_VOID)
+    {
+      (void) fprintf (pout, "    ");
+      print_variable_definition (pout, &fun->return_value, PLSQL,
+				 (int) fun->num_parameters);
+      (void) fprintf (pout, ";\n");
+    }
+
+  (void) fprintf (pout, "  BEGIN\n");
 
   /* SETUP OF CLIENT SIDE FUNCTION CALL */
-  (void) fprintf( pout, 
-                  "    epc_clnt.new_request(g_epc_key);\n" );
+  (void) fprintf (pout, "    epc_clnt.new_request(g_epc_key);\n");
 
-  for ( nr = 0; nr < fun->num_parameters; nr++ ) {
-    parm = fun->parameters[nr];
-
-    if ( parm->mode != C_OUT )
-      (void) fprintf( pout, 
-                      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, l_%s);\n", 
-                      parm->name, 
-                      get_constant_name(parm->datatype, PLSQL), 
-                      parm->name );
-  }
-
-  (void) fprintf( pout, 
-                  "    epc_clnt.send_request(g_epc_key, '%s', %ld);\n",
-                  fun->name,
-                  fun->oneway );
-
-  if ( fun->oneway == 0 )
+  for (nr = 0; nr < fun->num_parameters; nr++)
     {
-      (void) fprintf( pout, 
-                      "    epc_clnt.recv_response(g_epc_key);\n" );
+      parm = fun->parameters[nr];
+
+      if (parm->mode != C_OUT)
+	(void) fprintf (pout,
+			"    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, l_%s);\n",
+			parm->name,
+			get_constant_name (parm->datatype, PLSQL),
+			parm->name);
+    }
+
+  (void) fprintf (pout,
+		  "    epc_clnt.send_request(g_epc_key, '%s', %ld);\n",
+		  fun->name, fun->oneway);
+
+  if (fun->oneway == 0)
+    {
+      (void) fprintf (pout, "    epc_clnt.recv_response(g_epc_key);\n");
     }
 
   /* GET THE RESULTS */
-  for ( nr = 0; nr < fun->num_parameters; nr++ ) 
+  for (nr = 0; nr < fun->num_parameters; nr++)
     {
       parm = fun->parameters[nr];
-      if ( parm->mode != C_IN ) 
-        {
-          (void) fprintf( pout, 
-                          "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n    %s := l_%s;\n", 
-                          parm->name, 
-                          get_constant_name(parm->datatype, PLSQL), 
-                          parm->name, 
-                          parm->name, 
-                          parm->name );
-        }
+      if (parm->mode != C_IN)
+	{
+	  (void) fprintf (pout,
+			  "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n    %s := l_%s;\n",
+			  parm->name,
+			  get_constant_name (parm->datatype, PLSQL),
+			  parm->name, parm->name, parm->name);
+	}
     }
 
-  if ( fun->return_value.datatype != C_VOID ) 
+  if (fun->return_value.datatype != C_VOID)
     {
-      (void) fprintf( pout, 
-                      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n", 
-                      fun->return_value.name,
-                      get_constant_name(fun->return_value.datatype, PLSQL),
-                      fun->return_value.name );
-      (void) fprintf( pout, 
-                      "    RETURN l_%s;\n", 
-                      fun->return_value.name );
+      (void) fprintf (pout,
+		      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n",
+		      fun->return_value.name,
+		      get_constant_name (fun->return_value.datatype, PLSQL),
+		      fun->return_value.name);
+      (void) fprintf (pout, "    RETURN l_%s;\n", fun->return_value.name);
     }
 
-  (void) fprintf( pout, "  END;\n\n" );
+  (void) fprintf (pout, "  END;\n\n");
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_function_body_ext( FILE * pout, idl_function_t * fun )
+static void
+generate_plsql_function_body_ext (FILE * pout, idl_function_t * fun)
 {
   dword_t nr;
 
-  DBUG_ENTER( "generate_plsql_function_body_ext" );
-  DBUG_PRINT( "input", ( "interface: %s; function: %s", _interface.name, fun->name ) );
+  DBUG_ENTER ("generate_plsql_function_body_ext");
+  DBUG_PRINT ("input",
+	      ("interface: %s; function: %s", _interface.name, fun->name));
 
-  generate_plsql_function( pout, fun );
+  generate_plsql_function (pout, fun);
 
-  (void) fprintf( pout, " AS\n\
+  (void) fprintf (pout, " AS\n\
   EXTERNAL LIBRARY %s_lib\n\
   NAME \"%s\"\n\
-  LANGUAGE C", _interface.name, fun->name );
+  LANGUAGE C", _interface.name, fun->name);
 
-  DBUG_PRINT( "info",
-              ( "return datatype: %ld; # parms: %ld",
-                (int) fun->return_value.datatype,
-                (int) fun->num_parameters ) );
+  DBUG_PRINT ("info",
+	      ("return datatype: %ld; # parms: %ld",
+	       (int) fun->return_value.datatype, (int) fun->num_parameters));
 
   /* PARAMETERS CLAUSE ? */
-  if ( fun->return_value.datatype != C_VOID ||
-       fun->num_parameters > 0 )
+  if (fun->return_value.datatype != C_VOID || fun->num_parameters > 0)
     {
-      (void) fprintf( pout, "\n\
-  PARAMETERS (\n" );
+      (void) fprintf (pout, "\n\
+  PARAMETERS (\n");
 
-      for ( nr = 0; nr < fun->num_parameters; nr++ ) 
-        {
-          (void) fprintf( pout, "  %s  %s %s\n",
-                          (nr == 0 ? " " : "," ),
-                          fun->parameters[nr]->name,
-                          get_syntax( fun->parameters[nr]->datatype, C ) ) ;
-        }
-      
+      for (nr = 0; nr < fun->num_parameters; nr++)
+	{
+	  (void) fprintf (pout, "  %s  %s %s\n",
+			  (nr == 0 ? " " : ","),
+			  fun->parameters[nr]->name,
+			  get_syntax (fun->parameters[nr]->datatype, C));
+	}
+
       /* RETURN VARIABLE */
-      switch( fun->return_value.datatype )
-        {
-        case C_VOID:
-          break;
-          
-        default:
-          (void) fprintf( pout, "  %s  RETURN %s\n",
-                          (nr == 0 ? " " : "," ),
-                          get_syntax( fun->return_value.datatype, C ) ) ;
-          break;
-        }
-      
-      (void) fprintf( pout, "\
-  )" );
+      switch (fun->return_value.datatype)
+	{
+	case C_VOID:
+	  break;
+
+	default:
+	  (void) fprintf (pout, "  %s  RETURN %s\n",
+			  (nr == 0 ? " " : ","),
+			  get_syntax (fun->return_value.datatype, C));
+	  break;
+	}
+
+      (void) fprintf (pout, "\
+  )");
     }
 
-  (void) fprintf( pout, ";\n\n" );
+  (void) fprintf (pout, ";\n\n");
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_body( FILE * pout )
+static void
+generate_plsql_body (FILE * pout)
 {
   dword_t nr;
 
-  DBUG_ENTER( "generate_plsql_body" );
+  DBUG_ENTER ("generate_plsql_body");
 
-  print_generate_comment( pout, "REMARK " );
+  print_generate_comment (pout, "REMARK ");
 
   /* do not print an empty package body */
-  if ( _interface.num_functions > 0 )
+  if (_interface.num_functions > 0)
     {
-      (void) fprintf( pout, "CREATE OR REPLACE PACKAGE BODY %s IS\n\n\
-  g_epc_key epc_clnt.epc_key_subtype;\n\n",
-                      _interface.name );
-      (void) fprintf( pout, "\n" );
+      (void) fprintf (pout, "CREATE OR REPLACE PACKAGE BODY %s IS\n\n\
+  g_epc_key epc_clnt.epc_key_subtype;\n\n", _interface.name);
+      (void) fprintf (pout, "\n");
 
-      for ( nr = 0; nr < _interface.num_functions; nr++ ) 
-        {
-          generate_plsql_function_body( pout, _interface.functions[nr] );
-        }
-      
-      (void) fprintf( pout, "BEGIN\n\
+      for (nr = 0; nr < _interface.num_functions; nr++)
+	{
+	  generate_plsql_function_body (pout, _interface.functions[nr]);
+	}
+
+      (void) fprintf (pout, "BEGIN\n\
   g_epc_key := epc_clnt.register('%s');\n\
-END;\n", _interface.name );
-      (void) fprintf( pout, "/\n\n" );
+END;\n", _interface.name);
+      (void) fprintf (pout, "/\n\n");
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_plsql_body_ext( FILE * pout )
+static void
+generate_plsql_body_ext (FILE * pout)
 {
   dword_t nr;
 
-  DBUG_ENTER( "generate_plsql_body_ext" );
+  DBUG_ENTER ("generate_plsql_body_ext");
 
-  print_generate_comment( pout, "REMARK " );
+  print_generate_comment (pout, "REMARK ");
 
-  (void) fprintf( pout, "\
+  (void) fprintf (pout, "\
 WHENEVER SQLERROR CONTINUE\n\
 DROP LIBRARY %s_lib\n\
 /\n\
 WHENEVER SQLERROR EXIT FAILURE\n\
 CREATE LIBRARY %s_lib AS '&%s_lib'\n\
 /\n\
-CREATE OR REPLACE PACKAGE BODY %s IS\n\n",
-                  _interface.name,
-                  _interface.name,
-                  _interface.name,
-                  _interface.name );
+CREATE OR REPLACE PACKAGE BODY %s IS\n\n", _interface.name, _interface.name, _interface.name, _interface.name);
 
-  for ( nr = 0; nr < _interface.num_functions; nr++ ) {
-    generate_plsql_function_body_ext( pout, _interface.functions[nr] );
-  }
+  for (nr = 0; nr < _interface.num_functions; nr++)
+    {
+      generate_plsql_function_body_ext (pout, _interface.functions[nr]);
+    }
 
-  (void) fprintf( pout, "END;\n" );
-  (void) fprintf( pout, "/\n" );
+  (void) fprintf (pout, "END;\n");
+  (void) fprintf (pout, "/\n");
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
 void
-generate_plsql( void )
+generate_plsql (void)
 {
   char filename[256] = "";
 #define NR_PLSQL_FILES 4
   FILE *pout;
   int nr;
 
-  DBUG_ENTER( "generate_plsql" );
+  DBUG_ENTER ("generate_plsql");
 
-  for ( nr = 0; nr < NR_PLSQL_FILES; nr++ )
+  for (nr = 0; nr < NR_PLSQL_FILES; nr++)
     {
-      switch( nr )
-        {
-        case 0:
-          (void) snprintf( filename, sizeof(filename), "%s.pks", _interface.name );
-          break;
+      switch (nr)
+	{
+	case 0:
+	  (void) snprintf (filename, sizeof (filename), "%s.pks",
+			   _interface.name);
+	  break;
 
-        case 1:
-          (void) snprintf( filename, sizeof(filename), "%s.pkb", _interface.name );
-          break;
+	case 1:
+	  (void) snprintf (filename, sizeof (filename), "%s.pkb",
+			   _interface.name);
+	  break;
 
-        case 2:
-          /* for Oracle 8 external routines */
-          (void) snprintf( filename, sizeof(filename), "%s.pke", _interface.name );
-          break;
+	case 2:
+	  /* for Oracle 8 external routines */
+	  (void) snprintf (filename, sizeof (filename), "%s.pke",
+			   _interface.name);
+	  break;
 
-        case 3:
-          (void) snprintf( filename, sizeof(filename), "%s.pls", _interface.name );
-          break;
+	case 3:
+	  (void) snprintf (filename, sizeof (filename), "%s.pls",
+			   _interface.name);
+	  break;
 
-        default:
-          assert( nr >= 0 && nr < 4 );
-        }
+	default:
+	  assert (nr >= 0 && nr < 4);
+	}
 
-      if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
-        {
-          goto open_error;
-        }
+      if ((pout = fopen (filename, "w")) == NULL)
+	{
+	  goto open_error;
+	}
       else
-        {
-          (void) fprintf( stdout, "Creating %s\n", filename );
-        }
+	{
+	  (void) fprintf (stdout, "Creating %s\n", filename);
+	}
 
-      switch( nr )
-        {
-        case 0:
-          generate_plsql_header( pout );
-          break;
+      switch (nr)
+	{
+	case 0:
+	  generate_plsql_header (pout);
+	  break;
 
-        case 1:
-          generate_plsql_body( pout );
-          break;
+	case 1:
+	  generate_plsql_body (pout);
+	  break;
 
-        case 2:
-          generate_plsql_body_ext( pout );
-          break;
+	case 2:
+	  generate_plsql_body_ext (pout);
+	  break;
 
-        case 3:
-          /* .pls script call .pks and .pkb */
-          print_generate_comment( pout, "REMARK " );
+	case 3:
+	  /* .pls script call .pks and .pkb */
+	  print_generate_comment (pout, "REMARK ");
 
-          (void) fprintf( pout, "@@ %s.pks\n\
+	  (void) fprintf (pout, "@@ %s.pks\n\
 REMARK Package body using an EPC server.\n\
 @@ %s.pkb\n\
 REMARK Package body using PL/SQL external routines.\n\
 REMARK Uncomment the next line when using PL/SQL external routines (Oracle8 only).\n\
-REMARK @@ %s.pke\n", _interface.name, _interface.name, _interface.name );
-          break;
+REMARK @@ %s.pke\n", _interface.name, _interface.name, _interface.name);
+	  break;
 
-        default:
-          assert( nr >= 0 && nr < 4 );
-        }
+	default:
+	  assert (nr >= 0 && nr < 4);
+	}
 
-      (void) fclose( pout );
+      (void) fclose (pout);
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 
   return;
 
- open_error:
-  (void) fprintf( stderr, "Cannot write file %s\n", filename );
-  exit( EXIT_FAILURE );
+open_error:
+  (void) fprintf (stderr, "Cannot write file %s\n", filename);
+  exit (EXIT_FAILURE);
 }
 
 
-static
-void
-generate_c_parameters( FILE * pout, idl_function_t * fun )
+static void
+generate_c_parameters (FILE * pout, idl_function_t * fun)
 {
   dword_t nr;
-  idl_parameter_t * parm;
+  idl_parameter_t *parm;
 
-  DBUG_ENTER( "generate_c_parameters" );
+  DBUG_ENTER ("generate_c_parameters");
 
   /* 
    * declare variables 
    */
 
-  for ( nr = 0; nr < fun->num_parameters; nr++ ) {
-    parm = fun->parameters[nr];
-    (void) fprintf( pout, "  " );
-    print_variable_definition( pout, parm, C, (int)nr );
-    (void) fprintf( pout, ";\n" );
-  }
-
-  DBUG_LEAVE();
-}
-
-
-static
-void
-print_c_debug_info( FILE *pout, char *name, idl_type_t datatype )
-{
-  DBUG_ENTER( "print_c_debug_info" );
-
-  (void) fprintf( pout, "  DBUG_PRINT( \"info\", ( " );
-  switch( datatype )
+  for (nr = 0; nr < fun->num_parameters; nr++)
     {
-    case C_INT:
-      (void) fprintf( pout, "\"%s: %%d\", *%s ) );\n", name, name ); break;
-    case C_LONG:
-      (void) fprintf( pout, "\"%s: %%ld\", *%s ) );\n", name, name ); break;
-    case C_FLOAT:
-      (void) fprintf( pout, "\"%s: %%f\", *%s ) );\n", name, name ); break;
-    case C_DOUBLE:
-      (void) fprintf( pout, "\"%s: %%lf\", *%s ) );\n", name, name ); break;
-    case C_STRING:
-      (void) fprintf( pout, "\"%s: '%%s'\", %s ) );\n", name, name ); break;
-    default:
-      (void) fprintf( stderr, "print_c_debug_info#Unknown datatype (%ld) for %s\n", datatype, name ); break;
+      parm = fun->parameters[nr];
+      (void) fprintf (pout, "  ");
+      print_variable_definition (pout, parm, C, (int) nr);
+      (void) fprintf (pout, ";\n");
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode )
+static void
+print_c_debug_info (FILE * pout, char *name, idl_type_t datatype)
+{
+  DBUG_ENTER ("print_c_debug_info");
+
+  (void) fprintf (pout, "  DBUG_PRINT( \"info\", ( ");
+  switch (datatype)
+    {
+    case C_INT:
+      (void) fprintf (pout, "\"%s: %%d\", *%s ) );\n", name, name);
+      break;
+    case C_LONG:
+      (void) fprintf (pout, "\"%s: %%ld\", *%s ) );\n", name, name);
+      break;
+    case C_FLOAT:
+      (void) fprintf (pout, "\"%s: %%f\", *%s ) );\n", name, name);
+      break;
+    case C_DOUBLE:
+      (void) fprintf (pout, "\"%s: %%lf\", *%s ) );\n", name, name);
+      break;
+    case C_STRING:
+      (void) fprintf (pout, "\"%s: '%%s'\", %s ) );\n", name, name);
+      break;
+    default:
+      (void) fprintf (stderr,
+		      "print_c_debug_info#Unknown datatype (%ld) for %s\n",
+		      datatype, name);
+      break;
+    }
+
+  DBUG_LEAVE ();
+}
+
+
+static void
+generate_c_debug_info (FILE * pout, idl_function_t * fun, idl_mode_t mode)
 {
   dword_t nr;
   idl_parameter_t *parm;
 
-  DBUG_ENTER( "generate_c_debug_info" );
+  DBUG_ENTER ("generate_c_debug_info");
 
-  for ( nr = 0; nr < fun->num_parameters; nr++ ) {
-    parm = fun->parameters[nr];
-    
-    if ( parm->mode == mode )
-      {
-        print_c_debug_info( pout, parm->name, parm->datatype );
-      }
-  }
-
-  parm = &fun->return_value;
-  if ( parm->mode == mode && parm->datatype != C_VOID )
+  for (nr = 0; nr < fun->num_parameters; nr++)
     {
-      print_c_debug_info( pout, parm->name, parm->datatype );
+      parm = fun->parameters[nr];
+
+      if (parm->mode == mode)
+	{
+	  print_c_debug_info (pout, parm->name, parm->datatype);
+	}
     }
 
-  DBUG_LEAVE();
+  parm = &fun->return_value;
+  if (parm->mode == mode && parm->datatype != C_VOID)
+    {
+      print_c_debug_info (pout, parm->name, parm->datatype);
+    }
+
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_c_function( FILE * pout, idl_function_t * fun )
+static void
+generate_c_function (FILE * pout, idl_function_t * fun)
 {
   dword_t nr;
 
-  DBUG_ENTER( "generate_c_function" );
+  DBUG_ENTER ("generate_c_function");
 
-  (void) fprintf( pout, "void %s%s ( epc__function_t *function )\n", EPC_PREFIX, fun->name );
-  (void) fprintf( pout, "{\n" );
+  (void) fprintf (pout, "void %s%s ( epc__function_t *function )\n",
+		  EPC_PREFIX, fun->name);
+  (void) fprintf (pout, "{\n");
 
   /* PARAMETERS */
-  generate_c_parameters( pout, fun );
+  generate_c_parameters (pout, fun);
 
-  switch( fun->return_value.datatype )
+  switch (fun->return_value.datatype)
     {
     case C_VOID:
       break;
 
     default:
-      (void) fprintf( pout, "  " );
-      print_variable_definition( pout, &fun->return_value, C, (int)fun->num_parameters );
-      (void) fprintf( pout, ";\n" );
+      (void) fprintf (pout, "  ");
+      print_variable_definition (pout, &fun->return_value, C,
+				 (int) fun->num_parameters);
+      (void) fprintf (pout, ";\n");
       break;
     }
 
-  (void) fprintf( pout, "\n  DBUG_ENTER( \"%s\" );\n",
-                  fun->name );
+  (void) fprintf (pout, "\n  DBUG_ENTER( \"%s\" );\n", fun->name);
 
   /* ---------------------------------------------------------------
    * Print the in and in/out parameters, including Oracle error code
    * --------------------------------------------------------------- */
 
-  generate_c_debug_info( pout, fun, C_IN );
-  generate_c_debug_info( pout, fun, C_INOUT );
+  generate_c_debug_info (pout, fun, C_IN);
+  generate_c_debug_info (pout, fun, C_INOUT);
 
-  (void) fprintf( pout, "\n" );
+  (void) fprintf (pout, "\n");
 
   /* ---------------
    * THE ACTUAL CALL 
    * --------------- */
-  (void) fprintf( pout, "  " );
+  (void) fprintf (pout, "  ");
 
   /* set return value if any. Use strncpy for strings */
 
-  switch( fun->return_value.datatype )
+  switch (fun->return_value.datatype)
     {
     case C_VOID:
       break;
 
     case C_STRING:
-      (void) fprintf( pout, "(void) strncpy( %s, ", fun->return_value.name );
+      (void) fprintf (pout, "(void) strncpy( %s, ", fun->return_value.name);
       break;
 
     default:
-      (void) fprintf( pout, "*%s = ", fun->return_value.name );
+      (void) fprintf (pout, "*%s = ", fun->return_value.name);
       break;
     }
 
-  (void) fprintf( pout, "%s( ", fun->name );
+  (void) fprintf (pout, "%s( ", fun->name);
 
-  for ( nr = 0; nr < fun->num_parameters; nr++ ) {
-    if ( nr > 0 ) {
-      (void) fprintf( pout, ", " );
+  for (nr = 0; nr < fun->num_parameters; nr++)
+    {
+      if (nr > 0)
+	{
+	  (void) fprintf (pout, ", ");
+	}
+      print_actual_parameter (pout, fun->parameters[nr], C);
     }
-    print_actual_parameter( pout, fun->parameters[nr], C );
-  }
-  (void) fprintf( pout, " )" );
+  (void) fprintf (pout, " )");
 
-  switch( fun->return_value.datatype )
+  switch (fun->return_value.datatype)
     {
     case C_VOID:
       break;
 
     case C_STRING:
       /* zero terminate to be sure */
-      (void) fprintf( pout, ", %ld );\n%s  %s[%ld] = '\\0'",
-                      fun->return_value.size, 
-                      "",
-                      fun->return_value.proc_name, 
-                      fun->return_value.size );
+      (void) fprintf (pout, ", %ld );\n%s  %s[%ld] = '\\0'",
+		      fun->return_value.size,
+		      "",
+		      fun->return_value.proc_name, fun->return_value.size);
       break;
 
     default:
       break;
     }
 
-  (void) fprintf( pout, ";\n" );
+  (void) fprintf (pout, ";\n");
 
-  (void) fprintf( pout, "\n" );
+  (void) fprintf (pout, "\n");
 
   /*
    * Print the in/out and out parameters, including Oracle error code
    */
-  generate_c_debug_info( pout, fun, C_INOUT );
-  generate_c_debug_info( pout, fun, C_OUT );
+  generate_c_debug_info (pout, fun, C_INOUT);
+  generate_c_debug_info (pout, fun, C_OUT);
 
-  (void) fprintf( pout, "  DBUG_LEAVE();\n}\n\n" );
+  (void) fprintf (pout, "  DBUG_LEAVE();\n}\n\n");
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-declare_external_function( FILE * pout, idl_function_t * fun )
+static void
+declare_external_function (FILE * pout, idl_function_t * fun)
 {
   dword_t nr;
 
-  DBUG_ENTER( "declare_external_function" );
+  DBUG_ENTER ("declare_external_function");
 
-  (void) fprintf( pout, "extern %s %s( ", 
-                  get_syntax( fun->return_value.datatype, C ),
-                  fun->name );
-  if ( fun->num_parameters > 0 ) {
-    for ( nr = 0; nr < fun->num_parameters; nr++ ) {
-      idl_parameter_t * parm = fun->parameters[nr];
-
-      print_formal_parameter( pout, parm->name, parm->mode, parm->datatype, C );
-
-      if ( nr < fun->num_parameters - 1 )
-        (void) fprintf( pout, ", " );
-    }
-  }
-  else /* 0 parameters */
-    (void) fprintf( pout, "void" );
-
-  (void) fprintf( pout, " );\n" );
-
-  DBUG_LEAVE();
-}
-
-
-static
-void
-declare_internal_function( FILE * pout, idl_function_t * fun )
-{
-  DBUG_ENTER( "declare_internal_function" );
-
-  (void) fprintf( pout, "extern void %s%s( epc__function_t *function );\n", EPC_PREFIX, fun->name );
-
-  DBUG_LEAVE();
-}
-
-
-static
-void
-generate_c_source ( FILE * pout, /*@null@*/ const char *include_text )
-{
-  dword_t fnr /* function number */, pnr /* parameter number */;
-  idl_function_t * fun;
-
-  DBUG_ENTER( "generate_c_source" );
-
-  print_generate_comment( pout, "" );
-
-  if ( include_text != NULL )
+  (void) fprintf (pout, "extern %s %s( ",
+		  get_syntax (fun->return_value.datatype, C), fun->name);
+  if (fun->num_parameters > 0)
     {
-      (void) fprintf( pout, "%s\n", include_text );
+      for (nr = 0; nr < fun->num_parameters; nr++)
+	{
+	  idl_parameter_t *parm = fun->parameters[nr];
+
+	  print_formal_parameter (pout, parm->name, parm->mode,
+				  parm->datatype, C);
+
+	  if (nr < fun->num_parameters - 1)
+	    (void) fprintf (pout, ", ");
+	}
+    }
+  else				/* 0 parameters */
+    (void) fprintf (pout, "void");
+
+  (void) fprintf (pout, " );\n");
+
+  DBUG_LEAVE ();
+}
+
+
+static void
+declare_internal_function (FILE * pout, idl_function_t * fun)
+{
+  DBUG_ENTER ("declare_internal_function");
+
+  (void) fprintf (pout, "extern void %s%s( epc__function_t *function );\n",
+		  EPC_PREFIX, fun->name);
+
+  DBUG_LEAVE ();
+}
+
+
+static void
+generate_c_source (FILE * pout, /*@null@ */ const char *include_text)
+{
+  dword_t fnr /* function number */ , pnr /* parameter number */ ;
+  idl_function_t *fun;
+
+  DBUG_ENTER ("generate_c_source");
+
+  print_generate_comment (pout, "");
+
+  if (include_text != NULL)
+    {
+      (void) fprintf (pout, "%s\n", include_text);
     }
 
-  (void) fprintf( pout, "\
+  (void) fprintf (pout, "\
 #include <string.h>\n\
 #include <stdlib.h>\n\
-#include <epc.h>\n" );
+#include <epc.h>\n");
 
-  (void) fprintf( pout, "\
+  (void) fprintf (pout, "\
 #include <dbug.h>\n\
-#include \"%s.h\"\n\n", _interface.name );
+#include \"%s.h\"\n\n", _interface.name);
 
   /* parameter array */
-  for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) 
+  for (fnr = 0; fnr < _interface.num_functions; fnr++)
     {
       fun = _interface.functions[fnr];
-      (void) fprintf( pout, "\nstatic epc__parameter_t %s_parameters[] = {\n", fun->name );
-      for ( pnr = 0; pnr < fun->num_parameters; pnr++ )
-        {
-          (void) fprintf( pout, "  { \"%s\", %s, %s, %s, NULL },\n",
-                          fun->parameters[pnr]->name,
-                          get_constant_name( fun->parameters[pnr]->mode, C ), 
-                          get_constant_name( fun->parameters[pnr]->datatype, C ),
-                          get_size( fun->parameters[pnr] ) );
-        }
-      (void) fprintf( pout, "  { \"%s\", %s, %s, %s, NULL }\n", 
-                      fun->return_value.name,
-                      get_constant_name( fun->return_value.mode, C ), 
-                      get_constant_name( fun->return_value.datatype, C ),
-                      get_size( &fun->return_value ) );
-      (void) fprintf( pout, "};\n" );
-  }
+      (void) fprintf (pout, "\nstatic epc__parameter_t %s_parameters[] = {\n",
+		      fun->name);
+      for (pnr = 0; pnr < fun->num_parameters; pnr++)
+	{
+	  (void) fprintf (pout, "  { \"%s\", %s, %s, %s, NULL },\n",
+			  fun->parameters[pnr]->name,
+			  get_constant_name (fun->parameters[pnr]->mode, C),
+			  get_constant_name (fun->parameters[pnr]->datatype,
+					     C),
+			  get_size (fun->parameters[pnr]));
+	}
+      (void) fprintf (pout, "  { \"%s\", %s, %s, %s, NULL }\n",
+		      fun->return_value.name,
+		      get_constant_name (fun->return_value.mode, C),
+		      get_constant_name (fun->return_value.datatype, C),
+		      get_size (&fun->return_value));
+      (void) fprintf (pout, "};\n");
+    }
 
   /* function array */
-  (void) fprintf( pout, "\nstatic epc__function_t functions[] = {\n" );
-  for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) 
+  (void) fprintf (pout, "\nstatic epc__function_t functions[] = {\n");
+  for (fnr = 0; fnr < _interface.num_functions; fnr++)
     {
       fun = _interface.functions[fnr];
-      (void) fprintf( pout, "%s { \"%s", ( fnr > 0 ? "," : " " ), fun->name );
-      (void) fprintf( pout, "\",\n    %s%s, %ld, %ld, %s_parameters }\n", 
-                      EPC_PREFIX,
-                      fun->name,
-                      fun->oneway,
-                      fun->num_parameters+1, /* return value is a parameter too */
-                      fun->name
-                      );
-  }
-  (void) fprintf( pout, "};\n" );
+      (void) fprintf (pout, "%s { \"%s", (fnr > 0 ? "," : " "), fun->name);
+      (void) fprintf (pout, "\",\n    %s%s, %ld, %ld, %s_parameters }\n", EPC_PREFIX, fun->name, fun->oneway, fun->num_parameters + 1,	/* return value is a parameter too */
+		      fun->name);
+    }
+  (void) fprintf (pout, "};\n");
 
   /* interface */
-  (void) fprintf( pout, "\nepc__interface_t ifc_%s = {\n", _interface.name );
-  (void) fprintf( pout, "  \"%s\",\n", _interface.name );
-  (void) fprintf( pout, "  %ld,\n", _interface.num_functions );
-  (void) fprintf( pout, "  functions\n" );
-  (void) fprintf( pout, "};\n\n" );
+  (void) fprintf (pout, "\nepc__interface_t ifc_%s = {\n", _interface.name);
+  (void) fprintf (pout, "  \"%s\",\n", _interface.name);
+  (void) fprintf (pout, "  %ld,\n", _interface.num_functions);
+  (void) fprintf (pout, "  functions\n");
+  (void) fprintf (pout, "};\n\n");
 
 
-  for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) {
-    generate_c_function( pout, _interface.functions[fnr] );
-  }
+  for (fnr = 0; fnr < _interface.num_functions; fnr++)
+    {
+      generate_c_function (pout, _interface.functions[fnr]);
+    }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
-static
-void
-generate_header( FILE *pout )
+static void
+generate_header (FILE * pout)
 {
   dword_t nr;
 
-  DBUG_ENTER( "generate_header" );
+  DBUG_ENTER ("generate_header");
 
-  print_generate_comment( pout, "" );
+  print_generate_comment (pout, "");
 
   /* DECLARE THE INTERNAL FUNCTIONS CALLED, BECAUSE THE COMPILER NEEDS THEM!!! */
   /* HOWEVER DO NOT DECLARE EXTERNAL FUNCTIONS WHEN THEY DO NOT NEED TO BE PRINTED */
-  for ( nr = 0; nr < _interface.num_functions; nr++ ) {
-    if ( print_external_function != 0 )
-      declare_external_function( pout, _interface.functions[nr] );
-    declare_internal_function( pout, _interface.functions[nr] );
-  }
+  for (nr = 0; nr < _interface.num_functions; nr++)
+    {
+      if (print_external_function != 0)
+	declare_external_function (pout, _interface.functions[nr]);
+      declare_internal_function (pout, _interface.functions[nr]);
+    }
 
   /* interface declaration */
-  (void) fprintf( pout, "\nextern epc__interface_t ifc_%s;\n", _interface.name );
+  (void) fprintf (pout, "\nextern epc__interface_t ifc_%s;\n",
+		  _interface.name);
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
 }
 
 
 void
-generate_c( const char *include_text )
+generate_c (const char *include_text)
 {
   char filename[256];
   FILE *pout = NULL;
 
-  DBUG_ENTER( "generate_c" );
+  DBUG_ENTER ("generate_c");
 
-  if ( print_external_function == 0 )
+  if (print_external_function == 0)
     print_external_function = (include_text == NULL ? 1 : 0);
 
   /* Create header file */
 
-  (void) snprintf( filename, sizeof(filename), "%s.h", _interface.name );
-  if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
+  (void) snprintf (filename, sizeof (filename), "%s.h", _interface.name);
+  if ((pout = fopen (filename, "w")) == NULL)
     {
       goto open_error;
     }
   else
     {
-      (void) fprintf( stdout, "Creating %s\n", filename );
-      generate_header( pout );
-      (void) fclose( pout );
+      (void) fprintf (stdout, "Creating %s\n", filename);
+      generate_header (pout);
+      (void) fclose (pout);
     }
 
-  (void) snprintf( filename, sizeof(filename), "%s.c", _interface.name );
+  (void) snprintf (filename, sizeof (filename), "%s.c", _interface.name);
 
-  if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
+  if ((pout = fopen (filename, "w")) == NULL)
     {
       goto open_error;
     }
   else
     {
-      (void) fprintf( stdout, "Creating %s\n", filename );
-      generate_c_source( pout, include_text );
-      (void) fclose( pout );
+      (void) fprintf (stdout, "Creating %s\n", filename);
+      generate_c_source (pout, include_text);
+      (void) fclose (pout);
     }
 
-  DBUG_LEAVE();
+  DBUG_LEAVE ();
   return;
 
- open_error:
-  (void) fprintf( stderr, "Cannot write file %s\n", filename );
-  exit( EXIT_FAILURE );
+open_error:
+  (void) fprintf (stderr, "Cannot write file %s\n", filename);
+  exit (EXIT_FAILURE);
 }
-
-

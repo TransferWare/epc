@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.10  2004/10/21 11:54:32  gpaulissen
+ * indent *.c *.h
+ *
  * Revision 1.9  2004/10/20 13:34:06  gpaulissen
  * make lint
  *
@@ -53,47 +56,43 @@
 
 #include <idl_defs.h>
 
-typedef /*@only@*/ struct {
-  /*@unique@*/ char name[MAX_PARM_NAME_LEN];
-  /*@unique@*/ char proc_name[MAX_PARM_NAME_LEN+4];
+typedef /*@only@ */ struct
+{
+  /*@unique@ */ char name[MAX_PARM_NAME_LEN];
+  /*@unique@ */ char proc_name[MAX_PARM_NAME_LEN + 4];
   idl_mode_t mode;
   idl_type_t datatype;
   dword_t size;
 } idl_parameter_t;
 
-typedef /*@only@*/ struct {
-  /*@unique@*/ char name[MAX_FUNC_NAME_LEN];
+typedef /*@only@ */ struct
+{
+  /*@unique@ */ char name[MAX_FUNC_NAME_LEN];
   idl_parameter_t return_value;
   int oneway;
   dword_t num_parameters;
   idl_parameter_t *parameters[MAX_PARAMETERS];
 } idl_function_t;
 
-typedef struct {
-  /*@unique@*/ char name[MAX_INTERFACE_NAME_LEN];
+typedef struct
+{
+  /*@unique@ */ char name[MAX_INTERFACE_NAME_LEN];
   dword_t num_functions;
   idl_function_t *functions[MAX_FUNCTIONS];
 } idl_interface_t;
 
 
-extern
-void
-set_interface( char *name );
+extern void set_interface (char *name);
+
+extern void add_function (char *name, idl_type_t datatype, const int oneway);
 
 extern
-void
-add_function( char *name, idl_type_t datatype, const int oneway );
+  void
+add_parameter (char *name, idl_mode_t mode, idl_type_t datatype,
+	       dword_t size);
 
-extern
-void
-add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size );
+extern void generate_plsql (void);
 
-extern
-void
-generate_plsql( void );
-
-extern
-void
-generate_c( const char *include_text );
+extern void generate_c (const char *include_text);
 
 #endif
