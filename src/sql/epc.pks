@@ -1,9 +1,13 @@
+/*
 REMARK
 REMARK  $Header$
 REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.4  2004/12/16 17:50:31  gpaulissen
+REMARK  REMARK blocks commented for PLDoc
+REMARK
 REMARK  Revision 1.3  2004/04/21 11:16:54  gpaulissen
 REMARK  .
 REMARK
@@ -15,14 +19,16 @@ REMARK  New interface for epc
 REMARK
 REMARK
 REMARK
+*/
 
-create or replace package epc as
+create or replace package epc is
 /**
 --
 -- This package is used to implement RPC like functionality on Oracle.
 -- Messages are sent by the client to a server. The transport mechanisms
 -- supported are database pipes (DBMS_PIPE) and TCP/IP (UTL_TCP).
 --
+-- @headcom
 */
 
 /* see $EPC_HOME/src/lib/idl_defs.h */
