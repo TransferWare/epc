@@ -19,6 +19,10 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.12  1999/10/20 10:58:32  gpaulissen
+ * epc.request_set_parameter and epc.request_get_parameter instead of
+ * dbms_pipe.pack_message and dbms_pipe.unpack_message
+ *
  * Revision 1.11  1999/08/26 12:35:04  gpaulissen
  * Added DBUG info
  *
@@ -438,7 +442,7 @@ static void generate_plsql_function_body( FILE * pout, idl_function_t * fun )
 		parm = fun->parameters[i];
 
 		if ( parm->mode != C_OUT )
-			fprintf( pout, "\t\tdbms_pipe.pack_message( %s );\n", parm->name );
+			fprintf( pout, "\t\tepc.request_set_parameter( %s );\n", parm->name );
 	}
 
 	fprintf( pout, "\t\tepc.request_perform_routine;\n" );
@@ -594,7 +598,7 @@ static void generate_c_function( FILE * pout, idl_function_t * fun )
 \tEXEC SQL EXECUTE\n\
 \tBEGIN\n" );
 			}
-			fprintf( pout, "\t\tdbms_pipe.unpack_message( :%s );\n", parm->proc_name ); 
+			fprintf( pout, "\t\tepc.request_get_parameter( :%s );\n", parm->proc_name ); 
 		}
    	}
 
