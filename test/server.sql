@@ -79,7 +79,7 @@ declare
           elsif msg_type <> 0
           then
             dbms_output.put_line('unknown next item type: ' || to_char(msg_type));
-            exit unpack_message_loop;
+            /* exit unpack_message_loop; */
           else
             exit unpack_message_loop;
           end if;
@@ -248,28 +248,35 @@ begin
 
       request_get_header(v_result_pipe, v_interface_name, v_routine_name);
 
-      if v_routine_name like '%proc01%'
-      then
-        proc01;
-      elsif v_routine_name like '%proc02%'
-      then
-        proc02;
-      elsif v_routine_name like '%proc03%'
-      then
-        proc03;
-      elsif v_routine_name like '%proc04%'
-      then
-        proc04;
-      elsif v_routine_name like '%nothing1%'
-      then
-        nothing1;
-      elsif v_routine_name like '%nothing2%'
-      then
-        nothing2;
-        v_routine_name := null;
-      else
-        v_routine_name := null;      
-      end if;
+      begin
+        if v_routine_name like '%proc01%'
+        then
+          proc01;
+        elsif v_routine_name like '%proc02%'
+        then
+          proc02;
+        elsif v_routine_name like '%proc03%'
+        then
+          proc03;
+        elsif v_routine_name like '%proc04%'
+        then
+          proc04;
+        elsif v_routine_name like '%nothing1%'
+        then
+          nothing1;
+        elsif v_routine_name like '%nothing2%'
+        then
+          nothing2;
+          v_routine_name := null;
+        else
+          v_routine_name := null;      
+        end if;
+      exception
+        when others
+        then
+          dbms_output.put_line( 'Routine ' || v_routine_name );
+          raise;
+      end; 
 
 --      v_routine_name := null;
 
