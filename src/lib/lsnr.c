@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.5  2004/10/15 20:41:32  gpaulissen
+ * XML namespace bugs solved.
+ *
  * Revision 1.4  2004/02/22 17:14:14  gpaulissen
  * bug id 891761
  *
@@ -136,15 +139,11 @@ epc_list_main( int argc, char **argv, epc_interface_t *epc_interface, ... )
         {
           switch( argv[nr][1] ) 
             {
-            case '#':
+            case 'D':
               if ( argv[nr][2] != '\0' )
                 dbug_options = &argv[nr][2];
               else
                 dbug_options = &argv[++nr][0];
-              break;
-
-            case 'd':
-              dbug_options = "d,t,g";
               break;
 
             case 'h': 
@@ -263,8 +262,7 @@ help( char *procname )
 Syntax: %s -# <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n\
-        #       set dbug options\n\
-        d       full debugging, tracing and profiling on\n\
+        D       set dbug options\n\
         h       this help\n\
         p       set name of request pipe\n\
         u       user connect string for database logon, e.g. SCOTT/TIGER@DB\n\
