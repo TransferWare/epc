@@ -12,21 +12,12 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.2  1998/02/03 09:51:26  gpauliss
+ * - Changed old K&R syntax to ANSI C syntax.
+ * - Added extern declaration of IDL function to be called.
+ *
  * Revision 1.1  1998/01/25 15:20:21  gpauliss
  * Initial revision
- *
- * Revision 1.4  1997/07/10 14:33:58  hgwouden
- * stable
- *
- * Revision 1.3  1997/07/08 14:14:47  hgwouden
- * first stable version - generates executable code
- *
- * Revision 1.2  1997/07/02 14:46:14  hgwouden
- * Added c generation code
- *
- * Revision 1.1  1997/06/25 12:22:27  hgwouden
- * Initial revision
- *
  *
  */
 
@@ -39,6 +30,41 @@
 #include "idl_keywords.h"
 
 static interface _interface;
+
+keyword keywords[] = {
+	{ C_VOID, 	{	{ C, 		"void",		"C_VOID" },
+					{ PLSQL,	"",			"epc.c_void" }
+				}
+	},
+	{ C_INT,	{	{ C, 		"int",		"C_INT" },
+					{ PLSQL,	"integer",	"epc.c_int" }
+				}
+	},
+	{ C_FLOAT,	{	{ C,		"float",	"C_FLOAT" },
+					{ PLSQL,	"number",	"epc.c_float" }
+				}
+	},
+	{ C_DOUBLE,	{	{ C,		"double",	"C_DOUBLE" },
+					{ PLSQL,	"number",	"epc.c_double" }
+				}
+	},
+	{ C_STRING,	{	{ C,		"char *",	"C_STRING" },
+					{ PLSQL,	"varchar2",	"epc.c_string" }
+				}
+	},
+	{ C_IN,		{	{ C,		"",			"C_IN" },
+					{ PLSQL,	"in",		"epc.c_in" }
+				}
+	},
+	{ C_OUT,	{	{ C,		"*",		"C_OUT" },
+					{ PLSQL,	"out",		"epc.c_out" } 
+				}
+	},
+	{ C_INOUT,	{	{ C,		"*",		"C_INOUT" },
+					{ PLSQL,	"in out",	"epc.c_inout" }
+				}
+	}
+};
 
 void print_parameter( parm )
 parameter * parm;
@@ -60,7 +86,7 @@ function * fun;
 	}
 }
 
-void print_interface ()
+void print_interface ( void )
 {
 	int i;
 
@@ -71,16 +97,13 @@ void print_interface ()
 	}
 }
 
-void set_interface ( name )
-char * name;
+void set_interface ( char *name )
 {
 	strcpy( _interface.name, name );
 	_interface.num_functions = 0;
 }
 
-void add_function ( name, datatype )
-char *name;
-int datatype;
+void add_function ( char *name, int datatype )
 {
 	function * fun = malloc(sizeof(function));
 
@@ -92,10 +115,7 @@ int datatype;
 	_interface.num_functions++;
 }
 
-void add_parameter ( name, mode, datatype )
-char *name;
-int mode;
-int datatype;
+void add_parameter ( char *name, int mode, int datatype )
 {
 	function * fun = _interface.functions[_interface.num_functions-1];
 	parameter * parm = malloc(sizeof(parameter));
@@ -108,12 +128,8 @@ int datatype;
 	fun->num_parameters++;
 }
 
-char * 
-translate ( type, language )
-int type;
-int language;
+mapping *get_mapping( int type, int language )
 {
-	extern keyword keywords[];
 	int i, j;
 	int num_keywords = sizeof(keywords) / sizeof(keyword);
 
@@ -121,10 +137,10 @@ int language;
 		if ( keywords[i].key == type ) {
 			for ( j=0; j<NUM_LANGUAGES; j++ ) {
 				if ( keywords[i].mappings[j].language == language ) {
-					return keywords[i].mappings[j].value;
+					return &keywords[i].mappings[j];
 				}
 			}
-			printf( "No value for %d in language %d\n", type, language );
+			printf( "No mapping for %d in language %d\n", type, language );
 			exit(1);
 		}
 	}
@@ -132,9 +148,17 @@ int language;
 	exit(1);
 }
 
-void generate_plsql_parameters ( pout, fun )
-FILE * pout;
-function * fun;
+char *get_syntax( int type, int language )
+{
+	return	get_mapping( type, language )->syntax;
+}
+
+char *get_constant_name( int type, int language )
+{
+	return	get_mapping( type, language )->constant_name;
+}
+
+void generate_plsql_parameters( FILE * pout, function * fun )
 {
 	int i;
 	parameter * parm;
@@ -150,15 +174,13 @@ function * fun;
 
 		fprintf( pout, "\t\t%s %s %s", 
 			parm->name, 
-			translate( parm->mode, PLSQL ),
-			translate( parm->datatype, PLSQL ) );
+			get_syntax( parm->mode, PLSQL ),
+			get_syntax( parm->datatype, PLSQL ) );
 	}
 	fprintf( pout, "\n\t)" );
 }
 
-void generate_plsql_function ( pout, fun )
-FILE * pout;
-function * fun;
+void generate_plsql_function( FILE * pout, function * fun )
 {
 	if ( fun->datatype != C_VOID ) {
 		fprintf( pout, "\tfunction %s", fun->name );
@@ -173,20 +195,17 @@ function * fun;
 	}
 
 	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, " return %s", translate( fun->datatype, PLSQL ) );
+		fprintf( pout, " return %s", get_syntax( fun->datatype, PLSQL ) );
 	}
 }
 
-void generate_plsql_function_declaration ( pout, fun )
-FILE * pout;
-function * fun;
+void generate_plsql_function_declaration( FILE * pout, function * fun )
 {
 	generate_plsql_function ( pout, fun );
 	fprintf( pout, ";\n\n" );
 }
 
-void generate_plsql_header( pout )
-FILE * pout;
+void generate_plsql_header( FILE * pout )
 {
 	int i;
 
@@ -201,9 +220,7 @@ FILE * pout;
 	fprintf( pout, "/\n" );
 }
 
-void generate_plsql_function_body ( pout, fun )
-FILE * pout;
-function * fun;
+void generate_plsql_function_body( FILE * pout, function * fun )
 {
 	int i;
 	parameter * parm;
@@ -213,61 +230,31 @@ function * fun;
 
 	/* RETURN VARIABLE */
 	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, " \t\tresult %s;\n", translate( fun->datatype, PLSQL ) );
+		fprintf( pout, " \t\tresult %s;\n", get_syntax( fun->datatype, PLSQL ) );
 	}
 
 	fprintf( pout, "\tbegin\n" );
 
 	/* SETUP OF CLIENT SIDE FUNCTION CALL */
 	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, "\t\tepc.set_function( '%s', epc.c_%s );\n", 
-			fun->name, translate( fun->datatype, PLSQL ) );
+		fprintf( pout, "\t\tepc.set_function( '%s', '%s', %s );\n", 
+			_interface.name,
+			fun->name, 
+			get_constant_name( fun->datatype, PLSQL ) );
 	}
 	else {
-		fprintf( pout, "\t\tepc.set_procedure( '%s' );\n", fun->name );
+		fprintf( pout, "\t\tepc.set_procedure( '%s', '%s' );\n", 
+			_interface.name,
+			fun->name );
 	}
 
 
 	for ( i=0; i<fun->num_parameters; i++) {
 		parm = fun->parameters[i];
-		fprintf( pout, "\t\tepc.set_parameter_value( " );
-
-		switch( parm->mode ) {
-			case C_IN:
-				fprintf( pout, "epc.c_in, " );
-				break;
-			case C_INOUT:
-				fprintf( pout, "epc.c_inout, " );
-				break;
-			case C_OUT:
-				fprintf( pout, "epc.c_out, " );
-				break;
-			default:
-				fprintf( stderr, 
-					"Parameter mode not supported: %d\n", parm->mode );
-				exit(1);
-
-		}
-
-		switch( parm->datatype ) {
-			case C_STRING:
-				fprintf( pout, "epc.c_string" );
-				break;
-			case C_INT:
-				fprintf( pout, "epc.c_int" );
-				break;
-			case C_FLOAT:
-				fprintf( pout, "epc.c_float" );
-				break;
-			case C_DOUBLE:
-				fprintf( pout, "epc.c_double" );
-				break;
-			default:
-				fprintf( stderr, 
-					"Parameter datatype not supported: %d\n", parm->datatype );
-				exit(1);
-
-		}
+		fprintf( pout, "\t\tepc.set_parameter_value( %s, %s",
+				get_constant_name( parm->mode, PLSQL ), 
+				get_constant_name( parm->datatype, PLSQL ) 
+		);
 		if ( parm->mode != C_OUT ) {
 		   fprintf( pout, ", %s );\n", parm->name );
 		}
@@ -306,8 +293,7 @@ function * fun;
 	fprintf( pout, "\tend;\n\n" );
 }
 
-void generate_plsql_body ( pout )
-FILE * pout;
+void generate_plsql_body( FILE * pout )
 {
 	int i;
 
@@ -322,7 +308,7 @@ FILE * pout;
 	fprintf( pout, "/\n" );
 }
 
-void generate_plsql ()
+void generate_plsql ( void )
 {
 	char filename[256];
 	FILE * pout;
@@ -335,16 +321,14 @@ void generate_plsql ()
 	generate_plsql_body ( pout );
 }
 
-void generate_c_parameters ( pout, fun )
-FILE * pout;
-function * fun;
+void generate_c_parameters( FILE * pout, function * fun )
 {
 	int i;
 	parameter * parm;
 
 	for ( i=0; i<fun->num_parameters; i++) {
 		parm = fun->parameters[i];
-		fprintf( pout, "\t%s", translate( parm->datatype, C ) );
+		fprintf( pout, "\t%s", get_syntax( parm->datatype, C ) );
 
 		if ( parm->mode != C_IN && parm->datatype != C_STRING ) {
 			fprintf( pout, " *" );
@@ -357,7 +341,7 @@ function * fun;
 		}
 
 		fprintf( pout, "(" );
-		fprintf( pout, "%s", translate( parm->datatype, C ) );
+		fprintf( pout, "%s", get_syntax( parm->datatype, C ) );
 		if ( parm->datatype != C_STRING ) {
 			fprintf( pout, " *" );
 		}
@@ -368,9 +352,7 @@ function * fun;
 	fprintf( pout, "\n" );
 }
 
-void generate_c_function ( pout, fun )
-FILE * pout;
-function * fun;
+void generate_c_function ( FILE * pout, function * fun )
 {
 	int i;
 
@@ -379,11 +361,34 @@ function * fun;
 
 	/* VARIABLE TO HOLD RETURN VALUE */
 	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, "\t%s res;\n\t%s %s();\n", 
-			translate( fun->datatype, C ),
-			translate( fun->datatype, C ), 
-			fun->name );
+		fprintf( pout, "\t%s res;\n", 
+			get_syntax( fun->datatype, C )
+		);
 	}
+
+	/* DECLARE THE FUNCTION CALLED, BECAUSE THE PRECOMPILER NEEDS IT!!! */
+	fprintf( pout, "\textern %s %s( ", 
+		get_syntax( fun->datatype, C ),
+		fun->name
+	);
+	if ( fun->num_parameters > 0 ) {
+		for ( i=0; i<fun->num_parameters; i++) {
+			parameter * parm = fun->parameters[i];
+
+			fprintf( pout, "%s", get_syntax( parm->datatype, C ) );
+
+			if ( parm->mode != C_IN && parm->datatype != C_STRING ) {
+				fprintf( pout, " *" );
+			}
+
+			if ( i < fun->num_parameters - 1 )
+				fprintf( pout, ", " );
+		}
+	}
+	else /* 0 parameters */
+		fprintf( pout, "void" );
+
+	fprintf( pout, " );\n" );
 
 	/* PARAMETERS */
 	if ( fun->num_parameters > 0 ) {
@@ -408,12 +413,12 @@ function * fun;
 	/* BINDING TO RETVAL PARAMETER */
 	switch ( fun->datatype ) {
 		case C_STRING:
-			fprintf( pout, "\tmemcpy( call->return_value, res, strlen(res)+1 );\n" );
+			fprintf( pout, "\tmemcpy( call->return_value.value, res, strlen(res)+1 );\n" );
 			break;
 		case C_INT:
 		case C_FLOAT:
 		case C_DOUBLE:
-			fprintf( pout, "\tmemcpy( call->return_value, &res, sizeof(res) );\n" );
+			fprintf( pout, "\tmemcpy( call->return_value.value, &res, sizeof(res) );\n" );
 			break;
 		case C_VOID:
 			/* do nothing */
@@ -426,8 +431,7 @@ function * fun;
 	fprintf( pout, "}\n\n" );
 }
 
-void generate_c_source ( pout )
-FILE * pout;
+void generate_c_source ( FILE * pout )
 {
 	int i;
 
@@ -435,6 +439,7 @@ FILE * pout;
 	fprintf( pout, " ** Generated by EPC compiler **\n" );
 	fprintf( pout, " *******************************/\n\n" );
 
+	fprintf( pout, "#include <string.h>\n" );
 	fprintf( pout, "#include \"%s.h\"\n\n", _interface.name );
 
 	for ( i=0; i<_interface.num_functions; i++) {
@@ -442,8 +447,7 @@ FILE * pout;
 	}
 }
 
-void generate_interface_header ( pout )
-FILE * pout;
+void generate_interface_header ( FILE * pout )
 {
 	fprintf( pout, "/*******************************\n" );
 	fprintf( pout, " ** Generated by EPC compiler **\n" );
@@ -452,8 +456,7 @@ FILE * pout;
 	fprintf( pout, "#include \"%s.h\"\n\n", _interface.name );
 }
 
-void generate_header ( pout )
-FILE * pout;
+void generate_header ( FILE *pout )
 {
 	int i;
 	function * fun;
@@ -462,7 +465,7 @@ FILE * pout;
 	fprintf( pout, " ** Generated by EPC compiler **\n" );
 	fprintf( pout, " *******************************/\n\n" );
 
-	fprintf( pout, "#include <epc_types.h>\n\n" );
+	fprintf( pout, "#include \"epc_types.h\"\n\n" );
 
 	/* forward references to functions */
 	for ( i=0; i<_interface.num_functions; i++) {
@@ -472,16 +475,20 @@ FILE * pout;
 
 	/* function array */
 	fprintf( pout, "\nint num_functions = %d;\n\n", _interface.num_functions );
-	fprintf( pout, "function functions[] = {\n" );
+	fprintf( pout, "function_t functions[] = {\n" );
 	for ( i=0; i<_interface.num_functions; i++) {
 		fun = _interface.functions[i];
-		fprintf( pout, "\t{ \"%s\", %d, _%s },\n", 
-			fun->name, fun->datatype, fun->name );
+		fprintf( pout, "\t{ \"%s\", %s, _%s }%s\n", 
+			fun->name, 
+			get_constant_name( fun->datatype, C ), 
+			fun->name,
+			( i < _interface.num_functions-1 ? "," : "" ) 
+		);
 	}
 	fprintf( pout, "};\n" );
 }
 
-void generate_c ()
+void generate_c ( void )
 {
 	char filename[256];
 	FILE *pout_i, * pout_c, * pout_h;
