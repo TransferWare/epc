@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.47  2004/10/20 20:38:44  gpaulissen
+ * make lint
+ *
  * Revision 1.46  2004/10/19 19:45:28  gpaulissen
  * CTRL-C behaviour enhanced
  *
@@ -320,6 +323,22 @@ handle_interrupt(epc__info_t *epc__info)
 
   DBUG_LEAVE();
 }
+
+static
+void
+epc__abort( char *msg )
+{
+  char err_msg[512];
+  size_t buf_len, msg_len;
+
+  (void) printf("\n%s\n", msg);
+  buf_len = sizeof (err_msg);
+  sqlglm(err_msg, &buf_len, &msg_len);
+  (void) printf("%.*s\n", msg_len, err_msg);
+
+  exit(EXIT_FAILURE);
+}
+
 
 /*
   GJP 23-02-2004

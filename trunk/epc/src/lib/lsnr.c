@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.8  2004/10/20 20:38:44  gpaulissen
+ * make lint
+ *
  * Revision 1.7  2004/10/19 14:35:09  gpaulissen
  * epc_ -> epc__
  *
@@ -103,6 +106,13 @@ const char vcid[] = "$Id$";
 # include <u_alloc.h>
 #endif
 
+extern
+epc__error_t
+epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call );
+extern
+epc__error_t
+epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call );
+
 /* declarations */
 
 static
@@ -111,6 +121,7 @@ help( char *procname );
 
 
 static
+/*@observer@*/
 char *
 version( void )
 {
@@ -134,15 +145,9 @@ epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
   char *logon = NULL;
   char *request_pipe = NULL;
   int nr;
-  epc__info_t *epc__info = NULL;
+  /*@only@*/ /*@null@*/ epc__info_t *epc__info = NULL;
   epc__error_t ret;
-  char *dbug_options = "";
-  extern
-    epc__error_t
-    epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call );
-  extern
-    epc__error_t
-    epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call );
+  /*@only@*/ /*@null@*/ char *dbug_options = NULL;
 
   /* process command line parameters */
   for ( nr = 0; nr < argc; nr++ ) 
@@ -153,9 +158,18 @@ epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
             {
             case 'D':
               if ( argv[nr][2] != '\0' )
-                dbug_options = &argv[nr][2];
+                {
+                  dbug_options = (char*)malloc(strlen(&argv[nr][2])+1);
+                  assert(dbug_options != NULL);
+                  strcpy(dbug_options, &argv[nr][2]);
+                }
               else
-                dbug_options = &argv[++nr][0];
+                {
+                  ++nr;
+                  dbug_options = (char*)malloc(strlen(&argv[nr][0])+1);
+                  assert(dbug_options != NULL);
+                  strcpy(dbug_options, &argv[nr][0]);
+                }
               break;
 
             case 'h': 
@@ -179,7 +193,6 @@ epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
             case 'v':
               (void) fprintf( stdout, "EPC listener version: %s\n", version() );
               return OK;
-              break;
 
             default : 
               help( argv[0] ); 
@@ -188,75 +201,92 @@ epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
         }
     }
 
-  assert( OK == 0 );
-
-  for ( nr = 0, ret = OK; ret == OK && nr < 7; nr++ )
+  if ( dbug_options == NULL )
     {
-      switch( nr )
-        {
-        case 0:
-          ret = dbug_init( dbug_options, argv[0] );
-          break;
-                        
-        case 1:
-          epc__info = epc__init();
-          if ( epc__info == NULL )
-            ret = MEMORY_ERROR;
-          break;
-
-        case 2:
-          ret = epc__set_logon( epc__info, logon );
-          break;
-
-        case 3:
-          ret = epc__set_pipe( epc__info, request_pipe );
-          break;
-
-        case 4:
-          {
-            va_list ap;
-
-            va_start( ap, epc_interface );
-            for ( ; ret == OK && epc_interface != NULL; )
-              {
-                ret = epc__add_interface( epc__info, epc_interface );
-                epc_interface = va_arg(ap, epc__interface_t *);
-              }
-            va_end( ap );
-          }
-          break;
-
-        case 5:
-          ret = epc__connect( epc__info );
-          break;
-
-        case 6:
-          ret = epc__handle_requests( epc__info, epc_recv_request_pipe, epc_send_response_pipe );
-          break;
-        }
+      dbug_options = (char*)malloc(1);
+      assert(dbug_options != NULL);
+      dbug_options[0] = '\0';
     }
 
-  switch( nr-1 ) /* last correct step */
-    {
-    case 6:
-    case 5:
-      ret = epc__disconnect( epc__info );
-      /* no break */
+  assert( OK == 0 );
 
+  do
+    {
+      nr = 0;
+      if ( (ret = dbug_init( dbug_options, argv[0] )) != OK )
+        break;
+                        
+      nr++; /* 1 */
+      epc__info = epc__init();
+      if ( epc__info == NULL )
+        {
+          ret = MEMORY_ERROR;
+          break;
+        }
+
+      nr++; /* 2 */
+      if ( (ret = epc__set_logon( epc__info, logon )) != OK )
+        break;
+
+      nr++; /* 3 */
+      if ( (ret = epc__set_pipe( epc__info, request_pipe )) != OK )
+        break;
+
+      nr++; /* 4 */
+      {
+        va_list ap;
+
+        va_start( ap, epc_interface );
+        for ( ; ret == OK && epc_interface != NULL; )
+          {
+            ret = epc__add_interface( epc__info, epc_interface );
+            epc_interface = va_arg(ap, epc__interface_t *);
+          }
+        va_end( ap );
+      }
+      if ( ret != OK )
+        break;
+
+      nr++; /* 5 */
+      if ( (ret = epc__connect( epc__info )) != OK )
+        break;
+
+      nr++; /* 6 */
+      if ( (ret = epc__handle_requests( epc__info, epc_recv_request_pipe, epc_send_response_pipe )) != OK )
+        break;
+
+      nr++;
+    }
+  while (0);
+
+  switch( nr ) /* last step */
+    {
+    case 7:
+    case 6:
+      assert( epc__info != NULL );
+      ret = epc__disconnect( epc__info );
+      /*@-casebreak@*/
+
+    case 5:
     case 4:
     case 3:
     case 2:
-    case 1:
       epc__done( &epc__info );
-      /* no break */
+      /*@-casebreak@*/
+
+    case 1:
+      (void) dbug_done();
+      /*@-casebreak@*/
 
     case 0:
-      dbug_done();
       break;
 
     default:
+      assert(nr >= 0 && nr <= 7);
       break;
     }
+
+  free(dbug_options);
 
 #if defined(HASULIB) && HASULIB != 0
   (void) AllocStopCheckPoint(chk);

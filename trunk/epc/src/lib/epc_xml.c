@@ -125,7 +125,7 @@ epc__xml_done( epc__info_t *epc__info )
 unsigned int
 epc__xml_parse( epc__info_t *epc__info, epc__call_t *epc__call, const char *buf, const size_t len )
 {
-  uword ecode = 0;
+  uword ecode = XMLERR_OK;
   ub4 flags = XML_FLAG_DISCARD_WHITESPACE; /* | XML_FLAG_VALIDATE;*/
   xml_info_t *xml_info = (xml_info_t *)epc__info->xml_info;
 
@@ -135,6 +135,7 @@ epc__xml_parse( epc__info_t *epc__info, epc__call_t *epc__call, const char *buf,
 
   xml_info->epc__xml_ctx.epc__call = epc__call;
   ecode = xmlparsebuf(xml_info->xmlctx, (oratext *) buf, len, (oratext *) 0, flags);
+  xmlclean(xml_info->xmlctx);
 
   DBUG_PRINT("output", ("ecode: %lu", (unsigned long)ecode));
   DBUG_LEAVE();
@@ -158,7 +159,7 @@ start_document(void *epc__xml_ctx_ptr)
 
   dbug_enter(__FILE__, "document", __LINE__, NULL);
 
-  return 0;
+  return XMLERR_OK;
 }
 
 static
@@ -183,7 +184,7 @@ end_document(void *epc__xml_ctx_ptr)
 
   dbug_leave(__LINE__, NULL);
 
-  return 0;
+  return XMLERR_OK;
 }
 
 static
@@ -265,11 +266,11 @@ start_element(void *epc__xml_ctx_ptr, const oratext *name,
                                 break;
 
                               case C_FLOAT:
-                                *((float*)epc__call->function->parameters[nr].data) = 0;
+                                *((float*)epc__call->function->parameters[nr].data) = 0.0F;
                                 break;
 
                               case C_DOUBLE:
-                                *((double*)epc__call->function->parameters[nr].data) = 0;
+                                *((double*)epc__call->function->parameters[nr].data) = 0.0F;
                                 break;
                           
                               case C_VOID:
@@ -316,7 +317,7 @@ start_element(void *epc__xml_ctx_ptr, const oratext *name,
         }
     }
 
-  ecode = epc__call->epc__error == OK ? 0 : 1;
+  ecode = epc__call->epc__error == OK ? XMLERR_OK : XMLERR_OK+1;
 
   dbug_print(__LINE__, "info", "epc__error: %d; ecode: %u", (int)epc__call->epc__error, (unsigned)ecode);
 
@@ -329,7 +330,7 @@ end_element(void *epc__xml_ctx_ptr, const oratext *name)
 {
   dbug_leave(__LINE__, NULL);
 
-  return 0;
+  return XMLERR_OK;
 }
 
 static
@@ -384,7 +385,7 @@ element_content(void *epc__xml_ctx_ptr, const oratext *ch, size_t len)
               epc__call->function->parameters[nr].type <= C_DATATYPE_MAX );
     }
 
-  return 0;
+  return XMLERR_OK;
 }
 
 static
