@@ -78,12 +78,22 @@ BEGIN
 END;
 /
 
-prompt Performance test doing N number of calls doing nothing
+undefine N
+
+prompt Performance test doing &&N number of calls doing nothing with results returned.
 BEGIN
-	FOR	v_nr IN 1..&1
+        FOR     v_nr IN 1..&&N
 	LOOP
-		epctest.nothing;
+		epctest.nothing1;
 	END LOOP;
 END;
 /
 
+prompt Performance test doing &&N number of calls doing nothing without results returned.
+BEGIN
+        FOR     v_nr IN 1..&&N
+	LOOP
+		epctest.nothing2;
+	END LOOP;
+END;
+/

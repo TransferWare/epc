@@ -13,8 +13,8 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
- * Revision 1.13  2001/01/24 16:19:11  gpaulissen
- * Release 1.6.7
+ * Revision 1.14  2001/01/24 16:29:09  gpaulissen
+ * Release 2.0.0
  *
  * Revision 1.12  2000/08/14 13:47:40  gpaulissen
  * * Added -v command line option for version info.
@@ -123,24 +123,30 @@ end_include     "%}"
 <NORMAL>"interface"			{ DBUG_PRINT( "info", ("<NORMAL>\"interface\" '%s'", yytext));
                                           return INTERFACE; }
 <NORMAL>"[in]"				{ DBUG_PRINT( "info", ("<NORMAL>\"[in]\" '%s'", yytext));
-                                          yylval.ival = C_IN; return IN; }
+                                          yylval.mval = C_IN; return IN; }
 <NORMAL>"[out]"				{ DBUG_PRINT( "info", ("<NORMAL>\"[out]\" '%s'", yytext));
-                                          yylval.ival = C_OUT; return OUT; }
+                                          yylval.mval = C_OUT; return OUT; }
 <NORMAL>"[inout]"			{ DBUG_PRINT( "info", ("<NORMAL>\"[inout]\" '%s'", yytext));
-                                          yylval.ival = C_INOUT; return INOUT; }
+                                          yylval.mval = C_INOUT; return INOUT; }
 
 <NORMAL>"char"[ \t]*"*"			{ DBUG_PRINT( "info", ("<NORMAL>\"char\"[ \\t]*\"*\" '%s'", yytext));
-                                          yylval.ival = C_STRING; return STRING; }
+                                          yylval.tval.datatype = C_STRING; yylval.tval.size = MAX_STR_VAL_LEN;
+                                          return STRING; }
+<NORMAL>"char["[0-9]+"]"		{ DBUG_PRINT( "info", ("<NORMAL>\"char[\"[0-9]+\"]\" '%s'", yytext));
+                                          yylval.tval.datatype = C_STRING; yylval.tval.size = atoi(yytext+5); 
+                                          return STRING; }
 <NORMAL>"int"				{ DBUG_PRINT( "info", ("<NORMAL>\"int\" '%s'", yytext));
-                                          yylval.ival = C_INT; return INT; }
+                                          yylval.tval.datatype = C_INT; return INT; }
 <NORMAL>"long"				{ DBUG_PRINT( "info", ("<NORMAL>\"long\" '%s'", yytext));
-                                          yylval.ival = C_LONG; return LONG; }
+                                          yylval.tval.datatype = C_LONG; return LONG; }
 <NORMAL>"float"				{ DBUG_PRINT( "info", ("<NORMAL>\"float\" '%s'", yytext));
-                                          yylval.ival = C_FLOAT; return FLOAT; }
+                                          yylval.tval.datatype = C_FLOAT; return FLOAT; }
 <NORMAL>"double"			{ DBUG_PRINT( "info", ("<NORMAL>\"double\" '%s'", yytext));
-                                          yylval.ival = C_DOUBLE; return DOUBLE; }
+                                          yylval.tval.datatype = C_DOUBLE; return DOUBLE; }
 <NORMAL>"void"				{ DBUG_PRINT( "info", ("<NORMAL>\"void\" '%s'", yytext));
-                                          yylval.ival = C_VOID; return VOID; }
+                                          yylval.tval.datatype = C_VOID; return VOID; }
+<NORMAL>"oneway"			{ DBUG_PRINT( "info", ("<NORMAL>\"oneway\" '%s'", yytext));
+                                          return ONEWAY; }
 
 <NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT( "info", ("<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
                                           yylval.sval = STRDUP((const char*)yytext); return NAME; }

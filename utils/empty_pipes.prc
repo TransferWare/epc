@@ -39,72 +39,6 @@ SET TERMOUT ON
 
 POD*/
     IS
-	PROCEDURE empty_pipe
-	(
-		i_pipe_name IN VARCHAR2
-	,	i_timeout IN INTEGER
-	)
-	IS
-		/* Named constants for the different codes of pipe types */
-		date_type CONSTANT INTEGER := 12;
-		string_type CONSTANT INTEGER := 9;
-		number_type CONSTANT INTEGER := 6;
-
-		/* Variables to hold the items coming out of the pipe */
-		my_date DATE;
-		my_string VARCHAR2(2000);
-		my_number NUMBER;
-
-		/* Variables to hold message type */
-		msg_type INTEGER;
-		msg_nr INTEGER := 0;
-	BEGIN
-		dbms_output.put_line( 'Emptying pipe ' || i_pipe_name );
-		LOOP
-			/* Read a message from the named pipe. */
-			IF DBMS_PIPE.RECEIVE_MESSAGE (i_pipe_name, i_timeout) = 0
-			THEN
-				/* 
-				|| If successful, determine the datatype of the first item
-				|| and then call UNPACK_MESSAGE with the right kind of 
-				|| variable to match that datatype.
-				*/
-				msg_nr := msg_nr + 1;
-				BEGIN
-					dbms_output.put_line('Message: ' || to_char(msg_nr));
-				EXCEPTION
-					WHEN	OTHERS
-					THEN	NULL;
-				END;
-	
-				LOOP
-				BEGIN
-					msg_type := DBMS_PIPE.NEXT_ITEM_TYPE;
-					IF msg_type = date_type
-					THEN
-						DBMS_PIPE.UNPACK_MESSAGE(my_date);
-						dbms_output.put_line('Date  : ' || to_char(my_date, 'YYYYMMDDHH24MISS'));
-					ELSIF msg_type = string_type
-					THEN
-						DBMS_PIPE.UNPACK_MESSAGE(my_string);
-						dbms_output.put_line('String: ' || my_string);
-					ELSIF msg_type = number_type
-					THEN
-						DBMS_PIPE.UNPACK_MESSAGE(my_number);
-						dbms_output.put_line('Number: ' || to_char(my_number));
-					ELSE
-						EXIT;
-					END IF;
-				EXCEPTION
-					WHEN	OTHERS
-					THEN	NULL;
-				END;
-				END LOOP;
-			ELSE
-				EXIT;
-			END IF;
-		END LOOP;
-	END empty_pipe;
 BEGIN
 	FOR r_pipe IN
 	(
@@ -115,7 +49,7 @@ BEGIN
 	)
 	LOOP
 	BEGIN
-		empty_pipe( r_pipe.name, i_timeout );
+		epc.empty_pipe( r_pipe.name, i_timeout );
 	EXCEPTION
 		WHEN OTHERS
 		THEN

@@ -1,0 +1,13 @@
+%{
+#include <string.h>
+static char* strcpy1(char *str1, const char *str2) { return strcpy(str1, str2); }
+static char* strcpy2(char *str1, const char *str2) { return strcpy(str1, str2); }
+%}
+
+interface str
+{
+  int  strlen( [in] char[20] i_str );
+  void strcpy1( [out] char[30] o_str, [in] char[30] i_str );
+  void strcpy2( [out] char* o_str, [in] char* i_str );
+  void strcat( [inout] char[30] io_str, [in] char[30] i_str );
+}

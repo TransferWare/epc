@@ -15,10 +15,13 @@
 #define epc_handle_requests ts_epc_handle_requests
 #define epc_init ts_epc_init
 #define epc_main ts_epc_main
+#define epc_list_main ts_epc_list_main
 #define epc_set_logon ts_epc_set_logon
 #define epc_set_pipe ts_epc_set_pipe
 
 extern epc_error_t epc_main( int argc, char **argv, epc_interface_t * );
+
+extern epc_error_t epc_list_main( int argc, char **argv, epc_interface_t *, ... );
 
 extern epc_info_t *epc_init( void );
 

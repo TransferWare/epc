@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.7  2001/01/24 16:29:10  gpaulissen
+ * Release 2.0.0
+ *
  * Revision 1.6  1999/11/23 16:05:39  gpaulissen
  * DBUG interface changed.
  *
@@ -48,29 +51,30 @@
 #endif
 
 typedef struct {
-	char name[MAX_PARM_NAME_LEN];
-	char proc_name[MAX_PARM_NAME_LEN+4];
-	idl_mode_t mode;
-	idl_type_t datatype;
-	dword_t size;
+  char name[MAX_PARM_NAME_LEN];
+  char proc_name[MAX_PARM_NAME_LEN+4];
+  idl_mode_t mode;
+  idl_type_t datatype;
+  dword_t size;
 } idl_parameter_t;
 
 typedef struct {
-	char name[MAX_FUNC_NAME_LEN];
-	idl_parameter_t return_value;
-	dword_t num_parameters;
-	idl_parameter_t * parameters[MAX_PARAMETERS];
+  char name[MAX_FUNC_NAME_LEN];
+  idl_parameter_t return_value;
+  int oneway;
+  dword_t num_parameters;
+  idl_parameter_t * parameters[MAX_PARAMETERS];
 } idl_function_t;
 
 typedef struct {
-	char name[MAX_INTERFACE_NAME_LEN];
-	dword_t num_functions;
-	idl_function_t * functions[MAX_FUNCTIONS];
+  char name[MAX_INTERFACE_NAME_LEN];
+  dword_t num_functions;
+  idl_function_t * functions[MAX_FUNCTIONS];
 } idl_interface_t;
 
 void set_interface ( char *name );
-void add_function ( char *name, idl_type_t datatype );
-void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype );
+void add_function ( char *name, idl_type_t datatype, const int oneway );
+void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size );
 
 void generate_plsql ( void );
 void generate_c ( const char *include_text );
