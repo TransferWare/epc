@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.10  2004/10/21 11:54:32  gpaulissen
+ * indent *.c *.h
+ *
  * Revision 1.9  2004/10/21 10:37:07  gpaulissen
  * * make lint
  * * error reporting enhanced
@@ -94,7 +97,7 @@ const char vcid[] = "$Id$";
 #include <epc.h>
 #include <dbug.h>
 
-#ifndef  ORA_PROC    /* skip during precompiling */
+#ifndef  ORA_PROC		/* skip during precompiling */
 # if defined(HAVE_SQLPROTO_H) && HAVE_SQLPROTO_H
 #  include <sqlproto.h>
 # elif defined(HAVE_SQLCPR_H) && HAVE_SQLCPR_H
@@ -112,201 +115,201 @@ const char vcid[] = "$Id$";
 #endif
 
 extern
-epc__error_t
-epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call );
+  epc__error_t
+epc_recv_request_pipe (epc__info_t * epc__info, epc__call_t * epc__call);
 extern
-epc__error_t
-epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call );
+  epc__error_t
+epc_send_response_pipe (epc__info_t * epc__info, epc__call_t * epc__call);
 
 /* declarations */
 
-static
-void
-help( char *procname );
+static void help (char *procname);
 
 
 static
 /*@observer@*/
 char *
-version( void )
+version (void)
 {
   return PACKAGE_VERSION;
 }
 
 
 epc__error_t
-epc__main( int argc, char **argv, epc__interface_t *epc_interface )
+epc__main (int argc, char **argv, epc__interface_t * epc_interface)
 {
-  return epc__list_main( argc, argv, epc_interface, NULL );
+  return epc__list_main (argc, argv, epc_interface, NULL);
 }
 
 
 epc__error_t
-epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
+epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 {
 #if defined(HASULIB) && HASULIB != 0
-  unsigned int chk = AllocStartCheckPoint();
+  unsigned int chk = AllocStartCheckPoint ();
 #endif
   char *logon = NULL;
   char *request_pipe = NULL;
   int nr;
-  /*@only@*/ /*@null@*/ epc__info_t *epc__info = NULL;
+  /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
   epc__error_t ret;
-  /*@only@*/ /*@null@*/ char *dbug_options = NULL;
+  /*@only@ *//*@null@ */ char *dbug_options = NULL;
 
   /* process command line parameters */
-  for ( nr = 0; nr < argc; nr++ ) 
+  for (nr = 0; nr < argc; nr++)
     {
-      if ( argv[nr][0] == '-' ) 
-        {
-          switch( argv[nr][1] ) 
-            {
-            case 'D':
-              if ( argv[nr][2] != '\0' )
-                {
-                  dbug_options = (char*)malloc(strlen(&argv[nr][2])+1);
-                  assert(dbug_options != NULL);
-                  strcpy(dbug_options, &argv[nr][2]);
-                }
-              else
-                {
-                  ++nr;
-                  dbug_options = (char*)malloc(strlen(&argv[nr][0])+1);
-                  assert(dbug_options != NULL);
-                  strcpy(dbug_options, &argv[nr][0]);
-                }
-              break;
+      if (argv[nr][0] == '-')
+	{
+	  switch (argv[nr][1])
+	    {
+	    case 'D':
+	      if (argv[nr][2] != '\0')
+		{
+		  dbug_options = (char *) malloc (strlen (&argv[nr][2]) + 1);
+		  assert (dbug_options != NULL);
+		  strcpy (dbug_options, &argv[nr][2]);
+		}
+	      else
+		{
+		  ++nr;
+		  dbug_options = (char *) malloc (strlen (&argv[nr][0]) + 1);
+		  assert (dbug_options != NULL);
+		  strcpy (dbug_options, &argv[nr][0]);
+		}
+	      break;
 
-            case 'h': 
-              help( argv[0] ); 
-              return OK;
+	    case 'h':
+	      help (argv[0]);
+	      return OK;
 
-            case 'p': 
-              if ( argv[nr][2] != '\0' )
-                request_pipe = &argv[nr][2];
-              else
-                request_pipe = &argv[++nr][0]; 
-              break;
+	    case 'p':
+	      if (argv[nr][2] != '\0')
+		request_pipe = &argv[nr][2];
+	      else
+		request_pipe = &argv[++nr][0];
+	      break;
 
-            case 'u': 
-              if ( argv[nr][2] != '\0' )
-                logon = &argv[nr][2]; 
-              else
-                logon = &argv[++nr][0];
-              break;
+	    case 'u':
+	      if (argv[nr][2] != '\0')
+		logon = &argv[nr][2];
+	      else
+		logon = &argv[++nr][0];
+	      break;
 
-            case 'v':
-              (void) fprintf( stdout, "EPC listener version: %s\n", version() );
-              return OK;
+	    case 'v':
+	      (void) fprintf (stdout, "EPC listener version: %s\n",
+			      version ());
+	      return OK;
 
-            default : 
-              help( argv[0] ); 
-              return OK;
-            }
-        }
+	    default:
+	      help (argv[0]);
+	      return OK;
+	    }
+	}
     }
 
-  if ( dbug_options == NULL )
+  if (dbug_options == NULL)
     {
-      dbug_options = (char*)malloc(1);
-      assert(dbug_options != NULL);
+      dbug_options = (char *) malloc (1);
+      assert (dbug_options != NULL);
       dbug_options[0] = '\0';
     }
 
-  assert( OK == 0 );
+  assert (OK == 0);
 
   do
     {
       nr = 0;
-      if ( (ret = dbug_init( dbug_options, argv[0] )) != OK )
-        break;
-                        
-      nr++; /* 1 */
-      epc__info = epc__init();
-      if ( epc__info == NULL )
-        {
-          ret = MEMORY_ERROR;
-          break;
-        }
+      if ((ret = dbug_init (dbug_options, argv[0])) != OK)
+	break;
 
-      nr++; /* 2 */
-      if ( (ret = epc__set_logon( epc__info, logon )) != OK )
-        break;
+      nr++;			/* 1 */
+      epc__info = epc__init ();
+      if (epc__info == NULL)
+	{
+	  ret = MEMORY_ERROR;
+	  break;
+	}
 
-      nr++; /* 3 */
-      if ( (ret = epc__set_pipe( epc__info, request_pipe )) != OK )
-        break;
+      nr++;			/* 2 */
+      if ((ret = epc__set_logon (epc__info, logon)) != OK)
+	break;
 
-      nr++; /* 4 */
+      nr++;			/* 3 */
+      if ((ret = epc__set_pipe (epc__info, request_pipe)) != OK)
+	break;
+
+      nr++;			/* 4 */
       {
-        va_list ap;
+	va_list ap;
 
-        va_start( ap, epc_interface );
-        for ( ; ret == OK && epc_interface != NULL; )
-          {
-            ret = epc__add_interface( epc__info, epc_interface );
-            epc_interface = va_arg(ap, epc__interface_t *);
-          }
-        va_end( ap );
+	va_start (ap, epc_interface);
+	for (; ret == OK && epc_interface != NULL;)
+	  {
+	    ret = epc__add_interface (epc__info, epc_interface);
+	    epc_interface = va_arg (ap, epc__interface_t *);
+	  }
+	va_end (ap);
       }
-      if ( ret != OK )
-        break;
+      if (ret != OK)
+	break;
 
-      nr++; /* 5 */
-      if ( (ret = epc__connect( epc__info )) != OK )
-        break;
+      nr++;			/* 5 */
+      if ((ret = epc__connect (epc__info)) != OK)
+	break;
 
-      nr++; /* 6 */
-      if ( (ret = epc__handle_requests( epc__info, epc_recv_request_pipe, epc_send_response_pipe )) != OK )
-        break;
+      nr++;			/* 6 */
+      if ((ret =
+	   epc__handle_requests (epc__info, epc_recv_request_pipe,
+				 epc_send_response_pipe)) != OK)
+	break;
 
       nr++;
     }
   while (0);
 
-  /*@-branchstate@*/
-  switch( nr ) /* last step */
+  /*@-branchstate@ */
+  switch (nr)			/* last step */
     {
     case 7:
     case 6:
-      ret = epc__disconnect( epc__info );
-      /*@fallthrough@*/
+      ret = epc__disconnect (epc__info);
+      /*@fallthrough@ */
 
     case 5:
     case 4:
     case 3:
     case 2:
-      epc__done( epc__info );
-      /*@fallthrough@*/
+      epc__done (epc__info);
+      /*@fallthrough@ */
 
     case 1:
-      (void) dbug_done();
-      /*@fallthrough@*/
+      (void) dbug_done ();
+      /*@fallthrough@ */
 
     case 0:
       break;
 
     default:
-      assert(nr >= 0 && nr <= 7);
+      assert (nr >= 0 && nr <= 7);
       break;
     }
-  /*@=branchstate@*/
+  /*@=branchstate@ */
 
-  free(dbug_options);
+  free (dbug_options);
 
 #if defined(HASULIB) && HASULIB != 0
-  (void) AllocStopCheckPoint(chk);
+  (void) AllocStopCheckPoint (chk);
 #endif
 
   return ret;
 }
 
 
-static
-void 
-help( char *procname )
+static void
+help (char *procname)
 {
-  (void) printf( "\
+  (void) printf ("\
 Syntax: %s -D <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n\
@@ -315,5 +318,5 @@ Flags:\n\
         p       set name of request pipe\n\
         u       user connect string for database logon, e.g. SCOTT/TIGER@DB\n\
         v       display the EPC listener version\n\
-", procname );
+", procname);
 }

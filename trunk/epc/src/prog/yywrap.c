@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include "yy.h"
 
-int yywrap(void)
+int
+yywrap (void)
 {
-  return(1);
+  return (1);
 }
-
