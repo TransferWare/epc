@@ -23,6 +23,6 @@ result: 33.4500007629395
 io_par2: 33.9900016784668
 o_par3: -1.87999999523163
 Performance test doing a null block
-Performance test doing 1 number of calls doing nothing with results returned.
-Performance test doing 1 number of calls doing nothing without results returned.
+Performance test doing 100000 number of calls doing nothing with results returned.
+Performance test doing 100000 number of calls doing nothing without results returned.
 Finished.

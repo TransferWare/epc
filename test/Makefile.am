@@ -42,15 +42,21 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
 EXTRA_DIST           = Imakefile epctest.ref epctest.sql str.sql
 
-TESTS = test1
+TESTS = test1 
+
+COUNT = 100000
+
+FORCE = force
 
 EPCTEST = ./epctest
 DIFF = diff
 
-test1: $(top_srcdir)/test/epctest.sql
+test1: $(top_srcdir)/test/epctest.sql $(FORCE)
 	@$(EPCTEST) -d -u$(USERID) 1>epctest.log &
 	@sleep 20
-	@echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< 1
+	@echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT)
 	@pid=`ps | grep epctest | grep -v grep |  awk '{ print $$1; }'`; kill "$$pid"
 	@$(DIFF) epctest.lis $(top_srcdir)/test/epctest.ref
 	@echo : > $@
+
+force: ;
