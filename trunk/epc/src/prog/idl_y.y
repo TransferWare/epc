@@ -1,9 +1,9 @@
 %{
 
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
- * Creation date  : 25-JUN-1997
+ * Creation date  	: 25-JUN-1997
  *
  * Created by 		: Huub van der Wouden
  *
@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.6  1998/08/11 21:07:07  gjp
+ * Changed RCS keyword Source by RCSfile to prevent differences between checkouts.
+ *
  * Revision 1.5  1998/07/27 15:21:09  gert-jan
  * First release.
  *
