@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include "epc.h"
-#include "demo.h"
+#include <epc.h>
+#include <demo.h>
 
 void do_system_call( char *cmd )
 {

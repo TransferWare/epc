@@ -17,11 +17,23 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-# Strip RCS keyword Name (e.g. '$Name$' into 2_1_0).
-AC_DEFUN(AC_RCS_NAME, translit(regexp([$Name$], [epc_\(.*\) ], [\1]), [_], [.]))
-
 AC_REVISION([$Revision$])
-AC_INIT([epc],[AC_RCS_NAME()],[g.paulissen@chello.nl])
+AC_INIT([epc],[3.0.0],[g.paulissen@chello.nl])
+
+# version check
+if test -f "$srcdir/VERSION"
+then
+  read version < $srcdir/VERSION
+else
+  version=
+fi
+
+if test "$version" != "$PACKAGE_VERSION"
+then
+  echo "Updating file $srcdir/VERSION with package version $PACKAGE_VERSION." 1>&2
+  echo "$PACKAGE_VERSION" > $srcdir/VERSION
+fi
+
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_SRCDIR([test/main.c])
 AM_CONFIG_HEADER([config.h])
@@ -38,13 +50,6 @@ if test "$LEX" != flex; then
 fi
 AC_PROG_YACC
 AM_PROG_CC_STDC
-# Disable shared library building on Windows
-# because using the Oracle import library results in linker warnings
-#case "$host" in
-#*-*-cygwin* | *-*-mingw* )
-#  AC_DISABLE_SHARED
-#  ;;
-#esac
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 

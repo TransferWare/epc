@@ -19,7 +19,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 AUTOMAKE_OPTIONS     = ansi2knr
 
-MOSTLYCLEANFILES     = epc.c lsnr.c
+MOSTLYCLEANFILES     = epc.c
 
 procincludes         = @PROCINCLUDES@
 
@@ -27,15 +27,15 @@ procincludes        += INCLUDE=$(top_srcdir)/src/lib
 
 AM_CPPFLAGS          = `echo "$(procincludes)" | sed -e 's/include=/-I/g' -e 's/INCLUDE=/-I/g'`
 
-include_HEADERS      = epc_defs.h epc_dbg.h idl_defs.h
+include_HEADERS      = epc.h epc_defs.h epc_dbg.h idl_defs.h
 
 lib_LTLIBRARIES        = libepc.la
 
-libepc_la_SOURCES     = lsnr.c epc.c epc_call.c epc_dbg.c lsnr.h epc.h epc_call.h epc_dbg.h
+libepc_la_SOURCES     = lsnr.c epc.c epc_call.c epc_dbg.c epc_call.h
 libepc_la_LDFLAGS     = -no-undefined -version-info 0:0:0 
-libepc_la_LIBADD      = -ldbug @PROCLIB@
+libepc_la_LIBADD      = @PROCLIB@
 
-EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc lsnr.pc
+EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc
 
 
 @SUFFIXES@: .c .pc
