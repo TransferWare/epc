@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.41  2004/05/21 15:07:51  gpaulissen
+ * SOAP messages
+ *
  * Revision 1.40  2004/03/29 07:23:26  gpaulissen
  * Only call epc.request_get_body when there is input
  *
@@ -211,6 +214,7 @@ EXEC SQL END DECLARE SECTION;
 #ifndef ORA_PROC
 #include <epc_dbg.h>  /* trace and debug functionality */
 #include <epc.h>
+#include <epc_xml.h>
 #endif
 
 /* include dmalloc/ulib as last one */
@@ -658,7 +662,10 @@ print_call ( epc_call_t * call )
 {
   DBUG_ENTER( "print_call" );
   DBUG_PRINT( "input", ( "msg info: '%s'", call->msg_info) );
-  DBUG_PRINT( "input", ( "interface: '%s'; function: '%s'", call->interface_name, call->function_name) );
+  DBUG_PRINT( "input", 
+              ( "interface: '%s'; function: '%s'", 
+                (call->interface_name ? call->interface_name->name : "(null)"), 
+                (call->function_name ? call->function_name->name : "(null)") ) );
   DBUG_PRINT( "input", ( "status: %ld; SQL code: %ld", (long)call->epc_error, (long)call->sqlcode) );
   DBUG_LEAVE();
 }
@@ -686,15 +693,15 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
   long retval = OK;
   varchar msg_info[MAX_MSG_INFO_LEN] = { 0, "" };     /* client-specific pipe for results  */
   short msg_info_nl; /* null indicator */
-  varchar interface_name[MAX_INTERFACE_NAME_LEN] = { 0, "" };
-  short interface_name_nl; /* null indicator */
-  varchar function_name[MAX_FUNC_NAME_LEN] = { 0, "" };
-  short function_name_nl; /* null indicator */
+  varchar msg_request[MAX_STR_VAL_LEN] = { 0, "" };
+  short msg_request_nl; /* null indicator */
   const int msg_timed_out = MSG_TIMED_OUT;
   const int msg_too_big = MSG_TOO_BIG;
   const int msg_interrupted = MSG_INTERRUPTED;
   const int receive_error = RECEIVE_ERROR;
   EXEC SQL END DECLARE SECTION;
+  struct xmlctx *xmlctx = NULL;
+  epc_xml_ctx_t epc_xml_ctx = { epc_info, call };
 
   DBUG_ENTER( "receive_request" );
 
@@ -715,55 +722,68 @@ receive_request( epc_info_t *epc_info, epc_call_t *call )
   (void) osnsui(&handle, handle_interrupt, epc_info);
 
   EXEC SQL EXECUTE
-  BEGIN
-    epc.request_get_header
-    ( 
-      :msg_info:msg_info_nl
-    , :interface_name:interface_name_nl
-    , :function_name:function_name_nl
-    );
-  EXCEPTION
-    WHEN epc.msg_timed_out
-    THEN
-    :retval := :msg_timed_out;
-  WHEN epc.msg_too_big
-    THEN
-    :retval := :msg_too_big;
-  WHEN epc.msg_interrupted
-    THEN
-    :retval := :msg_interrupted;
-  WHEN OTHERS
-    THEN
-    :retval := :receive_error;
-  END;
+  DECLARE
+    retval          pls_integer;
+    v_msg_protocol  pls_integer;
+    v_msg_seq       pls_integer;
+    v_result_pipe   epc.pipe_name_t := null;
+  begin
+    retval := dbms_pipe.receive_message( epc.get_request_pipe );
+    if retval = 0 /* OK */
+    then
+      dbms_pipe.unpack_message( v_msg_protocol );
+      dbms_pipe.unpack_message( v_msg_seq );
+      dbms_pipe.unpack_message( :msg_request:msg_request_nl );
+      dbms_pipe.unpack_message( v_result_pipe );
+      /* strip the space as a result of to_char(..., '000X') */
+      :msg_info:msg_info_nl := ltrim(to_char(v_msg_seq, '000X')) || v_result_pipe;
+    elsif retval = 1
+    then
+      raise epc.msg_timed_out;
+    elsif retval = 2
+    then
+      raise epc.msg_too_big;
+    elsif retval = 3
+    then
+      raise epc.msg_interrupted;
+    else
+      /* ?? */
+      raise value_error;
+    end if;
+  exception
+    when epc.msg_timed_out
+    then
+      :retval := :msg_timed_out;
+    when epc.msg_too_big
+    then
+      :retval := :msg_too_big;
+    when epc.msg_interrupted
+    then
+      :retval := :msg_interrupted;
+    when others
+    then
+      :retval := :receive_error;
+  end;
   END-EXEC;
 
   (void) osncui(handle);
 
   if ( retval == OK )
     {
-      if ( msg_info_nl == -1 )
-        msg_info.len = 0;
-      msg_info.arr[msg_info.len] = '\0';
-
-      if ( interface_name_nl == -1 )
-        interface_name.len = 0;
-      interface_name.arr[interface_name.len] = '\0';
-
-      if ( function_name_nl == -1 )
-        function_name.len = 0;
-      function_name.arr[function_name.len] = '\0';
-
-      (void) strncpy( call->msg_info, (char*)msg_info.arr, sizeof(call->msg_info) );
-      call->msg_info[sizeof(call->msg_info)-1] = 0;
-      (void) strncpy( call->interface_name, (char*)interface_name.arr, sizeof(call->interface_name) );
-      call->interface_name[sizeof(call->interface_name)-1] = 0;
-      (void) strncpy( call->function_name, (char*)function_name.arr, sizeof(call->function_name) );
-      call->function_name[sizeof(call->function_name)-1] = 0;
+      if ( msg_request_nl == -1 )
+        msg_request.len = 0;
+      msg_request.arr[msg_request.len] = '\0';
 
 #ifndef DBUG_OFF
       print_call( call );
 #endif
+
+      epc_xml_init( &xmlctx, epc_info );
+      epc_xml_parse( xmlctx, (const char*)msg_request.arr, msg_request.len );
+      epc_xml_done( &xml_ctx );
+
+      (void) strncpy( call->msg_info, (char*)msg_info.arr, sizeof(call->msg_info) );
+      call->msg_info[sizeof(call->msg_info)-1] = 0;
     }
 
   call->epc_error = retval;
@@ -837,262 +857,20 @@ epc_cmp_interface( const void *par1, const void *par2 )
 static
 epc_error_t
 epc_exec_call( epc_info_t * epc_info, epc_call_t * call )
-/* ------------------------------------------------------------------------
- * Executes a call. This is done by finding the function pointer associated
- * with the name of the call in the function table, and calling it.
- * ------------------------------------------------------------------------*/
 {
-#ifndef USE_BSEARCH
-#define USE_BSEARCH 1
-#endif
-
-#if !USE_BSEARCH
-  int inr, fnr;
-  int result;
-#endif
-  epc_interface_t interface_tmp, *interface = &interface_tmp, **interface_ptr = NULL;
-  epc_function_t function_tmp, *function = &function_tmp;
-
   DBUG_ENTER( "epc_exec_call" );
 
   call->epc_error = OK;
 
-  /* get the interface */
-#if !USE_BSEARCH
-  for ( inr = 0, interface = NULL; inr < epc_info->num_interfaces; inr++ )
-    if ( (result=strcmp( call->interface_name, epc_info->interfaces[inr]->name )) == 0 )
-      {
-        interface = epc_info->interfaces[inr];
-        break;
-      }
-    else if ( result < 0 ) /* interfaces sorted ascending */
-      {
-        break;
-      }
-#else
-  interface->name = call->interface_name;
-  interface_ptr = bsearch( &interface,
-                           epc_info->interfaces,
-                           epc_info->num_interfaces,
-                           sizeof(epc_info->interfaces[0]),
-                           epc_cmp_interface );
-  if ( interface_ptr != NULL )
-    interface = *interface_ptr;
-  else
-    interface = NULL;
-#endif
-  
-  if ( interface == NULL )
+  if ( call->function == NULL )
     {
-      /* interface not found */
-      fprintf( stderr, "ERROR: interface %s not found\n", call->interface_name );
-      call->epc_error = INTERFACE_UNKNOWN;
+      /* function not found */
+      fprintf( stderr, "ERROR: function '%s' not found\n", call->function_name );
+      call->epc_error = FUNCTION_UNKNOWN;
     }
   else
     {
-      /* get the function */
-#if !USE_BSEARCH
-      for ( fnr = 0, function = NULL; fnr < interface->num_functions; fnr++ ) 
-        if ( (result=strcmp( call->function_name, interface->functions[fnr].name )) == 0 ) 
-          {
-            function = &interface->functions[fnr];
-            break;
-          }
-        else if ( result < 0 ) /* interface functions sorted ascending */
-          {
-            break;
-          }
-#else
-      function->name = call->function_name;
-      function = bsearch( function,
-                          interface->functions,
-                          interface->num_functions,
-                          sizeof(interface->functions[0]),
-                          epc_cmp_function );
-#endif
-
-      if ( function == NULL )
-        {
-          /* function not found */
-          fprintf( stderr, "ERROR: function '%s' not found\n", call->function_name );
-          call->epc_error = FUNCTION_UNKNOWN;
-        }
-      else
-        {
-          EXEC SQL BEGIN DECLARE SECTION;
-          static idl_type_t datatype_tab[MAX_PARAMETERS];
-          int datatype_tab_len = 0;
-          static idl_mode_t parameter_mode_tab[MAX_PARAMETERS];
-          int parameter_mode_tab_len = 0;
-          static idl_int_t int_tab[MAX_PARAMETERS];
-          static short int_tab_nl[MAX_PARAMETERS];
-          int int_tab_len_out = 0;
-          int int_tab_len_in;
-          static idl_long_t long_tab[MAX_PARAMETERS];
-          static short long_tab_nl[MAX_PARAMETERS];
-          int long_tab_len_out = 0;
-          int long_tab_len_in;
-          static idl_float_t float_tab[MAX_PARAMETERS];
-          static short float_tab_nl[MAX_PARAMETERS];
-          int float_tab_len_out = 0;
-          int float_tab_len_in;
-          static idl_double_t double_tab[MAX_PARAMETERS];
-          static short double_tab_nl[MAX_PARAMETERS];
-          int double_tab_len_out = 0;
-          int double_tab_len_in;
-          static char string_tab[MAX_PARAMETERS][MAX_STR_VAL_LEN+1];
-          static short string_tab_nl[MAX_PARAMETERS];
-          /* let Oracle zero terminate it */
-          EXEC SQL VAR string_tab is STRING(MAX_STR_VAL_LEN+1);
-          int string_tab_len_out = 0;
-          int string_tab_len_in;
-          char *msg_info = call->msg_info;
-          EXEC SQL END DECLARE SECTION;
-
-          short nr;
-
-          /*
-            Assign data fields for all parameters.
-            Use EXEC SQL ARRAYLEN to set the size of each array.
-            After EXEC SQL EXECUTE the array size of output arrays
-            has been set by Oracle.
-          */
-
-          for ( nr = 0; nr < function->num_parameters; nr++ ) {
-            datatype_tab[nr] = function->parameters[nr].type;
-            datatype_tab_len++;
-            
-            parameter_mode_tab[nr] = function->parameters[nr].mode;
-            parameter_mode_tab_len++;
-            
-            DBUG_PRINT( "info", ( "datatype_tab[%d]= %d", (int)nr, datatype_tab[nr] ) );
-            DBUG_PRINT( "info", ( "parameter_mode_tab[%d]= %d", (int)nr, parameter_mode_tab[nr] ) );
-
-            switch(datatype_tab[nr])
-              {
-              case C_INT:
-                function->parameters[nr].data = &int_tab[int_tab_len_out++];
-                break;
-                
-              case C_LONG:
-                function->parameters[nr].data = &long_tab[long_tab_len_out++];
-                break;
-                
-              case C_FLOAT:
-                function->parameters[nr].data = &float_tab[float_tab_len_out++];
-                break;
-                
-              case C_DOUBLE:
-                function->parameters[nr].data = &double_tab[double_tab_len_out++];
-                break;
-                
-              case C_STRING:
-                function->parameters[nr].data = string_tab[string_tab_len_out++];
-                /*        string_tab[string_tab_len_out].len = function->parameters[nr].size;*/
-                break;
-
-              case C_VOID:
-                break;
-
-              default:
-                assert( datatype_tab[nr] >= C_DATATYPE_MIN && datatype_tab[nr] <= C_DATATYPE_MAX );
-              }
-          }
-
-          int_tab_len_in = int_tab_len_out;
-          long_tab_len_in = long_tab_len_out;
-          float_tab_len_in = float_tab_len_out;
-          double_tab_len_in = double_tab_len_out;
-          string_tab_len_in = string_tab_len_out;
-
-          DBUG_PRINT( "info", ( "int_tab_len_out: %d", int_tab_len_out ) );
-          DBUG_PRINT( "info", ( "long_tab_len_out: %d", long_tab_len_out ) );
-          DBUG_PRINT( "info", ( "float_tab_len_out: %d", float_tab_len_out ) );
-          DBUG_PRINT( "info", ( "double_tab_len_out: %d", double_tab_len_out ) );
-          DBUG_PRINT( "info", ( "string_tab_len_out: %d", string_tab_len_out ) );
-
-          EXEC SQL ARRAYLEN datatype_tab (datatype_tab_len);
-          EXEC SQL ARRAYLEN parameter_mode_tab (parameter_mode_tab_len);
-          EXEC SQL ARRAYLEN int_tab (int_tab_len_out);
-          EXEC SQL ARRAYLEN long_tab (long_tab_len_out);
-          EXEC SQL ARRAYLEN float_tab (float_tab_len_out);
-          EXEC SQL ARRAYLEN double_tab (double_tab_len_out);
-          EXEC SQL ARRAYLEN string_tab (string_tab_len_out);
-
-          /* Only call request_get_body when there are input parameters */
-          if ( int_tab_len_out > 0 ||
-               long_tab_len_out > 0 ||
-               float_tab_len_out > 0 ||
-               double_tab_len_out > 0 ||
-               string_tab_len_out > 0 )
-            {
-              EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
-
-              EXEC SQL CONTEXT USE DEFAULT;
-
-              EXEC SQL EXECUTE
-                BEGIN
-                epc.request_get_body( :datatype_tab,
-                                      :parameter_mode_tab,
-                                      :int_tab:int_tab_nl,
-                                      :long_tab:long_tab_nl,
-                                      :float_tab:float_tab_nl,
-                                      :double_tab:double_tab_nl,
-                                      :string_tab:string_tab_nl );
-              END;
-              END-EXEC;
-            }
-
-          DBUG_PRINT( "info", ( "int_tab_len_out: %d", int_tab_len_out ) );
-          DBUG_PRINT( "info", ( "long_tab_len_out: %d", long_tab_len_out ) );
-          DBUG_PRINT( "info", ( "float_tab_len_out: %d", float_tab_len_out ) );
-          DBUG_PRINT( "info", ( "double_tab_len_out: %d", double_tab_len_out ) );
-          DBUG_PRINT( "info", ( "string_tab_len_out: %d", string_tab_len_out ) );
-
-          for ( nr = 0; nr < int_tab_len_out; nr++ ) 
-            {
-              DBUG_PRINT( "info", ( "int_tab[%d]= %d", (int)nr, int_tab[nr] ) );
-            }
-          for ( nr = 0; nr < string_tab_len_out; nr++ ) 
-            {
-              DBUG_PRINT( "info", ( "string_tab[%d]= '%s'", (int)nr, string_tab[nr] ) );
-            }
-          
-          (*function->function) ( call, function );
-
-          DBUG_PRINT( "info", ( "int_tab_len_in: %d", int_tab_len_in ) );
-          DBUG_PRINT( "info", ( "long_tab_len_in: %d", long_tab_len_in ) );
-          DBUG_PRINT( "info", ( "float_tab_len_in: %d", float_tab_len_in ) );
-          DBUG_PRINT( "info", ( "double_tab_len_in: %d", double_tab_len_in ) );
-          DBUG_PRINT( "info", ( "string_tab_len_in: %d", string_tab_len_in ) );
-
-          EXEC SQL ARRAYLEN datatype_tab (datatype_tab_len);
-          EXEC SQL ARRAYLEN parameter_mode_tab (parameter_mode_tab_len);
-          EXEC SQL ARRAYLEN int_tab (int_tab_len_in);
-          EXEC SQL ARRAYLEN long_tab (long_tab_len_in);
-          EXEC SQL ARRAYLEN float_tab (float_tab_len_in);
-          EXEC SQL ARRAYLEN double_tab (double_tab_len_in);
-          EXEC SQL ARRAYLEN string_tab (string_tab_len_in);
-
-          EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
-
-          EXEC SQL CONTEXT USE DEFAULT;
-
-          if ( function->oneway == 0 ) {
-            EXEC SQL EXECUTE
-            BEGIN
-              epc.receive_perform_routine( :msg_info,
-                                           :datatype_tab,
-                                           :parameter_mode_tab,
-                                           :int_tab,
-                                           :long_tab,
-                                           :float_tab,
-                                           :double_tab,
-                                           :string_tab );
-            END;
-            END-EXEC;
-          }
-        }
+      (*call->function->function) ( call );
     }
 
   DBUG_PRINT( "output", 
@@ -1155,15 +933,15 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
       /* receive the request */
       receive_request( epc_info, call );
 
-      if ( call->epc_error != OK )
+      if ( !( call->epc_error == FUNCTION_UNKNOWN ||
+              call->epc_error == INTERFACE_UNKNOWN ||
+              call->epc_error == OK ) )
         break;
 
       /* do the call */
       epc_exec_call( epc_info, call );
 
-      if ( !( call->epc_error == FUNCTION_UNKNOWN ||
-              call->epc_error == INTERFACE_UNKNOWN ||
-              call->epc_error == OK ) )
+      if ( call->epc_error != OK )
         break;
 
       retval = 0;

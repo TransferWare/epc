@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.10  2004/05/21 15:07:51  gpaulissen
+ * SOAP messages
+ *
  * Revision 1.9  2004/03/28 15:32:25  gpaulissen
  * Generate C code only.
  *
@@ -63,17 +66,17 @@
    alignment problems in structures */
 
 #ifndef dword_t_defined
-#define dword_t_defined
+#define dword_t_defined 1
 typedef long dword_t;
 #endif
 
 #ifndef word_t_defined
-#define word_t_defined
+#define word_t_defined 1
 typedef short word_t;
 #endif
 
 #ifndef string_defined
-#define string_defined
+#define string_defined 1
 typedef char *string;
 #endif
 
