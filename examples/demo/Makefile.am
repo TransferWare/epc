@@ -27,7 +27,7 @@ AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
 
-EXTRA_DIST           = Imakefile $(GENERATED_FILES)
+EXTRA_DIST           = $(GENERATED_FILES)
 
 noinst_DATA          = demo.pls_run
 noinst_PROGRAMS      = demo

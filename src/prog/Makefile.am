@@ -27,6 +27,6 @@ idl_LDADD            = $(libdir)/libdbug.la
 
 AM_YFLAGS            = -d
 
-EXTRA_DIST           = Imakefile
+EXTRA_DIST           = 
 
 idl_l.c: idl_y.h

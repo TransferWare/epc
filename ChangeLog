@@ -1,3 +1,8 @@
+2004-03-14  Gert-Jan Paulissen  <g.paulissen@chello.nl>
+
+	* Imake desupported
+	* LGPL license
+
 2004-03-12  Gert-Jan Paulissen  <g.paulissen@chello.nl>
 	
 	* Sourceforge bug [ 901781 ] CTRL-C kills EPC listener but not the session

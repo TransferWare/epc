@@ -21,7 +21,7 @@ MOSTLYCLEANFILES = epc.html
 
 CLEANFILES       = *.pls_run pod*.tmp
 
-EXTRA_DIST       = Imakefile epc.html epc.pls
+EXTRA_DIST       = epc.html epc.pls
 
 @SUFFIXES@: .pls .html .pls_run
 

@@ -1,3 +1,3 @@
 SUBDIRS    = demo
 
-EXTRA_DIST = Imakefile
+EXTRA_DIST = 

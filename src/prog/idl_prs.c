@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.29  2004/03/14 07:31:22  gpaulissen
+ * Imake support cancelled
+ *
  * Revision 1.28  2003/06/08 16:28:20  gpaulissen
  * GNU build system for ts_dbug
  *
@@ -1365,8 +1368,8 @@ generate_c_source ( FILE * pout, const char *include_text )
 #include <string.h>\n\
 #include <stdlib.h>\n\
 #include <epc.h>\n\
-EXEC SQL BEGIN DECLARE SECTION;\n\
 EXEC SQL INCLUDE \"epc_defs.h\";\n\
+EXEC SQL BEGIN DECLARE SECTION;\n\
 static const int msg_timed_out = MSG_TIMED_OUT;\n\
 static const int msg_interrupted = MSG_INTERRUPTED;\n\
 static const int send_error = SEND_ERROR;\n\

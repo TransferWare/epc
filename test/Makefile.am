@@ -40,7 +40,7 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
-EXTRA_DIST           = Imakefile epctest.ref epctest.sql str.sql
+EXTRA_DIST           = epctest.ref epctest.sql str.sql
 
 TESTS = test1 test2
 

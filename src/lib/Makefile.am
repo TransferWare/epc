@@ -38,7 +38,7 @@ libepc_la_SOURCES    = lsnr.c epc.c epc_call.c epc_dbg.c epc_call.h
 libepc_la_LDFLAGS     = -no-undefined -version-info 2:0:0
 libepc_la_LIBADD      = @PROCLIB@ $(libdir)/libdbug.la
 
-EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc
+EXTRA_DIST           = epc.pc
 
 
 @SUFFIXES@: .c .pc
