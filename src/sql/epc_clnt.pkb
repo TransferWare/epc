@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.10  2004/12/17 15:54:21  gpaulissen
+REMARK  inline namespaces introduced (xmlns:ns1)
+REMARK
 REMARK  Revision 1.9  2004/12/16 17:49:16  gpaulissen
 REMARK  added dbms_xmlgen.convert for converting HTML entities
 REMARK
@@ -40,6 +43,24 @@ REMARK
 REMARK
 
 create or replace package body epc_clnt as
+
+"ns" constant varchar2(4) := 'ns1:';
+"xmlns" constant varchar2(10) := 'xmlns:ns1';
+
+"xmlns:SOAP-ENV" constant varchar2(1000) := 
+  'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
+
+SOAP_HEADER_START constant varchar2(1000) := 
+  '<?xml version="1.0" encoding="iso-8859-1"?>' 
+  ||'<SOAP-ENV:Envelope'
+  ||' '
+  ||"xmlns:SOAP-ENV"
+  ||' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
+  ||' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+  ||' xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
+  ||'<SOAP-ENV:Body>';
+SOAP_HEADER_END constant varchar2(1000) := 
+  '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
 subtype connection_method_subtype is pls_integer;
 
@@ -416,21 +437,21 @@ procedure send_request
 is
 begin
   epc_info_tab(p_epc_key).msg :=
-'<?xml version="1.0" encoding="iso-8859-1"?>' 
-||'<SOAP-ENV:Envelope'
-||' xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'
-||' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
-||' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-||' xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
-||'<SOAP-ENV:Body><'
+SOAP_HEADER_START
+||'<'
+||"ns"
 ||p_method_name
-||' xmlns="'
+||' '
+||"xmlns" /* use identified "xmlns" ('xmlns:ns1') */
+||'="'
 ||epc_info_tab(p_epc_key).interface_name
 ||'">'
 ||epc_info_tab(p_epc_key).msg
 ||'</'
+||"ns"
 ||p_method_name
-||'></SOAP-ENV:Body></SOAP-ENV:Envelope>';
+||'>'
+||SOAP_HEADER_END;
 
   epc_info_tab(p_epc_key).doc := 
     xmltype.createxml( epc_info_tab(p_epc_key).msg );
@@ -523,20 +544,19 @@ procedure check_fault(p_doc in out nocopy xmltype) as
   fault_code   varchar2(256);
   fault_string varchar2(32767);
 begin
-   fault_node := p_doc.extract('/SOAP-ENV:Fault',
-     'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/');
+   fault_node := p_doc.extract('/SOAP-ENV:Fault', "xmlns:SOAP-ENV");
    if (fault_node is not null) then
      fault_code := 
        fault_node.extract
        (
          '/SOAP-ENV:Fault/faultcode/child::text()'
-       , 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/'
+       , "xmlns:SOAP-ENV"
        ).getstringval();
      fault_string := 
        fault_node.extract
        (
          '/SOAP-ENV:Fault/faultstring/child::text()'
-       , 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/'
+       , "xmlns:SOAP-ENV"
        ).getstringval();
      raise_application_error(-20000, fault_code || ' - ' || fault_string);
    end if;
@@ -558,7 +578,7 @@ begin
   epc_info_tab(p_epc_key).doc := xmltype.createxml( epc_info_tab(p_epc_key).msg );
   epc_info_tab(p_epc_key).doc :=
     epc_info_tab(p_epc_key).doc.extract('/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()',
-      'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"');
+      "xmlns:SOAP-ENV");
   -- show_envelope(epc_info_tab(p_epc_key).doc.getstringval());
   check_fault(epc_info_tab(p_epc_key).doc);
 end recv_response;
@@ -576,9 +596,10 @@ is
 begin
   l_xml := 
     epc_info_tab(p_epc_key).doc.extract
-    ( 
+    (
       '//'||p_name||'/child::text()'
-    , 'xmlns="'||epc_info_tab(p_epc_key).interface_name||'"'
+      /* use identifier "xmlns" */
+    , "xmlns" ||'="'||epc_info_tab(p_epc_key).interface_name||'"'
     );
 
   /* GJP 16-12-2004 Web services add the ns1 namespace to the response */
@@ -586,9 +607,10 @@ begin
   then
     l_xml := 
       epc_info_tab(p_epc_key).doc.extract
-      (
+      ( 
         '//'||p_name||'/child::text()'
-      , 'xmlns:ns1="'||epc_info_tab(p_epc_key).interface_name||'"'
+      /* use string 'xmlns' */
+      , 'xmlns'||'="'||epc_info_tab(p_epc_key).interface_name||'"'
       );
   end if;
 
