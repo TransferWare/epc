@@ -1,0 +1,435 @@
+/*
+ * Filename   		: $Source$
+ *
+ * Creation date  : 25-AUG-1997
+ *
+ * Created by 		: Huub van der Wouden
+ *
+ * Company    		: Transfer Solutions bv
+ *
+ * --- Description -------------------------------------------------------
+ * EPC functionality that requires interaction with the Oracle database.
+ *
+ * --- Revision History --------------------------------------------------
+ * $Log$
+ * Revision 1.1  1998/01/25 15:18:07  gpauliss
+ * Initial revision
+ *
+ *
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <sys/types.h>
+#include <time.h>
+
+#include <idl_const.h>  /* constants used by idl and epc */
+EXEC SQL INCLUDE "epc_types.h";  /* epc-specific type definitions */
+#include "epc_call.h"   /* server-side marshalling and call mechanism */
+#include "epc_debug.h"  /* trace and debug functionality */
+
+/* =====================================================================
+ *
+ * LOCAL DEFINITIONS
+ *
+ *======================================================================*/
+
+EXEC SQL INCLUDE sqlca;
+
+/* Static SQL variables */
+EXEC SQL BEGIN DECLARE SECTION;
+static varchar request_pipe[255];    /* pipe used by clients for requests */
+static varchar result_pipe[255];     /* client-specific pipe for results  */
+EXEC SQL END DECLARE SECTION;
+
+error_t
+get_result_pipe ()
+/* ----------------------------------------------------------------------
+ * Gets the result pipe from the clients' request message
+ * ----------------------------------------------------------------------*/
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	int retval = 0;
+	EXEC SQL END DECLARE SECTION;
+   
+	EXEC SQL EXECUTE
+		BEGIN
+			DBMS_PIPE.UNPACK_MESSAGE( :result_pipe );
+		EXCEPTION
+			WHEN OTHERS
+			THEN :retval := -1;
+     	END;
+  	END-EXEC;
+  	
+  	if ( retval == -1 ) return NO_RESULT_PIPE;
+  	else {
+		result_pipe.arr[result_pipe.len] = '\0';
+		debug( "result_pipe = %s\n", result_pipe.arr );
+		return OK;
+  	}
+}
+
+error_t
+get_function ( call_t * call )
+/* ----------------------------------------------------------------------
+ * Gets the function's name and type from the clients' request message,
+ * and puts them in the call spec.
+ * ----------------------------------------------------------------------*/
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+   	varchar function_name[255];
+   	int function_type;
+  	int retval = 0;
+	EXEC SQL END DECLARE SECTION;
+
+  	EXEC SQL EXECUTE
+  		BEGIN
+			DBMS_PIPE.UNPACK_MESSAGE ( :function_name );
+			DBMS_PIPE.UNPACK_MESSAGE ( :function_type );
+		EXCEPTION
+			WHEN OTHERS
+			THEN :retval := -1;
+     	END;
+  	END-EXEC;
+
+	if ( retval == -1 ) return NO_FUNCTION;
+
+	function_name.arr[function_name.len] = '\0';
+
+	debug( "function_name = %s\n", function_name.arr );
+	debug( "function_type = %d\n", function_type );
+
+	set_function( call, (char *) function_name.arr, function_type );
+
+	return OK;
+}
+
+error_t 
+get_parameters ( call_t * call )
+/* ----------------------------------------------------------------------
+ * Gets the function's parameters from the clients' request message,
+ * and puts them in the call spec.
+ * ----------------------------------------------------------------------*/
+{
+	int curr_parm = 0;
+
+	EXEC SQL BEGIN DECLARE SECTION;
+	static int retval;
+	static int get_next_parameter;
+	static int parameter_type;
+	static int parameter_mode;
+	static int int_parameter;
+	static float float_parameter;
+	static double double_parameter;
+		/* GJP 21-JAN-1998 Put maximum number of characters for a VARCHAR2 in array */
+	static varchar string_parameter[32768];
+	EXEC SQL END DECLARE SECTION;
+
+		/* GJP 21-JAN-1998 Initialise static parameters every time again */
+	retval = 0;
+	int_parameter = 0;
+	float_parameter = 0;
+	double_parameter = 0;
+	get_next_parameter = 1;
+
+	while ( get_next_parameter ) {
+
+   	EXEC SQL EXECUTE
+		BEGIN
+			:get_next_parameter := DBMS_PIPE.NEXT_ITEM_TYPE;
+			IF :get_next_parameter <> 0
+			THEN
+				DBMS_PIPE.UNPACK_MESSAGE( :parameter_mode );
+				DBMS_PIPE.UNPACK_MESSAGE( :parameter_type );
+
+   				IF :parameter_type = EPC.C_INT
+   				THEN 
+   					DBMS_PIPE.UNPACK_MESSAGE( :int_parameter );
+   				ELSIF :parameter_type = EPC.C_FLOAT
+   				THEN 
+   					DBMS_PIPE.UNPACK_MESSAGE( :float_parameter );
+   				ELSIF :parameter_type = EPC.C_DOUBLE
+   				THEN 
+   					DBMS_PIPE.UNPACK_MESSAGE( :double_parameter );
+   				ELSIF :parameter_type = EPC.C_STRING
+   				THEN 
+   					DBMS_PIPE.UNPACK_MESSAGE( :string_parameter );
+   				END IF;
+			END IF;
+		EXCEPTION
+			WHEN OTHERS
+			THEN :retval := -1;	
+		END;
+   	END-EXEC;
+
+   	if ( retval == -1 ) return NO_PARAMETER;
+   	
+		if ( get_next_parameter ) {
+			debug("\tparameter_type = %d\n", parameter_type );
+			switch( parameter_type ) {
+				case C_STRING:
+					string_parameter.arr[string_parameter.len] = '\0';
+					debug("\tparameter = %s\n", string_parameter.arr );
+					add_string_parameter( call, curr_parm, 
+						string_parameter.arr, parameter_mode );
+					break;
+				case C_INT:
+					debug("\tparameter = %d\n", int_parameter );
+					add_int_parameter( call, curr_parm, 
+						int_parameter, parameter_mode );
+					break;
+				case C_FLOAT:
+					debug("\tparameter = %f\n", float_parameter );
+					add_float_parameter( call, curr_parm, 
+						float_parameter, parameter_mode );
+					break;
+				case C_DOUBLE:
+					debug("\tparameter = %lf\n", double_parameter );
+					add_double_parameter( call, curr_parm, 
+						double_parameter, parameter_mode );
+					break;
+				default:
+					printf("unknown parameter type %d...\n", parameter_type);
+					return PARAMETER_UNKNOWN;
+			}
+			curr_parm++;
+		}
+	} /* end while */
+
+	set_num_parameters( call, curr_parm );
+	return OK;
+}
+
+error_t
+receive_request( pipe, call )
+EXEC SQL BEGIN DECLARE SECTION;
+char * pipe;
+EXEC SQL END DECLARE SECTION;
+call_t * call;
+/* ----------------------------------------------------------------------
+ * Receives a clients' request from the specified database pipe
+ * ----------------------------------------------------------------------*/
+{
+	error_t err;
+	EXEC SQL BEGIN DECLARE SECTION;
+   	int retval = 0;
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL EXECUTE
+   		BEGIN
+     		:retval := DBMS_PIPE.RECEIVE_MESSAGE( :pipe );
+			IF :retval = 2 OR :retval = 3
+			THEN DBMS_PIPE.PURGE( :pipe );
+			END IF;
+		END;
+	END-EXEC;
+	if ( retval == 2 ) return MSG_TOO_BIG;
+	if ( retval == 3 ) return MSG_INTERRUPTED;
+
+	err = get_result_pipe ();
+	if ( err != OK ) return err;
+	err = get_function( call);
+	if ( err != OK ) return err;
+	return get_parameters( call );
+}
+
+error_t
+send_result ( char * pipe, error_t status, call_t * call )
+/* ----------------------------------------------------------------------
+ * Packs the result of the call as specified by the call spec and the
+ * status of the call, into a message, and sends it through the specified
+ * database pipe.
+ * ----------------------------------------------------------------------*/
+{
+  	int i;
+  	parameter_t parm;
+
+	EXEC SQL BEGIN DECLARE SECTION;
+    int retval = 0;
+  	char * str_val;
+  	int int_val;
+  	float float_val;
+  	double double_val;
+  	int exec_status;
+	EXEC SQL END DECLARE SECTION;
+
+	debug( "sending result through pipe %s\n", pipe );
+		
+	/* First send status, stop if not OK */
+	exec_status = (int) status;
+	debug( "send_result: status = %d\n", exec_status );
+	EXEC SQL EXECUTE
+  		BEGIN
+			DBMS_PIPE.PACK_MESSAGE( :exec_status );
+     	END;
+  	END-EXEC;
+  	if ( status != OK ) {
+  	   return status;
+  	}
+
+  	print_call( call );
+  			
+  	/* SEND OUT OR INOUT PARAMETER VALUES */
+  	for ( i=0; i<call->num_parameters; i++ ) {
+  		parm = call->parameters[i];
+  		if ( parm.mode == C_OUT || parm.mode == C_INOUT ) {
+  			debug( "send_result: sending parameter value\n" );
+  			switch( parm.type ) {
+  				case C_STRING:
+  					str_val = (char *) parm.value;
+  					debug( "send_result: str_val = %s\n", str_val );
+  					EXEC SQL EXECUTE
+  						BEGIN
+							DBMS_PIPE.PACK_MESSAGE( :str_val );
+     					END;
+  					END-EXEC;
+  					break;
+				case C_INT:
+					int_val = * (int *) parm.value;
+					debug( "send_result: int_val = %d\n", int_val );
+					EXEC SQL EXECUTE
+						BEGIN
+							DBMS_PIPE.PACK_MESSAGE( :int_val );
+						END;
+					END-EXEC;
+					break;
+				case C_FLOAT:
+					float_val = * (float *) parm.value;
+					debug( "send_result: float_val = %f\n", float_val );
+					EXEC SQL EXECUTE
+						BEGIN
+							DBMS_PIPE.PACK_MESSAGE( :float_val );
+						END;
+					END-EXEC;
+					break;
+				case C_DOUBLE:
+					double_val = * (double *) parm.value;
+					debug( "send_result: double_val = %lf\n", double_val );
+					EXEC SQL EXECUTE
+						BEGIN
+							DBMS_PIPE.PACK_MESSAGE( :double_val );
+						END;
+					END-EXEC;
+					break;
+			   default:
+					printf("unknown parameter type %d...\n", parm.type);
+					return PARAMETER_UNKNOWN;
+			}
+		}
+	}
+
+	/* SEND FUNCTION RETURN VALUE IF THERE IS ONE */
+	if ( call->return_type != C_VOID ) {
+		debug( "send_result: sending return value\n" );
+		switch( call->return_type ) {
+  			case C_STRING:
+				str_val = (char *) call->return_value;
+				debug( "send_result: str_val = %s\n", str_val );
+				EXEC SQL EXECUTE
+					BEGIN
+						DBMS_PIPE.PACK_MESSAGE( :str_val );
+  					END;
+				END-EXEC;
+				break;
+			case C_INT:
+				int_val = * (int *) call->return_value;
+				debug( "send_result: int_val = %d\n", int_val );
+				EXEC SQL EXECUTE
+					BEGIN
+						DBMS_PIPE.PACK_MESSAGE( :int_val );
+					END;
+				END-EXEC;
+				break;
+			case C_FLOAT:
+				float_val = * (float *) call->return_value;
+				debug( "send_result: float_val = %f\n", float_val );
+				EXEC SQL EXECUTE
+					BEGIN
+						DBMS_PIPE.PACK_MESSAGE( :float_val );
+					END;
+				END-EXEC;
+				break;
+			case C_DOUBLE:
+				double_val = * (double *) call->return_value;
+				debug( "send_result: double_val = %lf\n", double_val );
+				EXEC SQL EXECUTE
+					BEGIN
+						DBMS_PIPE.PACK_MESSAGE( :double_val );
+					END;
+				END-EXEC;
+				break;
+			default:
+				printf("unknown return type %d...\n", call->return_type);
+				return PARAMETER_UNKNOWN;
+		}
+	}
+	
+	EXEC SQL EXECUTE
+	   BEGIN
+			:retval := DBMS_PIPE.SEND_MESSAGE( :result_pipe );
+			IF :retval = 2 OR :retval = 3
+			THEN DBMS_PIPE.PURGE( :result_pipe );
+			END IF;
+		END;
+	END-EXEC;
+
+	return retval;
+}
+
+
+/* =====================================================================
+ *
+ * EXPORTED FUNCTIONS
+ *
+ *======================================================================*/
+ 
+void
+EPC_handle_requests( char * request_pipe )
+/* ----------------------------------------------------------------------
+ * Handles all requests received over the specified database pipe:
+ * - receives a request message
+ * - unpacks the specifications of the requested call
+ * - executes the call
+ * - packs status and results of the call
+ * - sends back the results
+ * ----------------------------------------------------------------------*/
+{
+	call_t call;
+	error_t retval;
+
+	for( ;; ) { 
+
+		switch( retval = receive_request( request_pipe, &call ) ) {
+			case NO_RESULT_PIPE:
+				/* something is very wrong, but nothing can be done... */
+				printf( "ERROR in receiving message\n" );
+				break;
+			case NO_FUNCTION:
+			case NO_PARAMETER:
+			case PARAMETER_UNKNOWN:
+				/* message has the wrong format!? - notify client as well */
+				printf( "ERROR in message format from %s\n", result_pipe.arr );
+				send_result( result_pipe.arr, retval, &call );
+				break;
+			case OK:
+				/* no-op */
+				;
+		}
+		
+		switch ( retval = exec_call( &call ) ) {
+			case FUNCTION_UNKNOWN:
+				send_result( result_pipe.arr, retval, &call );
+				break;
+			case OK:
+				/* no-op */
+				;
+		}
+
+		retval = send_result( result_pipe.arr, OK, &call );
+		debug( "handle_requests: retval = %d\n", retval );
+	
+	}
+}
+
