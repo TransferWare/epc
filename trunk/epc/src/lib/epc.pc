@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.46  2004/10/19 19:45:28  gpaulissen
+ * CTRL-C behaviour enhanced
+ *
  * Revision 1.45  2004/10/19 14:35:08  gpaulissen
  * epc_ -> epc__
  *
@@ -329,11 +332,10 @@ epc__connect( epc__info_t *epc__info )
 {
   EXEC SQL BEGIN DECLARE SECTION;
   char *logon = epc__info->logon;
-  char * request_pipe = epc__info->pipe;
+  char *request_pipe = epc__info->pipe;
   short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
   EXEC SQL END DECLARE SECTION;
   epc__error_t status = OK;
-  int nr;
 
   DBUG_ENTER( "epc__connect" );
 
@@ -379,35 +381,36 @@ epc__connect( epc__info_t *epc__info )
 
       fflush( stdout ); /* flush because of DBUG package */
 
-      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+      EXEC SQL CONTEXT USE :interrupt_context;
 
-      for ( nr = 0; nr < 2; nr++ )
-        {
-          switch(nr)
-            {
-            case 0:
-              EXEC SQL CONTEXT USE :interrupt_context;
-              break;
-            case 1:
-              EXEC SQL CONTEXT USE DEFAULT;
-              break;
-            }
+      EXEC SQL EXECUTE
+      declare
+        l_epc_key epc_srvr.epc_key_subtype;
+      begin
+        l_epc_key := epc_srvr.register;
+        if ( :request_pipe:request_pipe_nl is not null )
+        then
+          epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
+        end if;
+      end;
+      END-EXEC;
 
-          EXEC SQL EXECUTE
-          declare
-            l_pipe_name epc.pipe_name_subtype;
-            l_epc_key epc_srvr.epc_key_subtype;
-          begin
-            l_epc_key := epc_srvr.register;
-            if ( :request_pipe:request_pipe_nl is not null )
-            then
-              epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
-            end if;
-            epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
-            dbms_pipe.purge( l_pipe_name );
-          end;
-          END-EXEC;
-        }
+      EXEC SQL CONTEXT USE DEFAULT;
+
+      EXEC SQL EXECUTE
+      declare
+        l_pipe_name epc.pipe_name_subtype;
+        l_epc_key epc_srvr.epc_key_subtype;
+      begin
+        l_epc_key := epc_srvr.register;
+        if ( :request_pipe:request_pipe_nl is not null )
+        then
+          epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
+        end if;
+        epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
+        dbms_pipe.purge( l_pipe_name );
+      end;
+      END-EXEC;
     }
 
   DBUG_LEAVE();
