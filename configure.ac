@@ -40,18 +40,33 @@ AC_PROG_YACC
 AM_PROG_CC_STDC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-AC_CHECK_PROGS([SQLPLUS],[plus80 plus33 plus32])
-AC_CHECK_PROG([PROC],[proc])
+
+AC_PATH_PROGS([SQLPLUS],[plus80 plus33 plus32])
+AC_PATH_PROG([PROC],[proc])
 
 # Checks for libraries.
-AC_MSG_CHECKING([whether ORACLE_HOME is set])
-if test -z "$ORACLE_HOME"
-then
-  
-else
+AH_TEMPLATE([HAVE_OCI8], [Defined when Oracle 8 OCI is available])
 
+dnl
+dnl Oracle is always configured. Optionally you can specify another
+dnl ORACLE_HOME via --with-oracle=<my_oracle_home>
+dnl 
+AM_PATH_ORACLE(8.0,[], [
+    LDFLAGS="$LDFLAGS $ORACLE_LDFLAGS"
+    LIBS="$LIBS $ORACLE_SHLIBS"
+    CPPFLAGS="$CPPFLAGS $ORACLE_CPPFLAGS"
+],[ echo "Oops, didn't find Oracle"; exit 1
+])
+
+if test "x$LD_RUNPATH_SWITCH" != "x" -a "x$LD_SHLIB_PATH" != "x" ; then
+  LDFLAGS=" $LDFLAGS ${LD_RUNPATH_SWITCH}$LD_SHLIB_PATH"
 fi
-AC_MSG_RESULT()
+
+dnl
+dnl Check if oracle supports OCIEnvCreate ( version >= 8.1.6?), OCIStmtFetch2 (9i),
+dnl OCILobOpen (>= 8.1) and OCILobWriteAppend (>= 8.1)
+dnl
+AC_CHECK_FUNCS([OCIEnvCreate OCIStmtFetch2 OCILobOpen OCILobWriteAppend osnsui])
 
 # Checks for header files.
 AC_HEADER_STDC
