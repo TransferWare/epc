@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/02/19 16:42:31  gpauliss
+ * Using dos filename conventions (8.3)
+ *
  * Revision 1.2  1998/02/03 10:06:53  gpauliss
  * - Removed obsolete logging
  *
@@ -24,7 +27,7 @@
  */
 
 #include <stdio.h>
-#include "idl_parse.h"
+#include "idl_prs.h"
 
 extern void yyerror( char *s );
 extern int yylex( void );
