@@ -41,32 +41,9 @@ AM_PROG_CC_STDC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
-AC_PATH_PROGS([SQLPLUS],[plus80 plus33 plus32])
-AC_PATH_PROG([PROC],[proc])
-
-# Checks for libraries.
-AH_TEMPLATE([HAVE_OCI8], [Defined when Oracle 8 OCI is available])
-
-dnl
-dnl Oracle is always configured. Optionally you can specify another
-dnl ORACLE_HOME via --with-oracle=<my_oracle_home>
-dnl 
-AM_PATH_ORACLE(8.0,[], [
-    LDFLAGS="$LDFLAGS $ORACLE_LDFLAGS"
-    LIBS="$LIBS $ORACLE_SHLIBS"
-    CPPFLAGS="$CPPFLAGS $ORACLE_CPPFLAGS"
-],[ echo "Oops, didn't find Oracle"; exit 1
-])
-
-if test "x$LD_RUNPATH_SWITCH" != "x" -a "x$LD_SHLIB_PATH" != "x" ; then
-  LDFLAGS=" $LDFLAGS ${LD_RUNPATH_SWITCH}$LD_SHLIB_PATH"
-fi
-
-dnl
-dnl Check if oracle supports OCIEnvCreate ( version >= 8.1.6?), OCIStmtFetch2 (9i),
-dnl OCILobOpen (>= 8.1) and OCILobWriteAppend (>= 8.1)
-dnl
-AC_CHECK_FUNCS([OCIEnvCreate OCIStmtFetch2 OCILobOpen OCILobWriteAppend osnsui])
+# Oracle checks
+ACX_PROG_PROC
+AH_BOTTOM([#define SQLPROTOHDR $SQLPROTOHDR])
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -86,12 +63,12 @@ LIB@&t@OBJS=`echo "$LIB@&t@OBJS" |
              sed 's,\.[[^.]]* ,$U&,g;s,\.[[^.]]*$,$U&,'`
 LTLIBOBJS=`echo "$LIB@&t@OBJS" |
            sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
-AC_SUBST(LTLIBOBJS)
+AC_SUBST(LTLIBOBJS)dnl
+AC_SUBST(ac_aux_dir)dnl
+AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile] dnl
+                [Makefile config/Makefile test/Makefile])dnl
+#AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile utils/Makefile])dnl
 
-AC_SUBST(ac_aux_dir)
-
-#AC_CONFIG_FILES([Makefile config/Makefile examples/Makefile examples/demo/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile test/Makefile utils/Makefile])
-AC_CONFIG_FILES([Makefile config/Makefile src/Makefile src/prog/Makefile])
 AC_OUTPUT
 
 echo \
@@ -106,3 +83,5 @@ Configuration:
 
   See config.h for further configuration information.
 ------------------------------------------------------------------------"
+
+

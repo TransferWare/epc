@@ -9,6 +9,83 @@ dnl  ACX_LD_RUNPATH_SWITCH
 dnl  AM_PATH_ORACLE
 dnl
 
+
+# ACX_PROG_PROC
+# -------------
+# Look for the Oracle PRO*C compiler. 
+# Sets/updates the following variables:
+# - PROC          the full path name of the PRO*C compiler
+# - PROCLIB       its associated library to
+# - CPPFLAGS      the directory of the PRO*C prototype header is added
+# - PROCFLAGS     PRO*C compiler flags
+# - PROCINCLUDES  PRO*C compiler includes
+
+#AC_DEFUN([ACX_PROG_PROC],
+#[AC_REQUIRE(AC_CANONICAL_HOST)dnl
+
+AC_DEFUN([ACX_PROG_PROC],
+[AC_ARG_VAR(PROC, [Oracle PRO*C compiler command])dnl
+AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)])dnl
+
+acx_cv_oracle_home=`dirname $PROC`
+acx_cv_oracle_home=`dirname $acx_cv_oracle_home`
+
+case "$host" in
+*-*-cygwin* | *-*-mingw* )
+  AC_MSG_CHECKING(for the full path name of the PRO*C library)
+  # set -xv
+  PROCLIB=
+  for dir in $acx_cv_oracle_home/precomp/lib/msvc $acx_cv_oracle_home
+  do
+    for file in orasql8.lib sqllib18.lib
+    do
+      # Windows: ignores case
+      PROCLIB=`find $dir \( -name \*.lib -o -name \*.LIB \) | grep -i $file 2>/dev/null`
+      test -z "$PROCLIB" || break
+    done
+    test -z "$PROCLIB" || break
+  done
+  LIBS="$PROCLIB $LIBS"
+  AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library not found)])
+  AC_MSG_RESULT($PROCLIB)
+  ;;
+* ) 
+  ;;
+esac
+AC_SUBST(PROCLIB)
+
+AC_MSG_CHECKING(for the PRO*C prototype header)
+acx_cv_prochdr=
+for dir in $acx_cv_oracle_home/precomp/public $acx_cv_oracle_home
+do
+  for file in sqlcpr.h sqlproto.h
+  do
+    # Windows: ignores case
+    acx_cv_protohdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file 2>/dev/null`
+    test -z "$acx_cv_protohdr" || break
+  done
+  test -z "$acx_cv_protohdr" || break
+done
+CPPFLAGS="-I`dirname $acx_cv_protohdr` $CPPFLAGS"
+acx_cv_protohdr=`basename $acx_cv_protohdr`
+AC_MSG_RESULT($acx_cv_protohdr)
+AC_CHECK_HEADERS([sqlcpr.h sqlproto.h], [break], [AC_MSG_ERROR(PRO*C prototype header not found)])
+for f in $CPPFLAGS
+do
+  case $f in
+  "-I*" )
+    PROCINCLUDES="$PROCINCLUDES `echo $f | sed -e 's/-I/INCLUDE=/g'`"
+    ;;
+  "-D*" )
+    PROCFLAGS="$PROCFLAGS `echo $f | sed -e 's/-D/DEFINE=/g'`"
+    ;;
+  esac
+done
+AC_SUBST(PROCINCLUDES)
+PROCFLAGS="$PROCFLAGS CODE=ANSI_C USERID=$(USERID) PARSE=NONE SQLCHECK=FULL"
+AC_SUBST(PROCFLAGS)
+])
+
 dnl -------------------------------------------------------------------------
 dnl ACX_LD_RUNPATH_SWITCH([ACTION-IF-FOUND [,ACTION-IF-NOT-FOUND]])
 dnl Sets the variable LD_RUNPATH_SWITCH
