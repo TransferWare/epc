@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.7  1999/11/25 09:15:18  gpaulissen
+ * Release 1.5
+ *
  * Revision 1.6  1999/11/23 16:05:38  gpaulissen
  * DBUG interface changed.
  *
@@ -95,6 +98,7 @@ end_include     "%}"
                                           BEGIN(COMMENT); }
 
 <INCLUDE>^{end_include}.*\n             { DBUG_PRINT((__LINE__, "info", "<INCLUDE>^{end_include}.*\\n '%s'", yytext));
+                                          lineno++;
                                           BEGIN(NORMAL); }
 <INCLUDE>.*\n                           { add_include_text( yytext ); 
                                           DBUG_PRINT((__LINE__, "info", "<INCLUDE>.* '%s'", yytext));
@@ -141,7 +145,7 @@ end_include     "%}"
 
 void yyerror( char *s )
 {
-  printf("line %d: %s; yytext: '%s'; keyword: %d\n", lineno, s, yytext, yylval.ival );
+  printf("%s; line %d: text: '%s'\n", s, lineno, yytext );
 }
 
 int main ( int argc, char **argv )

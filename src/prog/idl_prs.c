@@ -19,6 +19,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.14  1999/11/25 09:15:18  gpaulissen
+ * Release 1.5
+ *
  * Revision 1.13  1999/11/23 16:05:38  gpaulissen
  * DBUG interface changed.
  *
@@ -75,6 +78,7 @@
 */
 #define EXEC_SQL_BEGIN_DECLARE_SECTION "EXEC SQL BEGIN DECLARE SECTION"
 #define EXEC_SQL_END_DECLARE_SECTION "EXEC SQL END DECLARE SECTION"
+#define EPC_PREFIX "_epc_"
 
 /*
 || A special epc interface header is not needed, since the interface C file
@@ -123,7 +127,7 @@ static idl_interface_t _interface;
 
 
 /*
-|| Global variable
+|| Global variables
 */
 keyword keywords[] = {
 	{ C_VOID, 	{	{ C, 		"void",		"C_VOID" },
@@ -164,6 +168,11 @@ keyword keywords[] = {
 	}
 };
 
+int print_external_function = 0; /* print extern <function> in header */
+
+/*
+|| Global functions
+*/
 
 void set_interface ( char *name )
 {
@@ -519,7 +528,7 @@ static void generate_c_parameters( FILE * pout, idl_function_t * fun )
 
 static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype )
 {
-	fprintf( pout, "\tDBUG_PRINT( ( __LINE__, \"info\"" );
+	fprintf( pout, "\tDBUG_PRINT( ( __LINE__, \"info\", " );
 	switch( datatype )
 	{
 	case C_INT:
@@ -558,7 +567,7 @@ static void generate_c_function( FILE * pout, idl_function_t * fun )
 	int i;
 	int exec_sql_printed = 0;
 
-	fprintf( pout, "void _%s ( epc_call_t *call )\n", fun->name );
+	fprintf( pout, "void %s%s ( epc_call_t *call )\n", EPC_PREFIX, fun->name );
 	fprintf( pout, "{\n" );
 
 		/* 
@@ -768,7 +777,7 @@ static void declare_external_function( FILE * pout, idl_function_t * fun )
 
 static void declare_internal_function( FILE * pout, idl_function_t * fun )
 {
-	fprintf( pout, "extern void _%s( epc_call_t *call );\n", fun->name );
+	fprintf( pout, "extern void %s%s( epc_call_t *call );\n", EPC_PREFIX, fun->name );
 }
 
 static void generate_c_source ( FILE * pout, const char *include_text )
@@ -799,9 +808,10 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 	fprintf( pout, "\nstatic epc_function_t functions[] = {\n" );
 	for ( i=0; i<_interface.num_functions; i++) {
 		fun = _interface.functions[i];
-		fprintf( pout, "\t{ \"%s\", %s, _%s }%s\n", 
+		fprintf( pout, "\t{ \"%s\", %s, %s%s }%s\n", 
 			fun->name, 
 			get_constant_name( fun->return_value.datatype, C ), 
+			EPC_PREFIX,
 			fun->name,
 			( i < _interface.num_functions-1 ? "," : "" ) 
 		);
@@ -832,54 +842,58 @@ static void generate_interface_header ( FILE * pout )
 
 static void generate_header ( FILE *pout )
 {
-	int i;
+  int i;
 
-	print_generate_comment( pout, "" );
+  print_generate_comment( pout, "" );
 
 #ifdef GEN_EPC_IFC_H
-	fprintf( pout, "#include \"epc_defs.h\"\n\n" );
+  fprintf( pout, "#include \"epc_defs.h\"\n\n" );
 #endif
 
-		/* DECLARE THE FUNCTIONS CALLED, BECAUSE THE COMPILER NEEDS THEM!!! */
-	for ( i=0; i<_interface.num_functions; i++) {
-		declare_external_function( pout, _interface.functions[i] );
-		declare_internal_function( pout, _interface.functions[i] );
-	}
+  /* DECLARE THE INTERNAL FUNCTIONS CALLED, BECAUSE THE COMPILER NEEDS THEM!!! */
+  /* HOWEVER DO NOT DECLARE EXTERNAL FUNCTIONS WHEN THEY DO NOT NEED TO BE PRINTED */
+  for ( i=0; i<_interface.num_functions; i++) {
+    if ( print_external_function )
+      declare_external_function( pout, _interface.functions[i] );
+    declare_internal_function( pout, _interface.functions[i] );
+  }
 
-		/* interface declaration */
-	fprintf( pout, "\nextern epc_interface_t ifc_%s;\n", _interface.name );
+  /* interface declaration */
+  fprintf( pout, "\nextern epc_interface_t ifc_%s;\n", _interface.name );
 }
 
 void generate_c ( const char *include_text )
 {
-	char filename[256];
+  char filename[256];
 #ifdef GEN_EPC_IFC_H
-	FILE * pout_i;
+  FILE * pout_i;
 #endif
-	FILE * pout_c, * pout_h;
-
-#ifdef GEN_EPC_IFC_H
-	sprintf( filename, "epc_ifc.h" );
-	if ( ( pout_i = fopen( filename, "w" ) ) == NULL ) {
-		printf( "cannot open file %s - exiting...\n", filename );
-	}
-#endif
-
-	sprintf( filename, "%s.h", _interface.name );
-	if ( ( pout_h = fopen( filename, "w" ) ) == NULL ) {
-		printf( "cannot open file %s - exiting...\n", filename );
-	}
-
-		/* Generate a PRO*C file */
-	sprintf( filename, "%s.pc", _interface.name );
-	if ( ( pout_c = fopen( filename, "w" ) ) == NULL ) {
-		printf( "cannot open file %s - exiting...\n", filename );
-	}
+  FILE * pout_c, * pout_h;
 
 #ifdef GEN_EPC_IFC_H
-	generate_interface_header ( pout_i ); 
+  sprintf( filename, "epc_ifc.h" );
+  if ( ( pout_i = fopen( filename, "w" ) ) == NULL ) {
+    printf( "cannot open file %s - exiting...\n", filename );
+  }
 #endif
-	generate_header ( pout_h ); 
-	generate_c_source ( pout_c, include_text );
+
+  sprintf( filename, "%s.h", _interface.name );
+  if ( ( pout_h = fopen( filename, "w" ) ) == NULL ) {
+    printf( "cannot open file %s - exiting...\n", filename );
+  }
+
+  /* Generate a PRO*C file */
+  sprintf( filename, "%s.pc", _interface.name );
+  if ( ( pout_c = fopen( filename, "w" ) ) == NULL ) {
+    printf( "cannot open file %s - exiting...\n", filename );
+  }
+
+  if ( !print_external_function )
+    print_external_function = (include_text == NULL);
+
+#ifdef GEN_EPC_IFC_H
+  generate_interface_header ( pout_i ); 
+#endif
+  generate_header ( pout_h ); 
+  generate_c_source ( pout_c, include_text );
 }
-
