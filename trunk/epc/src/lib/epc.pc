@@ -1,5 +1,5 @@
 /*
- * Filename   		: $Source$
+ * Filename   		: $RCSfile$
  *
  * Creation date  : 25-AUG-1997
  *
@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.10  1998/05/26 11:06:13  gpauliss
+ * Replaced $Source$ by $RCSfile$
+ *
  * Revision 1.9  1998/05/19 19:31:46  gpauliss
  * Used ANSI C syntax for EPC_handle_requests
  *
