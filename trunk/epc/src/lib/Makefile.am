@@ -27,7 +27,7 @@ include_HEADERS      = epc.h epc_defs.h epc_dbg.h idl_defs.h
 
 lib_LTLIBRARIES      = libepc.la
 
-libepc_la_SOURCES    = lsnr.c epc.c epc_dbg.c
+libepc_la_SOURCES    = lsnr.c epc.pc epc_dbg.c
 
 ##
 ## History of interface versions:
@@ -37,11 +37,6 @@ libepc_la_SOURCES    = lsnr.c epc.c epc_dbg.c
 
 libepc_la_LDFLAGS     = -no-undefined -version-info 2:0:0
 libepc_la_LIBADD      = $(libdir)/libdbug.la
-
-EXTRA_DIST           = epc.pc
-
-
-@SUFFIXES@: .c .pc
 
 .pc.c:
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$< ONAME=$@

@@ -74,7 +74,7 @@ fi
 #                 The -I flags of CPPFLAGS are converted into include=..
 
 AC_DEFUN([ACX_PROG_PROC],
-[AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)])dnl
+[AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)], ["$ORACLE_HOME/bin:$PATH"])dnl
 
 acx_oracle_home="$ORACLE_HOME"
 if test -z "$acx_oracle_home"
@@ -131,10 +131,10 @@ AC_DEFUN([ACX_PROG_SQLPLUS],
 
 if test -n "${PROC:=}"
 then
-  acx_path=`dirname $PROC`
+  acx_path="`dirname $PROC`:$PATH"
 elif test -n "${ORACLE_HOME:=}"
 then
-  acx_path="$ORACLE_HOME/bin"
+  acx_path="$ORACLE_HOME/bin:$PATH"
 else
   acx_path="$PATH"
 fi
