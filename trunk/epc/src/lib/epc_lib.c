@@ -415,6 +415,8 @@ get_error_str( epc__error_t err )
       return "RECEIVE_ERROR";
     case EXEC_ERROR:
       return "EXEC_ERROR";
+    case PARSE_ERROR:
+      return "PARSE_ERROR";
     case MEMORY_ERROR:
       return "MEMORY_ERROR";
     case DATATYPE_UNKNOWN:
@@ -447,7 +449,10 @@ epc__init( void )
 
   epc__info = (epc__info_t*)malloc( sizeof(epc__info_t) );
 
-  assert( epc__info != NULL );
+  if ( epc__info == NULL )
+    {
+      exit (EXIT_FAILURE);
+    }
 
   epc__info->logon = NULL;
   epc__info->connected = 0;
@@ -461,48 +466,44 @@ epc__init( void )
   DBUG_PRINT( "info", ( "epc__info: %p", (void*)epc__info ) );
 
   DBUG_LEAVE();
+
   return epc__info;
 }
 
 void
-epc__done( epc__info_t **epc__info )
+epc__done( epc__info_t *epc__info )
 {
   DBUG_ENTER( "epc__done" );
 
-  DBUG_PRINT( "input", ( "*epc__info: %p", (void*)*epc__info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", epc__info ) );
 
-  if ( *epc__info != NULL )
+  (void) epc__xml_done( epc__info );
+
+  if ( epc__info->sqlca != NULL )
+    free( epc__info->sqlca );
+
+  if ( epc__info->interfaces != NULL )
     {
-      (void) epc__xml_done( *epc__info );
+      dword_t inr, fnr, pnr;
 
-      if ( (*epc__info)->sqlca != NULL )
-        free( (*epc__info)->sqlca );
-
-      if ( (*epc__info)->interfaces != NULL )
+      for (inr = 0; inr < epc__info->num_interfaces; inr++)
         {
-          dword_t inr, fnr, pnr;
+          epc__interface_t *interface = epc__info->interfaces[inr];
 
-          for (inr = 0; inr < (*epc__info)->num_interfaces; inr++)
-            {
-              epc__interface_t *interface = (*epc__info)->interfaces[inr];
-
-              /* free memory for the parameters */
-              for ( fnr = 0; fnr < interface->num_functions; fnr++ )
-                for ( pnr = 0; pnr < interface->functions[fnr].num_parameters; pnr++ )
-                  {
-                    free( interface->functions[fnr].parameters[pnr].data );
-                  }
-            }
-          
-          free( (*epc__info)->interfaces );
+          /* free memory for the parameters */
+          for ( fnr = 0; fnr < interface->num_functions; fnr++ )
+            for ( pnr = 0; pnr < interface->functions[fnr].num_parameters; pnr++ )
+              {
+                free( interface->functions[fnr].parameters[pnr].data );
+              }
         }
-
-      if ( (*epc__info)->pipe != NULL )
-        free( (*epc__info)->pipe );
-
-      free( *epc__info );
-      *epc__info = NULL;
+          
+      free( epc__info->interfaces );
     }
+
+  if ( epc__info->pipe != NULL )
+    free( epc__info->pipe );
+  free( epc__info );
 
   DBUG_LEAVE();
 }
@@ -669,63 +670,13 @@ epc__exec_call( epc__info_t * epc__info, epc__call_t * epc__call )
 
   assert( epc__call->epc__error == OK );
 
-  (void) epc__xml_parse( epc__info, epc__call, epc__call->msg_request, strlen(epc__call->msg_request) );
-
-  /* TBD: SOAP errors when interface or function unknown */
-  if ( epc__call->epc__error != OK )
+  if ( epc__xml_parse( epc__info, epc__call, epc__call->msg_request, strlen(epc__call->msg_request) ) != 0 ||
+       epc__call->epc__error != OK )
     {
-      assert( epc__call->epc__error == FUNCTION_UNKNOWN ||
-              epc__call->epc__error == INTERFACE_UNKNOWN );
-
-      /* Excerpt from http://www.w3schools.com/soap/soap_fault.asp:
-
-        The SOAP Fault Element
-
-        An error message from a SOAP message is carried inside a Fault
-        element.
-
-        If a Fault element is present, it must appear as a child element of
-        the Body element. A Fault element can only appear once in a SOAP
-        message.
-
-        The SOAP Fault element has the following sub elements: 
-        Sub Element     Description 
-        <faultcode>     A code for identifying the fault 
-        <faultstring>   A human readable explanation of the fault 
-        <faultactor>    Information about who caused the fault to happen 
-        <detail>        Holds application specific error information related 
-                        to the Body element
-
-        SOAP Fault Codes
-
-        The faultcode values defined below must be used in the faultcode
-        element when describing faults: 
-        Error           Description 
-        VersionMismatch Found an invalid namespace for the SOAP Envelope element
-        MustUnderstand  An immediate child element of the Header element, with
-                        the mustUnderstand attribute set to "1", was not understood
-        Client          The message was incorrectly formed or contained incorrect 
-                        information
-        Server          There was a problem with the server so the message could not
-                        proceed
-      */
-      /* construct the response */
-      (void) snprintf(epc__call->msg_response,
-                      MAX_MSG_RESPONSE_LEN+1, 
-                      "<?xml version='1.0' encoding='iso-8859-1'?>\
-<SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' \
-xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' \
-xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' \
-xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
-<SOAP-ENV:Body>\
-<SOAP-ENV:Fault>\
-<faultcode>Client</faultcode><faultstring>%s</faultstring>\
-</SOAP-ENV:Fault>\
-</SOAP-ENV:Body>\
-</SOAP-ENV:Envelope>", 
-                      ( epc__call->epc__error == FUNCTION_UNKNOWN 
-                        ? "function unknown" 
-                        : "interface unknown" ));
+      assert( epc__call->epc__error == PARSE_ERROR ||
+              epc__call->epc__error == INTERFACE_UNKNOWN ||
+              epc__call->epc__error == FUNCTION_UNKNOWN ||
+              epc__call->epc__error == PARAMETER_UNKNOWN );
     }
   else
     {
@@ -734,23 +685,15 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
 
       (*epc__call->function->function) ( epc__call->function );
 
-      /* construct the response */
-      if ( epc__call->function->oneway != 0 )
-        {
-          (void) strcpy( epc__call->msg_response, "" );
-        }
-      else 
+      /* construct the response for non oneway functions */
+      if ( epc__call->function->oneway == 0 )
         {
           dword_t nr;
 
           (void) snprintf(epc__call->msg_response,
                           MAX_MSG_RESPONSE_LEN+1, 
-                          "<?xml version='1.0' encoding='iso-8859-1'?>\
-<SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' \
-xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' \
-xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' \
-xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
-<SOAP-ENV:Body><%sResponse xmlns='%s'>", epc__call->function->name, epc__call->interface->name);
+                          SOAP_HEADER_START "<%sResponse xmlns='%s'>", 
+                          epc__call->function->name, epc__call->interface->name);
 
           for ( nr = 0; nr < epc__call->function->num_parameters; nr++ )
             {
@@ -777,7 +720,7 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%d", 
                                       epc__call->msg_response,
-                                      *((int*)epc__call->function->parameters[nr].data));
+                                      *((idl_int_t*)epc__call->function->parameters[nr].data));
                       break;
 
                     case C_LONG:
@@ -785,7 +728,7 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%ld", 
                                       epc__call->msg_response, 
-                                      *((long*)epc__call->function->parameters[nr].data));
+                                      *((idl_long_t*)epc__call->function->parameters[nr].data));
                       break;
 
                     case C_FLOAT:
@@ -793,7 +736,7 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%f",
                                       epc__call->msg_response,
-                                      (double)(*((float*)epc__call->function->parameters[nr].data)));
+                                      (double)(*((idl_float_t*)epc__call->function->parameters[nr].data)));
                       break;
                   
                     case C_DOUBLE:
@@ -801,7 +744,7 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%f", 
                                       epc__call->msg_response,
-                                      *((double*)epc__call->function->parameters[nr].data));
+                                      *((idl_double_t*)epc__call->function->parameters[nr].data));
                       break;
                           
                     case C_VOID: /* procedure */
@@ -820,7 +763,7 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
             }
 
           (void) snprintf(epc__call->msg_response, MAX_MSG_RESPONSE_LEN+1, 
-                          "%s</%sResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>", 
+                          "%s</%sResponse>" SOAP_HEADER_END, 
                           epc__call->msg_response, epc__call->function->name);
         }
     }
@@ -868,19 +811,24 @@ epc__handle_request( epc__info_t *epc__info,
 
       (void) epc__exec_call( epc__info, epc__call );
 
-      if ( !( epc__call->epc__error == FUNCTION_UNKNOWN ||
+      if ( !( epc__call->epc__error == OK ||
+              epc__call->epc__error == PARSE_ERROR ||
               epc__call->epc__error == INTERFACE_UNKNOWN ||
-              epc__call->epc__error == OK ) )
-        break;
-
-      DBUG_PRINT( "info", ( "msg_response: %s", epc__call->msg_response ) );
-
-      assert( epc__call->interface != NULL );
-      assert( epc__call->function != NULL );
-
-      /* send the response */
-      if ( epc__call->function->oneway == 0 )
+              epc__call->epc__error == FUNCTION_UNKNOWN ||
+              epc__call->epc__error == PARAMETER_UNKNOWN ) )
         {
+          break;
+        }
+
+      assert( epc__call->epc__error != OK || 
+              ( epc__call->function != NULL && epc__call->interface != NULL ) );
+
+      /* send the response in case of errors or for non oneway functions  */
+      if ( epc__call->epc__error != OK || 
+           ( epc__call->function != NULL && epc__call->function->oneway == 0 ) )
+        {
+          DBUG_PRINT( "info", ( "msg_response: %s", epc__call->msg_response ) );
+
           (void) (*send_response)( epc__info, epc__call );
         }
 

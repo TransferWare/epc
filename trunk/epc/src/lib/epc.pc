@@ -13,6 +13,11 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.48  2004/10/21 10:37:07  gpaulissen
+ * * make lint
+ * * error reporting enhanced
+ * * oneway functions enhanced
+ *
  * Revision 1.47  2004/10/20 20:38:44  gpaulissen
  * make lint
  *
@@ -599,22 +604,24 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 epc__error_t
 epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 {
+  EXEC SQL BEGIN DECLARE SECTION;
+  char *msg_info = epc__call->msg_info;
+  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
+  char *msg_response = epc__call->msg_response;
+  EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
+  EXEC SQL END DECLARE SECTION;
+
   DBUG_ENTER( "send_response" );
 
   epc__call->epc__error = OK;
 
-  if ( epc__call->function != NULL && epc__call->function->oneway == 0 )
+  assert( epc__call->function == NULL || epc__call->function->oneway == 0 );
+
+  sqlca.sqlcode = 0;
+  epc__call->errcode = 0;
+
+  if ( msg_info[0] != '\0' )
     {
-      EXEC SQL BEGIN DECLARE SECTION;
-      char *msg_info = epc__call->msg_info;
-      EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-      char *msg_response = epc__call->msg_response;
-      EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
-      EXEC SQL END DECLARE SECTION;
-
-      sqlca.sqlcode = 0;
-      epc__call->errcode = 0;
-
       EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
       EXEC SQL CONTEXT USE DEFAULT;

@@ -39,21 +39,21 @@ epc__error_t
 epc__list_main( int argc, char **argv, /*@notnull@*/ epc__interface_t *, ... );
 
 extern
-/*@only@*/
+/*@notnull@*/ /*@only@*/
 epc__info_t *
 epc__init( void );
 
 extern
 void
-epc__done( /*@notnull@*/ epc__info_ptr_t *epc__info );
+epc__done( /*@notnull@*/ /*@only@*/ epc__info_t *epc__info ) /*@modifies epc__info*/;
 
 extern
 epc__error_t
-epc__set_logon( /*@notnull@*/ epc__info_t *epc__info, /*@null@*/ char *logon );
+epc__set_logon( /*@notnull@*/ epc__info_t *epc__info, /*@null@*/ char *logon ) /*@modifies epc__info->logon*/;
 
 extern
 epc__error_t
-epc__set_pipe( /*@notnull@*/ epc__info_t *epc__info, /*@null@*/ char *pipe );
+epc__set_pipe( /*@notnull@*/ epc__info_t *epc__info, /*@null@*/ char *pipe ) /*@modifies epc__info->pipe*/;
 
 extern
 epc__error_t

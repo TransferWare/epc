@@ -4,6 +4,11 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.7  2004/10/21 10:37:08  gpaulissen
+REMARK  * make lint
+REMARK  * error reporting enhanced
+REMARK  * oneway functions enhanced
+REMARK
 REMARK  Revision 1.6  2004/10/20 20:38:44  gpaulissen
 REMARK  make lint
 REMARK
@@ -71,11 +76,11 @@ type epc_info_tabtype is table of epc_info_rectype index by binary_integer;
        GJP 07-04-2004
        RESULT PIPE is v_oneway_result_pipe for oneway functions.
 
-   5 - To server: PROTOCOL, MSG SEQ, SOAP REQUEST MESSAGE, RESULT PIPE
+   5 - To server: PROTOCOL, MSG SEQ, SOAP REQUEST MESSAGE [, RESULT PIPE ]
        From server: MSG SEQ, SOAP RESPONSE MESSAGE
 
-       GJP 07-04-2004
-       RESULT PIPE is v_oneway_result_pipe for oneway functions.
+       GJP 21-10-2004
+       RESULT PIPE is empty for oneway functions.
 
 */
 c_msg_protocol  constant pls_integer := 5;
@@ -84,8 +89,6 @@ c_max_msg_seq   constant pls_integer := 65535; /* msg seq wraps from 0 up till 6
 -- global variables
 epc_info_tab epc_info_tabtype;
 g_result_pipe epc.pipe_name_subtype := null;
---v_request_pipe epc.pipe_name_subtype := 'epc_request_pipe';
-g_oneway_result_pipe constant epc.pipe_name_subtype := 'N/A';
 /* The current message sequence number.
    The message sequence number is incremented before a message
    is sent. This (incremented) number if part of the message
@@ -298,9 +301,6 @@ begin
     end if;
 
     dbms_pipe.pack_message( g_result_pipe );
-  else
-    /* GJP 07-03-2004 Must supply a result pipe */
-    dbms_pipe.pack_message( g_oneway_result_pipe );
   end if;
 
   l_retval := dbms_pipe.send_message( epc_info_tab(p_epc_key).request_pipe, epc_info_tab(p_epc_key).send_timeout );

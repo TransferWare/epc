@@ -12,6 +12,11 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.9  2004/10/21 10:37:07  gpaulissen
+ * * make lint
+ * * error reporting enhanced
+ * * oneway functions enhanced
+ *
  * Revision 1.8  2004/10/20 20:38:44  gpaulissen
  * make lint
  *
@@ -259,24 +264,24 @@ epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
     }
   while (0);
 
+  /*@-branchstate@*/
   switch( nr ) /* last step */
     {
     case 7:
     case 6:
-      assert( epc__info != NULL );
       ret = epc__disconnect( epc__info );
-      /*@-casebreak@*/
+      /*@fallthrough@*/
 
     case 5:
     case 4:
     case 3:
     case 2:
-      epc__done( &epc__info );
-      /*@-casebreak@*/
+      epc__done( epc__info );
+      /*@fallthrough@*/
 
     case 1:
       (void) dbug_done();
-      /*@-casebreak@*/
+      /*@fallthrough@*/
 
     case 0:
       break;
@@ -285,6 +290,7 @@ epc__list_main( int argc, char **argv, epc__interface_t *epc_interface, ... )
       assert(nr >= 0 && nr <= 7);
       break;
     }
+  /*@=branchstate@*/
 
   free(dbug_options);
 

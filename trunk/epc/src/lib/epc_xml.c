@@ -36,6 +36,10 @@ typedef struct {
 /* SAX callback functions */
 
 static
+void
+error_handler(void *epc__xml_ctx_ptr, const oratext *msg, uword errcode);
+
+static
 sword
 start_document(void *epc__xml_ctx_ptr);
 
@@ -92,11 +96,15 @@ epc__xml_init( epc__info_t *epc__info )
 
   xml_info->saxcb = saxcb;
   
-  xml_info->xmlctx = xmlinit(&ecode, (const oratext *) 0,
-                             (void (*)(void *, const oratext *, uword)) 0,
-                             (void *) 0, &xml_info->saxcb, (void *) &xml_info->epc__xml_ctx,
-                             (const xmlmemcb *) 0, NULL,
-                             (const oratext *) 0);
+  xml_info->xmlctx = xmlinit(&ecode, 
+                             NULL,
+                             error_handler, 
+                             &xml_info->epc__xml_ctx,
+                             &xml_info->saxcb, 
+                             &xml_info->epc__xml_ctx,
+                             NULL, 
+                             NULL,
+                             NULL);
 
   DBUG_PRINT("info", ("xmlctx: %p", xml_info->xmlctx));
   DBUG_LEAVE();
@@ -107,7 +115,7 @@ epc__xml_init( epc__info_t *epc__info )
 unsigned int
 epc__xml_done( epc__info_t *epc__info )
 {
-  uword ecode = 0;
+  uword ecode = XMLERR_OK;
   xml_info_t *xml_info = (xml_info_t *)epc__info->xml_info;
 
   DBUG_ENTER("epc__xml_done");
@@ -134,7 +142,7 @@ epc__xml_parse( epc__info_t *epc__info, epc__call_t *epc__call, const char *buf,
   DBUG_PRINT("input", ("buf: %*.*s", len, len, buf));
 
   xml_info->epc__xml_ctx.epc__call = epc__call;
-  ecode = xmlparsebuf(xml_info->xmlctx, (oratext *) buf, len, (oratext *) 0, flags);
+  ecode = xmlparsebuf(xml_info->xmlctx, (oratext *) buf, len, NULL, flags);
   xmlclean(xml_info->xmlctx);
 
   DBUG_PRINT("output", ("ecode: %lu", (unsigned long)ecode));
@@ -144,6 +152,80 @@ epc__xml_parse( epc__info_t *epc__info, epc__call_t *epc__call, const char *buf,
 }
 
 /* LOCAL functions */
+
+/* Excerpt from http://www.w3schools.com/soap/soap_fault.asp:
+
+  The SOAP Fault Element
+
+  An error message from a SOAP message is carried inside a Fault
+  element.
+
+  If a Fault element is present, it must appear as a child element of
+  the Body element. A Fault element can only appear once in a SOAP
+  message.
+
+  The SOAP Fault element has the following sub elements: 
+  Sub Element     Description 
+  <faultcode>     A code for identifying the fault 
+  <faultstring>   A human readable explanation of the fault 
+  <faultactor>    Information about who caused the fault to happen 
+  <detail>        Holds application specific error information related 
+                  to the Body element
+
+  SOAP Fault Codes
+
+  The faultcode values defined below must be used in the faultcode
+  element when describing faults: 
+  Error           Description 
+  VersionMismatch Found an invalid namespace for the SOAP Envelope element
+  MustUnderstand  An immediate child element of the Header element, with
+                  the mustUnderstand attribute set to "1", was not understood
+  Client          The message was incorrectly formed or contained incorrect 
+                  information
+  Server          There was a problem with the server so the message could not
+                  proceed
+*/
+
+static
+void
+error_handler(void *epc__xml_ctx_ptr, const oratext *msg, uword errcode)
+{
+  epc__xml_ctx_t *epc__xml_ctx = (epc__xml_ctx_t *)epc__xml_ctx_ptr;
+  epc__call_t *epc__call = epc__xml_ctx->epc__call;
+
+  epc__call->epc__error = PARSE_ERROR;
+
+  /*
+    0000 - 0099 Generic
+    0100 - 0199 VC and other Warnings
+    0200 - 0299 Parser
+    0300 - 0399 XSL
+    0400 - 0499 XPATH
+  */
+
+  if ( errcode >= 0 && errcode <= 99 )
+    {
+      /* server side error */
+      (void) snprintf(epc__call->msg_response,
+                      MAX_MSG_RESPONSE_LEN+1,
+                      SOAP_HEADER_START
+                      "<SOAP-ENV:Fault>\
+<faultcode>Server</faultcode><faultstring>%s</faultstring>\
+</SOAP-ENV:Fault>" SOAP_HEADER_END,
+                      (char *)msg );
+    }
+  else
+    {
+      /* client side error */
+      (void) snprintf(epc__call->msg_response,
+                      MAX_MSG_RESPONSE_LEN+1, 
+                      SOAP_HEADER_START
+                      "<SOAP-ENV:Fault>\
+<faultcode>Client</faultcode><faultstring>%s</faultstring>\
+</SOAP-ENV:Fault>" SOAP_HEADER_END,
+                      (char *)msg );
+    }
+}
 
 static
 sword
@@ -198,7 +280,6 @@ start_element(void *epc__xml_ctx_ptr, const oratext *name,
   char element_type = 0; /* (S)oap, (M)ethod, (A)rgument */
   const size_t len = strlen((const char*)name);
   char *interface_name = NULL, *function_name = NULL, *argument_name = NULL;
-  uword ecode;
 
   dbug_enter(__FILE__, (char*)name, __LINE__, NULL);
 
@@ -245,6 +326,37 @@ start_element(void *epc__xml_ctx_ptr, const oratext *name,
                       lookup_interface( interface_name, epc__info, epc__call );
                       lookup_function( function_name, epc__info, epc__call );
 
+                      switch ( epc__call->epc__error )
+                        {
+                        case INTERFACE_UNKNOWN:
+                          /* construct the response */
+                          (void) snprintf(epc__call->msg_response,
+                                          MAX_MSG_RESPONSE_LEN+1, 
+                                          SOAP_HEADER_START "<SOAP-ENV:Fault>\
+<faultcode>Client</faultcode><faultstring>interface %s unknown</faultstring>\
+</SOAP-ENV:Fault>" SOAP_HEADER_END,
+                                          interface_name);
+                          break;
+
+                        case FUNCTION_UNKNOWN:
+                          /* construct the response */
+                          (void) snprintf(epc__call->msg_response,
+                                          MAX_MSG_RESPONSE_LEN+1, 
+                                          SOAP_HEADER_START "<SOAP-ENV:Fault>\
+<faultcode>Client</faultcode><faultstring>function %s unknown</faultstring>\
+</SOAP-ENV:Fault>" SOAP_HEADER_END,
+                                          function_name);
+                          break;
+
+                        case OK:
+                          break;
+
+                        default:
+                          assert ( epc__call->epc__error == INTERFACE_UNKNOWN ||
+                                   epc__call->epc__error == FUNCTION_UNKNOWN ||
+                                   epc__call->epc__error == OK );
+                        }
+
                       /* nullify all parameters */
 
                       if ( epc__call->interface != NULL &&
@@ -258,19 +370,19 @@ start_element(void *epc__xml_ctx_ptr, const oratext *name,
                                 break;
       
                               case C_INT:
-                                *((int*)epc__call->function->parameters[nr].data) = 0;
+                                *((idl_int_t*)epc__call->function->parameters[nr].data) = 0;
                                 break;
 
                               case C_LONG:
-                                *((long*)epc__call->function->parameters[nr].data) = 0L;
+                                *((idl_long_t*)epc__call->function->parameters[nr].data) = 0L;
                                 break;
 
                               case C_FLOAT:
-                                *((float*)epc__call->function->parameters[nr].data) = 0.0F;
+                                *((idl_float_t*)epc__call->function->parameters[nr].data) = 0.0F;
                                 break;
 
                               case C_DOUBLE:
-                                *((double*)epc__call->function->parameters[nr].data) = 0.0F;
+                                *((idl_double_t*)epc__call->function->parameters[nr].data) = 0.0F;
                                 break;
                           
                               case C_VOID:
@@ -317,11 +429,9 @@ start_element(void *epc__xml_ctx_ptr, const oratext *name,
         }
     }
 
-  ecode = epc__call->epc__error == OK ? XMLERR_OK : XMLERR_OK+1;
+  dbug_print(__LINE__, "info", "epc__error: %d", (int)epc__call->epc__error);
 
-  dbug_print(__LINE__, "info", "epc__error: %d; ecode: %u", (int)epc__call->epc__error, (unsigned)ecode);
-
-  return ecode;
+  return XMLERR_OK;
 }
 
 static
@@ -361,19 +471,19 @@ element_content(void *epc__xml_ctx_ptr, const oratext *ch, size_t len)
       break;
       
     case C_INT:
-      *((int*)epc__call->function->parameters[nr].data) = (int)strtol(ch, NULL, 10);
+      *((idl_int_t*)epc__call->function->parameters[nr].data) = (int)strtol(ch, NULL, 10);
       break;
 
     case C_LONG:
-      *((long*)epc__call->function->parameters[nr].data) = strtol(ch, NULL, 10);
+      *((idl_long_t*)epc__call->function->parameters[nr].data) = strtol(ch, NULL, 10);
       break;
 
     case C_FLOAT:
-      *((float*)epc__call->function->parameters[nr].data) = strtof(ch, NULL);
+      *((idl_float_t*)epc__call->function->parameters[nr].data) = strtof(ch, NULL);
       break;
 
     case C_DOUBLE:
-      *((double*)epc__call->function->parameters[nr].data) = strtod(ch, NULL);
+      *((idl_double_t*)epc__call->function->parameters[nr].data) = strtod(ch, NULL);
       break;
                           
     case C_VOID: /* impossible */
