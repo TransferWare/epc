@@ -13,6 +13,10 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.12  2000/08/14 13:47:40  gpaulissen
+ * * Added -v command line option for version info.
+ * * Updated build support.
+ *
  * Revision 1.11  2000/08/14 12:56:36  gpaulissen
  * Added version.
  *
@@ -165,7 +169,9 @@ version( void )
   } step_no;
   char *str = NULL, *instr = NULL, *found = NULL;
 
-  for ( step_no = NAME_KW; found == NULL && step_no <= REVISION_KW; step_no++ )
+  for ( step_no = NAME_KW;
+	( found == NULL || *found == '\0' ) && step_no <= REVISION_KW;
+	step_no++ )
     {
       switch( step_no )
 	{
@@ -181,14 +187,20 @@ version( void )
 	}
 
       found = strstr( str, instr );
+
       if ( found != NULL )
 	{
-	  char *space = strstr( found + strlen(instr), " " );
+	  char *space;
+
+	  found += strlen(instr);
+
+	  space = strstr( found, " " );
 
 	  if ( space != NULL )
 	    *space = '\0';
 	}
     }
+
   return found != NULL ? found : "";
 }
 
@@ -212,6 +224,8 @@ int main ( int argc, char **argv )
   char *dbug_options = "";
   int nr;
 
+  DBUG_INIT( dbug_options, NULL );
+
   for ( nr = 1; nr < argc; nr++ )
     {
       switch( argv[nr][0] )
@@ -221,7 +235,12 @@ int main ( int argc, char **argv )
 	    {
 	    case 'D':
 	    case '#': /* for compability reasons */
-	      dbug_options = &argv[nr][2];
+	      if ( argv[nr][2] != '\0' )
+		dbug_options = &argv[nr][2];
+	      else
+		dbug_options = &argv[++nr][0];
+	      DBUG_DONE();
+	      DBUG_INIT( dbug_options, NULL );
 	      break;
 
 	    case 'h':
@@ -252,7 +271,6 @@ int main ( int argc, char **argv )
     exit( EXIT_FAILURE );
   }
 
-  DBUG_INIT( dbug_options, NULL );
   {
     DBUG_ENTER( "main" );
     BEGIN(NORMAL);
