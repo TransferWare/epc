@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.21  2004/12/20 13:29:16  gpaulissen
+ * make lint
+ *
  * Revision 1.20  2004/12/16 16:03:08  gpaulissen
  * Web services added
  *
@@ -93,6 +96,9 @@ int lineno = 1;
 
 void yyerror( char *s );
 int yyparse( void );
+
+/*@unused@*/
+static void yyunput YY_PROTO(( int c, char *buf_ptr ));
 
 /* assume strdup() is NOT there */
 #ifndef HAVE_STRDUP
@@ -206,7 +212,6 @@ add_include_text( char *line )
 /*@-compdef@*/
 /*@-observertrans@*/
 /*@-dependenttrans@*/
-/*@-exportlocal@*/
 
 %}
 

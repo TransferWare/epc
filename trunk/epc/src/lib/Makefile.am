@@ -18,7 +18,13 @@
 include ../../lint.am
 
 # too difficult to lint epc_xml.c
-epc_xml.ln: ;
+#epc_xml_ln = epc_xml.ln
+
+#$(epc_xml_ln): ;
+
+epc_xml.ln: epc_xml.c
+	$(LINT.c) +posixlib $<
+
 
 MAINTAINERCLEANFILES = Makefile.in
 

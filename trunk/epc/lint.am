@@ -1,5 +1,5 @@
 LINT = lint
-LINTFLAGS = -badflag
+LINTFLAGS = -badflag -Dlint
 
 LINT.c = $(LINT) $(LINTFLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
         $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)

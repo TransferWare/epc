@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.9  2004/12/20 13:29:16  gpaulissen
+ * make lint
+ *
  * Revision 1.8  2004/10/21 11:54:32  gpaulissen
  * indent *.c *.h
  *
@@ -52,10 +55,10 @@ typedef dword_t idl_lang_t;
 typedef struct
 {
   idl_lang_t language;
-				/*@observer@ */ char *syntax;
-				/* part of the return value/parameter syntax */
-					/*@observer@ */ char *constant_name;
-					/* Name of constant */
+  /*@observer@ */ char *syntax;
+  /* part of the return value/parameter syntax */
+  /*@observer@ */ char *constant_name;
+  /* Name of constant */
 } mapping;
 
 typedef struct

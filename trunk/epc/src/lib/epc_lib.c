@@ -334,143 +334,143 @@ epc__set_signal_handlers (const int idx)
   for (nr = 0; nr < MAX_SIGNO; nr++)
     {
       switch (nr)
-        {
+	{
 #ifdef SIGHUP
-        case SIGHUP:
-          break;
+	case SIGHUP:
+	  break;
 #endif
 #ifdef SIGINT
-        case SIGINT:
-          continue;             /* GJP 21-02-2004 Handled by handle_interrupt() */
+	case SIGINT:
+	  continue;		/* GJP 21-02-2004 Handled by handle_interrupt() */
 #endif
 #ifdef SIGQUIT
-        case SIGQUIT:
-          break;
+	case SIGQUIT:
+	  break;
 #endif
 #ifdef SIGILL
-        case SIGILL:
-          break;
+	case SIGILL:
+	  break;
 #endif
 #ifdef SIGTRAP
-        case SIGTRAP:
-          break;
+	case SIGTRAP:
+	  break;
 #endif
 #ifdef SIGABRT
-        case SIGABRT:
-          break;
+	case SIGABRT:
+	  break;
 #endif
 #ifdef SIGEMT
-        case SIGEMT:
-          break;
+	case SIGEMT:
+	  break;
 #endif
 #ifdef SIGFPE
-        case SIGFPE:
-          break;
+	case SIGFPE:
+	  break;
 #endif
 #ifdef SIGBUS
-        case SIGBUS:
-          break;
+	case SIGBUS:
+	  break;
 #endif
 #ifdef SIGSEGV
-        case SIGSEGV:
-          break;
+	case SIGSEGV:
+	  break;
 #endif
 #ifdef SIGSYS
-        case SIGSYS:
-          break;
+	case SIGSYS:
+	  break;
 #endif
 #ifdef SIGPIPE
-        case SIGPIPE:
-          break;
+	case SIGPIPE:
+	  break;
 #endif
 #ifdef SIGALRM
-        case SIGALRM:
-          break;
+	case SIGALRM:
+	  break;
 #endif
 #ifdef SIGTERM
-        case SIGTERM:
-          break;
+	case SIGTERM:
+	  break;
 #endif
 #ifdef SIGURG
-        case SIGURG:
-          break;
+	case SIGURG:
+	  break;
 #endif
 #ifdef SIGSTOP
-        case SIGSTOP:
-          break;
+	case SIGSTOP:
+	  break;
 #endif
 #ifdef SIGTSTP
-        case SIGTSTP:
-          break;
+	case SIGTSTP:
+	  break;
 #endif
 #ifdef SIGCONT
-        case SIGCONT:
-          break;
+	case SIGCONT:
+	  break;
 #endif
 #ifdef SIGCHLD
-        case SIGCHLD:
-          break;
+	case SIGCHLD:
+	  break;
 #endif
 #ifdef SIGTTIN
-        case SIGTTIN:
-          break;
+	case SIGTTIN:
+	  break;
 #endif
 #ifdef SIGTTOU
-        case SIGTTOU:
-          break;
+	case SIGTTOU:
+	  break;
 #endif
 #ifdef SIGIO
-        case SIGIO:
-          break;
+	case SIGIO:
+	  break;
 #endif
 #ifdef SIGXCPU
-        case SIGXCPU:
-          break;
+	case SIGXCPU:
+	  break;
 #endif
 #ifdef SIGXFSZ
-        case SIGXFSZ:
-          break;
+	case SIGXFSZ:
+	  break;
 #endif
 #ifdef SIGVTALRM
-        case SIGVTALRM:
-          break;
+	case SIGVTALRM:
+	  break;
 #endif
 #ifdef SIGPROF
-        case SIGPROF:
-          break;
+	case SIGPROF:
+	  break;
 #endif
 #ifdef SIGWINCH
-        case SIGWINCH:
-          break;
+	case SIGWINCH:
+	  break;
 #endif
 #ifdef SIGLOST
-        case SIGLOST:
-          break;
+	case SIGLOST:
+	  break;
 #endif
 #ifdef SIGUSR1
-        case SIGUSR1:
-          break;
+	case SIGUSR1:
+	  break;
 #endif
 #ifdef SIGUSR2
-        case SIGUSR2:
-          break;
+	case SIGUSR2:
+	  break;
 #endif
 #ifdef SIGBREAK
-        case SIGBREAK:
-          break;
+	case SIGBREAK:
+	  break;
 #endif
-        default:
-          continue;             /* not a known signal */
-        }
+	default:
+	  continue;		/* not a known signal */
+	}
 
       DBUG_PRINT ("info", ("handler for signal %d (%s): %p",
-                           nr,
-                           signal_str (nr),
-                           signal_handler_info[idx][nr].func));
+			   nr,
+			   signal_str (nr),
+			   signal_handler_info[idx][nr].func));
 
       /* store old handler */
       signal_handler_info[idx][nr].func =
-        signal (nr, signal_handler_info[idx][nr].func);
+	signal (nr, signal_handler_info[idx][nr].func);
     }
 
   DBUG_LEAVE ();
@@ -491,20 +491,20 @@ epc__call_print (epc__call_t * call)
   DBUG_ENTER ("epc__call_print");
   DBUG_PRINT ("input", ("msg info: '%s'", call->msg_info));
   DBUG_PRINT ("input",
-              ("interface: '%s'; function: '%s'",
-               (call != NULL && call->interface != NULL
-                && call->interface->name !=
-                NULL ? call->interface->name : "(null)"), (call != NULL
-                                                           && call->
-                                                           function != NULL
-                                                           && call->function->
-                                                           name !=
-                                                           NULL ? call->
-                                                           function->
-                                                           name : "(null)")));
+	      ("interface: '%s'; function: '%s'",
+	       (call != NULL && call->interface != NULL
+		&& call->interface->name !=
+		NULL ? call->interface->name : "(null)"), (call != NULL
+							   && call->
+							   function != NULL
+							   && call->function->
+							   name !=
+							   NULL ? call->
+							   function->
+							   name : "(null)")));
   DBUG_PRINT ("input",
-              ("status: %ld; error code: %ld", (long) call->epc__error,
-               (long) call->errcode));
+	      ("status: %ld; error code: %ld", (long) call->epc__error,
+	       (long) call->errcode));
   DBUG_LEAVE ();
 }
 
@@ -617,17 +617,17 @@ epc__done (epc__info_t * epc__info)
       dword_t inr, fnr, pnr;
 
       for (inr = 0; inr < epc__info->num_interfaces; inr++)
-        {
-          epc__interface_t *interface = epc__info->interfaces[inr];
+	{
+	  epc__interface_t *interface = epc__info->interfaces[inr];
 
-          /* free memory for the parameters */
-          for (fnr = 0; fnr < interface->num_functions; fnr++)
-            for (pnr = 0; pnr < interface->functions[fnr].num_parameters;
-                 pnr++)
-              {
-                free (interface->functions[fnr].parameters[pnr].data);
-              }
-        }
+	  /* free memory for the parameters */
+	  for (fnr = 0; fnr < interface->num_functions; fnr++)
+	    for (pnr = 0; pnr < interface->functions[fnr].num_parameters;
+		 pnr++)
+	      {
+		free (interface->functions[fnr].parameters[pnr].data);
+	      }
+	}
 
       free (epc__info->interfaces);
     }
@@ -655,67 +655,67 @@ epc__add_interface (epc__info_t * epc__info, epc__interface_t * interface)
     {
       epc__info->num_interfaces++;
       epc__info->interfaces =
-        (epc__interface_t **)
-        realloc ((void *) epc__info->interfaces,
-                 (size_t) (epc__info->num_interfaces *
-                           sizeof (epc__interface_t **)));
+	(epc__interface_t **)
+	realloc ((void *) epc__info->interfaces,
+		 (size_t) (epc__info->num_interfaces *
+			   sizeof (epc__interface_t **)));
 
       if (epc__info->interfaces == NULL)
-        {
-          epc__info->num_interfaces--;
-          status = MEMORY_ERROR;
-        }
+	{
+	  epc__info->num_interfaces--;
+	  status = MEMORY_ERROR;
+	}
       else
-        {
-          dword_t fnr, pnr;
+	{
+	  dword_t fnr, pnr;
 
-          epc__info->interfaces[epc__info->num_interfaces - 1] = interface;
+	  epc__info->interfaces[epc__info->num_interfaces - 1] = interface;
 
-          /* sort the functions */
-          qsort (interface->functions,
-                 (size_t) interface->num_functions,
-                 sizeof (interface->functions[0]), epc__cmp_function);
+	  /* sort the functions */
+	  qsort (interface->functions,
+		 (size_t) interface->num_functions,
+		 sizeof (interface->functions[0]), epc__cmp_function);
 
-          /* sort the interfaces */
-          qsort (epc__info->interfaces,
-                 (size_t) epc__info->num_interfaces,
-                 sizeof (epc__info->interfaces[0]), epc__cmp_interface);
+	  /* sort the interfaces */
+	  qsort (epc__info->interfaces,
+		 (size_t) epc__info->num_interfaces,
+		 sizeof (epc__info->interfaces[0]), epc__cmp_interface);
 
-          /* allocate memory for the parameters */
-          for (fnr = 0; fnr < interface->num_functions; fnr++)
-            for (pnr = 0; pnr < interface->functions[fnr].num_parameters;
-                 pnr++)
-              {
-                size_t size = 0;
+	  /* allocate memory for the parameters */
+	  for (fnr = 0; fnr < interface->num_functions; fnr++)
+	    for (pnr = 0; pnr < interface->functions[fnr].num_parameters;
+		 pnr++)
+	      {
+		size_t size = 0;
 
-                switch (interface->functions[fnr].parameters[pnr].type)
-                  {
-                  case C_STRING:
-                  case C_INT:
-                  case C_LONG:
-                  case C_FLOAT:
-                  case C_DOUBLE:
-                    size =
-                      (size_t) interface->functions[fnr].parameters[pnr].size;
-                    break;
+		switch (interface->functions[fnr].parameters[pnr].type)
+		  {
+		  case C_STRING:
+		  case C_INT:
+		  case C_LONG:
+		  case C_FLOAT:
+		  case C_DOUBLE:
+		    size =
+		      (size_t) interface->functions[fnr].parameters[pnr].size;
+		    break;
 
-                  case C_VOID:
-                    continue;
+		  case C_VOID:
+		    continue;
 
-                  default:
-                    assert (interface->functions[fnr].parameters[pnr].type >=
-                            C_DATATYPE_MIN
-                            && interface->functions[fnr].parameters[pnr].
-                            type <= C_DATATYPE_MAX);
-                  }
-                if ((interface->functions[fnr].parameters[pnr].data =
-                     malloc (size)) == NULL)
-                  {
-                    status = MEMORY_ERROR;
-                    break;
-                  }
-              }
-        }
+		  default:
+		    assert (interface->functions[fnr].parameters[pnr].type >=
+			    C_DATATYPE_MIN
+			    && interface->functions[fnr].parameters[pnr].
+			    type <= C_DATATYPE_MAX);
+		  }
+		if ((interface->functions[fnr].parameters[pnr].data =
+		     malloc (size)) == NULL)
+		  {
+		    status = MEMORY_ERROR;
+		    break;
+		  }
+	      }
+	}
     }
 
   DBUG_PRINT ("output", ("status: %d", (int) status));
@@ -740,7 +740,7 @@ epc__set_pipe (epc__info_t * epc__info, char *pipe)
   else if (pipe == NULL)
     {
       if (epc__info->pipe != NULL)
-        free (epc__info->pipe);
+	free (epc__info->pipe);
 
       epc__info->pipe = NULL;
     }
@@ -748,9 +748,9 @@ epc__set_pipe (epc__info_t * epc__info, char *pipe)
     {
       epc__info->pipe = (char *) realloc (epc__info->pipe, strlen (pipe) + 1);
       if (epc__info->pipe == NULL)
-        status = MEMORY_ERROR;
+	status = MEMORY_ERROR;
       else
-        strcpy (epc__info->pipe, pipe);
+	strcpy (epc__info->pipe, pipe);
     }
 
   DBUG_PRINT ("output", ("status: %d", (int) status));
@@ -775,18 +775,18 @@ epc__set_logon (epc__info_t * epc__info, char *logon)
   else if (logon == NULL)
     {
       if (epc__info->logon != NULL)
-        free (epc__info->logon);
+	free (epc__info->logon);
 
       epc__info->logon = NULL;
     }
   else
     {
       epc__info->logon =
-        (char *) realloc (epc__info->logon, strlen (logon) + 1);
+	(char *) realloc (epc__info->logon, strlen (logon) + 1);
       if (epc__info->logon == NULL)
-        status = MEMORY_ERROR;
+	status = MEMORY_ERROR;
       else
-        strcpy (epc__info->logon, logon);
+	strcpy (epc__info->logon, logon);
     }
 
   DBUG_PRINT ("output", ("status: %d", (int) status));
@@ -808,9 +808,9 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
        strlen (epc__call->msg_request)) != 0 || epc__call->epc__error != OK)
     {
       assert (epc__call->epc__error == PARSE_ERROR ||
-              epc__call->epc__error == INTERFACE_UNKNOWN ||
-              epc__call->epc__error == FUNCTION_UNKNOWN ||
-              epc__call->epc__error == PARAMETER_UNKNOWN);
+	      epc__call->epc__error == INTERFACE_UNKNOWN ||
+	      epc__call->epc__error == FUNCTION_UNKNOWN ||
+	      epc__call->epc__error == PARAMETER_UNKNOWN);
     }
   else
     {
@@ -821,123 +821,126 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
 
       /* construct the response for non oneway functions */
       if (epc__call->function->oneway == 0)
-        {
-          dword_t nr;
+	{
+	  dword_t nr;
 
-          if ( epc__call->inline_namespace[0] != '\0' )
-            {
-              (void) snprintf (epc__call->msg_response,
-                               MAX_MSG_RESPONSE_LEN + 1,
-                               SOAP_HEADER_START "<%s:%sResponse xmlns:%s='%s'>",
-                               epc__call->inline_namespace,
-                               epc__call->function->name,
-                               epc__call->inline_namespace,
-                               epc__call->interface->name);
-            }
-          else
-            {
-              (void) snprintf (epc__call->msg_response,
-                               MAX_MSG_RESPONSE_LEN + 1,
-                               SOAP_HEADER_START "<%sResponse xmlns='%s'>",
-                               epc__call->function->name,
-                               epc__call->interface->name);
-            }
+	  if (epc__call->inline_namespace[0] != '\0')
+	    {
+	      (void) snprintf (epc__call->msg_response,
+			       MAX_MSG_RESPONSE_LEN + 1,
+			       SOAP_HEADER_START
+			       "<%s:%sResponse xmlns:%s='%s'>",
+			       epc__call->inline_namespace,
+			       epc__call->function->name,
+			       epc__call->inline_namespace,
+			       epc__call->interface->name);
+	    }
+	  else
+	    {
+	      (void) snprintf (epc__call->msg_response,
+			       MAX_MSG_RESPONSE_LEN + 1,
+			       SOAP_HEADER_START "<%sResponse xmlns='%s'>",
+			       epc__call->function->name,
+			       epc__call->interface->name);
+	    }
 
-          for (nr = 0; nr < epc__call->function->num_parameters; nr++)
-            {
-              if (epc__call->function->parameters[nr].mode != C_IN)
-                {
-                  (void) snprintf (epc__call->msg_response,
-                                   MAX_MSG_RESPONSE_LEN + 1,
-                                   "%s<%s>",
-                                   epc__call->msg_response,
-                                   epc__call->function->parameters[nr].name);
+	  for (nr = 0; nr < epc__call->function->num_parameters; nr++)
+	    {
+	      if (epc__call->function->parameters[nr].mode != C_IN)
+		{
+		  (void) snprintf (epc__call->msg_response,
+				   MAX_MSG_RESPONSE_LEN + 1,
+				   "%s<%s>",
+				   epc__call->msg_response,
+				   epc__call->function->parameters[nr].name);
 
-                  switch (epc__call->function->parameters[nr].type)
-                    {
-                    case C_STRING:
-                      (void) snprintf (epc__call->msg_response,
-                                       MAX_MSG_RESPONSE_LEN + 1,
-                                       "%s<![CDATA[%s]]>",
-                                       epc__call->msg_response,
-                                       (char *) epc__call->function->
-                                       parameters[nr].data);
-                      break;
+		  switch (epc__call->function->parameters[nr].type)
+		    {
+		    case C_STRING:
+		      (void) snprintf (epc__call->msg_response,
+				       MAX_MSG_RESPONSE_LEN + 1,
+				       "%s<![CDATA[%s]]>",
+				       epc__call->msg_response,
+				       (char *) epc__call->function->
+				       parameters[nr].data);
+		      break;
 
-                    case C_INT:
-                      (void) snprintf (epc__call->msg_response,
-                                       MAX_MSG_RESPONSE_LEN + 1,
-                                       "%s%d",
-                                       epc__call->msg_response,
-                                       *((idl_int_t *) epc__call->function->
-                                         parameters[nr].data));
-                      break;
+		    case C_INT:
+		      (void) snprintf (epc__call->msg_response,
+				       MAX_MSG_RESPONSE_LEN + 1,
+				       "%s%d",
+				       epc__call->msg_response,
+				       *((idl_int_t *) epc__call->function->
+					 parameters[nr].data));
+		      break;
 
-                    case C_LONG:
-                      (void) snprintf (epc__call->msg_response,
-                                       MAX_MSG_RESPONSE_LEN + 1,
-                                       "%s%ld",
-                                       epc__call->msg_response,
-                                       *((idl_long_t *) epc__call->function->
-                                         parameters[nr].data));
-                      break;
+		    case C_LONG:
+		      (void) snprintf (epc__call->msg_response,
+				       MAX_MSG_RESPONSE_LEN + 1,
+				       "%s%ld",
+				       epc__call->msg_response,
+				       *((idl_long_t *) epc__call->function->
+					 parameters[nr].data));
+		      break;
 
-                    case C_FLOAT:
-                      (void) snprintf (epc__call->msg_response,
-                                       MAX_MSG_RESPONSE_LEN + 1,
-                                       "%s%f",
-                                       epc__call->msg_response,
-                                       (double) (*
-                                                 ((idl_float_t *) epc__call->
-                                                  function->parameters[nr].
-                                                  data)));
-                      break;
+		    case C_FLOAT:
+		      (void) snprintf (epc__call->msg_response,
+				       MAX_MSG_RESPONSE_LEN + 1,
+				       "%s%f",
+				       epc__call->msg_response,
+				       (double) (*
+						 ((idl_float_t *) epc__call->
+						  function->parameters[nr].
+						  data)));
+		      break;
 
-                    case C_DOUBLE:
-                      (void) snprintf (epc__call->msg_response,
-                                       MAX_MSG_RESPONSE_LEN + 1,
-                                       "%s%f",
-                                       epc__call->msg_response,
-                                       *((idl_double_t *) epc__call->
-                                         function->parameters[nr].data));
-                      break;
+		    case C_DOUBLE:
+		      (void) snprintf (epc__call->msg_response,
+				       MAX_MSG_RESPONSE_LEN + 1,
+				       "%s%f",
+				       epc__call->msg_response,
+				       *((idl_double_t *) epc__call->
+					 function->parameters[nr].data));
+		      break;
 
-                    case C_VOID:        /* procedure */
-                      assert (epc__call->function->parameters[nr].mode ==
-                              C_OUT);
-                      break;
+		    case C_VOID:	/* procedure */
+		      assert (epc__call->function->parameters[nr].mode ==
+			      C_OUT);
+		      break;
 
-                    default:
-                      assert (epc__call->function->parameters[nr].type >=
-                              C_DATATYPE_MIN
-                              && epc__call->function->parameters[nr].type <=
-                              C_DATATYPE_MAX);
+		    default:
+		      assert (epc__call->function->parameters[nr].type >=
+			      C_DATATYPE_MIN
+			      && epc__call->function->parameters[nr].type <=
+			      C_DATATYPE_MAX);
 
-                    }
+		    }
 
-                  (void) snprintf (epc__call->msg_response,
-                                   MAX_MSG_RESPONSE_LEN + 1, "%s</%s>",
-                                   epc__call->msg_response,
-                                   epc__call->function->parameters[nr].name);
-                }
-            }
+		  (void) snprintf (epc__call->msg_response,
+				   MAX_MSG_RESPONSE_LEN + 1, "%s</%s>",
+				   epc__call->msg_response,
+				   epc__call->function->parameters[nr].name);
+		}
+	    }
 
-          if ( epc__call->inline_namespace[0] != '\0' )
-            {          
-              (void) snprintf (epc__call->msg_response, MAX_MSG_RESPONSE_LEN + 1,
-                               "%s</%s:%sResponse>" SOAP_HEADER_END,
-                               epc__call->msg_response,
-                               epc__call->inline_namespace,
-                               epc__call->function->name);
-            }
-          else
-            {
-              (void) snprintf (epc__call->msg_response, MAX_MSG_RESPONSE_LEN + 1,
-                               "%s</%sResponse>" SOAP_HEADER_END,
-                               epc__call->msg_response,
-                               epc__call->function->name);
-            }
-        }
+	  if (epc__call->inline_namespace[0] != '\0')
+	    {
+	      (void) snprintf (epc__call->msg_response,
+			       MAX_MSG_RESPONSE_LEN + 1,
+			       "%s</%s:%sResponse>" SOAP_HEADER_END,
+			       epc__call->msg_response,
+			       epc__call->inline_namespace,
+			       epc__call->function->name);
+	    }
+	  else
+	    {
+	      (void) snprintf (epc__call->msg_response,
+			       MAX_MSG_RESPONSE_LEN + 1,
+			       "%s</%sResponse>" SOAP_HEADER_END,
+			       epc__call->msg_response,
+			       epc__call->function->name);
+	    }
+	}
     }
 
   DBUG_LEAVE ();
@@ -953,11 +956,11 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
 
 long
 epc__handle_request (epc__info_t * epc__info,
-                     epc__call_t * epc__call,
-                     epc__error_t (*recv_request) (epc__info_t *,
-                                                   epc__call_t *),
-                     epc__error_t (*send_response) (epc__info_t *,
-                                                    epc__call_t *))
+		     epc__call_t * epc__call,
+		     epc__error_t (*recv_request) (epc__info_t *,
+						   epc__call_t *),
+		     epc__error_t (*send_response) (epc__info_t *,
+						    epc__call_t *))
      /* ----------------------------------------------------------------------
       * Handles a single request 
       * - receives a request message
@@ -980,37 +983,37 @@ epc__handle_request (epc__info_t * epc__info,
 
       /* do the call */
       if (epc__call->epc__error != OK)
-        break;
+	break;
 
       (void) epc__exec_call (epc__info, epc__call);
 
       if (!(epc__call->epc__error == OK ||
-            epc__call->epc__error == PARSE_ERROR ||
-            epc__call->epc__error == INTERFACE_UNKNOWN ||
-            epc__call->epc__error == FUNCTION_UNKNOWN ||
-            epc__call->epc__error == PARAMETER_UNKNOWN))
-        {
-          break;
-        }
+	    epc__call->epc__error == PARSE_ERROR ||
+	    epc__call->epc__error == INTERFACE_UNKNOWN ||
+	    epc__call->epc__error == FUNCTION_UNKNOWN ||
+	    epc__call->epc__error == PARAMETER_UNKNOWN))
+	{
+	  break;
+	}
 
       assert (epc__call->epc__error != OK ||
-              (epc__call->function != NULL && epc__call->interface != NULL));
+	      (epc__call->function != NULL && epc__call->interface != NULL));
 
       /* send the response in case of errors or for non oneway functions  */
       if (epc__call->epc__error != OK ||
-          (epc__call->function != NULL && epc__call->function->oneway == 0))
-        {
-          DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
+	  (epc__call->function != NULL && epc__call->function->oneway == 0))
+	{
+	  DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
 
-          (void) (*send_response) (epc__info, epc__call);
-        }
+	  (void) (*send_response) (epc__info, epc__call);
+	}
 
       if (epc__call->epc__error != OK)
-        break;
+	break;
 
       retval = 0L;
     }
-  while (0);                    /* loop is used only to be able to break out earlier */
+  while (0);			/* loop is used only to be able to break out earlier */
 
   /* GJP 18-10-2004 Do not know why dbms_pipe errors should be ignored */
   /*#define OBSOLETE 1 */
@@ -1022,17 +1025,17 @@ epc__handle_request (epc__info_t * epc__info,
     case SEND_ERROR:
     case OK:
       switch (epc__call->errcode)
-        {
-        case -6556:             /* the pipe is empty, cannot fulfill the unpack_message request */
-        case -6558:             /* buffer in dbms_pipe package is full. No more items allowed */
-        case -6559:             /* wrong datatype requested, string, actual datatype is string */
-        case 0:
-          retval = 0;
-          break;
+	{
+	case -6556:		/* the pipe is empty, cannot fulfill the unpack_message request */
+	case -6558:		/* buffer in dbms_pipe package is full. No more items allowed */
+	case -6559:		/* wrong datatype requested, string, actual datatype is string */
+	case 0:
+	  retval = 0;
+	  break;
 
-        default:
-          break;
-        }
+	default:
+	  break;
+	}
       break;
 
     default:
@@ -1041,9 +1044,9 @@ epc__handle_request (epc__info_t * epc__info,
 #endif
 
   DBUG_PRINT ("output",
-              ("retval: %ld; error code: %ld; epc status: %s",
-               retval, (long) epc__call->errcode,
-               get_error_str (epc__call->epc__error)));
+	      ("retval: %ld; error code: %ld; epc status: %s",
+	       retval, (long) epc__call->errcode,
+	       get_error_str (epc__call->epc__error)));
   DBUG_LEAVE ();
 
   return retval;
@@ -1051,10 +1054,10 @@ epc__handle_request (epc__info_t * epc__info,
 
 epc__error_t
 epc__handle_requests (epc__info_t * epc__info,
-                      epc__error_t (*recv_request) (epc__info_t *,
-                                                    epc__call_t *),
-                      epc__error_t (*send_response) (epc__info_t *,
-                                                     epc__call_t *))
+		      epc__error_t (*recv_request) (epc__info_t *,
+						    epc__call_t *),
+		      epc__error_t (*send_response) (epc__info_t *,
+						     epc__call_t *))
      /* ----------------------------------------------------------------------
       * Handles all requests received over the specified database pipe:
       * - receives a request message
@@ -1073,8 +1076,8 @@ epc__handle_requests (epc__info_t * epc__info,
   for (epc__call.errcode = 0; G_signo == 0; epc__call.errcode = 0)
     {
       if (epc__handle_request
-          (epc__info, &epc__call, recv_request, send_response) != 0)
-        break;
+	  (epc__info, &epc__call, recv_request, send_response) != 0)
+	break;
     }
 
   if (G_signo != 0)
@@ -1083,9 +1086,9 @@ epc__handle_requests (epc__info_t * epc__info,
     }
 
   DBUG_PRINT ("output",
-              ("error code: %ld; epc status: %s",
-               (long) epc__call.errcode,
-               get_error_str (epc__call.epc__error)));
+	      ("error code: %ld; epc status: %s",
+	       (long) epc__call.errcode,
+	       get_error_str (epc__call.epc__error)));
 
   DBUG_LEAVE ();
 
@@ -1112,7 +1115,7 @@ handle_signal (int signo)
 
 void
 epc__set_handle_interrupt (epc__handle_interrupt_t handle_interrupt,
-                           epc__info_t * epc__info)
+			   epc__info_t * epc__info)
 {
   G_epc__handle_interrupt = handle_interrupt;
   G_epc__info_interrupt = epc__info;
