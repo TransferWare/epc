@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.35  2004/02/23 15:59:28  gpaulissen
+ * sqlca is a member of epc_info structure
+ *
  * Revision 1.34  2004/02/22 17:16:20  gpaulissen
  * interrupt_get_request_header added
  *
@@ -585,7 +588,9 @@ handle_signal( int signo )
 /*
 ** User interrupt handler template.
 */
-void handle_interrupt(char *epc_info_ptr)
+static
+void
+handle_interrupt(char *epc_info_ptr)
 {
   epc_info_t *epc_info = (epc_info_t*)epc_info_ptr;
 
@@ -612,6 +617,14 @@ void handle_interrupt(char *epc_info_ptr)
 
   DBUG_LEAVE();
 }
+
+/*
+  GJP 23-02-2004
+  Use the global sqlca structure for handle_interrupt() and 
+  epc_info->sqlca for other routines.
+*/
+
+#define sqlca (*(epc_info->sqlca))
 
 static
 epc_error_t
@@ -899,52 +912,6 @@ epc_handle_requests( epc_info_t *epc_info )
   return call.epc_error;
 }
 
-epc_info_t *
-epc_init( void )
-{
-  epc_info_t *epc_info = NULL;
-
-  DBUG_ENTER( "epc_init" );
-
-  epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
-
-  DBUG_PRINT( "info", ( "epc_info: %p", (void*)epc_info ) );
-
-  if ( epc_info != NULL )
-    {
-      epc_info->logon = NULL;
-      epc_info->pipe = NULL;
-      epc_info->first_time = 1;
-      epc_info->num_interfaces = 0;
-      epc_info->interfaces = NULL;
-    }
-
-  DBUG_LEAVE();
-  return epc_info;
-}
-
-void
-epc_done( epc_info_t **epc_info )
-{
-  DBUG_ENTER( "epc_done" );
-
-  DBUG_PRINT( "input", ( "*epc_info: %p", (void*)*epc_info ) );
-
-  if ( *epc_info != NULL )
-    {
-      if ( (*epc_info)->interfaces )
-        free( (*epc_info)->interfaces );
-
-      if ( (*epc_info)->pipe )
-        free( (*epc_info)->pipe );
-
-      free( *epc_info );
-      *epc_info = NULL;
-    }
-
-  DBUG_LEAVE();
-}
-
 epc_error_t
 epc_set_logon( epc_info_t *epc_info, char *logon )
 {
@@ -1195,3 +1162,62 @@ epc_disconnect( epc_info_t *epc_info )
 
   return status;
 }
+
+
+#undef sqlca
+
+epc_info_t *
+epc_init( void )
+{
+  epc_info_t *epc_info = NULL;
+
+  DBUG_ENTER( "epc_init" );
+
+  epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
+
+  DBUG_PRINT( "info", ( "epc_info: %p", (void*)epc_info ) );
+
+  if ( epc_info != NULL )
+    {
+      epc_info->logon = NULL;
+      epc_info->pipe = NULL;
+      epc_info->first_time = 1;
+      epc_info->num_interfaces = 0;
+      epc_info->interfaces = NULL;
+      epc_info->sqlca = (struct sqlca *)malloc( sizeof(*(epc_info->sqlca)) );
+
+      assert( sizeof(*(epc_info->sqlca)) == sizeof(struct sqlca) );
+
+      /* initialize */
+      *(epc_info->sqlca) = sqlca;
+    }
+
+  DBUG_LEAVE();
+  return epc_info;
+}
+
+void
+epc_done( epc_info_t **epc_info )
+{
+  DBUG_ENTER( "epc_done" );
+
+  DBUG_PRINT( "input", ( "*epc_info: %p", (void*)*epc_info ) );
+
+  if ( *epc_info != NULL )
+    {
+      if ( (*epc_info)->sqlca != NULL )
+        free( (*epc_info)->sqlca );
+
+      if ( (*epc_info)->interfaces != NULL )
+        free( (*epc_info)->interfaces );
+
+      if ( (*epc_info)->pipe != NULL )
+        free( (*epc_info)->pipe );
+
+      free( *epc_info );
+      *epc_info = NULL;
+    }
+
+  DBUG_LEAVE();
+}
+
