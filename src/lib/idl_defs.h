@@ -15,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.15  2004/12/28 12:18:10  gpaulissen
+ * Test on Amazon
+ *
  * Revision 1.14  2004/12/20 13:29:15  gpaulissen
  * make lint
  *
@@ -63,13 +66,13 @@
  *
  */
 
-#define MAX_PARM_NAME_LEN       32	/* must be a multiple of 4 */
+#define MAX_PARM_NAME_LEN       32      /* must be a multiple of 4 */
 
 /* The function name might also be the function signature */
-#define MAX_FUNC_NAME_LEN       512	/* must be a multiple of 4 */
-#define MAX_INTERFACE_NAME_LEN  32	/* must be a multiple of 4 */
-#define MAX_NAMESPACE_LEN       128	/* must be a multiple of 4 */
-#define MAX_STR_VAL_LEN         4000	/* excluding terminating zero */
+#define MAX_FUNC_NAME_LEN       512     /* must be a multiple of 4 */
+#define MAX_INTERFACE_NAME_LEN  32      /* must be a multiple of 4 */
+#define MAX_NAMESPACE_LEN       128     /* must be a multiple of 4 */
+#define MAX_STR_VAL_LEN         4000    /* excluding terminating zero */
 #define MAX_FUNCTIONS           100
 #define MAX_PARAMETERS          20
 
@@ -100,11 +103,12 @@ typedef char *string;
 #define C_FLOAT 4
 #define C_DOUBLE 5
 #define C_VOID 6
+#define C_XML 7
 
 #define C_DATATYPE_MIN C_STRING
-#define C_DATATYPE_MAX C_VOID
+#define C_DATATYPE_MAX C_XML
 
-typedef dword_t idl_type_t;	/* one of the values above */
+typedef dword_t idl_type_t;     /* one of the values above */
 
 /* PARAMETER MODES */
 #define C_IN 101
@@ -114,12 +118,13 @@ typedef dword_t idl_type_t;	/* one of the values above */
 #define C_PARAMETER_MODE_MIN C_IN
 #define C_PARAMETER_MODE_MAX C_INOUT
 
-typedef dword_t idl_mode_t;	/* one of the values above */
+typedef dword_t idl_mode_t;     /* one of the values above */
 
 typedef int idl_int_t;
 typedef long idl_long_t;
 typedef float idl_float_t;
 typedef double idl_double_t;
 typedef char *idl_string_t;
+typedef char *idl_xml_t;
 
 #endif

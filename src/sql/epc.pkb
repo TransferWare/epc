@@ -1,5 +1,12 @@
 create or replace package body epc as
 
+function data_type_xml
+return data_type_subtype
+is
+begin
+  return 7;
+end data_type_xml;
+
 function data_type_string
 return data_type_subtype
 is

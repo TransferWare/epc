@@ -43,8 +43,7 @@ typedef struct epc__function
 
 typedef struct epc__interface
 {
-				/*@observer@ */ char *name;
-				/* actually the namespace */
+  /*@observer@ */ char *name;
   dword_t num_functions;
   /*@dependent@ */ epc__function_t *functions;
 } epc__interface_t;

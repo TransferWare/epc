@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.15  2004/12/28 12:18:11  gpaulissen
+ * Test on Amazon
+ *
  * Revision 1.14  2004/12/20 13:29:16  gpaulissen
  * make lint
  *
@@ -96,12 +99,12 @@ yylex( void );
 
 %token <sval> INTERFACE 
 %token <sval> NAME 
-%token <sval> NAMESPACE
 %token <mval> IN 
 %token <mval> OUT 
 %token <mval> INOUT 
 %token <tval> VOID 
 %token ONEWAY
+%token <tval> XML
 %token <tval> STRING 
 %token <tval> INT 
 %token <tval> LONG
@@ -114,13 +117,9 @@ yylex( void );
 
 %%
 
-interface: INTERFACE interface_name namespace interface_body;
+interface: INTERFACE interface_name interface_body;
 
 interface_name: NAME     { set_interface( $1 ); } ;
-
-namespace:      NAMESPACE     { set_namespace( $1 ); }
-        |       /* empty */
-        ;
 
 interface_body:
                 '{' function_list '}'
@@ -145,7 +144,8 @@ function:
         ;
 
 datatype:
-                STRING
+                XML
+	|	STRING
         |       INT
         |       LONG
         |       FLOAT

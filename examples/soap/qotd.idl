@@ -1,4 +1,4 @@
-interface qotd "urn:xmethods-qotd"
+interface qotd
 {
    char *getQuote ( );
 }

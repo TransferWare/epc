@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.11  2004/12/28 12:18:11  gpaulissen
+REMARK  Test on Amazon
+REMARK
 REMARK  Revision 1.10  2004/12/17 15:54:21  gpaulissen
 REMARK  inline namespaces introduced (xmlns:ns1)
 REMARK
@@ -44,21 +47,25 @@ REMARK
 
 create or replace package body epc_clnt as
 
-"ns" constant varchar2(4) := 'ns1:';
-"xmlns" constant varchar2(10) := 'xmlns:ns1';
-
 "xmlns:SOAP-ENV" constant varchar2(1000) := 
   'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
 
-SOAP_HEADER_START constant varchar2(1000) := 
-  '<?xml version="1.0" encoding="iso-8859-1"?>' 
+SOAP_HEADER_START constant varchar2(1000) :=
+  '<?xml version="1.0" encoding="UTF-8"?>'
   ||'<SOAP-ENV:Envelope'
   ||' '
+  ||'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+  ||' '
+  ||'xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
+  ||' '
   ||"xmlns:SOAP-ENV"
-  ||' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
-  ||' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-  ||' xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
+  ||' '
+  ||'xmlns:xsd="http://www.w3.org/2001/XMLSchema"'
+  ||' '
+  ||'SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"'
+  ||'>'
   ||'<SOAP-ENV:Body>';
+
 SOAP_HEADER_END constant varchar2(1000) := 
   '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
@@ -71,11 +78,13 @@ CONNECTION_METHOD_UTL_HTTP constant connection_method_subtype := 3;
 -- types
 type epc_info_rectype is record (
   interface_name epc.interface_name_subtype,
+  namespace epc.namespace_subtype,
+  inline_namespace epc.namespace_subtype,
   connection_method connection_method_subtype default CONNECTION_METHOD_DBMS_PIPE,
   request_pipe epc.pipe_name_subtype default 'epc_request_pipe',
   tcp_connection utl_tcp.connection,
   http_connection http_connection_subtype,
-  msg varchar2(4000),
+  msg varchar2(32767),
   doc xmltype, /* output */
   send_timeout pls_integer default 10,
   recv_timeout pls_integer default 10
@@ -141,6 +150,8 @@ begin
     then
       l_idx := epc_info_tab.count+1;
       epc_info_tab(l_idx).interface_name := p_interface_name;
+      epc_info_tab(l_idx).namespace := p_interface_name;
+      epc_info_tab(l_idx).inline_namespace := 'ns1';
   end;
   return l_idx;
 end register;
@@ -260,6 +271,26 @@ begin
   epc_info_tab(p_epc_key).recv_timeout := p_response_recv_timeout;
 end set_response_recv_timeout;
 
+procedure set_namespace
+(
+  p_epc_key in epc_key_subtype
+, p_namespace in varchar2
+)
+is
+begin
+  epc_info_tab(p_epc_key).namespace := p_namespace;
+end set_namespace;
+
+procedure set_inline_namespace
+(
+  p_epc_key in epc_key_subtype
+, p_inline_namespace in varchar2
+)
+is
+begin
+  epc_info_tab(p_epc_key).inline_namespace := p_inline_namespace;
+end set_inline_namespace;
+
 procedure new_request
 (
   p_epc_key in epc_key_subtype
@@ -286,6 +317,11 @@ begin
     epc_info_tab(p_epc_key).msg :=
       epc_info_tab(p_epc_key).msg
       ||'<'||p_name||' xsi:type="string">'||g_cdata_tag_start||p_value||g_cdata_tag_end||'</'||p_name||'>';
+  elsif p_data_type = epc.data_type_xml
+  then
+    epc_info_tab(p_epc_key).msg :=
+      epc_info_tab(p_epc_key).msg
+      ||'<'||p_name||'>'||p_value||'</'||p_name||'>';
   else
     raise value_error;
   end if;
@@ -319,7 +355,7 @@ begin
 
   epc_info_tab(p_epc_key).msg :=
     epc_info_tab(p_epc_key).msg 
-    ||'<'||p_name||' xsi:type="'||l_data_type||'">'||to_char(p_value)||'</'||p_name||'>';
+    ||'<'||p_name||' xsi:type="xsd:'||l_data_type||'">'||to_char(p_value)||'</'||p_name||'>';
 end set_request_parameter;
 
 procedure send_request_dbms_pipe( 
@@ -414,19 +450,65 @@ begin
   );
 end send_request_utl_http;
 
-procedure show_envelope(p_msg in varchar2) as
+procedure show_envelope(p_msg in varchar2) 
+is
   l_idx pls_integer;
   l_len pls_integer;
+  l_end pls_integer;
 begin
   l_idx := 1;
   l_len := length(p_msg);
 
   while (l_idx <= l_len)
   loop
-    dbms_output.put_line(substr(p_msg, l_idx, 60));
-    l_idx := l_idx + 60;
+    l_end := instr(p_msg, ' ', l_idx + 60);
+    if l_end = 0
+    then
+      l_end := l_idx + 60;
+    end if;
+
+    while l_idx + 255 < l_end
+    loop
+      dbms_output.put_line(substr(p_msg, l_idx, 255));
+      l_idx := l_idx + 255;
+    end loop;
+    dbms_output.put_line(substr(p_msg, l_idx, l_end - l_idx));
+    l_idx := l_end;
   end loop;
 end show_envelope;
+
+function get_method_name
+(
+  p_epc_key in epc_key_subtype
+, p_method_name in epc.method_name_subtype
+)
+return varchar2
+is
+begin
+  if epc_info_tab(p_epc_key).inline_namespace is null
+  then
+    return p_method_name;
+  else
+    return epc_info_tab(p_epc_key).inline_namespace
+    ||':'
+    ||p_method_name;
+  end if;
+end get_method_name;
+
+function get_xmlns
+(
+  p_epc_key in epc_key_subtype
+)
+return varchar2
+is
+begin
+  if epc_info_tab(p_epc_key).inline_namespace is null
+  then
+    return 'xmlns';
+  else
+    return 'xmlns:' || epc_info_tab(p_epc_key).inline_namespace;
+  end if;
+end get_xmlns;
 
 procedure send_request
 ( 
@@ -439,17 +521,15 @@ begin
   epc_info_tab(p_epc_key).msg :=
 SOAP_HEADER_START
 ||'<'
-||"ns"
-||p_method_name
+||get_method_name(p_epc_key, p_method_name)
 ||' '
-||"xmlns" /* use identified "xmlns" ('xmlns:ns1') */
+||get_xmlns(p_epc_key)
 ||'="'
-||epc_info_tab(p_epc_key).interface_name
+||epc_info_tab(p_epc_key).namespace
 ||'">'
 ||epc_info_tab(p_epc_key).msg
 ||'</'
-||"ns"
-||p_method_name
+||get_method_name(p_epc_key, p_method_name)
 ||'>'
 ||SOAP_HEADER_END;
 
@@ -466,7 +546,7 @@ SOAP_HEADER_START
     ( 
       p_epc_key
     , epc_info_tab(p_epc_key).msg
-    , epc_info_tab(p_epc_key).interface_name || '#' || p_method_name
+    , epc_info_tab(p_epc_key).namespace || '#' || p_method_name
     );
   end if;
 end send_request;
@@ -593,44 +673,47 @@ procedure get_response_parameter
 is
   l_value epc.string_subtype;
   l_xml XMLType;
+  l_extract_type varchar2(20);
 begin
+  if p_data_type = epc.data_type_xml
+  then
+    l_extract_type := 'child::node()';
+  else
+    l_extract_type := 'child::text()';
+  end if;
+
   l_xml := 
     epc_info_tab(p_epc_key).doc.extract
     (
-      '//'||p_name||'/child::text()'
-      /* use identifier "xmlns" */
-    , "xmlns" ||'="'||epc_info_tab(p_epc_key).interface_name||'"'
+      '//'||p_name||'/'||l_extract_type
+    , get_xmlns(p_epc_key)||'="'||epc_info_tab(p_epc_key).namespace||'"'
     );
-
-  /* GJP 16-12-2004 Web services add the ns1 namespace to the response */
-  if l_xml is null
-  then
-    l_xml := 
-      epc_info_tab(p_epc_key).doc.extract
-      ( 
-        '//'||p_name||'/child::text()'
-      /* use string 'xmlns' */
-      , 'xmlns'||'="'||epc_info_tab(p_epc_key).interface_name||'"'
-      );
-  end if;
 
   l_value := l_xml.getstringval();
 
-  if instr(l_value, g_cdata_tag_start) = 1
-  and instr(l_value, g_cdata_tag_end, length(l_value) - length(g_cdata_tag_end) + 1) > 0
+  if p_data_type = epc.data_type_string
   then
+    if instr(l_value, g_cdata_tag_start) = 1
+    and instr(l_value, g_cdata_tag_end, length(l_value) - length(g_cdata_tag_end) + 1) > 0
+    then
+      l_value :=
+        substr
+        (
+          l_value
+        , length(g_cdata_tag_start) + 1
+        , length(l_value) - length(g_cdata_tag_start) - length(g_cdata_tag_end)
+        );
+    end if;
+
     p_value := 
-      substr
+      dbms_xmlgen.convert
       (
-        l_value
-      , length(g_cdata_tag_start) + 1
-      , length(l_value) - length(g_cdata_tag_start) - length(g_cdata_tag_end)
+        xmlData => l_value
+      , flag => dbms_xmlgen.entity_decode
       );
   else
     p_value := l_value;
   end if;
-  p_value :=
-    dbms_xmlgen.convert(xmlData => p_value, flag => dbms_xmlgen.entity_decode);
 end get_response_parameter;
 
 procedure get_response_parameter
