@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.3  2004/04/21 11:16:56  gpaulissen
+REMARK  .
+REMARK
 REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
 REMARK  Interface changed
 REMARK
@@ -86,7 +89,10 @@ procedure set_connection_info
 -- Get the TCP/IP connection. 
 -- 
 -- @param p_epc_key     The key
--- @param p_connection  An open TCP/IP connection (see utl_tcp.open_connection)
+-- @param p_connection  An open TCP/IP connection
+--                      (see utl_tcp.open_connection)
+--
+-- @exception no_data_found  connection method is not utl_tcp
 */
 procedure get_connection_info
 (
@@ -112,6 +118,8 @@ procedure set_connection_info
 -- 
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
+--
+-- @exception no_data_found  connection method is not dbms_pipe
 */
 procedure get_connection_info
 (
@@ -148,14 +156,14 @@ procedure set_response_recv_timeout
 -- 
 -- @param p_epc_key         The key
 -- @param p_interface_name  The interface name
--- @param p_routine_name    The routine name/signature
+-- @param p_method_name     The method name
 -- @param p_oneway          Must we wait on a response? (0 = NO)
 */
 procedure set_request_header
 (
   p_epc_key in epc_key_subtype
 , p_interface_name in epc.interface_name_subtype
-, p_routine_name in epc.routine_name_subtype
+, p_method_name in epc.method_name_subtype
 , p_oneway in pls_integer
 );
 
