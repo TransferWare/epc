@@ -1,20 +1,25 @@
+rem $Header$
+rem
+rem Parameters:
+rem 1 - true (empty pipe) or false (act as server)
+rem
+
 set serveroutput on size 1000000
 set verify off
 
 declare
-  v_request_pipe constant varchar2(128) := epc.get_request_pipe;
-  v_result_pipe varchar2(128);
+  subtype pipe_name_t is varchar2(128);
+
+  v_request_pipe constant pipe_name_t := epc.get_request_pipe;
+  v_result_pipe pipe_name_t;
   v_send_wait_time pls_integer := 10;
   v_receive_wait_time pls_integer := 10;
 
   retval binary_integer;
-  v_interface_name varchar2(100);
-  v_routine_name varchar2(100);
+  v_interface_name varchar2(1000);
+  v_routine_name varchar2(1000);
 
   comm_error exception;
-  wrong_protocol exception;
-
-  subtype pipe_name_t is varchar2(128);
 
   function empty_pipe
   (
@@ -102,7 +107,7 @@ declare
     o_par3 varchar2(2000);
     v_result varchar2(2000);
   begin
---    dbms_output.put_line( 'proc01' );
+--/*DBUG*/    dbms_output.put_line( 'proc01' );
 
     dbms_pipe.unpack_message(i_par1);
     dbms_pipe.unpack_message(io_par2);
@@ -111,8 +116,6 @@ declare
     o_par3 := 'dfgfhahfmkghjfvsbvfhjfgeljaujfd';
     v_result := 'abcd';
 
-    dbms_pipe.pack_message(0);
-    dbms_pipe.pack_message(0);
     dbms_pipe.pack_message(io_par2);
     dbms_pipe.pack_message(o_par3);
     dbms_pipe.pack_message(v_result);
@@ -120,12 +123,12 @@ declare
 
   procedure proc02
   is
-    io_par1 binary_integer;
-    o_par2 binary_integer;
-    i_par3 binary_integer;
-    v_result binary_integer;
+    io_par1 epc.int_t;
+    o_par2 epc.int_t;
+    i_par3 epc.int_t;
+    v_result epc.int_t;
   begin
---    dbms_output.put_line( 'proc02' );
+--/*DBUG*/    dbms_output.put_line( 'proc02' );
 
     dbms_pipe.unpack_message(io_par1);
     dbms_pipe.unpack_message(i_par3);
@@ -134,8 +137,6 @@ declare
     o_par2 := 199;
     v_result := -1;
 
-    dbms_pipe.pack_message(0);
-    dbms_pipe.pack_message(0);
     dbms_pipe.pack_message(io_par1);
     dbms_pipe.pack_message(o_par2);
     dbms_pipe.pack_message(v_result);
@@ -143,12 +144,12 @@ declare
 
   procedure proc03
   is
-    o_par1 double precision;
-    i_par2 double precision;
-    io_par3 double precision;
-    v_result double precision;
+    o_par1 epc.double_t;
+    i_par2 epc.double_t;
+    io_par3 epc.double_t;
+    v_result epc.double_t;
   begin
---    dbms_output.put_line( 'proc03' );
+--/*DBUG*/    dbms_output.put_line( 'proc03' );
 
     dbms_pipe.unpack_message(i_par2);
     dbms_pipe.unpack_message(io_par3);
@@ -157,8 +158,6 @@ declare
     io_par3 := 13478.54754;
     v_result := 3473.686;
 
-    dbms_pipe.pack_message(0);
-    dbms_pipe.pack_message(0);
     dbms_pipe.pack_message(o_par1);
     dbms_pipe.pack_message(io_par3);
     dbms_pipe.pack_message(v_result);
@@ -166,12 +165,12 @@ declare
 
   procedure proc04
   is
-    i_par1 float;
-    io_par2 float;
-    o_par3 float;
-    v_result float;
+    i_par1 epc.float_t;
+    io_par2 epc.float_t;
+    o_par3 epc.float_t;
+    v_result epc.float_t;
   begin
---    dbms_output.put_line( 'proc04' );
+--/*DBUG*/    dbms_output.put_line( 'proc04' );
 
     dbms_pipe.unpack_message(i_par1);
     dbms_pipe.unpack_message(io_par2);
@@ -180,8 +179,6 @@ declare
     o_par3 := -1.88;
     v_result := 33.45;
 
-    dbms_pipe.pack_message(0);
-    dbms_pipe.pack_message(0);
     dbms_pipe.pack_message(io_par2);
     dbms_pipe.pack_message(o_par3);
     dbms_pipe.pack_message(v_result);
@@ -190,44 +187,34 @@ declare
   procedure nothing1
   is
   begin
---    dbms_output.put_line( 'nothing1' );
+--/*DBUG*/    dbms_output.put_line( 'nothing1' );
 
     null;
-    dbms_pipe.pack_message(0);
-    dbms_pipe.pack_message(0);
   end nothing1;
 
   procedure nothing2
   is
   begin
---    dbms_output.put_line( 'nothing2' );
+--/*DBUG*/    dbms_output.put_line( 'nothing2' );
     null;
   end nothing2;
 
   procedure request_get_header
   (
-    o_result_pipe out pipe_name_t
-  , o_interface out varchar2
+    o_interface out varchar2
   , o_routine_name out varchar2
+  , o_result_pipe out pipe_name_t
   )
   is
-    v_msg_protocol  integer;
   begin
-    dbms_pipe.unpack_message( v_msg_protocol );
     dbms_pipe.unpack_message( o_interface );
     dbms_pipe.unpack_message( o_routine_name );
-    if dbms_pipe.next_item_type <> 0
-    then
-      dbms_pipe.unpack_message( o_result_pipe );
-    else
-      o_result_pipe := null;
-    end if;
-/*
-    dbms_output.put_line( 'result pipe: '||o_result_pipe );
-    dbms_output.put_line( 'msg protocol: '||v_msg_protocol );
-    dbms_output.put_line( 'interface: '||o_interface );
-    dbms_output.put_line( 'routine: '||o_routine_name );
-*/
+    dbms_pipe.unpack_message( o_result_pipe );
+
+--/*DBUG*/    dbms_output.put_line( 'interface: '||o_interface );
+--/*DBUG*/    dbms_output.put_line( 'routine: '||o_routine_name );
+--/*DBUG*/    dbms_output.put_line( 'result pipe: '||o_result_pipe );
+
   end request_get_header;
 
 begin
@@ -246,7 +233,7 @@ begin
         raise comm_error;
       end if;
 
-      request_get_header(v_result_pipe, v_interface_name, v_routine_name);
+      request_get_header(v_interface_name, v_routine_name, v_result_pipe);
 
       begin
         if v_routine_name like '%proc01%'
@@ -280,14 +267,16 @@ begin
 
 --      v_routine_name := null;
 
-      if v_routine_name is not null and v_result_pipe is not null
+      if v_routine_name is not null and
+         v_result_pipe is not null and
+         v_result_pipe != 'N/A'
       then
         retval := dbms_pipe.send_message( v_result_pipe, 1 );
-/*
-        dbms_output.put_line( 'send message for ' ||
-                              v_result_pipe || ': ' ||
-                              to_char(retval) );
-*/
+
+--/*DBUG*/        dbms_output.put_line( 'send message for ' ||
+--/*DBUG*/                              v_result_pipe || ': ' ||
+--/*DBUG*/                              to_char(retval) );
+
         if retval != 0
         then
           dbms_output.put_line( 'Error sending message through ' || 
@@ -298,5 +287,12 @@ begin
       end if;
     end loop;
   end if;
+exception
+  when others
+  then
+    dbms_output.put_line( substr(sqlerrm, 1, 255) );
+    retval := empty_pipe( v_request_pipe, 0 );    
+    retval := empty_pipe( v_result_pipe, 0 );    
+    raise;
 end;
 /

@@ -39,7 +39,7 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 # first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
 
-EXTRA_DIST           = epctest.ref epctest.sql str.sql
+EXTRA_DIST           = epctest.ref epctest.sql str.sql test2.client.ref
 
 TESTS = test1 test2
 
@@ -50,22 +50,22 @@ FORCE = force
 EPCTEST = ./epctest
 DIFF = diff -w
 
-test1: $(top_srcdir)/test/epctest.sql $(FORCE)
+test1: $(srcdir)/epctest.sql $(FORCE)
 	$(EPCTEST) -d -u$(USERID) 1>$@.server.log 2>&1 &
 	sleep 20
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 2>&1 | tee $@.client.log
 	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
-	$(DIFF) epctest.lis $(top_srcdir)/test/epctest.ref
+	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	echo : > $@
 
-test2: $(top_srcdir)/test/epctest.sql $(FORCE)
+test2: $(srcdir)/client.sql $(FORCE)
 # empty the pipe
-	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(top_srcdir)/test/server.sql true
+	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
 #	sleep 5
-	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 2>&1 | tee $@.client.log
-	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(top_srcdir)/test/server.sql false 1>$@.server.log 2>&1 &
-	pid=`ps | grep $(SQLPLUS) | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
-	$(DIFF) epctest.lis $(top_srcdir)/test/epctest.ref
+	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql false 1>$@.server.log 2>&1 &
+	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 1>$@.client.log 2>&1
+	pid=`ps | grep $(SQLPLUS) | grep -v grep | awk '{ print $$1; }'`; test -z "$$pid" || kill "$$pid"
+	$(DIFF) $@.client.log $(srcdir)/$@.client.ref
 	echo : > $@
 
 force: ;
