@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
+REMARK  Interface changed
+REMARK
 REMARK  Revision 1.1  2004/04/02 10:26:28  gpaulissen
 REMARK  New interface for epc
 REMARK
@@ -81,4 +84,4 @@ return data_type_subtype;
 */
 
 end epc;
-
+/
