@@ -36,7 +36,7 @@ libepc_la_SOURCES    = lsnr.c epc.c epc_dbg.c
 ## - 2:0:0 due to adding epc_info to epc_disconnect
 
 libepc_la_LDFLAGS     = -no-undefined -version-info 2:0:0
-libepc_la_LIBADD      = @PROCLIB@ $(libdir)/libdbug.la
+libepc_la_LIBADD      = $(libdir)/libdbug.la
 
 EXTRA_DIST           = epc.pc
 
