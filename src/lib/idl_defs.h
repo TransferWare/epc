@@ -1,3 +1,6 @@
+#ifndef IDL_DEFS_H
+#define IDL_DEFS_H
+
 /*
  * Filename             : $RCSfile$
  *
@@ -12,6 +15,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.7  2002/10/28 14:53:04  gpaulissen
+ * Using GNU standards.
+ *
  * Revision 1.6  2002/10/19 13:58:13  gpaulissen
  * function signature instead of function name
  *
@@ -35,9 +41,6 @@
  *
  *
  */
-
-#ifndef _IDL_DEFS_H_
-#define _IDL_DEFS_H_
 
 #define MAX_PARM_NAME_LEN       32   /* must be a multiple of 4 */
 
@@ -81,8 +84,3 @@ typedef dword_t idl_type_t; /* one of the values above */
 typedef dword_t idl_mode_t; /* one of the values above */
 
 #endif
-
-
-
-
-

@@ -1,17 +1,20 @@
 /*
- * Filename   		: $RCSfile$
+ * Filename             : $RCSfile$
  *
- * Creation date	: 25-JUN-1997
+ * Creation date        : 25-JUN-1997
  *
- * Created by 		: Huub van der Wouden
+ * Created by           : Huub van der Wouden
  *
- * Company    		: Transfer Solutions bv
+ * Company              : Transfer Solutions bv
  *
  * --- Description -------------------------------------------------------
  * Data structures for parsing and code generation
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.8  2002/10/28 14:53:05  gpaulissen
+ * Using GNU standards.
+ *
  * Revision 1.7  2001/01/24 16:29:10  gpaulissen
  * Release 2.0.0
  *
@@ -42,13 +45,10 @@
  *
  */
 
-#ifndef _IDL_PRS_H
-#define _IDL_PRS_H
+#ifndef IDL_PRS_H
+#define IDL_PRS_H
 
-#ifndef  _IDL_DEFS_H_
-#include "idl_defs.h"
-#define  _IDL_DEFS_H_
-#endif
+#include <idl_defs.h>
 
 typedef struct {
   char name[MAX_PARM_NAME_LEN];
@@ -72,11 +72,25 @@ typedef struct {
   idl_function_t * functions[MAX_FUNCTIONS];
 } idl_interface_t;
 
-void set_interface ( char *name );
-void add_function ( char *name, idl_type_t datatype, const int oneway );
-void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size );
 
-void generate_plsql ( void );
-void generate_c ( const char *include_text );
+extern
+void
+set_interface( char *name );
+
+extern
+void
+add_function( char *name, idl_type_t datatype, const int oneway );
+
+extern
+void
+add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size );
+
+extern
+void
+generate_plsql( void );
+
+extern
+void
+generate_c( const char *include_text );
 
 #endif

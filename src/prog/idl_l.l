@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.15  2002/10/28 14:53:04  gpaulissen
+ * Using GNU standards.
+ *
  * Revision 1.14  2001/01/24 16:29:09  gpaulissen
  * Release 2.0.0
  *
@@ -50,9 +53,22 @@
  *
  */
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+
 #include "idl_y.h"
 #include "idl_defs.h"
 #include "idl_prs.h"
@@ -63,32 +79,81 @@ int lineno = 1;
 void yyerror( char *s );
 int yyparse( void );
 
-static char *STRDUP( const char * str )
+#if !HAVE_STRDUP
+
+static
+char *
+strdup( const char * str )
 {
-	char *tmp = malloc( strlen(str)+1 );
-	if ( tmp )
-	{
-		strcpy( tmp, str );
-	}
-	return tmp;
+  char *tmp;
+
+  if ( str == NULL )
+    return NULL;
+
+  tmp = (char *) malloc( strlen(str)+1 );
+
+  if ( tmp != NULL )
+    {
+      (void) strcpy( tmp, str );
+    }
+  return tmp;
 }
+
+#endif
+
+
+#if !HAVE_STRSTR
+
+/* find first occurence of s2 in s1 */
+static
+char *
+strstr( const char *s1, const char *s2 )
+{
+  char *s1_ptr = (char *)s1, *s2_ptr = (char *)s2;
+
+  if ( s1_ptr == NULL || s2_ptr == NULL )
+    return NULL;
+
+  while ( *s1_ptr != '\0' && *s2_ptr != '\0' ) 
+    {
+      if ( *s1_ptr == *s2_ptr ) 
+        {
+          s1_ptr++;
+          s2_ptr++;
+        } 
+      else 
+        {
+          s1_ptr++; /* advance */
+          s2_ptr = (char *)s2; /* back to start */
+        }
+    }
+
+  if ( *s2_ptr == '\0' ) /* s2 completey within s1 */
+    return s1_ptr;
+
+  return NULL;
+}
+
+#endif
 
 static char *include_text = NULL;
 static int size = 0;
 
-static void add_include_text( char *line )
+static
+void
+add_include_text( char *line )
 {
-	include_text = realloc( include_text, size+strlen(line)+1 );
+  include_text = (char*) realloc( include_text, size+strlen(line)+1 );
 
-	if ( include_text )
-	{
-		if ( size > 0 )
-			strcat( include_text, line );
-		else
-			strcpy( include_text, line );
+  if ( include_text != NULL )
+    {
+      if ( size > 0 )
+	(void) strcat( include_text, line );
+      else
+	(void) strcpy( include_text, line );
 
-		size += strlen(line)+1;
-	}
+      size += strlen(line)+1;
+    }
 }
 
 %}
@@ -149,7 +214,7 @@ end_include     "%}"
                                           return ONEWAY; }
 
 <NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT( "info", ("<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
-                                          yylval.sval = STRDUP((const char*)yytext); return NAME; }
+                                          yylval.sval = strdup((const char*)yytext); return NAME; }
 
 <NORMAL>[{}(),;]			{ DBUG_PRINT( "info", ("<NORMAL>[{}(),;] '%s'", yytext));
                                           return yytext[0]; }
@@ -206,7 +271,7 @@ static
 void
 usage( int argc, char **argv )
 {
-  fprintf( stdout, "\
+  (void) fprintf( stdout, "\
 Syntax: %s [ -D DBUG_OPTIONS ] [ -h ] [ -v ] <input file>\n\
 \n\
 OPTIONS\n\
@@ -216,7 +281,8 @@ OPTIONS\n\
 	   argv[0] );
 }
 
-int main ( int argc, char **argv )
+int
+main( int argc, char **argv )
 {
   char *file = NULL;
   char *dbug_options = "";
@@ -259,28 +325,33 @@ int main ( int argc, char **argv )
 	}
     }
 
-  if ( file == NULL ) {
-    usage( argc, argv );
-    exit( EXIT_FAILURE );
-  }
+  if ( file == NULL ) 
+    {
+      usage( argc, argv );
+      exit( EXIT_FAILURE );
+    }
 
-  if ( (yyin = fopen( file, "r" )) == NULL ) {
-    perror(file);
-    exit( EXIT_FAILURE );
-  }
+  if ( (yyin = fopen( file, "r" )) == NULL ) 
+    {
+      perror(file);
+      exit( EXIT_FAILURE );
+    }
 
+  /* a new block for DBUG_ENTER */
   {
     DBUG_ENTER( "main" );
     BEGIN(NORMAL);
   
-    if ( !yyparse () ) {
-      generate_plsql();
-      generate_c( include_text );
-      printf( "Code generated...\n" );
-    }
-    else {
-      printf( "IDL parse failed\n" );
-    }
+    if ( !yyparse () ) 
+      {
+        generate_plsql();
+        generate_c( include_text );
+        (void) printf( "Code generated...\n" );
+      }
+    else 
+      {
+        (void) printf( "IDL parse failed\n" );
+      }
     DBUG_LEAVE();
   }
   DBUG_DONE();
