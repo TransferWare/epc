@@ -19,6 +19,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.10  1998/08/02 15:17:40  gjp
+ * Removed obsolete local variable fun in generate_header.
+ *
  * Revision 1.9  1998/08/02 13:58:26  gjp
  * Moved declarations of external routines to the interface header file. This reduces the chance of conflicts.
  *
@@ -817,7 +820,6 @@ static void generate_interface_header ( FILE * pout )
 static void generate_header ( FILE *pout )
 {
 	int i;
-	idl_function_t * fun;
 
 	print_generate_comment( pout, "" );
 
