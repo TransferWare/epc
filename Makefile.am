@@ -32,5 +32,4 @@ dist-hook:
 	  cp $$file $(distdir)/$$file; \
 	done
 
-EXTRA_DIST              = bootstrap Imakefile MANIFEST MANIFEST.SKIP Makefile.PL README.html README.imake \
-			doc/epcman.doc doc/EPC-optimize.doc doc/epcman.doc doc/epcman.html 
+EXTRA_DIST              = bootstrap Imakefile MANIFEST MANIFEST.SKIP Makefile.PL README.html README.imake

@@ -22,5 +22,5 @@ epc_SOURCES = epc.pls
 epc$(EXEEXT): epc.pls
 	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @$<
 
-EXTRA_DIST           = Imakefile
+EXTRA_DIST           = Imakefile epcman.doc EPC-optimize.doc epcman.htm
 
