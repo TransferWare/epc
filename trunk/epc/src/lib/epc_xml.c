@@ -123,6 +123,13 @@ static
 sword
 start_document(void *epc_xml_ctx_ptr)
 {
+  epc_xml_ctx_t *epc_xml_ctx = (epc_xml_ctx_t *)epc_xml_ctx_ptr;
+  epc_call_t *epc_call = epc_xml_ctx->epc_call;
+
+  epc_call->interface = NULL;
+  epc_call->function = NULL;
+  epc_call->epc_error = OK;
+
   dbug_enter(__FILE__, "document", __LINE__, NULL);
 
   return 0;
@@ -161,16 +168,18 @@ start_element(void *epc_xml_ctx_ptr, const oratext *name,
   epc_xml_ctx_t *epc_xml_ctx = (epc_xml_ctx_t *)epc_xml_ctx_ptr;
   epc_info_t *epc_info = epc_xml_ctx->epc_info;
   epc_call_t *epc_call = epc_xml_ctx->epc_call;
-  char element_type = 0; /* (B)ody, (M)ethod, (A)rgument */
+  char element_type = 0; /* (S)oap, (M)ethod, (A)rgument */
   const size_t len = strlen((const char*)name);
   char *interface_name = NULL, *function_name = NULL, *argument_name = NULL;
+  uword ecode;
 
   dbug_enter(__FILE__, (char*)name, __LINE__, NULL);
 
-  if ( len >= 4 && strncmp((const char *)&name[len - 4], "Body", 4) == 0 )
+  if ( strncmp((const char *)name, "SOAP", 4) == 0 ||
+       strncmp((const char *)name, "soap", 4) == 0 )
     {
-      dbug_print(__LINE__, "info", "Setting body");
-      element_type = 'B';
+      dbug_print(__LINE__, "info", "skipping SOAP element");
+      element_type = 'S';
     }
   else 
     {
@@ -255,6 +264,9 @@ start_element(void *epc_xml_ctx_ptr, const oratext *name,
                     {
                       if (epc_call->function->parameters[nr].mode != C_OUT) /* in or in/out */
                         {
+                          dbug_print(__LINE__, "info", "parameter[%d]: %s; argument_name: %s",
+                                     (int)nr, epc_call->function->parameters[nr].name, argument_name);
+                          assert( strcmp(epc_call->function->parameters[nr].name, argument_name) == 0 );
                           break; /* found */
                         }
                     }
@@ -270,7 +282,7 @@ start_element(void *epc_xml_ctx_ptr, const oratext *name,
                     }
                   break;
 
-                case 'B': /* new body */
+                case 'S': /* SOAP element */
                 default:
                   break;
                 }
@@ -279,7 +291,11 @@ start_element(void *epc_xml_ctx_ptr, const oratext *name,
         }
     }
 
-  return epc_call->epc_error == OK ? 0 : 1;
+  ecode = epc_call->epc_error == OK ? 0 : 1;
+
+  dbug_print(__LINE__, "info", "epc_error: %d; ecode: %u", (int)epc_call->epc_error, (unsigned)ecode);
+
+  return ecode;
 }
 
 static
