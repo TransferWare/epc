@@ -25,7 +25,7 @@ INCLUDES	     = -I$(top_builddir) -I$(top_srcdir) -I../../src/lib
 
 bin_PROGRAMS         = demo
 demo_SOURCES         = demo.c demo.h main.c
-demo_LDADD           = ../../src/lib/libepc.a ../../*.a -ldbug
+demo_LDADD           = ../../src/lib/libepc.la
 
 ../../src/prog/idl$(EXEEXT):
 	cd `dirname $@` && make
