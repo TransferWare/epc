@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.15  1998/11/27 14:04:01  gjp
+ * Added debugging.
+ *
  * Revision 1.14  1998/08/19 06:35:49  gjp
  * Added epc_handle_request.
  *
@@ -503,101 +506,139 @@ end_of_epc_handle_requests:
 
 epc_info_t *epc_init( void )
 {
-	epc_info_t *epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
+	epc_info_t *epc_info = NULL;
 
-	if ( epc_info == NULL )
-		return NULL;
+	epc_debug( "Entering epc_init\n" );
 
-	epc_info->logon = NULL;
-	epc_info->pipe = NULL;
-	epc_info->num_interfaces = 0;
-	epc_info->interfaces = NULL;
+	epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
+
+	if ( epc_info != NULL )
+	{
+		epc_info->logon = NULL;
+		epc_info->pipe = NULL;
+		epc_info->num_interfaces = 0;
+		epc_info->interfaces = NULL;
+	}
+
+	epc_debug( "Leaving epc_init\n" );
 
 	return epc_info;
 }
 
 void epc_done( epc_info_t **epc_info )
 {
-	if ( *epc_info == NULL )
-		return;
+	epc_debug( "Entering epc_done\n" );
 
-	if ( (*epc_info)->interfaces )
-		free( (*epc_info)->interfaces );
+	if ( *epc_info != NULL )
+	{
+		if ( (*epc_info)->interfaces )
+			free( (*epc_info)->interfaces );
 
-	if ( (*epc_info)->pipe )
-		free( (*epc_info)->pipe );
+		if ( (*epc_info)->pipe )
+			free( (*epc_info)->pipe );
 
-	free( *epc_info );
-	*epc_info = NULL;
+		free( *epc_info );
+		*epc_info = NULL;
+	}
+
+	epc_debug( "Leaving epc_done\n" );
 }
 
 epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
 {
-	if ( epc_info == NULL )
-		return	MEMORY_ERROR;
+	epc_error_t status = OK;
 
-	if ( logon == NULL )
+	epc_debug( "Entering epc_set_logon\n" );
+
+	if ( epc_info == NULL )
+	{
+		status = MEMORY_ERROR;
+	}
+	else if ( logon == NULL )
 	{
 		if ( epc_info->logon != NULL )
 			free( epc_info->logon );
 
 		epc_info->logon = NULL;
-		return OK;
+	}
+	else
+	{
+		epc_info->logon = (char*) realloc( epc_info->logon, strlen(logon) + 1 );
+		if ( epc_info->logon == NULL )
+			status = MEMORY_ERROR;
+		else
+			strcpy( epc_info->logon, logon );
 	}
 
-	epc_info->logon = (char*) realloc( epc_info->logon, strlen(logon) + 1 );
-	if ( epc_info->logon == NULL )
-		return	MEMORY_ERROR;
+	epc_debug( "Leaving epc_set_logon; status: %d\n", (int)status );
 
-	strcpy( epc_info->logon, logon );
-
-	return OK;
+	return status;
 }
 
 epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
 {
-	if ( epc_info == NULL )
-		return	MEMORY_ERROR;
+	epc_error_t status = OK;
 
-	if ( pipe == NULL )
+	epc_debug( "Entering epc_set_pipe\n" );
+
+	if ( epc_info == NULL )
+	{
+		status = MEMORY_ERROR;
+	}
+	else if ( pipe == NULL )
 	{
 		if ( epc_info->pipe != NULL )
 			free( epc_info->pipe );
 
 		epc_info->pipe = NULL;
-		return OK;
+	}
+	else
+	{
+		epc_info->pipe = (char*) realloc( epc_info->pipe, strlen(pipe) + 1 );
+		if ( epc_info->pipe == NULL )
+			status = MEMORY_ERROR;
+		else
+			strcpy( epc_info->pipe, pipe );
 	}
 
-	epc_info->pipe = (char*) realloc( epc_info->pipe, strlen(pipe) + 1 );
-	if ( epc_info->pipe == NULL )
-		return	MEMORY_ERROR;
+	epc_debug( "Leaving epc_set_pipe; status: %d\n", (int)status );
 
-	strcpy( epc_info->pipe, pipe );
-
-	return OK;
+	return status;
 }
 
 epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
 {
+	epc_error_t status = OK;
+
+	epc_debug( "Entering epc_add_interface\n" );
+
 	if ( epc_info == NULL )
-		return	MEMORY_ERROR;
-
-	epc_info->num_interfaces++;
-	epc_info->interfaces = 
-		(epc_interface_t**)
-			realloc(
-				(void*)epc_info->interfaces,
-				(size_t)(epc_info->num_interfaces * sizeof(epc_interface_t**))
-			);
-
-	if ( epc_info->interfaces == NULL )
 	{
-		epc_info->num_interfaces--;
-		return	MEMORY_ERROR;
+		status = MEMORY_ERROR;
 	}
-	
-	epc_info->interfaces[epc_info->num_interfaces - 1] = interface;
+	else
+	{
+		epc_info->num_interfaces++;
+		epc_info->interfaces = 
+			(epc_interface_t**)
+				realloc(
+					(void*)epc_info->interfaces,
+					(size_t)(epc_info->num_interfaces * sizeof(epc_interface_t**))
+				);
 
-	return OK;
+		if ( epc_info->interfaces == NULL )
+		{
+			epc_info->num_interfaces--;
+			status = MEMORY_ERROR;
+		}
+		else
+		{
+			epc_info->interfaces[epc_info->num_interfaces - 1] = interface;
+		}
+	}
+
+	epc_debug( "Leaving epc_add_interface; status: %d\n", (int)status );
+
+	return status;
 }
 
