@@ -98,15 +98,15 @@ then
   AC_MSG_CHECKING([for the full pathname of the library for $acx_function])
   for acx_dir in ${acx_dirs:?"acx_dirs undefined"}
   do
-    for prefix_suffix in lib:.la lib:.so lib:.a :.lib :.dll
+    for acx_prefix_suffix in lib:.la lib:.so lib:.a :.lib :.dll
     do
-      prefix=`echo $prefix_suffix | cut -d':' -f1`
-      suffix=`echo $prefix_suffix | cut -d':' -f2`
+      acx_prefix=`echo $acx_prefix_suffix | cut -d':' -f1`
+      acx_suffix=`echo $acx_prefix_suffix | cut -d':' -f2`
       # Bug 849475
       # Check links first, next normal files
       for type in l f
       do
-        acx_lib_pathname=`find $acx_dir -type $type | ${EGREP:?"EGREP undefined"} -i "^$acx_dir/$prefix$acx_lib_found$suffix$" | 
+        acx_lib_pathname=`find $acx_dir -type $type | ${EGREP:?"EGREP undefined"} -i "^$acx_dir/$acx_prefix$acx_lib_found$acx_suffix$" | 
 head -1`
         test -z "$acx_lib_pathname" || break
       done
