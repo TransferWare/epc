@@ -24,6 +24,7 @@ CLEANFILES       = *.pk?_run pod*.tmp
 EXTRA_DIST       = epc.pks epc.pkb
 EXTRA_DIST      += epc_clnt.pks epc_clnt.pkb
 EXTRA_DIST      += epc_srvr.pks epc_srvr.pkb
+EXTRA_DIST      += login.sql
 
 @SUFFIXES@: .pks .pkb .pks_run .pkb_run
 
