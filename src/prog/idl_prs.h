@@ -12,7 +12,10 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
- * Revision 1.4  1998/07/27 15:21:09  gert-jan
+ * Revision 1.5  1998/07/31 16:25:46  gert-jan
+ * Various changes.
+ *
+ * Revision 1.4  1998/07/27  15:21:09  gert-jan
  * First release.
  *
  * Revision 1.3  1998/05/06 20:23:44  gpauliss
@@ -43,6 +46,7 @@
 
 typedef struct {
 	char name[MAX_PARM_NAME_LEN];
+	char proc_name[MAX_PARM_NAME_LEN+4];
 	idl_mode_t mode;
 	idl_type_t datatype;
 	dword_t size;
