@@ -66,6 +66,7 @@ case "$host" in
   ;;
 esac
 acx_save_LIBS="$LIBS"
+set -x
 LIBS="$PROCLIB $LIBS"
 AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library not found)])
 LIBS=$acx_save_LIBS
