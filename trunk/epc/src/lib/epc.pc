@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.13  1998/08/11 21:03:23  gjp
+ * Modified comments.
+ *
  * Revision 1.12  1998/07/31 16:23:04  gert-jan
  * Various changes.
  *
@@ -19,7 +22,7 @@
 # First release.
 #
  * Revision 1.10  1998/05/26 11:06:13  gpauliss
- * Replaced $Source$ by $RCSfile$
+ * Replaced RCS keyword Source by RCSfile
  *
  * Revision 1.9  1998/05/19 19:31:46  gpauliss
  * Used ANSI C syntax for EPC_handle_requests
