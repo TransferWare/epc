@@ -1,0 +1,14 @@
+This README describes how to invoke the regression test.
+
+Invoke the regression test by:
+
+  $ imboot -C EPA ..
+  $ make test
+
+No errors should occur.
+
+On DOS/Windows platforms you need a Korn (ksh), Bourne (sh) or Bash (bash)
+shell. The make command now is:
+
+  DOS> <make executable> SHELL=<shell> TOP=<path of DBUG with a slash (/) as separator> test
+
