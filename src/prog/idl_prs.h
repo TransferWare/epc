@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.6  1999/11/23 16:05:39  gpaulissen
+ * DBUG interface changed.
+ *
  * Revision 1.5  1998/07/31 16:25:46  gert-jan
  * Various changes.
  *
@@ -70,6 +73,6 @@ void add_function ( char *name, idl_type_t datatype );
 void add_parameter ( char *name, idl_mode_t mode, idl_type_t datatype );
 
 void generate_plsql ( void );
-void generate_c ( void );
+void generate_c ( const char *include_text );
 
 #endif

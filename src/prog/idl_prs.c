@@ -19,6 +19,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.13  1999/11/23 16:05:38  gpaulissen
+ * DBUG interface changed.
+ *
  * Revision 1.12  1999/10/20 10:58:32  gpaulissen
  * epc.request_set_parameter and epc.request_get_parameter instead of
  * dbms_pipe.pack_message and dbms_pipe.unpack_message
@@ -105,7 +108,7 @@ static void generate_c_function ( FILE * pout, idl_function_t * fun );
 static void print_generate_comment( FILE * pout, char * prefix );
 static void declare_external_function( FILE * pout, idl_function_t * fun );
 static void declare_internal_function( FILE * pout, idl_function_t * fun );
-static void generate_c_source ( FILE * pout );
+static void generate_c_source ( FILE * pout, const char *include_text );
 #ifdef GEN_EPC_IFC_H
 static void generate_interface_header ( FILE * pout );
 #endif
@@ -516,18 +519,19 @@ static void generate_c_parameters( FILE * pout, idl_function_t * fun )
 
 static void print_c_debug_info( FILE *pout, char *name, idl_type_t datatype )
 {
+	fprintf( pout, "\tDBUG_PRINT( ( __LINE__, \"info\"" );
 	switch( datatype )
 	{
 	case C_INT:
-		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%d\", (int)%s ) );\n", name, name ); break;
+		fprintf( pout, "\"%s= %%d\", (int)%s ) );\n", name, name ); break;
 	case C_LONG:
-		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%ld\", (long)%s ) );\n", name, name ); break;
+		fprintf( pout, "\"%s= %%ld\", (long)%s ) );\n", name, name ); break;
 	case C_FLOAT:
-		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%f\", (float)%s ) );\n", name, name ); break;
+		fprintf( pout, "\"%s= %%f\", (float)%s ) );\n", name, name ); break;
 	case C_DOUBLE:
-		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= %%lf\", (double)%s ) );\n", name, name ); break;
+		fprintf( pout, "\"%s= %%lf\", (double)%s ) );\n", name, name ); break;
 	case C_STRING:
-		fprintf( pout, "\tDBUG_PRINT( \"info\", ( \"%s= '%%s'\", (char*)%s ) );\n", name, name ); break;
+		fprintf( pout, "\"%s= '%%s'\", (char*)%s ) );\n", name, name ); break;
 	default:
 		fprintf( stderr, "print_c_debug_info#Unknown datatype (%d) for %s\n", datatype, name ); break;
 	}
@@ -767,13 +771,15 @@ static void declare_internal_function( FILE * pout, idl_function_t * fun )
 	fprintf( pout, "extern void _%s( epc_call_t *call );\n", fun->name );
 }
 
-static void generate_c_source ( FILE * pout )
+static void generate_c_source ( FILE * pout, const char *include_text )
 {
 	int i;
 	idl_function_t * fun;
 
 	print_generate_comment( pout, "" );
 
+	if ( include_text )
+	  fprintf( pout, "%s\n", include_text );
 	fprintf( pout, "#include <string.h>\n" );
 	fprintf( pout, "#include <stdlib.h>\n" );
 	fprintf( pout, "#include \"epc_defs.h\"\n" );
@@ -844,7 +850,7 @@ static void generate_header ( FILE *pout )
 	fprintf( pout, "\nextern epc_interface_t ifc_%s;\n", _interface.name );
 }
 
-void generate_c ( void )
+void generate_c ( const char *include_text )
 {
 	char filename[256];
 #ifdef GEN_EPC_IFC_H
@@ -874,6 +880,6 @@ void generate_c ( void )
 	generate_interface_header ( pout_i ); 
 #endif
 	generate_header ( pout_h ); 
-	generate_c_source ( pout_c );
+	generate_c_source ( pout_c, include_text );
 }
 

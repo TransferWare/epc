@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.6  1999/11/23 16:05:38  gpaulissen
+ * DBUG interface changed.
+ *
  * Revision 1.5  1998/07/27 15:21:09  gert-jan
  * First release.
  *
@@ -37,6 +40,7 @@
 #include "idl_y.h"
 #include "idl_defs.h"
 #include "idl_prs.h"
+#include "dbug.h"
 
 int lineno = 1;
 
@@ -53,56 +57,143 @@ static char *STRDUP( const char * str )
 	return tmp;
 }
 
+static char *include_text = NULL;
+static int size = 0;
+
+static void add_include_text( char *line )
+{
+	include_text = realloc( include_text, size+strlen(line)+1 );
+
+	if ( include_text )
+	{
+		if ( size > 0 )
+			strcat( include_text, line );
+		else
+			strcpy( include_text, line );
+
+		size += strlen(line)+1;
+	}
+}
+
 %}
+
+%s NORMAL COMMENT INCLUDE
+
+start_comment   "/*"
+end_comment     "*/"
+start_include   "%{"
+end_include     "%}"
 
 %%
 
-"interface"				{ return INTERFACE; }
-"[in]"					{ yylval.ival = C_IN; return IN; }
-"[out]"					{ yylval.ival = C_OUT; return OUT; }
-"[inout]"				{ yylval.ival = C_INOUT; return INOUT; }
+<COMMENT>{end_comment}                  { DBUG_PRINT((__LINE__, "info", "<COMMENT>{end_comment} '%s'", yytext)); 
+                                          BEGIN(NORMAL); }
+<COMMENT>.                              { DBUG_PRINT((__LINE__, "info", "<COMMENT>. '%s'", yytext)); }
+<COMMENT>\n                             { DBUG_PRINT((__LINE__, "info", "<COMMENT>\\n '%s'", yytext)); lineno++; }
 
-"char"[ \t]*"*"				{ yylval.ival = C_STRING; return STRING; }
-"int"					{ yylval.ival = C_INT; return INT; }
-"long"					{ yylval.ival = C_LONG; return LONG; }
-"float"					{ yylval.ival = C_FLOAT; return FLOAT; }
-"double"				{ yylval.ival = C_DOUBLE; return DOUBLE; }
-"void"					{ yylval.ival = C_VOID; return VOID; }
+<NORMAL>{start_comment}                 { DBUG_PRINT((__LINE__, "info", "<NORMAL>{start_comment} '%s'", yytext));
+                                          BEGIN(COMMENT); }
 
-[A-Za-z][A-Za-z0-9_]*			{ yylval.sval = STRDUP((const char*)yytext); return NAME; }
+<INCLUDE>^{end_include}.*\n             { DBUG_PRINT((__LINE__, "info", "<INCLUDE>^{end_include}.*\\n '%s'", yytext));
+                                          BEGIN(NORMAL); }
+<INCLUDE>.*\n                           { add_include_text( yytext ); 
+                                          DBUG_PRINT((__LINE__, "info", "<INCLUDE>.* '%s'", yytext));
+                                          lineno++; }
+<NORMAL>^{start_include}.*\n            { DBUG_PRINT((__LINE__, "info", "<NORMAL>^{start_include}.* '%s'", yytext));
+                                          lineno++;
+                                          BEGIN(INCLUDE); }
 
-[{}(),;]				{ return yytext[0]; }
+<NORMAL>"interface"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"interface\" '%s'", yytext));
+                                          return INTERFACE; }
+<NORMAL>"[in]"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"[in]\" '%s'", yytext));
+                                          yylval.ival = C_IN; return IN; }
+<NORMAL>"[out]"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"[out]\" '%s'", yytext));
+                                          yylval.ival = C_OUT; return OUT; }
+<NORMAL>"[inout]"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"[inout]\" '%s'", yytext));
+                                          yylval.ival = C_INOUT; return INOUT; }
 
-[ \t\r\n]+				;
+<NORMAL>"char"[ \t]*"*"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"char\"[ \\t]*\"*\" '%s'", yytext));
+                                          yylval.ival = C_STRING; return STRING; }
+<NORMAL>"int"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"int\" '%s'", yytext));
+                                          yylval.ival = C_INT; return INT; }
+<NORMAL>"long"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"long\" '%s'", yytext));
+                                          yylval.ival = C_LONG; return LONG; }
+<NORMAL>"float"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"float\" '%s'", yytext));
+                                          yylval.ival = C_FLOAT; return FLOAT; }
+<NORMAL>"double"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"double\" '%s'", yytext));
+                                          yylval.ival = C_DOUBLE; return DOUBLE; }
+<NORMAL>"void"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"void\" '%s'", yytext));
+                                          yylval.ival = C_VOID; return VOID; }
 
-.					yyerror("invalid character");
+<NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT((__LINE__, "info", "<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
+                                          yylval.sval = STRDUP((const char*)yytext); return NAME; }
+
+<NORMAL>[{}(),;]			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>[{}(),;] '%s'", yytext));
+                                          return yytext[0]; }
+
+<NORMAL>[ \t]+			        { DBUG_PRINT((__LINE__, "info", "<NORMAL>[ \\t]+ '%s'", yytext)); }
+
+<NORMAL>\n			        { DBUG_PRINT((__LINE__, "info", "<NORMAL>\\n")); lineno++; }
+
+<NORMAL>.				yyerror("invalid character");
 
 %%
 
 void yyerror( char *s )
 {
-	printf("%d: %s at '%s', keyword: %d\n", lineno, s, yytext, yylval.ival );
+  printf("line %d: %s; yytext: '%s'; keyword: %d\n", lineno, s, yytext, yylval.ival );
 }
 
 int main ( int argc, char **argv )
 {
-	if ( argc <= 1 ) {
-		fprintf( stderr, "Syntax: %s <input file>\n", argv[0] );
-		exit (-1);
-	}
-	if ( (yyin = fopen( argv[1], "r" )) == NULL ) {
-		perror(argv[1]);
-		exit (-1);
-	}
+  char *file = NULL;
+  char *dbug_options = "";
+  int nr;
 
-	if ( !yyparse () ) {
-		generate_plsql ();
-		generate_c ();
-		printf( "Code generated...\n" );
+  for ( nr = 1; nr < argc; nr++ )
+    {
+      switch( argv[nr][0] )
+	{
+	case '-':
+	  switch( argv[nr][1] )
+	    {
+	    case '#':
+	      dbug_options = &argv[nr][2];
+	      break;
+	    }
+	  break;
+	default:
+	  file = argv[nr];
+	  break;
 	}
-	else {
-		printf( "IDL parse failed\n" );
-	}
-	return 0;
+    }
+
+  if ( file == NULL ) {
+    fprintf( stderr, "Syntax: %s [ -#<dbug options> ] <input file>\n", argv[0] );
+    exit (-1);
+  }
+
+  if ( (yyin = fopen( file, "r" )) == NULL ) {
+    perror(file);
+    exit (-1);
+  }
+
+  DBUG_INIT( dbug_options, NULL );
+  {
+    DBUG_ENTER( "main" );
+    BEGIN(NORMAL);
+  
+    if ( !yyparse () ) {
+      generate_plsql();
+      generate_c( include_text );
+      printf( "Code generated...\n" );
+    }
+    else {
+      printf( "IDL parse failed\n" );
+    }
+    DBUG_LEAVE();
+  }
+  DBUG_DONE();
+
+  return 0;
 }
-
