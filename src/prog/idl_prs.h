@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.12  2004/12/20 13:29:16  gpaulissen
+ * make lint
+ *
  * Revision 1.11  2004/12/16 16:03:23  gpaulissen
  * Web services added
  *
@@ -88,6 +91,7 @@ typedef struct
 
 extern void set_interface (char *name);
 
+/*@-exportlocal@*/
 extern void set_namespace (char *namespace);
 
 extern void add_function (char *name, idl_type_t datatype, const int oneway);
@@ -95,7 +99,7 @@ extern void add_function (char *name, idl_type_t datatype, const int oneway);
 extern
   void
 add_parameter (char *name, idl_mode_t mode, idl_type_t datatype,
-               dword_t size);
+	       dword_t size);
 
 extern void generate_plsql (void);
 

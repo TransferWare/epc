@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.14  2004/12/20 13:29:16  gpaulissen
+ * make lint
+ *
  * Revision 1.13  2004/12/16 16:03:23  gpaulissen
  * Web services added
  *
@@ -113,10 +116,10 @@ yylex( void );
 
 interface: INTERFACE interface_name namespace interface_body;
 
-interface_name:	NAME     { set_interface( $1 ); } ;
+interface_name: NAME     { set_interface( $1 ); } ;
 
-namespace:	NAMESPACE     { set_namespace( $1 ); }
-	|	/* empty */
+namespace:      NAMESPACE     { set_namespace( $1 ); }
+        |       /* empty */
         ;
 
 interface_body:
@@ -185,7 +188,3 @@ in_parameter:
                 IN datatype parameter_name
                 { add_parameter( $3, $1, $2.datatype, $2.size ); }
         ;
-
-
-
-

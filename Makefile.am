@@ -21,6 +21,12 @@ MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 ACLOCAL			= aclocal -I $(ac_aux_dir)
 
+dist: lint
+
+lint:
+	cd $(top_builddir)/src/lib && make lint
+	cd $(top_builddir)/src/prog && make lint
+
 generated_html_dirs     = doc/sql doc/c
 
 doc: $(generated_html_dirs)

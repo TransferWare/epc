@@ -23,7 +23,7 @@ idl_l.ln: idl_l.c
 
 # Bison does not produce lint quality code
 idl_y.ln: idl_y.c
-	$(LINT.c) -noeffect -branchstate -usereleased $<
+	$(LINT.c) -noeffect -branchstate -usereleased -exportlocal $<
 
 MAINTAINERCLEANFILES = Makefile.in
 
