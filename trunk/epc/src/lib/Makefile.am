@@ -33,8 +33,9 @@ libepc_la_SOURCES    = lsnr.c epc.c epc_call.c epc_dbg.c epc_call.h
 ## History of interface versions:
 ## - 0:0:0 start
 ## - 1:0:0 due to add epc_abort and epc_disconnect
+## - 2:0:0 due to adding epc_info to epc_disconnect
 
-libepc_la_LDFLAGS     = -no-undefined -version-info 1:0:1
+libepc_la_LDFLAGS     = -no-undefined -version-info 2:0:0
 libepc_la_LIBADD      = @PROCLIB@
 
 EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc
