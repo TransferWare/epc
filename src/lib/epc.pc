@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.23  2000/07/07 12:14:55  gpaulissen
+ * Release 1.6.3
+ *
  * Revision 1.22  2000/01/13 16:23:24  gpaulissen
  * Version 1.6.0
  *
@@ -82,7 +85,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
+/*#include <math.h>*/ /* GJP 25-06-2000
+                         math.h gives compilation errors on Oracle 8.1.5 on Linux SuSE 6.3 */
 #include <sys/types.h>
 #include <time.h>
 #endif
