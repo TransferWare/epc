@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.40  2004/03/29 07:23:26  gpaulissen
+ * Only call epc.request_get_body when there is input
+ *
  * Revision 1.39  2004/03/28 19:04:18  gpaulissen
  * null indicator toegevoegd voor output host arrays
  *
@@ -1016,21 +1019,29 @@ epc_exec_call( epc_info_t * epc_info, epc_call_t * call )
           EXEC SQL ARRAYLEN double_tab (double_tab_len_out);
           EXEC SQL ARRAYLEN string_tab (string_tab_len_out);
 
-          EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+          /* Only call request_get_body when there are input parameters */
+          if ( int_tab_len_out > 0 ||
+               long_tab_len_out > 0 ||
+               float_tab_len_out > 0 ||
+               double_tab_len_out > 0 ||
+               string_tab_len_out > 0 )
+            {
+              EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
-          EXEC SQL CONTEXT USE DEFAULT;
+              EXEC SQL CONTEXT USE DEFAULT;
 
-          EXEC SQL EXECUTE
-            BEGIN
-            epc.request_get_body( :datatype_tab,
-                                  :parameter_mode_tab,
-                                  :int_tab:int_tab_nl,
-                                  :long_tab:long_tab_nl,
-                                  :float_tab:float_tab_nl,
-                                  :double_tab:double_tab_nl,
-                                  :string_tab:string_tab_nl );
-          END;
-          END-EXEC;
+              EXEC SQL EXECUTE
+                BEGIN
+                epc.request_get_body( :datatype_tab,
+                                      :parameter_mode_tab,
+                                      :int_tab:int_tab_nl,
+                                      :long_tab:long_tab_nl,
+                                      :float_tab:float_tab_nl,
+                                      :double_tab:double_tab_nl,
+                                      :string_tab:string_tab_nl );
+              END;
+              END-EXEC;
+            }
 
           DBUG_PRINT( "info", ( "int_tab_len_out: %d", int_tab_len_out ) );
           DBUG_PRINT( "info", ( "long_tab_len_out: %d", long_tab_len_out ) );
