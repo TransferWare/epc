@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.26  2003/03/26 21:47:08  gpaulissen
+ * Building the epc
+ *
  * Revision 1.25  2002/12/04 17:47:03  gpaulissen
  * Libtool problems
  *
@@ -1088,7 +1091,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     {
       /* call the recv function */
       (void) fprintf( pout, "\
-\tEXEC SQL WHENEVER SQLERROR CONTINUE;\n\
+\tEXEC SQL WHENEVER SQLERROR GOTO ready;\n\
 \tEXEC SQL EXECUTE\n\
 \tBEGIN\n\
 \t\t%s%s.%s", _interface.name, package_type_str[SKEL_RECV], fun->name );
@@ -1106,11 +1109,8 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
       /* close the parameter list if there are actual parameters */
       (void) fprintf( pout, "%s;\n\
-\tEXCEPTION\n\
-\t\tWHEN\tOTHERS\n\
-\t\tTHEN\t:sqlcode := SQLCODE;\n\
 \tEND;\n\
-\tEND-EXEC;\n\n", 
+\tEND-EXEC;\n\n",
                       ( nr_actual_parameters == 0 ? "" : " )" ) );
     }
 
@@ -1193,7 +1193,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     {
       /* call the send function */
       (void) fprintf( pout, "\
-\tEXEC SQL WHENEVER SQLERROR CONTINUE;\n\
+\tEXEC SQL WHENEVER SQLERROR GOTO ready;\n\
 \tEXEC SQL EXECUTE\n\
 \tBEGIN\n\
 \t\t%s%s.%s",
@@ -1227,6 +1227,8 @@ EXEC SQL INCLUDE sqlca;\n\n" );
       (void) fprintf( pout, " );\n\
 \tEND;\n\
 \tEND-EXEC;\n\n\
+ready:\n\
+\tsqlcode = sqlca.sqlcode;\n\
 \tswitch ( sqlcode )\n\
 \t{\n\
 \tcase 0:\n\

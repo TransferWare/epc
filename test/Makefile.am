@@ -17,13 +17,26 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AUTOMAKE_OPTIONS     = ../src/lib/ansi2knr
+AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-INCLUDES	     = -I$(top_builddir) -I$(top_srcdir)
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
 noinst_PROGRAMS      = epctest
-LDADD                = ../src/lib/libts_epc.la
-AM_CPPFLAGS          = -I../src/lib
+epctest_SOURCES      = epctest.c epctest.h proc.c main.c str.c str.h
+epctest_LDADD        = $(top_builddir)/src/lib/libepc.la
+
+epctest.h epctest.pc: epctest.idl $(top_builddir)/src/prog/idl$(EXEEXT)
+	$(top_builddir)/src/prog/idl $<
+	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @epctest.pls
+
+str.h str.pc: str.idl $(top_builddir)/src/prog/idl$(EXEEXT)
+	$(top_builddir)/src/prog/idl $<
+	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @str.pls
+
+@SUFFIXES@: .c .pc
+
+.pc.c:
+	@PROC@ @PROCINCLUDES@ @PROCFLAGS@ iname=$< oname=$@
 
 EXTRA_DIST           = Imakefile epctest.ref epctest.idl epctest.sql
 

@@ -15,12 +15,8 @@
 ## along with this program; if not, write to the Free Software
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
-noinst_PROGRAMS = epc
+empty_pipes.html: empty_pipes.prc
+	@PERL@ -S pod2html --infile=$< --outfile=$@
 
-epc_SOURCES = epc.pls
-
-epc$(EXEEXT): epc.pls
-	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @$<
-
-EXTRA_DIST           = Imakefile
+EXTRA_DIST           = Imakefile empty_pipes.html empty_pipes.prc
 

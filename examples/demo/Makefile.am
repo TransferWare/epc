@@ -19,19 +19,19 @@ MAINTAINERCLEANFILES = Makefile.in
 
 MOSTLYCLEANFILES     = demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
 
-AUTOMAKE_OPTIONS     = ../../src/lib/ansi2knr
+AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-INCLUDES	     = -I$(top_builddir) -I$(top_srcdir) -I../../src/lib
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
 bin_PROGRAMS         = demo
 demo_SOURCES         = demo.c demo.h main.c
-demo_LDADD           = ../../src/lib/libepc.la
+demo_LDADD           = $(top_builddir)/src/lib/libepc.la 
 
-../../src/prog/idl$(EXEEXT):
+$(top_builddir)/src/prog/idl$(EXEEXT):
 	cd `dirname $@` && make
 
-demo.pc: demo.idl ../../src/prog/idl$(EXEEXT)
-	../../src/prog/idl $<
+demo.pc: demo.idl $(top_builddir)/src/prog/idl$(EXEEXT)
+	$(top_builddir)/src/prog/idl $<
 	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @demo.pls
 
 @SUFFIXES@: .c .pc

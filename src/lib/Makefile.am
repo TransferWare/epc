@@ -21,25 +21,18 @@ AUTOMAKE_OPTIONS     = ansi2knr
 
 MOSTLYCLEANFILES     = epc.c lsnr.c
 
-INCLUDES	     = `echo "@PROCINCLUDES@" | sed -e 's/include=/-I/g' -e 's/INCLUDE=/-I/g'`
-#AM_LDFLAGS = oracle.a
+procincludes         = @PROCINCLUDES@
 
+procincludes        += INCLUDE=$(top_srcdir)/src/lib
+
+AM_CPPFLAGS          = `echo "$(procincludes)" | sed -e 's/include=/-I/g' -e 's/INCLUDE=/-I/g'`
 
 include_HEADERS      = epc_defs.h epc_dbg.h idl_defs.h
-
-#LIBS = @PROCLIB@
-
-oracle.a: oracle.def
-	$(DLLTOOL) --def $< --dllname oraSQL8.dll --output-lib $@
-
-oracle.def: 
-	echo EXPORTS > $@
-	nm @PROCLIB@ | grep ' T _' | sed 's/.* T _//' >> $@
 
 lib_LTLIBRARIES        = libepc.la
 
 libepc_la_SOURCES     = lsnr.c epc.c epc_call.c epc_dbg.c lsnr.h epc.h epc_call.h epc_dbg.h
-libepc_la_LDFLAGS     = -static -no-undefined -version-info 0:0:0 
+libepc_la_LDFLAGS     = -no-undefined -version-info 0:0:0 
 libepc_la_LIBADD      = -ldbug @PROCLIB@
 
 EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc lsnr.pc
@@ -48,4 +41,4 @@ EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc lsnr.pc
 @SUFFIXES@: .c .pc
 
 .pc.c:
-	@PROC@ @PROCINCLUDES@ @PROCFLAGS@ iname=$< oname=$@
+	@PROC@ $(procincludes) @PROCFLAGS@ iname=$< oname=$@

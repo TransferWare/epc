@@ -18,6 +18,8 @@
 #define epc_list_main ts_epc_list_main
 #define epc_set_logon ts_epc_set_logon
 #define epc_set_pipe ts_epc_set_pipe
+#define epc_abort ts_epc_abort
+#define epc_disconnect ts_epc_disconnect
 
 extern
 epc_error_t
@@ -54,4 +56,13 @@ extern
 epc_error_t
 epc_handle_requests( epc_info_t *epc_info );
  
+extern
+void
+epc_abort(char *msg );
+
+extern
+void
+epc_disconnect( void );
+
+
 #endif

@@ -17,15 +17,14 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AUTOMAKE_OPTIONS     = ../lib/ansi2knr
+AUTOMAKE_OPTIONS     = $(top_builddir)/lib/ansi2knr
 
-INCLUDES	     = -I$(top_builddir) -I$(top_srcdir) -I../lib
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
 
 bin_PROGRAMS         = idl
 idl_SOURCES          = idl_l.l idl_prs.c idl_y.y idl_kwrd.h idl_prs.h idl_y.h yy.h yywrap.c
 idl_LDADD            = -ldbug
 
-#AM_CPPFLAGS          = -I../src/lib
 AM_YFLAGS            = -d
 
 EXTRA_DIST           = Imakefile

@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.29  2003/03/26 21:47:06  gpaulissen
+ * Building the epc
+ *
  * Revision 1.28  2002/12/01 20:05:30  gpaulissen
  * Autoconf modifications
  *
@@ -204,7 +207,8 @@ receive_request( epc_call_t * call )
   sqlca.sqlcode = 0;
   call->sqlcode = 0;
 
-  EXEC SQL WHENEVER SQLERROR GOTO receive_error;
+  EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
+
   EXEC SQL EXECUTE
   BEGIN
     epc.request_get_header
@@ -345,7 +349,7 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
 
   if ( epc_info->first_time != 0 ) {
 
-    EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_request;
+    EXEC SQL WHENEVER SQLERROR DO epc_abort("-- Oracle error --");
 
     EXEC SQL EXECUTE
     BEGIN
@@ -455,27 +459,33 @@ epc_handle_requests( epc_info_t *epc_info )
 
   DBUG_ENTER( "epc_handle_requests" );
 
-  /* log on to database */
-  EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_requests;
-  EXEC SQL CONNECT :logon;
+  if ( logon == NULL ) {
+    printf( "No connect string specified.\n" );
+    exit( EXIT_FAILURE );
+  } else {
+    /* log on to database */
+    EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_requests;
 
-  printf( "Connected to database....\n" );
-  fflush( stdout ); /* flush because of DBUG package */
+    EXEC SQL CONNECT :logon;
 
-  for ( call.sqlcode = 0; ; call.sqlcode = 0 )
-    {    
-      if ( epc_handle_request( epc_info, &call ) != 0 )
-        break;
-    }
+    printf( "Connected to database....\n" );
+    fflush( stdout ); /* flush because of DBUG package */
 
- end_of_epc_handle_requests:
+    for ( call.sqlcode = 0; ; call.sqlcode = 0 )
+      {    
+        if ( epc_handle_request( epc_info, &call ) != 0 )
+          break;
+      }
 
-  DBUG_PRINT( "output", 
-              ( "sql code: %ld; epc status: %s", 
-                (long)call.sqlcode, get_error_str( call.epc_error ) ) );
+  end_of_epc_handle_requests:
 
-  EXEC SQL WHENEVER SQLERROR CONTINUE;
-  EXEC SQL COMMIT WORK RELEASE;
+    DBUG_PRINT( "output", 
+                ( "sql code: %ld; epc status: %s", 
+                  (long)call.sqlcode, get_error_str( call.epc_error ) ) );
+
+    EXEC SQL WHENEVER SQLERROR CONTINUE;
+    EXEC SQL COMMIT WORK RELEASE;
+  }
 
   DBUG_LEAVE();
   return call.epc_error;
@@ -663,4 +673,47 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
 
   DBUG_LEAVE();
   return( status );
+}
+
+
+void
+epc_abort( char *msg )
+{
+  char err_msg[512];
+  size_t buf_len, msg_len;
+
+  (void) printf("\n%s\n", msg);
+  buf_len = sizeof (err_msg);
+  sqlglm(err_msg, &buf_len, &msg_len);
+  (void) printf("%.*s\n", msg_len, err_msg);
+
+  epc_disconnect();
+}
+
+
+void
+epc_disconnect( void )
+{
+#ifdef SQLCA
+#undef SQLCA
+#endif
+
+#ifdef SQLCA_NONE
+#undef SQLCA_NONE
+#endif
+
+/* force initialisation of any sqlca struct */
+#ifndef SQLCA_INIT
+#define SQLCA_INIT
+#endif
+
+  EXEC SQL INCLUDE sqlca;
+
+  (void) printf( "Disconnected from database\n" );
+
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  EXEC SQL ROLLBACK RELEASE;
+
+  (void) printf( "Exit epc listener....\n" );
+  exit( EXIT_FAILURE );
 }

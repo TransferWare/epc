@@ -33,6 +33,4 @@ dist-hook:
 	done
 
 EXTRA_DIST              = bootstrap Imakefile MANIFEST MANIFEST.SKIP Makefile.PL README.html README.imake \
-			cmp/EPC.cmp cmp/EPC_CORE.cmp cmp/EPC_DEV.cmp \
-			cmp/EPC_DOC.cmp cmp/EPC_RUN.cmp doc/epcman.doc \
-			doc/EPC-optimize.doc doc/epcman.doc doc/epcman.html 
+			doc/epcman.doc doc/EPC-optimize.doc doc/epcman.doc doc/epcman.html 
