@@ -27,3 +27,9 @@ libts_epc_la_SOURCES = lsnr.c epc.c epc_call.c epc_dbg.c lsnr.h epc.h epc_call.h
 libts_epc_la_LDFLAGS = -no-undefined -version-info 0:0:0
 
 EXTRA_DIST           = Imakefile ts_epc-def.msub epc.pc lsnr.pc
+
+
+@SUFFIXES@: .c .pc
+
+.pc.c:
+	@PROC@ @PROCFLAGS@ @PROCFLAGS@ INFILE=$< OUTFILE=$@
