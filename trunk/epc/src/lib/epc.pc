@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.18  1999/11/23 16:05:30  gpaulissen
+ * DBUG interface changed.
+ *
  * Revision 1.17  1999/10/20 10:55:20  gpaulissen
  * Clean up return pipe when send fails.
  *
@@ -208,10 +211,11 @@ receive_error:
 
 end_of_receive_request:
 	call->epc_error = retval;
-	DBUG_PRINT( "output", 
-		    ("sql code: %ld; epc error: %ld", 
-		     (long)call->sqlcode, (long)call->epc_error) );
-	DBUG_RETURN( retval );
+	DBUG_PRINT(( __LINE__, "output", 
+		     "sql code: %ld; epc error: %ld", 
+		     (long)call->sqlcode, (long)call->epc_error));
+	DBUG_LEAVE(); 
+	return retval;
 }
 
 
@@ -246,7 +250,7 @@ EXEC SQL INCLUDE sqlca;
 	EXEC SQL END DECLARE SECTION;
 
 	DBUG_ENTER( "send_result" );
-	DBUG_PRINT( "input", ("sending result through pipe %s", result_pipe ) );
+	DBUG_PRINT( ( __LINE__, "input", "sending result through pipe %s", result_pipe ) );
 
 	sqlca.sqlcode = 0;
 		
@@ -323,10 +327,11 @@ EXEC SQL INCLUDE sqlca;
 		END-EXEC;
 	}
 	
-	DBUG_PRINT( "output", 
-		    ("sql code: %ld; retval: %ld", 
+	DBUG_PRINT( (__LINE__, "output", 
+		     "sql code: %ld; retval: %ld", 
 		     (long)call->sqlcode, (long)retval) );
-	DBUG_RETURN( retval );
+	DBUG_LEAVE();
+	return retval;
 
 #ifdef retval
 #undef retval
@@ -438,10 +443,11 @@ EXEC SQL INCLUDE sqlca;
 		goto error;
 
 		/* call->epc_error == OK */
-	DBUG_RETURN( 0 );
+	DBUG_LEAVE();
+	return 0;
 
 error:
-	DBUG_PRINT( "info", ( "epc status: %s", get_error_str( call->epc_error ) ) );
+	DBUG_PRINT( ( __LINE__, "info", "epc status: %s", get_error_str( call->epc_error ) ) );
 
 	switch( call->epc_error )
 	{
@@ -456,7 +462,7 @@ error:
 		break;
 	}
 
-	DBUG_PRINT( "info", ( "sql code: %ld", (long)call->sqlcode ) );
+	DBUG_PRINT( ( __LINE__, "info", "sql code: %ld", (long)call->sqlcode ) );
 
 	switch( call->sqlcode )
 	{
@@ -471,15 +477,17 @@ error:
 		break;
 	}
 
-	DBUG_RETURN( 0 );
+	DBUG_LEAVE();
+	return 0;
 
 end_of_epc_handle_request:
 
-	DBUG_PRINT( "output", 
-		    ("sql code: %ld; epc status: %s", 
+	DBUG_PRINT( (__LINE__, "output", 
+		     "sql code: %ld; epc status: %s", 
 		     (long)call->sqlcode, get_error_str( call->epc_error ) ) );
 
-	DBUG_RETURN( -1 );
+	DBUG_LEAVE();
+	return -1;
 }
 
  
@@ -519,14 +527,15 @@ EXEC SQL INCLUDE sqlca;
 
 end_of_epc_handle_requests:
 
-	DBUG_PRINT( "output", 
-		    ("sql code: %ld; epc status: %s", 
+	DBUG_PRINT( (__LINE__, "output", 
+		     "sql code: %ld; epc status: %s", 
 		     (long)call.sqlcode, get_error_str( call.epc_error ) ) );
 
 	EXEC SQL WHENEVER SQLERROR CONTINUE;
 	EXEC SQL COMMIT WORK RELEASE;
 
-	DBUG_RETURN( call.epc_error );
+	DBUG_LEAVE();
+	return call.epc_error;
 }
 
 epc_info_t *epc_init( void )
@@ -545,7 +554,8 @@ epc_info_t *epc_init( void )
 		epc_info->interfaces = NULL;
 	}
 
-	DBUG_RETURN( epc_info );
+	DBUG_LEAVE();
+	return epc_info;
 }
 
 void epc_done( epc_info_t **epc_info )
@@ -564,7 +574,7 @@ void epc_done( epc_info_t **epc_info )
 		*epc_info = NULL;
 	}
 
-	DBUG_VOID_RETURN;
+	DBUG_LEAVE();
 }
 
 epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
@@ -593,9 +603,11 @@ epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
 			strcpy( epc_info->logon, logon );
 	}
 
-	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
+	DBUG_PRINT( ( __LINE__, "output", "status: %d", (int)status ) );
 
-	DBUG_RETURN( status );
+	DBUG_LEAVE();
+
+	return( status );
 }
 
 epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
@@ -624,9 +636,10 @@ epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
 			strcpy( epc_info->pipe, pipe );
 	}
 
-	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
+	DBUG_PRINT( ( __LINE__, "output", "status: %d", (int)status ) );
 
-	DBUG_RETURN( status );
+	DBUG_LEAVE();
+	return( status );
 }
 
 epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
@@ -660,7 +673,8 @@ epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface 
 		}
 	}
 
-	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
+	DBUG_PRINT( ( __LINE__, "output", "status: %d", (int)status ) );
 
-	DBUG_RETURN( status );
+	DBUG_LEAVE();
+	return( status );
 }

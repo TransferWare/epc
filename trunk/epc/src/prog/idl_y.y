@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.8  1999/11/23 16:05:39  gpaulissen
+ * DBUG interface changed.
+ *
  * Revision 1.7  1998/11/27 08:17:25  gjp
  * PSK-EPC-10. Clash between types of INTERFACE keyword and interface rule.
  *
@@ -69,9 +72,7 @@ extern int yylex( void );
 
 %%
 
-interface:
-		INTERFACE interface_name interface_body
-	;
+interface: INTERFACE interface_name interface_body;
 
 interface_name:
 		NAME	 { set_interface( $1 ); }
