@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.3  1998/02/17 20:25:33  gpauliss
+ * Interface changed
+ *
  * Revision 1.2  1998/02/03 09:51:26  gpauliss
  * - Changed old K&R syntax to ANSI C syntax.
  * - Added extern declaration of IDL function to be called.
@@ -236,22 +239,14 @@ void generate_plsql_function_body( FILE * pout, function * fun )
 	fprintf( pout, "\tbegin\n" );
 
 	/* SETUP OF CLIENT SIDE FUNCTION CALL */
-	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, "\t\tepc.set_function( '%s', '%s', %s );\n", 
-			_interface.name,
-			fun->name, 
-			get_constant_name( fun->datatype, PLSQL ) );
-	}
-	else {
-		fprintf( pout, "\t\tepc.set_procedure( '%s', '%s' );\n", 
-			_interface.name,
-			fun->name );
-	}
-
+	fprintf( pout, "\t\tepc.request_set_header( '%s', '%s', %s );\n", 
+		_interface.name,
+		fun->name, 
+		get_constant_name( fun->datatype, PLSQL ) );
 
 	for ( i=0; i<fun->num_parameters; i++) {
 		parm = fun->parameters[i];
-		fprintf( pout, "\t\tepc.set_parameter_value( %s, %s",
+		fprintf( pout, "\t\tepc.request_set_parameter( %s, %s",
 				get_constant_name( parm->mode, PLSQL ), 
 				get_constant_name( parm->datatype, PLSQL ) 
 		);
@@ -264,23 +259,18 @@ void generate_plsql_function_body( FILE * pout, function * fun )
 		
 	}
 
-	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, "\t\tepc.call_function;\n" );
-	}
-	else {
-		fprintf( pout, "\t\tepc.call_procedure;\n" );
-	}
+	fprintf( pout, "\t\tepc.request_perform_routine;\n" );
 
+	/* GET THE RESULTS */
 	for ( i=0; i<fun->num_parameters; i++) {
 		parm = fun->parameters[i];
 		if ( parm->mode != C_IN ) {
-			fprintf( pout, "\t\tepc.get_parameter_value( %s );\n", parm->name );
+			fprintf( pout, "\t\tepc.result_get_parameter_value( %s );\n", parm->name );
 		}
 	}
 
-
 	if ( fun->datatype != C_VOID ) {
-		fprintf( pout, "\t\tepc.get_return_value( result );\n" );
+		fprintf( pout, "\t\tepc.result_get_return_value( result );\n" );
 		fprintf( pout, "\t\treturn result;\n" );
 	}
 
