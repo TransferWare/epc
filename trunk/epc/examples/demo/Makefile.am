@@ -21,24 +21,23 @@ MOSTLYCLEANFILES     = demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
 
 AUTOMAKE_OPTIONS     = ../../src/lib/ansi2knr
 
-INCLUDES	     = -I$(top_builddir) -I$(top_srcdir) -I../lib
+INCLUDES	     = -I$(top_builddir) -I$(top_srcdir) -I../../src/lib
 
 bin_PROGRAMS         = demo
-demo_SOURCES         = demo.c demo.h
-demo_LDADD           = -ldbug
+demo_SOURCES         = demo.c demo.h main.c
+demo_LDADD           = ../../src/lib/libepc.a ../../*.a -ldbug
 
-#AM_CPPFLAGS          = -I../src/lib
-
-../../src/prog/idl:
+../../src/prog/idl$(EXEEXT):
 	cd `dirname $@` && make
 
-demo.pc: demo.idl ../../src/prog/idl
+demo.pc: demo.idl ../../src/prog/idl$(EXEEXT)
 	../../src/prog/idl $<
+	echo exit SQL.SQLCODE | @SQLPLUS@ $(USERID) @demo.pls
 
 @SUFFIXES@: .c .pc
 
 .pc.c:
-	@PROC@ @PROCFLAGS@ iname=$< oname=$@
+	@PROC@ @PROCINCLUDES@ @PROCFLAGS@ iname=$< oname=$@
 
 EXTRA_DIST           = Imakefile demo.pks demo.pkb demo.pke demo.pls demo.pc demo.idl
 

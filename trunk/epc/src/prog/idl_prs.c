@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.25  2002/12/04 17:47:03  gpaulissen
+ * Libtool problems
+ *
  * Revision 1.24  2002/10/28 14:53:04  gpaulissen
  * Using GNU standards.
  *
@@ -936,6 +939,10 @@ generate_plsql( void )
       if ( ( pout[nr] = fopen( filename, "w" ) ) == NULL ) 
         {
           goto open_error;
+        }
+      else
+        {
+          (void) fprintf( stdout, "Creating %s\n", filename );
         }
     }
 

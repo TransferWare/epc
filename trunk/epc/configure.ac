@@ -38,6 +38,13 @@ if test "$LEX" != flex; then
 fi
 AC_PROG_YACC
 AM_PROG_CC_STDC
+## Disable shared library building on Windows
+## because using the Oracle import library results in linker warnings
+#case "$host" in
+#*-*-cygwin* | *-*-mingw* )
+#  AC_DISABLE_SHARED
+#  ;;
+#esac
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
@@ -68,7 +75,7 @@ AC_SUBST(ac_aux_dir)dnl
 AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
 AC_CONFIG_FILES([Makefile config/Makefile test/Makefile])
 AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile])
-#AC_CONFIG_FILES([doc/Makefile utils/Makefile])dnl
+AC_CONFIG_FILES([doc/Makefile utils/Makefile])dnl
 
 AC_OUTPUT
 
