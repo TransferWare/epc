@@ -14,13 +14,10 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.2  1998/02/03 10:06:53  gpauliss
+ * - Removed obsolete logging
+ *
  * Revision 1.1  1998/01/25 15:20:20  gpauliss
- * Initial revision
- *
- * Revision 1.2  1997/07/08 14:14:25  hgwouden
- * added DOUBLE datatype
- *
- * Revision 1.1  1997/06/25 12:22:27  hgwouden
  * Initial revision
  *
  *
