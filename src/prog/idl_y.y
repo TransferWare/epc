@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.13  2004/12/16 16:03:23  gpaulissen
+ * Web services added
+ *
  * Revision 1.12  2004/10/20 13:34:06  gpaulissen
  * make lint
  *
@@ -90,6 +93,7 @@ yylex( void );
 
 %token <sval> INTERFACE 
 %token <sval> NAME 
+%token <sval> NAMESPACE
 %token <mval> IN 
 %token <mval> OUT 
 %token <mval> INOUT 
@@ -107,10 +111,12 @@ yylex( void );
 
 %%
 
-interface: INTERFACE interface_name interface_body;
+interface: INTERFACE interface_name namespace interface_body;
 
-interface_name:
-                NAME     { set_interface( $1 ); }
+interface_name:	NAME     { set_interface( $1 ); } ;
+
+namespace:	NAMESPACE     { set_namespace( $1 ); }
+	|	/* empty */
         ;
 
 interface_body:
