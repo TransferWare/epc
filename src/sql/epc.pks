@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.3  2004/04/21 11:16:54  gpaulissen
+REMARK  .
+REMARK
 REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
 REMARK  Interface changed
 REMARK
@@ -24,7 +27,7 @@ create or replace package epc as
 
 /* see $EPC_HOME/src/lib/idl_defs.h */
 subtype interface_name_subtype is varchar2(32);
-subtype routine_name_subtype is varchar2(512);
+subtype method_name_subtype is varchar2(512);
 subtype parameter_name_subtype is varchar2(32);
 subtype data_type_subtype is pls_integer;
 subtype parameter_mode_subtype is pls_integer;
