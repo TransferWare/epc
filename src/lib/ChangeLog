@@ -1,0 +1,11 @@
+2003-03-29  Gert-Jan Paulissen  <g.paulissen@chello.nl>
+
+	* epc.pc: Request id 699638 Empty connect string dumps core.
+        * epc.pc: Request id 692220 public synonyms
+	ts_dbug_send/ts_dbug_recv missing.
+	Now any Oracle error will stop the server.
+        * lsnr.c: lsnr.pc move to lsnr.c since it no longer has Embedded
+	SQL statememts.
+	* Makefile.am: lsnr.pc changed into lsnr.c
+	* Makefile.am: added procincludes (lower case).
+
