@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.19  1999/11/25 09:15:17  gpaulissen
+ * Release 1.5
+ *
  * Revision 1.18  1999/11/23 16:05:30  gpaulissen
  * DBUG interface changed.
  *
@@ -250,10 +253,12 @@ EXEC SQL INCLUDE sqlca;
 	EXEC SQL END DECLARE SECTION;
 
 	DBUG_ENTER( "send_result" );
-	DBUG_PRINT( ( __LINE__, "input", "sending result through pipe %s", result_pipe ) );
+	DBUG_PRINT( ( __LINE__, "input", "sending result through pipe '%s'", result_pipe ) );
 
 	sqlca.sqlcode = 0;
 		
+	DBUG_PRINT( ( __LINE__, "info", "call->epc_error: %d", call->epc_error ) );
+
 	if ( call->epc_error != OK )
 	{
 		EXEC SQL BEGIN DECLARE SECTION;
@@ -289,6 +294,8 @@ EXEC SQL INCLUDE sqlca;
 		END-EXEC;
 	}
 
+	DBUG_PRINT( ( __LINE__, "info", "dbms_pipe.send_message: %d", retval ) );
+
 	/* save last sqlcode */
 	call->sqlcode = sqlca.sqlcode;
 
@@ -314,6 +321,8 @@ EXEC SQL INCLUDE sqlca;
 		|| An error has occurred while sending the result: purge the result
 		|| pipe for subsequent calls . Ignore any errors.
 		*/
+
+		DBUG_PRINT( ( __LINE__, "info", "Purging result pipe" ) );
 
 		EXEC SQL WHENEVER SQLERROR CONTINUE;
 		EXEC SQL EXECUTE
@@ -518,6 +527,9 @@ EXEC SQL INCLUDE sqlca;
 	/* log on to database */
 	EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_requests;
 	EXEC SQL CONNECT :logon;
+
+	printf( "Connected to database....\n" );
+	fflush( stdout ); /* flush because of DBUG package */
 
 	for( call.sqlcode = 0; ; call.sqlcode = 0 ) 
 	{ 
