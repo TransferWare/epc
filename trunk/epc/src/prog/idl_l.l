@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.8  2000/01/13 13:34:23  gpaulissen
+ * New version of dbug library used.
+ *
  * Revision 1.7  1999/11/25 09:15:18  gpaulissen
  * Release 1.5
  *
@@ -89,55 +92,55 @@ end_include     "%}"
 
 %%
 
-<COMMENT>{end_comment}                  { DBUG_PRINT((__LINE__, "info", "<COMMENT>{end_comment} '%s'", yytext)); 
+<COMMENT>{end_comment}                  { DBUG_PRINT( "info", ("<COMMENT>{end_comment} '%s'", yytext)); 
                                           BEGIN(NORMAL); }
-<COMMENT>.                              { DBUG_PRINT((__LINE__, "info", "<COMMENT>. '%s'", yytext)); }
-<COMMENT>\n                             { DBUG_PRINT((__LINE__, "info", "<COMMENT>\\n '%s'", yytext)); lineno++; }
+<COMMENT>.                              { DBUG_PRINT( "info", ("<COMMENT>. '%s'", yytext)); }
+<COMMENT>\n                             { DBUG_PRINT( "info", ("<COMMENT>\\n '%s'", yytext)); lineno++; }
 
-<NORMAL>{start_comment}                 { DBUG_PRINT((__LINE__, "info", "<NORMAL>{start_comment} '%s'", yytext));
+<NORMAL>{start_comment}                 { DBUG_PRINT( "info", ("<NORMAL>{start_comment} '%s'", yytext));
                                           BEGIN(COMMENT); }
 
-<INCLUDE>^{end_include}.*\n             { DBUG_PRINT((__LINE__, "info", "<INCLUDE>^{end_include}.*\\n '%s'", yytext));
+<INCLUDE>^{end_include}.*\n             { DBUG_PRINT( "info", ("<INCLUDE>^{end_include}.*\\n '%s'", yytext));
                                           lineno++;
                                           BEGIN(NORMAL); }
 <INCLUDE>.*\n                           { add_include_text( yytext ); 
-                                          DBUG_PRINT((__LINE__, "info", "<INCLUDE>.* '%s'", yytext));
+                                          DBUG_PRINT( "info", ("<INCLUDE>.* '%s'", yytext));
                                           lineno++; }
-<NORMAL>^{start_include}.*\n            { DBUG_PRINT((__LINE__, "info", "<NORMAL>^{start_include}.* '%s'", yytext));
+<NORMAL>^{start_include}.*\n            { DBUG_PRINT( "info", ("<NORMAL>^{start_include}.* '%s'", yytext));
                                           lineno++;
                                           BEGIN(INCLUDE); }
 
-<NORMAL>"interface"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"interface\" '%s'", yytext));
+<NORMAL>"interface"			{ DBUG_PRINT( "info", ("<NORMAL>\"interface\" '%s'", yytext));
                                           return INTERFACE; }
-<NORMAL>"[in]"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"[in]\" '%s'", yytext));
+<NORMAL>"[in]"				{ DBUG_PRINT( "info", ("<NORMAL>\"[in]\" '%s'", yytext));
                                           yylval.ival = C_IN; return IN; }
-<NORMAL>"[out]"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"[out]\" '%s'", yytext));
+<NORMAL>"[out]"				{ DBUG_PRINT( "info", ("<NORMAL>\"[out]\" '%s'", yytext));
                                           yylval.ival = C_OUT; return OUT; }
-<NORMAL>"[inout]"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"[inout]\" '%s'", yytext));
+<NORMAL>"[inout]"			{ DBUG_PRINT( "info", ("<NORMAL>\"[inout]\" '%s'", yytext));
                                           yylval.ival = C_INOUT; return INOUT; }
 
-<NORMAL>"char"[ \t]*"*"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"char\"[ \\t]*\"*\" '%s'", yytext));
+<NORMAL>"char"[ \t]*"*"			{ DBUG_PRINT( "info", ("<NORMAL>\"char\"[ \\t]*\"*\" '%s'", yytext));
                                           yylval.ival = C_STRING; return STRING; }
-<NORMAL>"int"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"int\" '%s'", yytext));
+<NORMAL>"int"				{ DBUG_PRINT( "info", ("<NORMAL>\"int\" '%s'", yytext));
                                           yylval.ival = C_INT; return INT; }
-<NORMAL>"long"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"long\" '%s'", yytext));
+<NORMAL>"long"				{ DBUG_PRINT( "info", ("<NORMAL>\"long\" '%s'", yytext));
                                           yylval.ival = C_LONG; return LONG; }
-<NORMAL>"float"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"float\" '%s'", yytext));
+<NORMAL>"float"				{ DBUG_PRINT( "info", ("<NORMAL>\"float\" '%s'", yytext));
                                           yylval.ival = C_FLOAT; return FLOAT; }
-<NORMAL>"double"			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"double\" '%s'", yytext));
+<NORMAL>"double"			{ DBUG_PRINT( "info", ("<NORMAL>\"double\" '%s'", yytext));
                                           yylval.ival = C_DOUBLE; return DOUBLE; }
-<NORMAL>"void"				{ DBUG_PRINT((__LINE__, "info", "<NORMAL>\"void\" '%s'", yytext));
+<NORMAL>"void"				{ DBUG_PRINT( "info", ("<NORMAL>\"void\" '%s'", yytext));
                                           yylval.ival = C_VOID; return VOID; }
 
-<NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT((__LINE__, "info", "<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
+<NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT( "info", ("<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
                                           yylval.sval = STRDUP((const char*)yytext); return NAME; }
 
-<NORMAL>[{}(),;]			{ DBUG_PRINT((__LINE__, "info", "<NORMAL>[{}(),;] '%s'", yytext));
+<NORMAL>[{}(),;]			{ DBUG_PRINT( "info", ("<NORMAL>[{}(),;] '%s'", yytext));
                                           return yytext[0]; }
 
-<NORMAL>[ \t]+			        { DBUG_PRINT((__LINE__, "info", "<NORMAL>[ \\t]+ '%s'", yytext)); }
+<NORMAL>[ \t]+			        { DBUG_PRINT( "info", ("<NORMAL>[ \\t]+ '%s'", yytext)); }
 
-<NORMAL>\n			        { DBUG_PRINT((__LINE__, "info", "<NORMAL>\\n")); lineno++; }
+<NORMAL>\n			        { DBUG_PRINT( "info", ("<NORMAL>\\n")); lineno++; }
 
 <NORMAL>.				yyerror("invalid character");
 

@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.20  2000/01/13 13:34:22  gpaulissen
+ * New version of dbug library used.
+ *
  * Revision 1.19  1999/11/25 09:15:17  gpaulissen
  * Release 1.5
  *
@@ -214,9 +217,9 @@ receive_error:
 
 end_of_receive_request:
 	call->epc_error = retval;
-	DBUG_PRINT(( __LINE__, "output", 
-		     "sql code: %ld; epc error: %ld", 
-		     (long)call->sqlcode, (long)call->epc_error));
+	DBUG_PRINT( "output", 
+		    ( "sql code: %ld; epc error: %ld", 
+		      (long)call->sqlcode, (long)call->epc_error));
 	DBUG_LEAVE(); 
 	return retval;
 }
@@ -253,11 +256,11 @@ EXEC SQL INCLUDE sqlca;
 	EXEC SQL END DECLARE SECTION;
 
 	DBUG_ENTER( "send_result" );
-	DBUG_PRINT( ( __LINE__, "input", "sending result through pipe '%s'", result_pipe ) );
+	DBUG_PRINT( "input", ( "sending result through pipe '%s'", result_pipe ) );
 
 	sqlca.sqlcode = 0;
 		
-	DBUG_PRINT( ( __LINE__, "info", "call->epc_error: %d", call->epc_error ) );
+	DBUG_PRINT( "info", ( "call->epc_error: %d", call->epc_error ) );
 
 	if ( call->epc_error != OK )
 	{
@@ -294,7 +297,7 @@ EXEC SQL INCLUDE sqlca;
 		END-EXEC;
 	}
 
-	DBUG_PRINT( ( __LINE__, "info", "dbms_pipe.send_message: %d", retval ) );
+	DBUG_PRINT( "info", ( "dbms_pipe.send_message: %d", retval ) );
 
 	/* save last sqlcode */
 	call->sqlcode = sqlca.sqlcode;
@@ -322,7 +325,7 @@ EXEC SQL INCLUDE sqlca;
 		|| pipe for subsequent calls . Ignore any errors.
 		*/
 
-		DBUG_PRINT( ( __LINE__, "info", "Purging result pipe" ) );
+		DBUG_PRINT( "info", ( "Purging result pipe" ) );
 
 		EXEC SQL WHENEVER SQLERROR CONTINUE;
 		EXEC SQL EXECUTE
@@ -336,9 +339,9 @@ EXEC SQL INCLUDE sqlca;
 		END-EXEC;
 	}
 	
-	DBUG_PRINT( (__LINE__, "output", 
-		     "sql code: %ld; retval: %ld", 
-		     (long)call->sqlcode, (long)retval) );
+	DBUG_PRINT( "output", 
+		    ( "sql code: %ld; retval: %ld", 
+		      (long)call->sqlcode, (long)retval) );
 	DBUG_LEAVE();
 	return retval;
 
@@ -456,7 +459,7 @@ EXEC SQL INCLUDE sqlca;
 	return 0;
 
 error:
-	DBUG_PRINT( ( __LINE__, "info", "epc status: %s", get_error_str( call->epc_error ) ) );
+	DBUG_PRINT( "info", ( "epc status: %s", get_error_str( call->epc_error ) ) );
 
 	switch( call->epc_error )
 	{
@@ -471,7 +474,7 @@ error:
 		break;
 	}
 
-	DBUG_PRINT( ( __LINE__, "info", "sql code: %ld", (long)call->sqlcode ) );
+	DBUG_PRINT( "info", ( "sql code: %ld", (long)call->sqlcode ) );
 
 	switch( call->sqlcode )
 	{
@@ -491,9 +494,9 @@ error:
 
 end_of_epc_handle_request:
 
-	DBUG_PRINT( (__LINE__, "output", 
-		     "sql code: %ld; epc status: %s", 
-		     (long)call->sqlcode, get_error_str( call->epc_error ) ) );
+	DBUG_PRINT( "output", 
+		    ( "sql code: %ld; epc status: %s", 
+		      (long)call->sqlcode, get_error_str( call->epc_error ) ) );
 
 	DBUG_LEAVE();
 	return -1;
@@ -539,9 +542,9 @@ EXEC SQL INCLUDE sqlca;
 
 end_of_epc_handle_requests:
 
-	DBUG_PRINT( (__LINE__, "output", 
-		     "sql code: %ld; epc status: %s", 
-		     (long)call.sqlcode, get_error_str( call.epc_error ) ) );
+	DBUG_PRINT( "output", 
+		    ( "sql code: %ld; epc status: %s", 
+		      (long)call.sqlcode, get_error_str( call.epc_error ) ) );
 
 	EXEC SQL WHENEVER SQLERROR CONTINUE;
 	EXEC SQL COMMIT WORK RELEASE;
@@ -615,7 +618,7 @@ epc_error_t epc_set_logon( epc_info_t *epc_info, char *logon )
 			strcpy( epc_info->logon, logon );
 	}
 
-	DBUG_PRINT( ( __LINE__, "output", "status: %d", (int)status ) );
+	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
 
 	DBUG_LEAVE();
 
@@ -648,7 +651,7 @@ epc_error_t epc_set_pipe( epc_info_t *epc_info, char *pipe )
 			strcpy( epc_info->pipe, pipe );
 	}
 
-	DBUG_PRINT( ( __LINE__, "output", "status: %d", (int)status ) );
+	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
 
 	DBUG_LEAVE();
 	return( status );
@@ -685,7 +688,7 @@ epc_error_t epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface 
 		}
 	}
 
-	DBUG_PRINT( ( __LINE__, "output", "status: %d", (int)status ) );
+	DBUG_PRINT( "output", ( "status: %d", (int)status ) );
 
 	DBUG_LEAVE();
 	return( status );
