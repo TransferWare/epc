@@ -3,6 +3,6 @@
 
 #include "epc_defs.h"
 
-error_t EPC_handle_requests( char * pipe );
+extern error_t EPC_handle_requests( char * pipe );
  
 #endif
