@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.20  2004/12/16 16:03:08  gpaulissen
+ * Web services added
+ *
  * Revision 1.19  2004/10/20 13:34:05  gpaulissen
  * make lint
  *
@@ -214,6 +217,8 @@ end_comment     "*/"
 start_include   "%{"
 end_include     "%}"
 
+namespace       ["][^"]+["]
+
 %%
 
 <COMMENT>{end_comment}                  { DBUG_PRINT( "info", ("<COMMENT>{end_comment} '%s'", yytext)); 
@@ -264,6 +269,12 @@ end_include     "%}"
 
 <NORMAL>[A-Za-z][A-Za-z0-9_]*		{ DBUG_PRINT( "info", ("<NORMAL>[A-Za-z][A-Za-z0-9_]* '%s'", yytext));
                                           yylval.sval = strdup((const char*)yytext); return NAME; }
+
+<NORMAL>{namespace}			{ DBUG_PRINT( "info", ("<NORMAL>{namespace} '%s'", yytext));
+					  /* strip " at begin and end */
+                                          yylval.sval = strdup((const char*)yytext+1); 
+					  yylval.sval[strlen(yylval.sval)-1] = '\0';
+					  return NAMESPACE; }
 
 <NORMAL>[{}(),;]			{ DBUG_PRINT( "info", ("<NORMAL>[{}(),;] '%s'", yytext));
                                           return yytext[0]; }

@@ -17,23 +17,16 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = demo.c demo.h demo.c demo.pkb \
-                       demo.pke demo.pks demo.pls
+GENERATED_FILES      = qotd.c qotd.h qotd.c qotd.pkb \
+                       qotd.pke qotd.pks qotd.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
-CLEANFILES           = demo.pls_run
-
-AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
-
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
+CLEANFILES           = qotd.pls_run
 
 EXTRA_DIST           = 
 
-noinst_DATA          = demo.pls_run
-noinst_PROGRAMS      = demo
-demo_SOURCES         = demo.idl main.c
-demo_LDADD           = $(top_builddir)/src/lib/libepc.la
+noinst_DATA          = qotd.pls_run
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
@@ -42,13 +35,10 @@ $(GENERATED_FILES): $(IDL)
 $(IDL):
 	cd $(top_builddir)/src/prog && make all
 
-@SUFFIXES@: .c .idl .pls_run .pls
+@SUFFIXES@: .idl .pls_run .pls
 
-.idl.c:
+.idl.pls:
 	$(IDL) $<
-# Before running the compiler first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
-	@touch $(@:.c=.pls_run)
 
 .pls.pls_run:
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?

@@ -25,7 +25,7 @@ typedef struct
 {
   struct epc__info *epc__info;
   struct epc__call *epc__call;
-  long num_parameters;		/* number of in or in/out parameters parsed yet */
+  long num_parameters;          /* number of in or in/out parameters parsed yet */
 } epc__xml_ctx_t;
 
 typedef struct
@@ -48,7 +48,7 @@ static sword end_document (void *epc__xml_ctx_ptr);
 static
   sword
 start_element (void *epc__xml_ctx_ptr, const oratext * name,
-	       const struct xmlnodes *attrs);
+               const struct xmlnodes *attrs);
 static sword end_element (void *epc__xml_ctx_ptr, const oratext * name);
 
 static
@@ -58,12 +58,12 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len);
 static
   void
 lookup_interface (const char *interface_name, epc__info_t * epc__info,
-		  epc__call_t * epc__call);
+                  epc__call_t * epc__call);
 
 static
   void
 lookup_function (const char *function_name, epc__info_t * epc__info,
-		 epc__call_t * epc__call);
+                 epc__call_t * epc__call);
 
 /* GLOBAL functions */
 
@@ -95,11 +95,11 @@ epc__xml_init (epc__info_t * epc__info)
   xml_info->saxcb = saxcb;
 
   xml_info->xmlctx = xmlinit (&ecode,
-			      NULL,
-			      error_handler,
-			      &xml_info->epc__xml_ctx,
-			      &xml_info->saxcb,
-			      &xml_info->epc__xml_ctx, NULL, NULL, NULL);
+                              NULL,
+                              error_handler,
+                              &xml_info->epc__xml_ctx,
+                              &xml_info->saxcb,
+                              &xml_info->epc__xml_ctx, NULL, NULL, NULL);
 
   DBUG_PRINT ("info", ("xmlctx: %p", xml_info->xmlctx));
   DBUG_LEAVE ();
@@ -116,7 +116,7 @@ epc__xml_done (epc__info_t * epc__info)
   DBUG_ENTER ("epc__xml_done");
   DBUG_PRINT ("info", ("xmlctx: %p", xml_info->xmlctx));
 
-  ecode = xmlterm (xml_info->xmlctx);	/* terminate XML package */
+  ecode = xmlterm (xml_info->xmlctx);   /* terminate XML package */
   free (xml_info);
   epc__info->xml_info = NULL;
 
@@ -127,10 +127,10 @@ epc__xml_done (epc__info_t * epc__info)
 
 unsigned int
 epc__xml_parse (epc__info_t * epc__info, epc__call_t * epc__call,
-		const char *buf, const size_t len)
+                const char *buf, const size_t len)
 {
   uword ecode = XMLERR_OK;
-  ub4 flags = XML_FLAG_DISCARD_WHITESPACE;	/* | XML_FLAG_VALIDATE; */
+  ub4 flags = XML_FLAG_DISCARD_WHITESPACE;      /* | XML_FLAG_VALIDATE; */
   xml_info_t *xml_info = (xml_info_t *) epc__info->xml_info;
 
   DBUG_ENTER ("epc__xml_parse");
@@ -202,8 +202,8 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
     {
       /* server side error */
       (void) snprintf (epc__call->msg_response,
-		       MAX_MSG_RESPONSE_LEN + 1,
-		       SOAP_HEADER_START "<SOAP-ENV:Fault>\
+                       MAX_MSG_RESPONSE_LEN + 1,
+                       SOAP_HEADER_START "<SOAP-ENV:Fault>\
 <faultcode>Server</faultcode><faultstring>%s</faultstring>\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, (char *) msg);
     }
@@ -211,8 +211,8 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
     {
       /* client side error */
       (void) snprintf (epc__call->msg_response,
-		       MAX_MSG_RESPONSE_LEN + 1,
-		       SOAP_HEADER_START "<SOAP-ENV:Fault>\
+                       MAX_MSG_RESPONSE_LEN + 1,
+                       SOAP_HEADER_START "<SOAP-ENV:Fault>\
 <faultcode>Client</faultcode><faultstring>%s</faultstring>\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, (char *) msg);
     }
@@ -242,16 +242,16 @@ end_document (void *epc__xml_ctx_ptr)
   int nr;
 
   dbug_print (__LINE__, "info", "method: %s",
-	      (epc__call->function !=
-	       NULL ? epc__call->function->name : "(null)"));
+              (epc__call->function !=
+               NULL ? epc__call->function->name : "(null)"));
 
   if (epc__call->function != NULL)
     {
       for (nr = 0; nr < epc__call->function->num_parameters; nr++)
-	{
-	  dbug_print (__LINE__, "info", "argument %d; name: %s",
-		      nr, epc__call->function->parameters[nr].name);
-	}
+        {
+          dbug_print (__LINE__, "info", "argument %d; name: %s",
+                      nr, epc__call->function->parameters[nr].name);
+        }
     }
 
   dbug_leave (__LINE__, NULL);
@@ -261,12 +261,12 @@ end_document (void *epc__xml_ctx_ptr)
 
 static sword
 start_element (void *epc__xml_ctx_ptr, const oratext * name,
-	       const struct xmlnodes *attrs)
+               const struct xmlnodes *attrs)
 {
   epc__xml_ctx_t *epc__xml_ctx = (epc__xml_ctx_t *) epc__xml_ctx_ptr;
   epc__info_t *epc__info = epc__xml_ctx->epc__info;
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
-  char element_type = 0;	/* (S)oap, (M)ethod, (A)rgument */
+  char element_type = 0;        /* (S)oap, (M)ethod, (A)rgument */
   const size_t len = strlen ((const char *) name);
   char *interface_name = NULL, *function_name = NULL, *argument_name = NULL;
 
@@ -281,160 +281,160 @@ start_element (void *epc__xml_ctx_ptr, const oratext * name,
   else
     {
       if (epc__call->function == NULL)
-	{
-	  dbug_print (__LINE__, "info", "method: %s", (char *) name);
+        {
+          dbug_print (__LINE__, "info", "method: %s", (char *) name);
 
-	  function_name = (char *) name;
-	  element_type = 'M';
-	}
+          function_name = (char *) name;
+          element_type = 'M';
+        }
       else
-	{
-	  dbug_print (__LINE__, "info", "argument: %s", (char *) name);
+        {
+          dbug_print (__LINE__, "info", "argument: %s", (char *) name);
 
-	  argument_name = (char *) name;
-	  element_type = 'A';
-	}
+          argument_name = (char *) name;
+          element_type = 'A';
+        }
 
       if (attrs != NULL)
-	{
-	  size_t idx;
-	  xmlnode *attr;
-	  dword_t nr;
+        {
+          size_t idx;
+          xmlnode *attr;
+          dword_t nr;
 
-	  for (idx = 0; idx < numAttributes (attrs); idx++)
-	    {
-	      attr = getAttributeIndex (attrs, idx);
+          for (idx = 0; idx < numAttributes (attrs); idx++)
+            {
+              attr = getAttributeIndex (attrs, idx);
 
-	      switch (element_type)
-		{
-		case 'M':	/* new method */
-		  /* namespace is the interface name */
-		  if (strcmp ((char *) getAttrName (attr), "xmlns") == 0)
-		    {
-		      interface_name = (char *) getAttrValue (attr);
-		      lookup_interface (interface_name, epc__info, epc__call);
-		      lookup_function (function_name, epc__info, epc__call);
+              switch (element_type)
+                {
+                case 'M':       /* new method */
+                  /* namespace is the interface name */
+                  if (strcmp ((char *) getAttrName (attr), "xmlns") == 0)
+                    {
+                      interface_name = (char *) getAttrValue (attr);
+                      lookup_interface (interface_name, epc__info, epc__call);
+                      lookup_function (function_name, epc__info, epc__call);
 
-		      switch (epc__call->epc__error)
-			{
-			case INTERFACE_UNKNOWN:
-			  /* construct the response */
-			  (void) snprintf (epc__call->msg_response,
-					   MAX_MSG_RESPONSE_LEN + 1,
-					   SOAP_HEADER_START "<SOAP-ENV:Fault>\
+                      switch (epc__call->epc__error)
+                        {
+                        case INTERFACE_UNKNOWN:
+                          /* construct the response */
+                          (void) snprintf (epc__call->msg_response,
+                                           MAX_MSG_RESPONSE_LEN + 1,
+                                           SOAP_HEADER_START "<SOAP-ENV:Fault>\
 <faultcode>Client</faultcode><faultstring>interface %s unknown</faultstring>\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, interface_name);
-			  break;
+                          break;
 
-			case FUNCTION_UNKNOWN:
-			  /* construct the response */
-			  (void) snprintf (epc__call->msg_response,
-					   MAX_MSG_RESPONSE_LEN + 1,
-					   SOAP_HEADER_START "<SOAP-ENV:Fault>\
+                        case FUNCTION_UNKNOWN:
+                          /* construct the response */
+                          (void) snprintf (epc__call->msg_response,
+                                           MAX_MSG_RESPONSE_LEN + 1,
+                                           SOAP_HEADER_START "<SOAP-ENV:Fault>\
 <faultcode>Client</faultcode><faultstring>function %s unknown</faultstring>\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, function_name);
-			  break;
+                          break;
 
-			case OK:
-			  break;
+                        case OK:
+                          break;
 
-			default:
-			  assert (epc__call->epc__error == INTERFACE_UNKNOWN
-				  || epc__call->epc__error == FUNCTION_UNKNOWN
-				  || epc__call->epc__error == OK);
-			}
+                        default:
+                          assert (epc__call->epc__error == INTERFACE_UNKNOWN
+                                  || epc__call->epc__error == FUNCTION_UNKNOWN
+                                  || epc__call->epc__error == OK);
+                        }
 
-		      /* nullify all parameters */
+                      /* nullify all parameters */
 
-		      if (epc__call->interface != NULL &&
-			  epc__call->function != NULL)
-			{
-			  for (nr = 0;
-			       nr < epc__call->function->num_parameters; nr++)
-			    switch (epc__call->function->parameters[nr].type)
-			      {
-			      case C_STRING:
-				*((char *) epc__call->function->
-				  parameters[nr].data) = '\0';
-				break;
+                      if (epc__call->interface != NULL &&
+                          epc__call->function != NULL)
+                        {
+                          for (nr = 0;
+                               nr < epc__call->function->num_parameters; nr++)
+                            switch (epc__call->function->parameters[nr].type)
+                              {
+                              case C_STRING:
+                                *((char *) epc__call->function->
+                                  parameters[nr].data) = '\0';
+                                break;
 
-			      case C_INT:
-				*((idl_int_t *) epc__call->function->
-				  parameters[nr].data) = 0;
-				break;
+                              case C_INT:
+                                *((idl_int_t *) epc__call->function->
+                                  parameters[nr].data) = 0;
+                                break;
 
-			      case C_LONG:
-				*((idl_long_t *) epc__call->function->
-				  parameters[nr].data) = 0L;
-				break;
+                              case C_LONG:
+                                *((idl_long_t *) epc__call->function->
+                                  parameters[nr].data) = 0L;
+                                break;
 
-			      case C_FLOAT:
-				*((idl_float_t *) epc__call->function->
-				  parameters[nr].data) = 0.0F;
-				break;
+                              case C_FLOAT:
+                                *((idl_float_t *) epc__call->function->
+                                  parameters[nr].data) = 0.0F;
+                                break;
 
-			      case C_DOUBLE:
-				*((idl_double_t *) epc__call->function->
-				  parameters[nr].data) = 0.0F;
-				break;
+                              case C_DOUBLE:
+                                *((idl_double_t *) epc__call->function->
+                                  parameters[nr].data) = 0.0F;
+                                break;
 
-			      case C_VOID:
-				break;
+                              case C_VOID:
+                                break;
 
-			      default:
-				assert (epc__call->function->parameters[nr].
-					type >= C_DATATYPE_MIN
-					&& epc__call->function->
-					parameters[nr].type <=
-					C_DATATYPE_MAX);
-			      }
-			}
-		    }
-		  break;
+                              default:
+                                assert (epc__call->function->parameters[nr].
+                                        type >= C_DATATYPE_MIN
+                                        && epc__call->function->
+                                        parameters[nr].type <=
+                                        C_DATATYPE_MAX);
+                              }
+                        }
+                    }
+                  break;
 
-		case 'A':	/* new argument */
-		  /* get next in or inout argument */
-		  for (nr = epc__xml_ctx->num_parameters;
-		       nr < epc__call->function->num_parameters; nr++)
-		    {
-		      if (epc__call->function->parameters[nr].mode != C_OUT)	/* in or in/out */
-			{
-			  dbug_print (__LINE__, "info",
-				      "parameter[%d]: %s; argument_name: %s",
-				      (int) nr,
-				      epc__call->function->parameters[nr].
-				      name, argument_name);
-			  assert (strcmp
-				  (epc__call->function->parameters[nr].name,
-				   argument_name) == 0);
-			  break;	/* found */
-			}
-		    }
+                case 'A':       /* new argument */
+                  /* get next in or inout argument */
+                  for (nr = epc__xml_ctx->num_parameters;
+                       nr < epc__call->function->num_parameters; nr++)
+                    {
+                      if (epc__call->function->parameters[nr].mode != C_OUT)    /* in or in/out */
+                        {
+                          dbug_print (__LINE__, "info",
+                                      "parameter[%d]: %s; argument_name: %s",
+                                      (int) nr,
+                                      epc__call->function->parameters[nr].
+                                      name, argument_name);
+                          assert (strcmp
+                                  (epc__call->function->parameters[nr].name,
+                                   argument_name) == 0);
+                          break;        /* found */
+                        }
+                    }
 
-		  assert (nr < epc__call->function->num_parameters);	/* should be found */
-		  if (nr >= epc__call->function->num_parameters)
-		    {
-		      epc__call->epc__error = PARAMETER_UNKNOWN;
-		    }
-		  else
-		    {
-		      epc__xml_ctx->num_parameters = nr + 1;	/* next time: search from next parameter */
-		    }
-		  break;
+                  assert (nr < epc__call->function->num_parameters);    /* should be found */
+                  if (nr >= epc__call->function->num_parameters)
+                    {
+                      epc__call->epc__error = PARAMETER_UNKNOWN;
+                    }
+                  else
+                    {
+                      epc__xml_ctx->num_parameters = nr + 1;    /* next time: search from next parameter */
+                    }
+                  break;
 
-		case 'S':	/* SOAP element */
-		default:
-		  break;
-		}
-	      dbug_print (__LINE__, "info", "attribute %s: %s",
-			  (char *) getAttrName (attr),
-			  (char *) getAttrValue (attr));
-	    }
-	}
+                case 'S':       /* SOAP element */
+                default:
+                  break;
+                }
+              dbug_print (__LINE__, "info", "attribute %s: %s",
+                          (char *) getAttrName (attr),
+                          (char *) getAttrValue (attr));
+            }
+        }
     }
 
   dbug_print (__LINE__, "info", "epc__error: %d",
-	      (int) epc__call->epc__error);
+              (int) epc__call->epc__error);
 
   return XMLERR_OK;
 }
@@ -457,7 +457,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
   assert (epc__call != NULL);
   assert (epc__call->function != NULL);
   assert (nr >= 0 && nr < epc__call->function->num_parameters);
-  assert (epc__call->function->parameters[nr].mode != C_OUT);	/* in or in/out */
+  assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
   dbug_print (__LINE__, "info", "element content: %*s", len, (char *) ch);
 
@@ -466,41 +466,41 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
     case C_STRING:
       assert (len < epc__call->function->parameters[nr].size);
       if (len >= epc__call->function->parameters[nr].size)
-	{
-	  len = epc__call->function->parameters[nr].size - 1;
-	}
+        {
+          len = epc__call->function->parameters[nr].size - 1;
+        }
       (void) strncpy ((char *) epc__call->function->parameters[nr].data,
-		      (char *) ch, len);
+                      (char *) ch, len);
       ((char *) epc__call->function->parameters[nr].data)[len] = '\0';
       break;
 
     case C_INT:
       *((idl_int_t *) epc__call->function->parameters[nr].data) =
-	(int) strtol (ch, NULL, 10);
+        (int) strtol (ch, NULL, 10);
       break;
 
     case C_LONG:
       *((idl_long_t *) epc__call->function->parameters[nr].data) =
-	strtol (ch, NULL, 10);
+        strtol (ch, NULL, 10);
       break;
 
     case C_FLOAT:
       *((idl_float_t *) epc__call->function->parameters[nr].data) =
-	strtof (ch, NULL);
+        strtof (ch, NULL);
       break;
 
     case C_DOUBLE:
       *((idl_double_t *) epc__call->function->parameters[nr].data) =
-	strtod (ch, NULL);
+        strtod (ch, NULL);
       break;
 
-    case C_VOID:		/* impossible */
+    case C_VOID:                /* impossible */
       assert (epc__call->function->parameters[nr].type != C_VOID);
       break;
 
     default:
       assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN &&
-	      epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+              epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
     }
 
   return XMLERR_OK;
@@ -508,7 +508,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
 
 static void
 lookup_interface (const char *interface_name, epc__info_t * epc__info,
-		  epc__call_t * epc__call)
+                  epc__call_t * epc__call)
 {
   int inr;
   int result;
@@ -517,14 +517,14 @@ lookup_interface (const char *interface_name, epc__info_t * epc__info,
   for (inr = 0, epc__call->interface = NULL; inr < epc__info->num_interfaces;
        inr++)
     if ((result =
-	 strcmp (interface_name, epc__info->interfaces[inr]->name)) == 0)
+         strcmp (interface_name, epc__info->interfaces[inr]->name)) == 0)
       {
-	epc__call->interface = epc__info->interfaces[inr];
-	break;
+        epc__call->interface = epc__info->interfaces[inr];
+        break;
       }
-    else if (result < 0)	/* interfaces sorted ascending */
+    else if (result < 0)        /* interfaces sorted ascending */
       {
-	break;
+        break;
       }
 
   if (epc__call->interface == NULL)
@@ -537,7 +537,7 @@ lookup_interface (const char *interface_name, epc__info_t * epc__info,
 
 static void
 lookup_function (const char *function_name, epc__info_t * epc__info,
-		 epc__call_t * epc__call)
+                 epc__call_t * epc__call)
 {
   int fnr;
   int result;
@@ -550,18 +550,18 @@ lookup_function (const char *function_name, epc__info_t * epc__info,
     {
       /* get the function */
       for (fnr = 0, epc__call->function = NULL;
-	   fnr < epc__call->interface->num_functions; fnr++)
-	if ((result =
-	     strcmp (function_name,
-		     epc__call->interface->functions[fnr].name)) == 0)
-	  {
-	    epc__call->function = &epc__call->interface->functions[fnr];
-	    break;
-	  }
-	else if (result < 0)	/* interface functions sorted ascending */
-	  {
-	    break;
-	  }
+           fnr < epc__call->interface->num_functions; fnr++)
+        if ((result =
+             strcmp (function_name,
+                     epc__call->interface->functions[fnr].name)) == 0)
+          {
+            epc__call->function = &epc__call->interface->functions[fnr];
+            break;
+          }
+        else if (result < 0)    /* interface functions sorted ascending */
+          {
+            break;
+          }
     }
 
   if (epc__call->function == NULL)

@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.8  2004/12/16 16:03:24  gpaulissen
+REMARK  Web services added
+REMARK
 REMARK  Revision 1.7  2004/10/21 10:37:08  gpaulissen
 REMARK  * make lint
 REMARK  * error reporting enhanced
@@ -39,6 +42,7 @@ subtype connection_method_subtype is pls_integer;
 
 CONNECTION_METHOD_DBMS_PIPE constant connection_method_subtype := 1;
 CONNECTION_METHOD_UTL_TCP constant connection_method_subtype := 2;
+CONNECTION_METHOD_UTL_HTTP constant connection_method_subtype := 3;
 
 -- types
 type epc_info_rectype is record (
@@ -46,6 +50,7 @@ type epc_info_rectype is record (
   connection_method connection_method_subtype default CONNECTION_METHOD_DBMS_PIPE,
   request_pipe epc.pipe_name_subtype default 'epc_request_pipe',
   tcp_connection utl_tcp.connection,
+  http_connection http_connection_subtype,
   msg varchar2(4000),
   doc xmltype, /* output */
   send_timeout pls_integer default 10,
@@ -132,6 +137,32 @@ begin
   end if;
   raise no_data_found;
 end get_epc_key;
+
+procedure set_connection_info
+(
+  p_epc_key in epc_key_subtype
+, p_connection in http_connection_subtype
+)
+is
+begin
+  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_HTTP;
+  epc_info_tab(p_epc_key).http_connection := p_connection;
+end set_connection_info;
+
+procedure get_connection_info
+(
+  p_epc_key in epc_key_subtype
+, p_connection out http_connection_subtype
+)
+is
+begin
+  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_HTTP
+  then
+    p_connection := epc_info_tab(p_epc_key).http_connection;
+  else
+    raise no_data_found;
+  end if;
+end get_connection_info;
 
 procedure set_connection_info
 (
@@ -303,7 +334,12 @@ begin
     dbms_pipe.pack_message( g_result_pipe );
   end if;
 
-  l_retval := dbms_pipe.send_message( epc_info_tab(p_epc_key).request_pipe, epc_info_tab(p_epc_key).send_timeout );
+  l_retval := 
+    dbms_pipe.send_message
+    ( 
+      epc_info_tab(p_epc_key).request_pipe
+    , epc_info_tab(p_epc_key).send_timeout 
+    );
   if l_retval <> 0
   then
     raise e_send_error;
@@ -317,6 +353,42 @@ exception
                           'Current message number: ' || g_msg_seq );
     raise epc.e_comm_error;
 end send_request_dbms_pipe;
+
+procedure send_request_utl_http( 
+  p_epc_key in epc_key_subtype
+, p_soap_request in varchar2
+, p_soap_action in varchar2
+)
+is
+begin
+  epc_info_tab(p_epc_key).http_connection.http_req := 
+    utl_http.begin_request
+    (
+      epc_info_tab(p_epc_key).http_connection.url
+    , epc_info_tab(p_epc_key).http_connection.method
+    , epc_info_tab(p_epc_key).http_connection.version
+    );
+  utl_http.set_header
+  (
+    epc_info_tab(p_epc_key).http_connection.http_req
+  , 'Content-Type', 'text/xml'
+  );
+  utl_http.set_header
+  (
+    epc_info_tab(p_epc_key).http_connection.http_req
+  , 'Content-Length', length(p_soap_request)
+  );
+  utl_http.set_header
+  (
+    epc_info_tab(p_epc_key).http_connection.http_req
+  , 'SOAPAction', p_soap_action
+  );
+  utl_http.write_text
+  (
+    epc_info_tab(p_epc_key).http_connection.http_req
+  , p_soap_request
+  );
+end send_request_utl_http;
 
 procedure show_envelope(p_msg in varchar2) as
   l_idx pls_integer;
@@ -357,12 +429,21 @@ begin
 ||p_method_name
 ||'></SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
-  epc_info_tab(p_epc_key).doc := xmltype.createxml( epc_info_tab(p_epc_key).msg );
+  epc_info_tab(p_epc_key).doc := 
+    xmltype.createxml( epc_info_tab(p_epc_key).msg );
   -- show_envelope(epc_info_tab(p_epc_key).doc.getstringval());
 
   if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
     send_request_dbms_pipe(p_epc_key, epc_info_tab(p_epc_key).msg, p_oneway);
+  elsif epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_HTTP
+  then
+    send_request_utl_http
+    ( 
+      p_epc_key
+    , epc_info_tab(p_epc_key).msg
+    , epc_info_tab(p_epc_key).interface_name || '#' || p_method_name
+    );
   end if;
 end send_request;
 
@@ -376,7 +457,12 @@ is
 
   e_recv_error exception;
 begin
-  l_retval := dbms_pipe.receive_message( g_result_pipe, epc_info_tab(p_epc_key).recv_timeout );
+  l_retval :=
+    dbms_pipe.receive_message
+    ( 
+      g_result_pipe
+    , epc_info_tab(p_epc_key).recv_timeout 
+    );
   if l_retval <> 0
   then
     raise e_recv_error;
@@ -410,6 +496,25 @@ exception
     raise epc.e_comm_error;
 end recv_response_dbms_pipe;
 
+procedure recv_response_utl_http( 
+  p_epc_key in epc_key_subtype
+)
+is
+  http_resp utl_http.resp;
+begin
+  http_resp := 
+    utl_http.get_response(epc_info_tab(p_epc_key).http_connection.http_req);
+  begin
+    utl_http.read_text(http_resp, epc_info_tab(p_epc_key).msg);
+    utl_http.end_response(http_resp);
+  exception
+    when others
+    then
+      utl_http.end_response(http_resp);
+      raise;
+  end;
+end recv_response_utl_http;
+
 procedure check_fault(p_doc in out nocopy xmltype) as
   fault_node   xmltype;
   fault_code   varchar2(256);
@@ -418,10 +523,18 @@ begin
    fault_node := p_doc.extract('/SOAP-ENV:Fault',
      'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/');
    if (fault_node is not null) then
-     fault_code := fault_node.extract('/SOAP-ENV:Fault/faultcode/child::text()',
-       'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/').getstringval();
-     fault_string := fault_node.extract('/SOAP-ENV:Fault/faultstring/child::text()',
-       'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/').getstringval();
+     fault_code := 
+       fault_node.extract
+       (
+         '/SOAP-ENV:Fault/faultcode/child::text()'
+       , 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/'
+       ).getstringval();
+     fault_string := 
+       fault_node.extract
+       (
+         '/SOAP-ENV:Fault/faultstring/child::text()'
+       , 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/'
+       ).getstringval();
      raise_application_error(-20000, fault_code || ' - ' || fault_string);
    end if;
 end check_fault;
@@ -435,6 +548,9 @@ begin
   if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
     recv_response_dbms_pipe(p_epc_key);
+  elsif epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_HTTP
+  then
+    recv_response_utl_http(p_epc_key);
   end if;
   epc_info_tab(p_epc_key).doc := xmltype.createxml( epc_info_tab(p_epc_key).msg );
   epc_info_tab(p_epc_key).doc :=
@@ -453,9 +569,28 @@ procedure get_response_parameter
 )
 is
   l_value epc.string_subtype;
+  l_xml XMLType;
 begin
-  l_value := epc_info_tab(p_epc_key).doc.extract('//'||p_name||'/child::text()',
-      'xmlns="'||epc_info_tab(p_epc_key).interface_name||'"').getstringval();
+  l_xml := 
+    epc_info_tab(p_epc_key).doc.extract
+    ( 
+      '//'||p_name||'/child::text()'
+    , 'xmlns="'||epc_info_tab(p_epc_key).interface_name||'"'
+    );
+
+  /* GJP 16-12-2004 Web services add the ns1 namespace to the response */
+  if l_xml is null
+  then
+    l_xml := 
+      epc_info_tab(p_epc_key).doc.extract
+      (
+        '//'||p_name||'/child::text()'
+      , 'xmlns:ns1="'||epc_info_tab(p_epc_key).interface_name||'"'
+      );
+  end if;
+
+  l_value := l_xml.getstringval();
+
   if instr(l_value, g_cdata_tag_start) = 1
   and instr(l_value, g_cdata_tag_end, length(l_value) - length(g_cdata_tag_end) + 1) > 0
   then
@@ -479,9 +614,16 @@ procedure get_response_parameter
 , p_value out number
 )
 is
+  l_value epc.string_subtype;
 begin
-  p_value := to_number(epc_info_tab(p_epc_key).doc.extract('//'||p_name||'/child::text()',
-      'xmlns="'||epc_info_tab(p_epc_key).interface_name||'"').getstringval());
+  epc_clnt.get_response_parameter
+  (
+    p_epc_key => p_epc_key
+  , p_name => p_name
+  , p_data_type => p_data_type
+  , p_value => l_value
+  );
+  p_value := to_number(l_value);
 end get_response_parameter;
 
 end epc_clnt;

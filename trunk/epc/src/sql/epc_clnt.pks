@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.7  2004/12/16 16:03:24  gpaulissen
+REMARK  Web services added
+REMARK
 REMARK  Revision 1.6  2004/10/20 20:38:44  gpaulissen
 REMARK  make lint
 REMARK
@@ -31,7 +34,7 @@ create or replace package epc_clnt as
 -- This package is used to implement the client side of RPC like functionality
 -- on an Oracle database.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (DBMS_PIPE) and TCP/IP (UTL_TCP).
+-- supported are database pipes (DBMS_PIPE), HTTP (utl_http) and TCP/IP (UTL_TCP).
 --
 -- The flow of procedure calls will typically look like this:
 -- 1) Set connection information.
@@ -51,6 +54,15 @@ create or replace package epc_clnt as
 */
 
 subtype epc_key_subtype is binary_integer;
+
+type http_connection_rectype is record (
+  url varchar2(4000) /* http://... */
+, method varchar2(10) default 'POST'
+, version varchar2(10) default utl_http.http_version_1_1
+, http_req utl_http.req
+);
+
+subtype http_connection_subtype is http_connection_rectype;
 
 /**
 -- Register an interface
@@ -77,6 +89,33 @@ return epc_key_subtype;
 /* 
 || Connection related functions/procedures.
 */
+
+/**
+-- Set the connection type to HTTP and store the HTTP
+-- connection info for later use. 
+-- 
+-- @param p_epc_key     The key
+-- @param p_connection  The HTTP connection info.
+*/
+procedure set_connection_info
+(
+  p_epc_key in epc_key_subtype
+, p_connection in http_connection_subtype
+);
+
+/**
+-- Get the HTTP connection info. 
+-- 
+-- @param p_epc_key     The key
+-- @param p_connection  The HTTP connection info
+--
+-- @exception no_data_found  connection method is not utl_http
+*/
+procedure get_connection_info
+(
+  p_epc_key in epc_key_subtype
+, p_connection out http_connection_subtype
+);
 
 /**
 -- Set the connection type to TCP/IP and store the open TCP/IP

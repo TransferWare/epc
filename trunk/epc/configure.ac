@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[4.2.0],[g.paulissen@chello.nl])
+AC_INIT([epc],[4.3.0],[g.paulissen@chello.nl])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -91,7 +91,7 @@ AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
 AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
 AC_CONFIG_FILES([Makefile test/Makefile])
-AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile])
+AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile examples/soap/Makefile])
 AC_CONFIG_FILES([doc/Makefile utils/Makefile])dnl
 
 AC_OUTPUT
