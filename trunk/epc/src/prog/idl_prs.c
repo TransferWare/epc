@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.35  2004/10/21 11:02:40  gpaulissen
+ * length checking added to PL/SQL
+ *
  * Revision 1.34  2004/10/20 13:34:05  gpaulissen
  * make lint
  *
@@ -501,17 +504,21 @@ print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang, c
         case C_LONG:
         case C_FLOAT:
         case C_DOUBLE:
-          (void) fprintf( pout, "%s %s", 
+          (void) fprintf( pout, "l_%s %s", 
                           parm->name, 
                           get_syntax( parm->datatype, PLSQL ) );
           break;
           
         case C_STRING:
-          (void) fprintf( pout, "%s %s(%ld)", 
+          (void) fprintf( pout, "l_%s VARCHAR2(%ld)", 
                           parm->name, 
-                          get_syntax( parm->datatype, PLSQL ), 
                           parm->size );
           break;
+        }
+      if ( parm->mode == C_IN || parm->mode == C_INOUT )
+        {
+          (void) fprintf( pout, " := %s", 
+                          parm->name );
         }
       break;
     }
@@ -625,9 +632,17 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun )
 
   DBUG_ENTER( "generate_plsql_function_body" );
 
-  /* do we need it? */
   generate_plsql_function( pout, fun );
   (void) fprintf( pout, "\n  IS\n" );
+
+  /* define local variables for all parameters: needed for bounds checking */
+  for ( nr = 0; nr < fun->num_parameters; nr++ ) {
+    parm = fun->parameters[nr];
+
+    (void) fprintf( pout, "    " );
+    print_variable_definition( pout, parm, PLSQL, (int)nr );
+    (void) fprintf( pout, ";\n" );
+  }
 
   /* RETURN VARIABLE */
   if ( fun->return_value.datatype != C_VOID )
@@ -648,7 +663,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun )
 
     if ( parm->mode != C_OUT )
       (void) fprintf( pout, 
-                      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s);\n", 
+                      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, l_%s);\n", 
                       parm->name, 
                       get_constant_name(parm->datatype, PLSQL), 
                       parm->name );
@@ -672,9 +687,11 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun )
       if ( parm->mode != C_IN ) 
         {
           (void) fprintf( pout, 
-                          "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n", 
+                          "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n    %s := l_%s;\n", 
                           parm->name, 
                           get_constant_name(parm->datatype, PLSQL), 
+                          parm->name, 
+                          parm->name, 
                           parm->name );
         }
     }
@@ -682,12 +699,12 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun )
   if ( fun->return_value.datatype != C_VOID ) 
     {
       (void) fprintf( pout, 
-                      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n", 
+                      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n", 
                       fun->return_value.name,
                       get_constant_name(fun->return_value.datatype, PLSQL),
                       fun->return_value.name );
       (void) fprintf( pout, 
-                      "    RETURN %s;\n", 
+                      "    RETURN l_%s;\n", 
                       fun->return_value.name );
     }
 
