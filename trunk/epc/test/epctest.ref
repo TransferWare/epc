@@ -1,0 +1,37 @@
+SQL> @epctest
+proc01
+i_par1: dhsd
+io_par2: 1234
+result: abcd
+io_par2: hjfgeljaujfd
+o_par3: dfgfhahfmkghjfvsbvfhjfgeljaujfd
+ real: 60
+proc02
+io_par1: 99
+i_par3: 1
+result: -1
+io_par1: 100
+o_par2: 199
+ real: 110
+proc03
+i_par2: 10.111
+io_par3: 99.09
+result: 3473.686
+o_par1: 100.9998
+io_par3: 13478.54754
+ real: 110
+proc04
+i_par1: 232367.44
+io_par2: 1234.99999
+result: 33.4500007629395
+io_par2: 33.9900016784668
+o_par3: -1.87999999523163
+ real: 110
+Performance test doing a null block
+ real: 0
+Performance test doing N number of calls doing nothing
+Enter value for 1: 1
+old   2: 	FOR	v_nr IN 1..&1
+new   2: 	FOR	v_nr IN 1..1
+ real: 110
+SQL> spool off
