@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.28  2002/12/01 20:05:30  gpaulissen
+ * Autoconf modifications
+ *
  * Revision 1.27  2002/10/31 22:21:20  gpaulissen
  * Release 3.0.0a
  *
@@ -334,31 +337,27 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
 
   EXEC SQL BEGIN DECLARE SECTION;
   char * request_pipe = epc_info->pipe;
+  short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
   EXEC SQL END DECLARE SECTION;
-
-  static int first_time = 1;
+  long retval = -1L;
 
   DBUG_ENTER( "epc_handle_request" );
 
-  if ( first_time ) {
+  if ( epc_info->first_time != 0 ) {
 
     EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_request;
 
-    if ( request_pipe != NULL ) { 
-      EXEC SQL EXECUTE
-      BEGIN
-        epc.set_request_pipe( :request_pipe );
-      END;
-      END-EXEC;
-    } 
-
     EXEC SQL EXECUTE
     BEGIN
+      IF ( :request_pipe:request_pipe_nl IS NOT NULL )
+      THEN
+        epc.set_request_pipe( :request_pipe );
+      END IF;
       epc.empty_pipe( epc.get_request_pipe, 0 );
     END;
     END-EXEC;
 
-    first_time = 0;
+    epc_info->first_time = 0;
   }
 
   /* receive the request */
@@ -385,8 +384,8 @@ epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
     goto error;
 
   /* call->epc_error == OK */
-  DBUG_LEAVE();
-  return 0;
+  retval = 0;
+  goto end_of_epc_handle_request;
 
 error:
   DBUG_PRINT( "info", ( "epc status: %s", get_error_str( call->epc_error ) ) );
@@ -418,9 +417,8 @@ error:
       goto end_of_epc_handle_request;
       break;
     }
-
-  DBUG_LEAVE();
-  return 0;
+  retval = 0;
+  goto end_of_epc_handle_request;
 
 end_of_epc_handle_request:
 
@@ -429,7 +427,7 @@ end_of_epc_handle_request:
                 (long)call->sqlcode, get_error_str( call->epc_error ) ) );
 
   DBUG_LEAVE();
-  return -1;
+  return retval;
 }
 
 
@@ -497,6 +495,7 @@ epc_init( void )
     {
       epc_info->logon = NULL;
       epc_info->pipe = NULL;
+      epc_info->first_time = 1;
       epc_info->num_interfaces = 0;
       epc_info->interfaces = NULL;
     }

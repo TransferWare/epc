@@ -17,6 +17,8 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
+MOSTLYCLEANFILES     = demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
+
 AUTOMAKE_OPTIONS     = ../../src/lib/ansi2knr
 
 INCLUDES	     = -I$(top_builddir) -I$(top_srcdir) -I../lib
@@ -26,6 +28,17 @@ demo_SOURCES         = demo.c demo.h
 demo_LDADD           = -ldbug
 
 #AM_CPPFLAGS          = -I../src/lib
+
+../../src/prog/idl:
+	cd `dirname $@` && make
+
+demo.pc: demo.idl ../../src/prog/idl
+	../../src/prog/idl $<
+
+@SUFFIXES@: .c .pc
+
+.pc.c:
+	@PROC@ @PROCFLAGS@ iname=$< oname=$@
 
 EXTRA_DIST           = Imakefile demo.pks demo.pkb demo.pke demo.pls demo.pc demo.idl
 

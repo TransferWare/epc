@@ -20,11 +20,91 @@ dnl
 # - PROCFLAGS     PRO*C compiler flags
 # - PROCINCLUDES  PRO*C compiler includes
 
+# Note: PROC command line options
+# 
+# Pro*C/C++: Release 8.1.7.0.0 - Production on Zo Dec 1 18:04:36 2002
+# 
+# (c) Copyright 2000 Oracle Corporation.  All rights reserved.
+# 
+# Standaardwaarden voor optie komen uit: C:\oracle\ora81\precomp\admin\pcscfg.cfg
+# 
+# Naam van optie Huidige waarde Beschrijving
+# -------------------------------------------------------------------------------
+# auto_connect   nee            Automatische verbinding met ops$ account
+#                               toestaan.
+# char_map       charz          Toewijzing van tekenarrays en -strings.
+# close_on_commitnee            Sluit alle cursors bij COMMIT.
+# code           ansi_c         Het type code dat moet worden gegenereerd.
+# comp_charset   multi_byte     Het tekensettype dat de C-compiler ondersteunt.
+# config         default        Het systeemconfiguratiebestand met een ander
+#                               overschrijven.
+# cpp_suffix     *geen*         De standaard C++ bestandsnaamsuffix
+#                               overschrijven.
+# dbms           native         v6/v7/v8 compatibiliteitsmodus.
+# def_sqlcode    nee            Een '#define SQLCODE sqlca.sqlcode' macro
+#                               genereren.
+# define         WIN32_LEAN_AND_Een preprocessorsymbool definiÙren.
+# duration       transaction    Vastpintijdsduur voor objecten in de cache
+#                               instellen.
+# dynamic        oracle         Dynamische SQL-semantiek van Oracle of ANSI
+#                               opgeven.
+# errors         ja             Of er foutberichten naar de terminal worden
+#                               verzonden.
+# errtype        *geen*         Naam van het lijstbestand voor fouten in
+#                               INTYPE-bestanden.
+# fips           none           FIPS-vlagmarkering van gebruik dat niet voldoet
+#                               aan ANSI.
+# header         *geen*         Bestandsextensie opgeven voor reeds
+#                               gecompileerde kopteksten.
+# hold_cursor    nee            Het blokkeren van cursors in de cursorcache
+#                               beheren.
+# iname          *geen*         De naam van het invoerbestand.
+# include        *geen*         Directorypaden voor ingesloten bestanden.
+# intype         *geen*         De naam van het invoerbestand voor
+#                               type-informatie.
+# lines          nee            #line-instructies aan de gegenereerde code
+#                               toevoegen.
+# lname          *geen*         Standaardnaam lijstbestand overschrijven.
+# ltype          none           De hoeveelheid gegevens die in het lijstbestand
+#                               is gegenereerd.
+# maxliteral     1024           Maximumlengte van een gegenereerde
+#                               tekstconstante in een string.
+# maxopencursors 10             Maximumaantal open cursors in cache.
+# mode           oracle         Code in overeenstemming met Oracle- of
+#                               ANSI-regels.
+# nls_char       *geen*         Tekenvariabelen voor een bepaalde taal opgeven.
+# nls_local      nee            Uitvoering van NLS-tekensemantiek besturen.
+# objects        ja             Objecttypen ondersteunen.
+# oname          *geen*         De naam van het uitvoerbestand.
+# oraca          nee            Het gebruik van ORACA besturen.
+# pagelen        80             De paginalengte van het lijstbestand.
+# parse          none           Ontleding van niet-SQL-code besturen.
+# prefetch       1              Het aantal rijen in de prefetch-buffer als de
+#                               cursortijd OPEN is.
+# release_cursor nee            Vrijgave van cursors uit de cursorcache
+#                               besturen.
+# select_error   ja             Vlagmarkering van selectiefouten besturen.
+# sqlcheck       syntax         Hoeveelheid compilatieijd voor SQL-controle.
+# sys_include    *geen*         Directory voor systeemkoptekstbestanden.
+# threads        nee            Duidt op een MultiThreaded-toepassing.
+# type_code      oracle         Oracle- of ANSI-typecodes voor dynamische SQL
+#                               gebruiken.
+# unsafe_null    nee            Een NULL-ophaalbewerking zonder
+#                               indicatorvariabele toestaan.
+# userid         *geen*         Een gebruikersnaam/wachtwoord [@dbname]
+#                               verbindingsstring.
+# varchar        nee            Gebruik van impliciete VARCHAR-structuren
+#                               toestaan.
+# version        recent         Welke versie van een object moet worden
+#                               teruggegeven.
+# 
+
 #AC_DEFUN([ACX_PROG_PROC],
 #[AC_REQUIRE(AC_CANONICAL_HOST)dnl
 
 AC_DEFUN([ACX_PROG_PROC],
-[AC_ARG_VAR(PROC, [Oracle PRO*C compiler command])dnl
+[AC_ARG_VAR([PROC], [Oracle PRO*C compiler command])dnl
+AC_ARG_VAR([USERID], [Oracle connect string])dnl
 AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)])dnl
 
 acx_cv_oracle_home=`dirname $PROC`
@@ -82,9 +162,23 @@ do
   esac
 done
 AC_SUBST(PROCINCLUDES)
-PROCFLAGS="$PROCFLAGS CODE=ANSI_C USERID=$(USERID) PARSE=NONE SQLCHECK=FULL"
+PROCFLAGS="$PROCFLAGS code=ansi_c parse=none sqlcheck=full userid=\$(USERID)"
 AC_SUBST(PROCFLAGS)
 ])
+
+
+# ACX_PROG_SQLPLUS
+# ----------------
+# Look for the Oracle SQL*Plus program.
+# Sets/updates the following variables:
+# - SQLPLUS       the full path name of the SQL*Plus program.
+
+AC_DEFUN([ACX_PROG_SQLPLUS],
+[AC_ARG_VAR([SQLPLUS], [Oracle SQL*Plus program])dnl
+AC_PATH_PROGS([SQLPLUS], [plus80 plus33 plus32 plus31 sqlplus])
+test -n "$SQLPLUS" || AC_MSG_ERROR(sqlplus not found)
+])
+
 
 dnl -------------------------------------------------------------------------
 dnl ACX_LD_RUNPATH_SWITCH([ACTION-IF-FOUND [,ACTION-IF-NOT-FOUND]])
