@@ -6,6 +6,13 @@ See the end for copying conditions.
 Please send EPC bug reports to g.paulissen@chello.nl.
 
 
+Release 4.3.0
+
+* Web services implemented.
+* Support for HTTP added.
+* Documentation updated.
+
+
 Release 4.2.0
 
 * SOAP message layout implemented.
