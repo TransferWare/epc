@@ -12,6 +12,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.14  1998/08/19 06:35:49  gjp
+ * Added epc_handle_request.
+ *
  * Revision 1.13  1998/08/11 21:03:23  gjp
  * Modified comments.
  *
@@ -337,6 +340,117 @@ get_error_str( epc_error_t err )
  * EXPORTED FUNCTIONS
  *
  *======================================================================*/
+
+long
+epc_handle_request( epc_info_t *epc_info, epc_call_t *call )
+/* ----------------------------------------------------------------------
+ * Handles a single request received over the specified database pipe:
+ * - receives a request message
+ * - unpacks the specifications of the requested call
+ * - executes the call
+ * - packs status and results of the call
+ * - sends back the results
+ * ----------------------------------------------------------------------*/
+{
+#ifdef SQLCA
+#undef SQLCA
+#endif
+
+EXEC SQL INCLUDE sqlca;
+
+	EXEC SQL BEGIN DECLARE SECTION;
+	char * request_pipe = epc_info->pipe;
+	EXEC SQL END DECLARE SECTION;
+
+	static int first_time = 1;
+
+	epc_debug( "entering epc_handle_request\n" );
+
+	if ( first_time && request_pipe != NULL ) {
+
+		EXEC SQL WHENEVER SQLERROR GOTO end_of_epc_handle_request;
+		EXEC SQL EXECUTE
+		BEGIN
+			epc.set_request_pipe( :request_pipe );
+		END;
+		END-EXEC;
+
+		first_time = 0;
+	}
+
+		/* receive the request */
+	receive_request( call );
+
+	if ( call->epc_error != OK )
+		goto error;
+
+		/* do the call */
+	epc_exec_call( call, epc_info );
+
+	switch ( call->epc_error )
+	{
+	case FUNCTION_UNKNOWN:
+	case INTERFACE_UNKNOWN:
+	case OK:
+		break;
+
+	default:
+		goto error;
+	}
+
+		/* send the result */
+	send_result( call ); 
+
+	if ( call->epc_error != OK )
+		goto error;
+
+		/* call->epc_error == OK */
+	epc_debug( "leaving epc_handle_request\n" );
+	return	0;
+
+error:
+	fprintf( stderr, "epc_handle_request#epc status: %s\n", get_error_str( call->epc_error ) );
+
+	switch( call->epc_error )
+	{
+	case MSG_TIMED_OUT:
+	case RECEIVE_ERROR:
+	case SEND_ERROR:
+	case OK:
+		break;
+
+	default:
+		goto end_of_epc_handle_request;
+		break;
+	}
+
+	fprintf( stderr, "epc_handle_request#sql code: %ld\n", (long)call->sqlcode );
+
+	switch( call->sqlcode )
+	{
+	case -6556:
+	case -6558:
+	case -6559: /* dbms_pipe errors */
+	case 0:
+		break;
+
+	default:
+		goto end_of_epc_handle_request;
+		break;
+	}
+
+	epc_debug( "leaving epc_handle_request\n" );
+	return 0;
+
+end_of_epc_handle_request:
+
+	epc_debug( "epc_handle_request#epc status: %s\n", get_error_str( call->epc_error ) );
+	epc_debug( "epc_handle_request#sql code: %ld\n", (long)call->sqlcode );
+
+	epc_debug( "leaving epc_handle_request\n" );
+	return -1;
+}
+
  
 epc_error_t
 epc_handle_requests( epc_info_t *epc_info )
@@ -356,7 +470,6 @@ epc_handle_requests( epc_info_t *epc_info )
 EXEC SQL INCLUDE sqlca;
 
 	EXEC SQL BEGIN DECLARE SECTION;
-	char * request_pipe = epc_info->pipe;
 	char * logon = epc_info->logon;
 	EXEC SQL END DECLARE SECTION;
 	epc_call_t call = CALL_INIT;
@@ -368,79 +481,12 @@ EXEC SQL INCLUDE sqlca;
 	EXEC SQL CONNECT :logon;
 
 	printf( "epc listener started - logon %s, pipe %s\n\n", 
-		logon, (request_pipe?request_pipe:"(null)") );
+		logon, (epc_info->pipe?epc_info->pipe:"(null)") );
 
-	if ( request_pipe != NULL ) {
-
-		EXEC SQL EXECUTE
-		BEGIN
-				epc.set_request_pipe( :request_pipe );
-		END;
-		END-EXEC;
-
-	}
-
-	for( call.sqlcode = 0;; call.sqlcode = 0 ) 
+	for( call.sqlcode = 0; ; call.sqlcode = 0 ) 
 	{ 
-			/* receive the requests */
-		receive_request( &call );
-
-		if ( call.epc_error != OK )
-			goto error;
-
-			/* do the call */
-		epc_exec_call( &call, epc_info );
-
-		switch ( call.epc_error )
-		{
-		case FUNCTION_UNKNOWN:
-		case INTERFACE_UNKNOWN:
-		case OK:
+		if ( epc_handle_request( epc_info, &call ) != 0 )
 			break;
-
-		default:
-			goto error;
-		}
-
-			/* send the result */
-		send_result( &call ); 
-
-		if ( call.epc_error != OK )
-			goto error;
-
-			/* call.epc_error == OK */
-		continue;
-
-	error:
-		fprintf( stderr, "epc_handle_requests#epc status: %s\n", get_error_str( call.epc_error ) );
-
-		switch( call.epc_error )
-		{
-		case MSG_TIMED_OUT:
-		case RECEIVE_ERROR:
-		case SEND_ERROR:
-		case OK:
-			break;
-
-		default:
-			goto end_of_epc_handle_requests;
-			break;
-		}
-
-		fprintf( stderr, "epc_handle_requests#sql code: %ld\n", (long)call.sqlcode );
-
-		switch( call.sqlcode )
-		{
-		case -6556:
-		case -6558:
-		case -6559: /* dbms_pipe errors */
-		case 0:
-			break;
-
-		default:
-			goto end_of_epc_handle_requests;
-			break;
-		}
 	}
 
 end_of_epc_handle_requests:
