@@ -2,7 +2,7 @@
 #define EPC_TYPES_H
 
 /* Oracle pipe name length is 128.
-   Add 1 for the terminating zerio and round till next multiple of 4.
+   Add 1 for the terminating zero and round till next multiple of 4.
  */
 #define MAX_PIPE_NAME_LEN       132  
 #define MAX_MSG_INFO_LEN        (4+MAX_PIPE_NAME_LEN)
@@ -16,16 +16,9 @@
 typedef struct {
   idl_mode_t mode;
   idl_type_t type;
-  union {
-    int ival;
-    long        lval;
-    double      dval;
-    float       fval;
-    char *      sval;
-  } uval;
-  void *value;  /* points to one of the union members above */
+  dword_t size;
+  void *data;
 } epc_parameter_t;
-
 
 typedef struct {
   char msg_info[MAX_MSG_INFO_LEN];
@@ -37,10 +30,12 @@ typedef struct {
 
 #define CALL_INIT { "", "", "", OK, 0L }
 
-typedef struct {
+typedef struct epc_function {
   char *name;
-  idl_type_t type;
-  void (*function) ( epc_call_t * );
+  void (*function)( epc_call_t *, struct epc_function * );
+  dword_t oneway;
+  dword_t num_parameters;
+  epc_parameter_t *parameters;
 } epc_function_t;
 
 typedef struct {
