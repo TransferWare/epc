@@ -1,6 +1,8 @@
 #ifndef _EPC_H_
 #define _EPC_H_
 
-void EPC_handle_requests( char * pipe );
+#include "epc_types.h"
+
+error_t EPC_handle_requests( char * pipe );
  
 #endif
