@@ -20,9 +20,6 @@ INSTALLATION
 ============
 Installation using the GNU build tools is described in INSTALL. 
 
-Installation using imake is described in README.imake. This is not
-supported anymore.
-
 Windows specific
 ================
 For Windows platforms the Cygwin suite can be used. There is one caveat:
