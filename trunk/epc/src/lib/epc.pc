@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.26  2002/01/17 11:46:53  gpaulissen
+ * - Call to epc package updated due to changes.
+ *
  * Revision 1.25  2001/01/24 16:29:08  gpaulissen
  * Release 2.0.0
  *
@@ -178,13 +181,13 @@ receive_request( epc_call_t * call )
   EXEC SQL WHENEVER SQLERROR GOTO receive_error;
   EXEC SQL EXECUTE
   BEGIN
-    :retval := 
-      epc.request_get_header
-      ( 
-        :result_pipe:result_pipe_nl
-      , :interface_name:interface_name_nl
-      ,	:function_name:function_name_nl
-      );
+    epc.request_get_header
+    ( 
+      :result_pipe:result_pipe_nl
+    , :interface_name:interface_name_nl
+    , :function_name:function_name_nl
+    , :retval
+    );
   END;
   END-EXEC;
 
