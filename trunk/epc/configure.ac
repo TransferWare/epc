@@ -28,6 +28,10 @@ AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AM_C_PROTOTYPES
 
+# Oracle checks
+ACX_PROG_PROC
+ACX_PROG_SQLPLUS
+
 # Checks for programs.
 AC_PROG_CC
 AM_PROG_LEX
@@ -47,10 +51,6 @@ case "$host" in
 esac
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
-
-# Oracle checks
-ACX_PROG_PROC
-ACX_PROG_SQLPLUS
 
 # Checks for header files.
 AC_HEADER_STDC
