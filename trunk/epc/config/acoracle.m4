@@ -92,24 +92,27 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
                 [osnsui],
                 [clntsh oran9 oran8 oran7])
 
-acx_prochdr=
+acx_protohdrs="sqlcpr.h sqlproto.h"
+acx_protohdr=
 for dir in $acx_oracle_home/precomp/public $acx_oracle_home
 do
-  for file in sqlcpr.h sqlproto.h
+  test -d $dir || continue
+  for file in $acx_protohdrs 
   do
     # Windows: ignore case
     # Bug 849475: just return one header by using head -1
     acx_protohdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
-    test -z "$acx_protohdr" || break
+    if test -n "$acx_protohdr"
+    then
+      CPPFLAGS="-I`dirname $acx_protohdr` $CPPFLAGS"
+      break
+    fi
   done
+  # One is enough
   test -z "$acx_protohdr" || break
 done
 
-CPPFLAGS="-I`dirname $acx_protohdr` $CPPFLAGS"
-acx_protohdr=`basename $acx_protohdr`
-AC_CHECK_HEADERS([sqlcpr.h sqlproto.h], [break], [AC_MSG_ERROR(PRO*C prototype header not found)])
-AC_MSG_CHECKING(for the PRO*C prototype header)
-AC_MSG_RESULT($acx_protohdr)
+AC_CHECK_HEADERS([$acx_protohdrs], [break], [AC_MSG_ERROR(PRO*C prototype header not found)])
 
 PROCINCLUDES='`echo " $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
 PROCFLAGS='`echo " $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
@@ -141,6 +144,51 @@ fi
 
 AC_PATH_PROGS([SQLPLUS], [plus80 plus33 plus32 plus31 sqlplus], [], [$acx_path])
 test -n "$SQLPLUS" || AC_MSG_ERROR(sqlplus not found)
+])
+
+
+# ACX_PROG_XML
+# -------------
+# Look for the Oracle XML library and header.
+# Sets/updates the following variables:
+# - LIBS          extended with the XML library
+# - CPPFLAGS      extended with the XML header
+
+AC_DEFUN([ACX_PROG_XML],
+[
+acx_oracle_home="$ORACLE_HOME"
+if test -z "$acx_oracle_home"
+then
+  acx_oracle_home=`dirname $PROC`
+  acx_oracle_home=`dirname $acx_oracle_home`
+fi
+
+ACX_SEARCH_LIBS([$acx_oracle_home],
+                [lib bin],
+                [xmlinit],
+                [oraxml9 oraxml8])
+
+acx_xmlhdrs="oraxml.h"
+#acx_xmlhdrs="oraxml.h oratypes.h"
+acx_xmlhdr=
+for dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home
+do
+  test -d $dir || continue
+  for file in $acx_xmlhdrs
+  do
+    # Windows: ignore case
+    # Bug 849475: just return one header by using head -1
+    acx_xmlhdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
+    if test -n "$acx_xmlhdr"
+    then
+      CPPFLAGS="-I`dirname $acx_xmlhdr` $CPPFLAGS"
+      break
+    fi
+  done
+  test -z "$acx_xmlhdr" || break
+done
+
+AC_CHECK_HEADERS([$acx_xmlhdrs], [continue], [AC_MSG_ERROR(XML header not found)])
 ])
 
 dnl $Id$
