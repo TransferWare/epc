@@ -16,7 +16,7 @@
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 AUTOMAKE_OPTIONS 	= 
-SUBDIRS 		= config src examples test utils
+SUBDIRS 		= config doc src examples test utils
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 ACLOCAL			= aclocal -I $(ac_aux_dir)
@@ -32,4 +32,5 @@ dist-hook:
 	  cp $$file $(distdir)/$$file; \
 	done
 
-EXTRA_DIST              = bootstrap Imakefile MANIFEST MANIFEST.SKIP Makefile.PL README.html README.imake
+EXTRA_DIST              = bootstrap Imakefile MANIFEST MANIFEST.SKIP \
+                        Makefile.PL README.html README.imake config.msub

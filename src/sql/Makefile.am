@@ -23,5 +23,5 @@ epc.html: epc.pls
 
 MOSTLYCLEANFILES = epc.html
 
-EXTRA_DIST           = Imakefile epc.html
+EXTRA_DIST           = Imakefile epc.html epc.pls
 
