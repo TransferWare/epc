@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.7  1998/11/27 08:17:25  gjp
+ * PSK-EPC-10. Clash between types of INTERFACE keyword and interface rule.
+ *
  * Revision 1.6  1998/08/11 21:07:07  gjp
  * Changed RCS keyword Source by RCSfile to prevent differences between checkouts.
  *
@@ -62,7 +65,7 @@ extern int yylex( void );
 %token <ival> DOUBLE
 
 %type <ival> datatype, parameter_mode
-%type <sval> interface_name, function_name, parameter_name
+%type <sval> interface, interface_name, function_name, parameter_name
 
 %%
 
