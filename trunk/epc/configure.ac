@@ -41,7 +41,6 @@ AM_INIT_AUTOMAKE
 AM_C_PROTOTYPES
 
 # Checks for programs.
-# Checks for programs.
 AC_PATH_PROG([PERL],[perl])
 case x$PERL in
 x)
