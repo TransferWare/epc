@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.30  2004/03/28 15:32:25  gpaulissen
+ * Generate C code only.
+ *
  * Revision 1.29  2004/03/14 07:31:22  gpaulissen
  * Imake support cancelled
  *
@@ -126,8 +129,17 @@
 /*
 || Defines
 */
+#ifndef GENERATE_PROC
+#define GENERATE_PROC 0
+#endif
+
+#if GENEATE_PROC != 0
+
 #define EXEC_SQL_BEGIN_DECLARE_SECTION "EXEC SQL BEGIN DECLARE SECTION"
 #define EXEC_SQL_END_DECLARE_SECTION "EXEC SQL END DECLARE SECTION"
+
+#endif
+
 #define EPC_PREFIX "_epc_"
 
  /* GJP 6-6-2003 Do not send epc_error nor sqlcode back to the client */
@@ -173,36 +185,32 @@ keyword keywords[] = {
   },
   { C_INT,      
     {   
-      { C,      "int",          "C_INT" },
-      /*      { PLSQL,  "INTEGER",      "epc.c_int" }*/
-      { PLSQL,  "BINARY_INTEGER",       "epc.c_int" }
+      { C,      "idl_int_t",    "C_INT" },
+      { PLSQL,  "epc.int_t",    "epc.c_int" }
     }
   },
   { C_LONG,     
     {   
-      { C,      "long",         "C_LONG" },
-      /*      { PLSQL,  "INTEGER",      "epc.c_long" }*/
-      { PLSQL,  "BINARY_INTEGER",       "epc.c_long" }
+      { C,      "idl_long_t",   "C_LONG" },
+      { PLSQL,  "epc.long_t",   "epc.c_long" }
     }
   },
   { C_FLOAT,    
     {   
-      { C,      "float",        "C_FLOAT" },
-      /*      { PLSQL,  "NUMBER",       "epc.c_float" }*/
-      { PLSQL,  "FLOAT",        "epc.c_float" }
+      { C,      "idl_float_t",  "C_FLOAT" },
+      { PLSQL,  "epc.float_t",  "epc.c_float" }
     }
   },
   { C_DOUBLE,   
     {   
-      { C,      "double",       "C_DOUBLE" },
-      /*      { PLSQL,  "NUMBER",       "epc.c_double" }*/
-      { PLSQL,  "DOUBLE PRECISION",     "epc.c_double" }
+      { C,      "idl_double_t", "C_DOUBLE" },
+      { PLSQL,  "epc.double_t", "epc.c_double" }
     }
   },
   { C_STRING,   
     {
       /* string is a typedef */
-      { C,      "string",       "C_STRING" },
+      { C,      "idl_string_t", "C_STRING" },
       { PLSQL,  "VARCHAR2",     "epc.c_string" }
     }
   },
@@ -235,16 +243,21 @@ int print_external_function = 0; /* print extern <function> in header */
 void
 set_interface( char *name )
 {
-  assert( strlen(name) < sizeof(_interface.name) ); /* beware of the trailing '\0' */
+  DBUG_ENTER( "set_interface" );
+
+  /*assert( strlen(name) < sizeof(_interface.name) ); /* beware of the trailing '\0' */
   (void) strcpy( _interface.name, name );
   _interface.num_functions = 0;
-}
 
+  DBUG_LEAVE();
+}
 
 static
 void
 init_parameter( idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
 {
+  DBUG_ENTER( "init_parameter" );
+
   assert( strlen(name) < sizeof(parm->name) ); /* beware of the trailing '\0' */
   (void) strcpy( parm->name, name );
   assert( strlen(name) < sizeof(parm->proc_name) ); /* beware of the trailing '\0' */
@@ -285,6 +298,7 @@ init_parameter( idl_parameter_t *parm, char *name, idl_mode_t mode, idl_type_t d
                       (long)datatype, name );
       exit( EXIT_FAILURE );
     }
+  DBUG_LEAVE();
 }
 
 
@@ -292,6 +306,8 @@ void
 add_function( char *name, idl_type_t datatype, const int oneway )
 {
   idl_function_t * fun = (idl_function_t*)malloc(sizeof(idl_function_t));
+
+  DBUG_ENTER( "add_function" );
 
   assert( strlen(name) < sizeof(fun->name) ); /* beware of the trailing '\0' */
   (void) strcpy( fun->name, name );
@@ -302,6 +318,8 @@ add_function( char *name, idl_type_t datatype, const int oneway )
 
   _interface.functions[_interface.num_functions] = fun;
   _interface.num_functions++;
+
+  DBUG_LEAVE();
 }
 
 
@@ -311,10 +329,14 @@ add_parameter( char *name, idl_mode_t mode, idl_type_t datatype, dword_t size )
   idl_function_t * fun = _interface.functions[_interface.num_functions-1];
   idl_parameter_t * parm = (idl_parameter_t*)malloc(sizeof(idl_parameter_t));
 
+  DBUG_ENTER( "add_parameter" );
+
   init_parameter( parm, name, mode, datatype, size );
 
   fun->parameters[fun->num_parameters] = parm;
   fun->num_parameters++;
+
+  DBUG_LEAVE();
 }
 
 
@@ -347,7 +369,7 @@ static
 char *
 get_syntax( idl_type_t type, idl_lang_t language )
 {
-  return        get_mapping( type, language )->syntax;
+  return get_mapping( type, language )->syntax;
 }
 
 
@@ -355,7 +377,7 @@ static
 char *
 get_constant_name( const idl_type_t type, const idl_lang_t language )
 {
-  return        get_mapping( type, language )->constant_name;
+  return get_mapping( type, language )->constant_name;
 }
 
 
@@ -367,6 +389,8 @@ print_formal_parameter( FILE *pout,
                         const idl_type_t datatype,
                         const idl_lang_t lang )
 {
+  DBUG_ENTER( "print_formal_parameter" );
+
   switch( lang )
     {
     case C:
@@ -383,6 +407,8 @@ print_formal_parameter( FILE *pout,
                       get_syntax( datatype, lang ) );
       break;
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -390,11 +416,13 @@ static
 void
 print_actual_parameter( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
 {
+  DBUG_ENTER( "print_actual_parameter" );
+
   switch( lang )
     {
     case C:
       (void) fprintf( pout, "%s%s",
-                      ( parm->mode != C_IN && parm->datatype != C_STRING ? "&" : "" ),
+                      ( parm->mode == C_IN && parm->datatype != C_STRING ? "*" : "" ),
                       parm->name );
       break;
     case PLSQL:
@@ -402,13 +430,17 @@ print_actual_parameter( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
                       parm->name );
       break;
     }
+
+  DBUG_LEAVE();
 }
 
 
 static
 void
-print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
+print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang, const int parameter_nr  )
 {
+  DBUG_ENTER( "print_variable_definition" );
+
   switch( lang )
     {
     case C:
@@ -418,12 +450,35 @@ print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
         case C_LONG:
         case C_FLOAT:
         case C_DOUBLE:
-          (void) fprintf( pout, "%s %s = 0", get_syntax( parm->datatype, C ), parm->proc_name );
+#if GENERATE_PROC != 0
+          (void) fprintf( pout,
+                          "%s %s = 0",
+                          get_syntax( parm->datatype, C ),
+                          parm->proc_name );
+#else
+          (void) fprintf( pout,
+                          "%s *%s = (%s *)function->parameters[%d].data",
+                          get_syntax( parm->datatype, C ),
+                          parm->proc_name,
+                          get_syntax( parm->datatype, C ),
+                          parameter_nr );
+#endif
           break;
 
-        case C_STRING: /* Use the STRING PRO*C construct */
-          (void) fprintf( pout, "char %s[%d] = \"\";\n  EXEC SQL VAR %s IS STRING(%d)", 
+        case C_STRING:
+#if GENERATE_PROC != 0
+          /* Use the STRING PRO*C construct */
+          (void) fprintf( pout, "char %s[%ld] = \"\";\n  EXEC SQL VAR %s IS STRING(%ld)", 
                           parm->proc_name, parm->size+1, parm->proc_name, parm->size+1 );
+#else
+          /* Use the STRING PRO*C construct */
+          (void) fprintf( pout,
+                          "%s %s = (%s)function->parameters[%d].data", 
+                          get_syntax( parm->datatype, C ),
+                          parm->proc_name,
+                          get_syntax( parm->datatype, C ),
+                          parameter_nr );
+#endif
           break;
         }
       break;
@@ -441,7 +496,7 @@ print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
           break;
           
         case C_STRING:
-          (void) fprintf( pout, "%s %s(%d)", 
+          (void) fprintf( pout, "%s %s(%ld)", 
                           parm->name, 
                           get_syntax( parm->datatype, PLSQL ), 
                           parm->size );
@@ -449,6 +504,8 @@ print_variable_definition( FILE *pout, idl_parameter_t *parm, idl_lang_t lang )
         }
       break;
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -460,6 +517,8 @@ exists_plsql_function( idl_function_t * fun, const int package_type )
   int val = 0;
   int nr;
 
+  DBUG_ENTER( "exists_plsql_function" );
+
   switch( package_type )
     {
     case STUB:
@@ -467,12 +526,15 @@ exists_plsql_function( idl_function_t * fun, const int package_type )
       break;
 
     case SKEL_SEND:
+#if GENERATE_PROC != 0
       /* oneway functions do not return any result */
       if ( fun->oneway == 0 )
         val = 1;
+#endif
       break;
 
     case SKEL_RECV:
+#if GENERATE_PROC != 0
       /* if there are no in or in/out parameters the recv function is not necessary */
       for ( nr = 0; nr < fun->num_parameters; nr++ )
         {
@@ -483,7 +545,12 @@ exists_plsql_function( idl_function_t * fun, const int package_type )
               break;
             }
         }
+#endif
+      break;
     }
+
+  DBUG_LEAVE();
+
   return val;
 }
 
@@ -493,6 +560,8 @@ void
 generate_plsql_function( FILE * pout, idl_function_t * fun, const int package_type )
 {
   int nr, nr_actual_parameters /* for a SEND and RECV less parameters */;
+
+  DBUG_ENTER( "generate_plsql_function" );
 
   assert( exists_plsql_function( fun, package_type ) != 0 );
 
@@ -603,6 +672,8 @@ generate_plsql_function( FILE * pout, idl_function_t * fun, const int package_ty
     {
       (void) fprintf( pout, " RETURN %s", get_syntax( fun->return_value.datatype, PLSQL ) );
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -610,11 +681,15 @@ static
 void
 generate_plsql_function_declaration( FILE * pout, idl_function_t * fun, const int package_type )
 {
+  DBUG_ENTER( "generate_plsql_function_declaration" );
+
   if ( exists_plsql_function( fun, package_type ) != 0 )
     {
       generate_plsql_function( pout, fun, package_type );
       (void) fprintf( pout, ";\n\n" );
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -622,9 +697,13 @@ static
 void
 print_generate_comment( FILE * pout, char * prefix )
 {
+  DBUG_ENTER( "print_generate_comment" );
+
   (void) fprintf( pout, "%s/*******************************\n", prefix );
   (void) fprintf( pout, "%s ** Generated by EPC compiler **\n", prefix );
   (void) fprintf( pout, "%s *******************************/\n\n", prefix );
+
+  DBUG_LEAVE();
 }
 
 
@@ -633,12 +712,27 @@ void
 generate_plsql_header( FILE * pout )
 {
   int nr;
+  int do_print;
   int package_type;
+
+  DBUG_ENTER( "generate_plsql_header" );
 
   print_generate_comment( pout, "REMARK " );
 
   /* Create three packagas: the STUB and two SKELETON packages (RECV from STUB and SEND) */
   for ( package_type = 0; package_type < NR_PACKAGE_TYPE; package_type++ ) {
+    /* do not print an empty package */
+    for ( do_print = 0, nr = 0; nr < _interface.num_functions; nr++ ) {
+      if ( exists_plsql_function( _interface.functions[nr], package_type ) )
+        { 
+          do_print = 1;
+          break;
+        }
+    }
+    
+    if ( !do_print )
+      continue;
+
     (void) fprintf( pout, "CREATE OR REPLACE PACKAGE %s%s IS\n\n",
                     _interface.name, package_type_str[package_type] );
     
@@ -648,6 +742,8 @@ generate_plsql_header( FILE * pout )
 
     (void) fprintf( pout, "END %s%s;\n/\n\n", _interface.name, package_type_str[package_type] );
   }
+
+  DBUG_LEAVE();
 }
 
 
@@ -658,6 +754,8 @@ print_function_signature( FILE *pout, idl_function_t *fun )
   int nr;
   const idl_lang_t language = C;
   int tot_length = 0, length;
+
+  DBUG_ENTER( "print_function_signature" );
 
   length = fprintf( pout, "%s%s %s",
                     ( fun->oneway != 0 ? "oneway " : "" ),
@@ -670,9 +768,9 @@ print_function_signature( FILE *pout, idl_function_t *fun )
     {
       length = fprintf( pout, "%s[%s] %s %s",
                         ( nr == 0 ? "( " : ", " ),
-                        ( fun->parameters[nr]->datatype == C_IN ?
+                        ( fun->parameters[nr]->mode == C_IN ?
                           "in" :
-                          ( fun->parameters[nr]->datatype == C_INOUT ?
+                          ( fun->parameters[nr]->mode == C_INOUT ?
                             "inout" :
                             "out" ) ),
                         get_syntax( fun->parameters[nr]->datatype, language ),
@@ -689,6 +787,8 @@ print_function_signature( FILE *pout, idl_function_t *fun )
     }
 
   assert( tot_length < MAX_FUNC_NAME_LEN );
+
+  DBUG_LEAVE();
 }
 
 static
@@ -710,7 +810,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
       if ( package_type == STUB && fun->return_value.datatype != C_VOID )
         {
           (void) fprintf( pout, "    " );
-          print_variable_definition( pout, &fun->return_value, PLSQL );
+          print_variable_definition( pout, &fun->return_value, PLSQL, fun->num_parameters );
           (void) fprintf( pout, ";\n" );
         }
 
@@ -723,7 +823,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
           (void) fprintf( pout, "    epc.request_set_header( '%s', '", 
                           _interface.name );
           print_function_signature( pout, fun );
-          (void) fprintf( pout, "', %d );\n", fun->oneway );
+          (void) fprintf( pout, "', %ld );\n", fun->oneway );
 
           for ( nr = 0; nr < fun->num_parameters; nr++ ) {
             parm = fun->parameters[nr];
@@ -732,20 +832,20 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
               (void) fprintf( pout, "    epc.request_set_parameter( %s );\n", parm->name );
           }
 
-          (void) fprintf( pout, "    epc.request_perform_routine( %d );\n", fun->oneway );
+          (void) fprintf( pout, "    epc.request_perform_routine( %ld );\n", fun->oneway );
 
           /* GET THE RESULTS */
           for ( nr = 0; nr < fun->num_parameters; nr++ ) 
             {
               parm = fun->parameters[nr];
               if ( parm->mode != C_IN ) {
-                (void) fprintf( pout, "    dbms_pipe.unpack_message( %s );\n", parm->name );
+                (void) fprintf( pout, "    epc.receive_get_parameter( %s );\n", parm->name );
               }
             }
 
           if ( fun->return_value.datatype != C_VOID ) 
             {
-              (void) fprintf( pout, "    dbms_pipe.unpack_message( %s );\n", fun->return_value.name );
+              (void) fprintf( pout, "    epc.receive_get_parameter( %s );\n", fun->return_value.name );
               (void) fprintf( pout, "    RETURN %s;\n", fun->return_value.name );
             }
           break;
@@ -755,8 +855,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
            * Send the results
            * ---------------- */
           (void) fprintf( pout, "\
-    dbms_pipe.reset_buffer;\n\
-    dbms_pipe.pack_message( epc.get_msg_seq(msg_info) );\n" );
+    epc.receive_set_parameter( epc.get_msg_seq(msg_info) );\n" );
 
 #if SEND_EPC_ERROR != 0
           (void) fprintf( pout, "\
@@ -774,7 +873,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
 #if SEND_EPC_ERROR != 0
                 (void) fputs( "  ", pout ); 
 #endif
-                (void) fprintf( pout, "    dbms_pipe.pack_message( %s );\n", parm->name ); 
+                (void) fprintf( pout, "    epc.receive_set_parameter( %s );\n", parm->name ); 
               }
           }
           if ( fun->return_value.datatype != C_VOID )
@@ -782,7 +881,7 @@ generate_plsql_function_body( FILE * pout, idl_function_t * fun, const int packa
 #if SEND_EPC_ERROR != 0
               (void) fputs( "  ", pout ); 
 #endif
-              (void) fprintf( pout, "    dbms_pipe.pack_message( %s );\n", fun->return_value.name ); 
+              (void) fprintf( pout, "    epc.receive_set_parameter( %s );\n", fun->return_value.name ); 
             }
 
 #if SEND_EPC_ERROR != 0
@@ -863,7 +962,7 @@ generate_plsql_function_body_ext( FILE * pout, idl_function_t * fun )
   LANGUAGE C", _interface.name, fun->name );
 
       DBUG_PRINT( "info",
-                  ( "return datatype: %d; # parms: %d",
+                  ( "return datatype: %ld; # parms: %ld",
                     (int) fun->return_value.datatype,
                     (int) fun->num_parameters ) );
 
@@ -911,12 +1010,27 @@ void
 generate_plsql_body( FILE * pout )
 {
   int nr;
+  int do_print;
   int package_type;
+
+  DBUG_ENTER( "generate_plsql_body" );
 
   print_generate_comment( pout, "REMARK " );
 
   for ( package_type = 0; package_type < NR_PACKAGE_TYPE; package_type++ ) 
     {
+      /* do not print an empty package body */
+      for ( do_print = 0, nr = 0; nr < _interface.num_functions; nr++ ) {
+        if ( exists_plsql_function( _interface.functions[nr], package_type ) )
+          { 
+            do_print = 1;
+            break;
+          }
+      }
+    
+      if ( !do_print )
+        continue;
+
       (void) fprintf( pout, "CREATE OR REPLACE PACKAGE BODY %s%s IS\n",
                       _interface.name, package_type_str[package_type] );
       (void) fprintf( pout, "\n" );
@@ -929,6 +1043,8 @@ generate_plsql_body( FILE * pout )
       (void) fprintf( pout, "END;\n" );
       (void) fprintf( pout, "/\n\n" );
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -973,6 +1089,8 @@ generate_plsql( void )
 #define NR_PLSQL_FILES 4
   FILE * pout[NR_PLSQL_FILES];
   int nr;
+
+  DBUG_ENTER( "generate_plsql" );
 
   for ( nr = 0; nr < NR_PLSQL_FILES; nr++ )
     {
@@ -1028,6 +1146,8 @@ REMARK @@ %s.pke\n", _interface.name, _interface.name, _interface.name );
       (void) fclose( pout[nr] );
     }
 
+  DBUG_LEAVE();
+
   return;
 
  open_error:
@@ -1043,6 +1163,8 @@ generate_c_parameters( FILE * pout, idl_function_t * fun )
   int nr;
   idl_parameter_t * parm;
 
+  DBUG_ENTER( "generate_c_parameters" );
+
   /* 
    * declare variables 
    */
@@ -1050,9 +1172,11 @@ generate_c_parameters( FILE * pout, idl_function_t * fun )
   for ( nr = 0; nr < fun->num_parameters; nr++ ) {
     parm = fun->parameters[nr];
     (void) fprintf( pout, "  " );
-    print_variable_definition( pout, parm, C );
+    print_variable_definition( pout, parm, C, nr );
     (void) fprintf( pout, ";\n" );
   }
+
+  DBUG_LEAVE();
 }
 
 
@@ -1060,22 +1184,26 @@ static
 void
 print_c_debug_info( FILE *pout, char *name, idl_type_t datatype )
 {
+  DBUG_ENTER( "print_c_debug_info" );
+
   (void) fprintf( pout, "  DBUG_PRINT( \"info\", ( " );
   switch( datatype )
     {
     case C_INT:
-      (void) fprintf( pout, "\"%s: %%d\", %s ) );\n", name, name ); break;
+      (void) fprintf( pout, "\"%s: %%d\", *%s ) );\n", name, name ); break;
     case C_LONG:
-      (void) fprintf( pout, "\"%s: %%ld\", %s ) );\n", name, name ); break;
+      (void) fprintf( pout, "\"%s: %%ld\", *%s ) );\n", name, name ); break;
     case C_FLOAT:
-      (void) fprintf( pout, "\"%s: %%f\", %s ) );\n", name, name ); break;
+      (void) fprintf( pout, "\"%s: %%f\", *%s ) );\n", name, name ); break;
     case C_DOUBLE:
-      (void) fprintf( pout, "\"%s: %%lf\", %s ) );\n", name, name ); break;
+      (void) fprintf( pout, "\"%s: %%lf\", *%s ) );\n", name, name ); break;
     case C_STRING:
       (void) fprintf( pout, "\"%s: '%%s'\", %s ) );\n", name, name ); break;
     default:
-      (void) fprintf( stderr, "print_c_debug_info#Unknown datatype (%d) for %s\n", datatype, name ); break;
+      (void) fprintf( stderr, "print_c_debug_info#Unknown datatype (%ld) for %s\n", datatype, name ); break;
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -1085,6 +1213,8 @@ generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode )
 {
   int nr;
   idl_parameter_t *parm;
+
+  DBUG_ENTER( "generate_c_debug_info" );
 
   for ( nr = 0; nr < fun->num_parameters; nr++ ) {
     parm = fun->parameters[nr];
@@ -1100,6 +1230,8 @@ generate_c_debug_info( FILE * pout, idl_function_t * fun, idl_mode_t mode )
     {
       print_c_debug_info( pout, parm->name, parm->datatype );
     }
+
+  DBUG_LEAVE();
 }
 
 
@@ -1110,8 +1242,13 @@ generate_c_function( FILE * pout, idl_function_t * fun )
   int nr, nr_actual_parameters;
   int exec_sql_printed = 0;
 
-  (void) fprintf( pout, "void %s%s ( epc_call_t *call )\n", EPC_PREFIX, fun->name );
-  (void) fprintf( pout, "{\n\
+  DBUG_ENTER( "generate_c_function" );
+
+  (void) fprintf( pout, "void %s%s ( epc_call_t *call, epc_function_t *function )\n", EPC_PREFIX, fun->name );
+  (void) fprintf( pout, "{\n" );
+
+#if GENERATE_PROC != 0
+  (void) fprintf( pout, "\
 #ifdef SQLCA\n\
 #undef SQLCA\n\
 #endif\n\
@@ -1125,6 +1262,10 @@ EXEC SQL INCLUDE sqlca;\n\n" );
   (void) fprintf( pout, "  long epc_error = OK;\n" );
   (void) fprintf( pout, "  long sqlcode = 0;\n" );
   (void) fprintf( pout, "  const char *msg_info = call->msg_info;\n" );
+#endif
+
+  /* PARAMETERS */
+  generate_c_parameters( pout, fun );
 
   switch( fun->return_value.datatype )
     {
@@ -1133,17 +1274,19 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
     default:
       (void) fprintf( pout, "  " );
-      print_variable_definition( pout, &fun->return_value, C );
+      print_variable_definition( pout, &fun->return_value, C, fun->num_parameters );
       (void) fprintf( pout, ";\n" );
       break;
     }
 
-  /* PARAMETERS */
-  generate_c_parameters( pout, fun );
+#if GENERATE_PROC != 0
+  (void) fprintf( pout, "  %s;\n", EXEC_SQL_END_DECLARE_SECTION );
+#endif
 
-  (void) fprintf( pout, "  %s;\n\n  DBUG_ENTER(\"%s\");\n\n",
-                  EXEC_SQL_END_DECLARE_SECTION, fun->name );
+  (void) fprintf( pout, "\n  DBUG_ENTER( \"%s\" );\n",
+                  fun->name );
 
+#if GENERATE_PROC != 0
   /*
    * Get the in and in/out parameters
    */
@@ -1173,6 +1316,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
   END-EXEC;\n\n",
                       ( nr_actual_parameters == 0 ? "" : " )" ) );
     }
+#endif
 
   /* ---------------------------------------------------------------
    * Print the in and in/out parameters, including Oracle error code
@@ -1180,24 +1324,29 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
   generate_c_debug_info( pout, fun, C_IN );
   generate_c_debug_info( pout, fun, C_INOUT );
+
+  (void) fprintf( pout, "\n" );
+
+#if GENERATE_PROC != 0
   print_c_debug_info( pout, "sqlcode", C_LONG );
 
   /* -----------------
    * HANDLE SQL ERRORS
    * ----------------- */
 
-  (void) fprintf( pout, "\n\
+  (void) fprintf( pout, "\
   if ( sqlcode != 0 )\n\
   {\n\
     epc_error = RECEIVE_ERROR;\n\
   }\n\
   else\n\
-  {\n" );
+  {\n  " );
+#endif
 
   /* ---------------
    * THE ACTUAL CALL 
    * --------------- */
-  (void) fprintf( pout, "    " );
+  (void) fprintf( pout, "  " );
 
   /* set return value if any. Use strncpy for strings */
 
@@ -1211,7 +1360,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
       break;
 
     default:
-      (void) fprintf( pout, "%s = ", fun->return_value.name );
+      (void) fprintf( pout, "*%s = ", fun->return_value.name );
       break;
     }
 
@@ -1232,8 +1381,13 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
     case C_STRING:
       /* zero terminate to be sure */
-      (void) fprintf( pout, ", %d );\n    %s[%d] = 0", 
+      (void) fprintf( pout, ", %ld );\n%s  %s[%ld] = '\\0'",
                       fun->return_value.size, 
+#if GENERATE_PROC != 0
+                      "  ",
+#else
+                      "",
+#endif                      
                       fun->return_value.proc_name, 
                       fun->return_value.size );
       break;
@@ -1242,7 +1396,15 @@ EXEC SQL INCLUDE sqlca;\n\n" );
       break;
     }
 
-  (void) fprintf( pout, ";\n\
+  (void) fprintf( pout, ";\n" );
+
+#if GENERATE_PROC == 0
+
+  (void) fprintf( pout, "\n" );
+
+#else
+
+  (void) fprintf( pout, "\
   }\n\
 \n" );
 
@@ -1303,16 +1465,21 @@ EXEC SQL INCLUDE sqlca;\n\n" );
   (void) fprintf( pout, "\
   call->epc_error = epc_error;\n\
   call->sqlcode = sqlcode;\n" );
+#endif
 
   /*
    * Print the in/out and out parameters, including Oracle error code
    */
   generate_c_debug_info( pout, fun, C_INOUT );
   generate_c_debug_info( pout, fun, C_OUT );
+#if GENERATE_PROC != 0
   print_c_debug_info( pout, "sqlcode", C_LONG );
   print_c_debug_info( pout, "epc_error", C_LONG );
+#endif
 
   (void) fprintf( pout, "  DBUG_LEAVE();\n}\n\n" );
+
+  DBUG_LEAVE();
 }
 
 
@@ -1321,6 +1488,8 @@ void
 declare_external_function( FILE * pout, idl_function_t * fun )
 {
   int nr;
+
+  DBUG_ENTER( "declare_external_function" );
 
   (void) fprintf( pout, "extern %s %s( ", 
                   get_syntax( fun->return_value.datatype, C ),
@@ -1339,6 +1508,8 @@ declare_external_function( FILE * pout, idl_function_t * fun )
     (void) fprintf( pout, "void" );
 
   (void) fprintf( pout, " );\n" );
+
+  DBUG_LEAVE();
 }
 
 
@@ -1346,7 +1517,11 @@ static
 void
 declare_internal_function( FILE * pout, idl_function_t * fun )
 {
-  (void) fprintf( pout, "extern void %s%s( epc_call_t *call );\n", EPC_PREFIX, fun->name );
+  DBUG_ENTER( "declare_internal_function" );
+
+  (void) fprintf( pout, "extern void %s%s( epc_call_t *call, epc_function_t *function );\n", EPC_PREFIX, fun->name );
+
+  DBUG_LEAVE();
 }
 
 
@@ -1354,8 +1529,10 @@ static
 void
 generate_c_source ( FILE * pout, const char *include_text )
 {
-  int nr;
+  int fnr /* function number */, pnr /* parameter number */;
   idl_function_t * fun;
+
+  DBUG_ENTER( "generate_c_source" );
 
   print_generate_comment( pout, "" );
 
@@ -1367,30 +1544,64 @@ generate_c_source ( FILE * pout, const char *include_text )
   (void) fprintf( pout, "\
 #include <string.h>\n\
 #include <stdlib.h>\n\
-#include <epc.h>\n\
+#include <epc.h>\n" );
+
+#if GENERATE_PROC != 0
+
+  (void) fprintf( pout, "\
 EXEC SQL INCLUDE \"epc_defs.h\";\n\
 EXEC SQL BEGIN DECLARE SECTION;\n\
 static const int msg_timed_out = MSG_TIMED_OUT;\n\
 static const int msg_interrupted = MSG_INTERRUPTED;\n\
 static const int send_error = SEND_ERROR;\n\
-EXEC SQL END DECLARE SECTION;\n\
-#include <epc_dbg.h>\n\
-#include \"%s.h\"\n\n\
-#define SQLCA_INIT\n\n", _interface.name );
+EXEC SQL END DECLARE SECTION;\n" );
 
+#endif
+
+  (void) fprintf( pout, "\
+#include <epc_dbg.h>\n\
+#include \"%s.h\"\n\n", _interface.name );
+
+#if GENERATE_PROC != 0
+
+  (void) fprintf( pout, "\
+#define SQLCA_INIT\n\n" );
+
+#endif
+
+  /* parameter array */
+  for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) 
+    {
+      fun = _interface.functions[fnr];
+      (void) fprintf( pout, "\nstatic epc_parameter_t %s_parameters[] = {\n", fun->name );
+      for ( pnr = 0; pnr < fun->num_parameters; pnr++ )
+        {
+          (void) fprintf( pout, "  { %s, %s, %ld, NULL },\n", 
+                          get_constant_name( fun->parameters[pnr]->mode, C ), 
+                          get_constant_name( fun->parameters[pnr]->datatype, C ),
+                          fun->parameters[pnr]->size );
+        }
+      (void) fprintf( pout, "  { %s, %s, %ld, NULL }\n", 
+                      get_constant_name( fun->return_value.mode, C ), 
+                      get_constant_name( fun->return_value.datatype, C ),
+                      fun->return_value.size );
+      (void) fprintf( pout, "};\n" );
+  }
 
   /* function array */
   (void) fprintf( pout, "\nstatic epc_function_t functions[] = {\n" );
-  for ( nr = 0; nr < _interface.num_functions; nr++ ) 
+  for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) 
     {
-      fun = _interface.functions[nr];
-      (void) fprintf( pout, "  { \"" );
+      fun = _interface.functions[fnr];
+      (void) fprintf( pout, "%s { \"", ( fnr > 0 ? "," : " " ) );
       print_function_signature( pout, fun );
-      (void) fprintf( pout, "\", %s, %s%s }%s\n", 
-                      get_constant_name( fun->return_value.datatype, C ), 
+      (void) fprintf( pout, "\",\n    %s%s, %ld, %ld, %s_parameters }\n", 
                       EPC_PREFIX,
                       fun->name,
-                      ( nr < _interface.num_functions-1 ? "," : "" ) );
+                      fun->oneway,
+                      fun->num_parameters+1, /* return value is a parameter too */
+                      fun->name
+                      );
   }
   (void) fprintf( pout, "};\n" );
 
@@ -1402,9 +1613,11 @@ EXEC SQL END DECLARE SECTION;\n\
   (void) fprintf( pout, "};\n\n" );
 
 
-  for ( nr = 0; nr < _interface.num_functions; nr++ ) {
-    generate_c_function( pout, _interface.functions[nr] );
+  for ( fnr = 0; fnr < _interface.num_functions; fnr++ ) {
+    generate_c_function( pout, _interface.functions[fnr] );
   }
+
+  DBUG_LEAVE();
 }
 
 
@@ -1413,9 +1626,13 @@ static
 void
 generate_interface_header( FILE * pout )
 {
+  DBUG_ENTER( "generate_interface_header" );
+
   print_generate_comment( pout, "" );
 
   (void) fprintf( pout, "#include \"%s.h\"\n\n", _interface.name );
+
+  DBUG_LEAVE();
 }
 #endif
 
@@ -1425,6 +1642,8 @@ void
 generate_header( FILE *pout )
 {
   int nr;
+
+  DBUG_ENTER( "generate_header" );
 
   print_generate_comment( pout, "" );
 
@@ -1442,6 +1661,8 @@ generate_header( FILE *pout )
 
   /* interface declaration */
   (void) fprintf( pout, "\nextern epc_interface_t ifc_%s;\n", _interface.name );
+
+  DBUG_LEAVE();
 }
 
 
@@ -1450,6 +1671,8 @@ generate_c( const char *include_text )
 {
   char filename[256];
   FILE *pout = NULL;
+
+  DBUG_ENTER( "generate_c" );
 
   if ( print_external_function == 0 )
     print_external_function = (include_text == NULL);
@@ -1485,9 +1708,13 @@ generate_c( const char *include_text )
     }
 
 
+#if GENERATE_PROC != 0
   /* Generate a PRO*C file */
-
   (void) sprintf( filename, "%s.pc", _interface.name );
+#else
+  (void) sprintf( filename, "%s.c", _interface.name );
+#endif
+
   if ( ( pout = fopen( filename, "w" ) ) == NULL ) 
     {
       goto open_error;
@@ -1499,9 +1726,12 @@ generate_c( const char *include_text )
       (void) fclose( pout );
     }
 
+  DBUG_LEAVE();
   return;
 
  open_error:
   (void) fprintf( stderr, "Cannot write file %s\n", filename );
   exit( EXIT_FAILURE );
 }
+
+

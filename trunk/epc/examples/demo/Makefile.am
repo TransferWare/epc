@@ -17,7 +17,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = demo.c demo.h demo.pc demo.pkb demo.pke demo.pks demo.pls
+GENERATED_FILES      = demo.c demo.h demo.c demo.pkb demo.pke demo.pks demo.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
@@ -43,7 +43,6 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 # Before running PRO*C first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
 	@touch $(@:.c=.pls_run)
-	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
 .pls.pls_run:
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
