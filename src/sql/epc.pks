@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.8  2005/01/03 13:06:31  gpaulissen
+REMARK  Release 4.4.0
+REMARK
 REMARK  Revision 1.7  2005/01/03 12:26:44  gpaulissen
 REMARK  Release 4.4.0
 REMARK
@@ -41,11 +44,6 @@ create or replace package epc is
 -- @headcom
 */
 
-/* 
-|| SUBTYPES
-*/
-
-/* see $EPC_HOME/src/lib/idl_defs.h */
 subtype interface_name_subtype is varchar2(32);
 subtype namespace_subtype is varchar2(128);
 subtype method_name_subtype is varchar2(512);
@@ -60,10 +58,6 @@ subtype float_subtype is float;
 subtype double_subtype is double precision;
 subtype string_subtype is varchar2(32767);
 subtype xml_subtype is varchar2(32767);
-
-/* 
-|| CONSTANTS
-*/
 
 "xmlns:SOAP-ENV" constant varchar2(1000) := 
   'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
@@ -86,10 +80,6 @@ SOAP_HEADER_START constant varchar2(1000) :=
 
 SOAP_HEADER_END constant varchar2(1000) := 
   '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
-
-/* 
-|| EXCEPTIONS
-*/
 
 e_illegal_null_value exception;
 e_wrong_protocol     exception;
