@@ -28,3 +28,4 @@ AM_YFLAGS            = -d
 
 EXTRA_DIST           = Imakefile
 
+idl_l.c: idl_y.h

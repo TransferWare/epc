@@ -16,7 +16,8 @@ For Windows platforms the Cygwin suite can be used except for the
 compiler because the Cygwin DLL and the Microsoft Visual C++ run-time
 DLL will be linked together which will result in problems. Therefore a
 different compiler is needed. A good choice is the MinGW compiler or the
-Microsoft Visual C++ compiler. Make sure the MinGW compiler is found before the Cygwin compiler (e.g. PATH=/cygdrive/c/MinGW/bin:$PATH).
+Microsoft Visual C++ compiler. Make sure the MinGW compiler is found
+before the Cygwin compiler (e.g. PATH=/cygdrive/c/MinGW/bin:$PATH).
 
 The EPC toolkit depends on the package dbug. On Windows systems this
 package too must have been built with the same compiler. To separate
@@ -34,7 +35,8 @@ the MinGW compiler.
 
 An example for Windows configuration:
 
-./configure --prefix=c:/usr/local CPPFLAGS=-Ic:/usr/local/include LDFLAGS="-Lc:/usr/local/lib -ldbug" ORACLE_HOME=c:/oracle/ora81
+./configure --prefix=c:/usr/local CPPFLAGS=-Ic:/usr/local/include \
+  LDFLAGS="-Lc:/usr/local/lib -ldbug" ORACLE_HOME=c:/oracle/ora81
 
 The documentation is doc/epcman.doc or doc/epcman.html.
 

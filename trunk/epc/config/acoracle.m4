@@ -111,13 +111,24 @@ AC_SUBST(PROCFLAGS)
 
 # ACX_PROG_SQLPLUS
 # ----------------
-# Look for the Oracle SQL*Plus program.
+# Look for the Oracle SQL*Plus program in directory of PRO*C, ORACLE_HOME/bin or PATH.
 # Sets/updates the following variables:
 # - SQLPLUS       the full path name of the SQL*Plus program.
 
 AC_DEFUN([ACX_PROG_SQLPLUS],
 [AC_ARG_VAR([SQLPLUS], [Oracle SQL*Plus program])dnl
-AC_PATH_PROGS([SQLPLUS], [plus80 plus33 plus32 plus31 sqlplus])
+
+if test -n "${PROC:=}"
+then
+  acx_cv_path=`dirname $PROC`
+elif test -n "${ORACLE_HOME:=}"
+then
+  acx_cv_path="$ORACLE_HOME/bin"
+else
+  acx_cv_path="$PATH"
+fi
+
+AC_PATH_PROGS([SQLPLUS], [plus80 plus33 plus32 plus31 sqlplus], [], [$acx_cv_path])
 test -n "$SQLPLUS" || AC_MSG_ERROR(sqlplus not found)
 ])
 

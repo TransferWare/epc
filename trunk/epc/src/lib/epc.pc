@@ -13,6 +13,11 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.33  2003/08/19 15:55:57  gpaulissen
+ * - enhanced searching for sqlplus
+ * - enhanced signal handling
+ * - make idl_y.h before idl_l.c
+ *
  * Revision 1.32  2003/06/08 16:28:20  gpaulissen
  * GNU build system for ts_dbug
  *
@@ -181,10 +186,83 @@ static int G_signo = 0;
 
 static
 void
-handle_signal( int signo )
-{
-  G_signo = signo;
-}
+handle_signal( int signo );
+
+#define MAX_SIGNO 32
+
+/* index 0 for startup, index 1 in signal handler */
+static struct {
+  void (*func)(int);
+} signal_handler_info[2][MAX_SIGNO] = {
+  {
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal },
+    { handle_signal }
+  },
+  {
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN },
+    { SIG_IGN }
+  }
+};
 
 static
 char *
@@ -291,48 +369,9 @@ signal_str( int signo )
   return NULL;
 }
 
-#define MAX_SIGNO 32
-
-static struct {
-  void (*func)(int);
-} signal_handler_info[MAX_SIGNO] = {
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal },
-  { handle_signal }
-};
-
 static
 void
-set_signal_handlers( void )
+set_signal_handlers( const int idx )
 {
   int nr;
 
@@ -441,10 +480,10 @@ set_signal_handlers( void )
     DBUG_PRINT( "info", ( "handler for signal %d (%s): %p", 
                           nr,
                           signal_str(nr),
-                          (void*) signal_handler_info[nr].func ) );
+                          (void*) signal_handler_info[idx][nr].func ) );
 
     /* store old handler */
-    signal_handler_info[nr].func = signal( nr, signal_handler_info[nr].func );
+    signal_handler_info[idx][nr].func = signal( nr, signal_handler_info[idx][nr].func );
   }
 
   DBUG_LEAVE();
@@ -452,9 +491,30 @@ set_signal_handlers( void )
 
 static
 void
-reset_signal_handlers( void )
+reset_signal_handlers( const int idx )
 {
-  set_signal_handlers();
+  set_signal_handlers( idx );
+}
+
+static
+void
+handle_signal( int signo )
+{
+  set_signal_handlers( 1 );
+
+  (void) fprintf( stderr, "Received signal %d\n", signo );
+
+  switch( G_signo = signo )
+    {
+    default:
+      /* GJP 18-09-2003 The only way to stop while in a dbms_pipe.receive() loop 
+         is to disconnect AND exit */
+      epc_disconnect(); 
+      exit(EXIT_SUCCESS);
+      break;
+    }
+
+  reset_signal_handlers( 1 );
 }
 
 static
@@ -934,6 +994,8 @@ epc_abort( char *msg )
   (void) printf("%.*s\n", msg_len, err_msg);
 
   epc_disconnect();
+
+  exit(EXIT_FAILURE);
 }
 
 epc_error_t
@@ -959,8 +1021,6 @@ epc_connect( epc_info_t *epc_info )
   EXEC SQL END DECLARE SECTION;
   epc_error_t status = OK;
 
-  set_signal_handlers();
-
   if ( logon == NULL ) {
     printf( "ERROR: No connect string specified.\n" );
     status = CONNECT_ERROR;
@@ -972,6 +1032,9 @@ epc_connect( epc_info_t *epc_info )
     EXEC SQL CONNECT :logon;
 
     printf( "Connected to database....\n" );
+
+    set_signal_handlers( 0 );
+
     fflush( stdout ); /* flush because of DBUG package */
   }
   return status;
@@ -999,6 +1062,10 @@ epc_disconnect( void )
 
   EXEC SQL WHENEVER SQLERROR CONTINUE;
 
+  (void) printf( "Disconnecting from database....\n" );
+
+  reset_signal_handlers( 0 );
+
   switch ( G_signo )
     {
     case 0:
@@ -1008,9 +1075,7 @@ epc_disconnect( void )
       EXEC SQL ROLLBACK RELEASE;
     }
 
-  (void) printf( "Disconnected from database\n" );
-
-  reset_signal_handlers();
+  (void) printf( "Disconnected from database....\n" );
 
   return sqlca.sqlcode == 0 ? status : DISCONNECT_ERROR;
 }
