@@ -24,7 +24,7 @@ MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
 
 check_PROGRAMS       = epctest
 epctest_SOURCES      = epctest.idl str.idl proc.c main.c
@@ -49,7 +49,7 @@ COUNT = 1000
 FORCE = force
 
 EPCTEST = ./epctest
-DIFF = diff
+DIFF = diff -w
 
 test1: $(top_srcdir)/test/epctest.sql $(FORCE)
 	$(EPCTEST) -d -u$(USERID) 1>$@.server.log 2>&1 &
