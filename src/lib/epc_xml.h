@@ -5,14 +5,14 @@
 
 extern
 unsigned int
-epc_xml_init( epc_info_t *epc_info );
+epc__xml_init( epc__info_t *epc__info );
 
 extern
 unsigned int
-epc_xml_done( epc_info_t *epc_info );
+epc__xml_done( epc__info_t *epc__info );
 
 extern
 unsigned int
-epc_xml_parse( epc_info_t *epc_info, epc_call_t *epc_call, const char *buf, const size_t len );
+epc__xml_parse( epc__info_t *epc__info, epc__call_t *epc__call, const char *buf, const size_t len );
 
 #endif

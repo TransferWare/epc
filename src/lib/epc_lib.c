@@ -22,7 +22,7 @@
 #endif
 
 #include <epc.h>
-#include <epc_dbg.h>
+#include <dbug.h>
 
 /* include dmalloc/ulib as last one */
 #if defined(HASDMALLOC) && HASDMALLOC != 0
@@ -32,11 +32,11 @@
 #endif
 
 static
-epc_handle_interrupt_t G_epc_handle_interrupt = NULL;
+epc__handle_interrupt_t G_epc__handle_interrupt = NULL;
 
-/* Can not supply epc_info to standard signal handlers 
+/* Can not supply epc__info to standard signal handlers 
    so supply a global */
-static epc_info_t *G_interrupt_epc_info = NULL;
+static epc__info_t *G_epc__info_interrupt = NULL;
 
 static
 int
@@ -228,11 +228,11 @@ signal_str( int signo )
 }
 
 void
-epc_set_signal_handlers( const int idx )
+epc__set_signal_handlers( const int idx )
 {
   int nr;
 
-  DBUG_ENTER( "epc_set_signal_handlers" );
+  DBUG_ENTER( "epc__set_signal_handlers" );
 
   for ( nr = 0; nr < MAX_SIGNO; nr++ ) {
     switch( nr )
@@ -347,18 +347,18 @@ epc_set_signal_handlers( const int idx )
 }
 
 void
-epc_reset_signal_handlers( const int idx )
+epc__reset_signal_handlers( const int idx )
 {
-  epc_set_signal_handlers( idx );
+  epc__set_signal_handlers( idx );
 }
 
 void
-epc_call_print ( epc_call_t * call )
+epc__call_print ( epc__call_t * call )
 /* ----------------------------------------------------------------------
  * Prints out all fields of a call in readable format
  * ----------------------------------------------------------------------*/
 {
-  DBUG_ENTER( "epc_call_print" );
+  DBUG_ENTER( "epc__call_print" );
   DBUG_PRINT( "input", ( "msg info: '%s'", call->msg_info) );
   DBUG_PRINT( "input", 
               ( "interface: '%s'; function: '%s'", 
@@ -368,33 +368,33 @@ epc_call_print ( epc_call_t * call )
                 (call != NULL && call->function != NULL && call->function->name != NULL
                  ? call->function->name 
                  : "(null)") ) );
-  DBUG_PRINT( "input", ( "status: %ld; error code: %ld", (long)call->epc_error, (long)call->errcode) );
+  DBUG_PRINT( "input", ( "status: %ld; error code: %ld", (long)call->epc__error, (long)call->errcode) );
   DBUG_LEAVE();
 }
 
 static
 int
-epc_cmp_function( const void *par1, const void *par2 )
+epc__cmp_function( const void *par1, const void *par2 )
 {
-  epc_function_t *fnc1 = (epc_function_t *) par1;
-  epc_function_t *fnc2 = (epc_function_t *) par2;
+  epc__function_t *fnc1 = (epc__function_t *) par1;
+  epc__function_t *fnc2 = (epc__function_t *) par2;
 
   return strcmp( fnc1->name, fnc2->name );
 }
 
 static
 int
-epc_cmp_interface( const void *par1, const void *par2 )
+epc__cmp_interface( const void *par1, const void *par2 )
 {
-  epc_interface_t *ifc1 = *((epc_interface_t **) par1);
-  epc_interface_t *ifc2 = *((epc_interface_t **) par2);
+  epc__interface_t *ifc1 = *((epc__interface_t **) par1);
+  epc__interface_t *ifc2 = *((epc__interface_t **) par2);
 
   return strcmp( ifc1->name, ifc2->name );
 }
 
 static
 char *
-get_error_str( epc_error_t err )
+get_error_str( epc__error_t err )
 {
   switch( err ) 
     {
@@ -433,53 +433,53 @@ get_error_str( epc_error_t err )
     }
 }
 
-epc_info_t *
-epc_init( void )
+epc__info_t *
+epc__init( void )
 {
-  epc_info_t *epc_info = NULL;
+  epc__info_t *epc__info = NULL;
 
-  DBUG_ENTER( "epc_init" );
+  DBUG_ENTER( "epc__init" );
 
-  epc_info = (epc_info_t*)malloc( sizeof(epc_info_t) );
+  epc__info = (epc__info_t*)malloc( sizeof(epc__info_t) );
 
-  DBUG_PRINT( "info", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "info", ( "epc__info: %p", (void*)epc__info ) );
 
-  if ( epc_info != NULL )
+  if ( epc__info != NULL )
     {
-      epc_info->logon = NULL;
-      epc_info->connected = FALSE;
-      epc_info->pipe = NULL;
-      epc_info->num_interfaces = 0;
-      epc_info->interfaces = NULL;
-      epc_info->sqlca = NULL;
-      epc_xml_init( epc_info );
+      epc__info->logon = NULL;
+      epc__info->connected = 0;
+      epc__info->pipe = NULL;
+      epc__info->num_interfaces = 0;
+      epc__info->interfaces = NULL;
+      epc__info->sqlca = NULL;
+      epc__xml_init( epc__info );
     }
 
   DBUG_LEAVE();
-  return epc_info;
+  return epc__info;
 }
 
 void
-epc_done( epc_info_t **epc_info )
+epc__done( epc__info_t **epc__info )
 {
-  DBUG_ENTER( "epc_done" );
+  DBUG_ENTER( "epc__done" );
 
-  DBUG_PRINT( "input", ( "*epc_info: %p", (void*)*epc_info ) );
+  DBUG_PRINT( "input", ( "*epc__info: %p", (void*)*epc__info ) );
 
-  if ( *epc_info != NULL )
+  if ( *epc__info != NULL )
     {
-      epc_xml_done( *epc_info );
+      epc__xml_done( *epc__info );
 
-      if ( (*epc_info)->sqlca != NULL )
-        free( (*epc_info)->sqlca );
+      if ( (*epc__info)->sqlca != NULL )
+        free( (*epc__info)->sqlca );
 
-      if ( (*epc_info)->interfaces != NULL )
+      if ( (*epc__info)->interfaces != NULL )
         {
           int inr, fnr, pnr;
 
-          for (inr = 0; inr < (*epc_info)->num_interfaces; inr++)
+          for (inr = 0; inr < (*epc__info)->num_interfaces; inr++)
             {
-              epc_interface_t *interface = (*epc_info)->interfaces[inr];
+              epc__interface_t *interface = (*epc__info)->interfaces[inr];
 
               /* free memory for the parameters */
               for ( fnr = 0; fnr < interface->num_functions; fnr++ )
@@ -491,21 +491,21 @@ epc_done( epc_info_t **epc_info )
                   }
             }
           
-          free( (*epc_info)->interfaces );
+          free( (*epc__info)->interfaces );
         }
 
-      if ( (*epc_info)->pipe != NULL )
-        free( (*epc_info)->pipe );
+      if ( (*epc__info)->pipe != NULL )
+        free( (*epc__info)->pipe );
 
-      free( *epc_info );
-      *epc_info = NULL;
+      free( *epc__info );
+      *epc__info = NULL;
     }
 
   DBUG_LEAVE();
 }
 
 void
-epc_abort( char *msg )
+epc__abort( char *msg )
 {
   char err_msg[512];
   size_t buf_len, msg_len;
@@ -518,50 +518,50 @@ epc_abort( char *msg )
   exit(EXIT_FAILURE);
 }
 
-epc_error_t
-epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
+epc__error_t
+epc__add_interface( epc__info_t *epc__info, epc__interface_t *interface )
 {
-  epc_error_t status = OK;
+  epc__error_t status = OK;
 
-  DBUG_ENTER( "epc_add_interface" );
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_ENTER( "epc__add_interface" );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  if ( epc_info == NULL )
+  if ( epc__info == NULL )
     {
       status = MEMORY_ERROR;
     }
   else
     {
-      epc_info->num_interfaces++;
-      epc_info->interfaces = 
-        (epc_interface_t**)
+      epc__info->num_interfaces++;
+      epc__info->interfaces = 
+        (epc__interface_t**)
         realloc(
-                (void*)epc_info->interfaces,
-                (size_t)(epc_info->num_interfaces * sizeof(epc_interface_t**))
+                (void*)epc__info->interfaces,
+                (size_t)(epc__info->num_interfaces * sizeof(epc__interface_t**))
                 );
 
-      if ( epc_info->interfaces == NULL )
+      if ( epc__info->interfaces == NULL )
         {
-          epc_info->num_interfaces--;
+          epc__info->num_interfaces--;
           status = MEMORY_ERROR;
         }
       else
         {
           int fnr, pnr;
 
-          epc_info->interfaces[epc_info->num_interfaces - 1] = interface;
+          epc__info->interfaces[epc__info->num_interfaces - 1] = interface;
 
           /* sort the functions */
           qsort( interface->functions,
                  interface->num_functions,
                  sizeof(interface->functions[0]),
-                 epc_cmp_function );
+                 epc__cmp_function );
 
           /* sort the interfaces */
-          qsort( epc_info->interfaces,
-                 epc_info->num_interfaces,
-                 sizeof(epc_info->interfaces[0]),
-                 epc_cmp_interface );
+          qsort( epc__info->interfaces,
+                 epc__info->num_interfaces,
+                 sizeof(epc__info->interfaces[0]),
+                 epc__cmp_interface );
 
           /* allocate memory for the parameters */
           for ( fnr = 0; fnr < interface->num_functions; fnr++ )
@@ -602,33 +602,33 @@ epc_add_interface( epc_info_t *epc_info, epc_interface_t *interface )
   return( status );
 }
 
-epc_error_t
-epc_set_pipe( epc_info_t *epc_info, char *pipe )
+epc__error_t
+epc__set_pipe( epc__info_t *epc__info, char *pipe )
 {
-  epc_error_t status = OK;
+  epc__error_t status = OK;
 
-  DBUG_ENTER( "epc_set_pipe" );
+  DBUG_ENTER( "epc__set_pipe" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  if ( epc_info == NULL )
+  if ( epc__info == NULL )
     {
       status = MEMORY_ERROR;
     }
   else if ( pipe == NULL )
     {
-      if ( epc_info->pipe != NULL )
-        free( epc_info->pipe );
+      if ( epc__info->pipe != NULL )
+        free( epc__info->pipe );
 
-      epc_info->pipe = NULL;
+      epc__info->pipe = NULL;
     }
   else
     {
-      epc_info->pipe = (char*) realloc( epc_info->pipe, strlen(pipe) + 1 );
-      if ( epc_info->pipe == NULL )
+      epc__info->pipe = (char*) realloc( epc__info->pipe, strlen(pipe) + 1 );
+      if ( epc__info->pipe == NULL )
         status = MEMORY_ERROR;
       else
-        strcpy( epc_info->pipe, pipe );
+        strcpy( epc__info->pipe, pipe );
     }
 
   DBUG_PRINT( "output", ( "status: %d", (int)status ) );
@@ -637,33 +637,33 @@ epc_set_pipe( epc_info_t *epc_info, char *pipe )
   return( status );
 }
 
-epc_error_t
-epc_set_logon( epc_info_t *epc_info, char *logon )
+epc__error_t
+epc__set_logon( epc__info_t *epc__info, char *logon )
 {
-  epc_error_t status = OK;
+  epc__error_t status = OK;
 
-  DBUG_ENTER( "epc_set_logon" );
+  DBUG_ENTER( "epc__set_logon" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  if ( epc_info == NULL )
+  if ( epc__info == NULL )
     {
       status = MEMORY_ERROR;
     }
   else if ( logon == NULL )
     {
-      if ( epc_info->logon != NULL )
-        free( epc_info->logon );
+      if ( epc__info->logon != NULL )
+        free( epc__info->logon );
 
-      epc_info->logon = NULL;
+      epc__info->logon = NULL;
     }
   else
     {
-      epc_info->logon = (char*) realloc( epc_info->logon, strlen(logon) + 1 );
-      if ( epc_info->logon == NULL )
+      epc__info->logon = (char*) realloc( epc__info->logon, strlen(logon) + 1 );
+      if ( epc__info->logon == NULL )
         status = MEMORY_ERROR;
       else
-        strcpy( epc_info->logon, logon );
+        strcpy( epc__info->logon, logon );
     }
 
   DBUG_PRINT( "output", ( "status: %d", (int)status ) );
@@ -673,106 +673,119 @@ epc_set_logon( epc_info_t *epc_info, char *logon )
   return( status );
 }
 
-epc_error_t
-epc_exec_call( epc_info_t * epc_info, epc_call_t * epc_call )
+epc__error_t
+epc__exec_call( epc__info_t * epc__info, epc__call_t * epc__call )
 {
-  DBUG_ENTER( "epc_exec_call" );
+  DBUG_ENTER( "epc__exec_call" );
 
-  epc_call->epc_error = OK;
+  assert( epc__call->epc__error == OK );
 
-  if ( epc_call->function != NULL && epc_call->function->oneway == 0 )
+  epc__xml_parse( epc__info, epc__call, epc__call->msg_request, strlen(epc__call->msg_request) );
+
+  /* TBD: SOAP errors when interface or function unknown */
+  if ( epc__call->epc__error != OK )
     {
-      char *msg_response = epc_call->msg_response;
-      dword_t nr;
+      (void) strcpy( epc__call->msg_response, "ERROR" );
+    }
+  else
+    {
+      assert( epc__call->function != NULL );
 
-      (*epc_call->function->function) ( epc_call->function );
+      (*epc__call->function->function) ( epc__call->function );
 
-      (void) snprintf(msg_response,
-                      MAX_MSG_RESPONSE_LEN+1, 
-                      "<?xml version='1.0' encoding='UTF-8'?>\
+      /* construct the response */
+      if ( epc__call->function->oneway == 0 )
+        {
+          char *msg_response = epc__call->msg_response;
+          dword_t nr;
+
+          (void) snprintf(msg_response,
+                          MAX_MSG_RESPONSE_LEN+1, 
+                          "<?xml version='1.0' encoding='UTF-8'?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' \
 xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' \
 xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' \
 xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
-<SOAP-ENV:Body><%sResponse xmlns='%s'>", epc_call->function->name, epc_call->interface->name);
+<SOAP-ENV:Body><%sResponse xmlns='%s'>", epc__call->function->name, epc__call->interface->name);
 
-      for ( nr = 0; nr < epc_call->function->num_parameters; nr++ )
-        {
-          if ( epc_call->function->parameters[nr].mode != C_IN )
+          for ( nr = 0; nr < epc__call->function->num_parameters; nr++ )
             {
-              (void) snprintf(msg_response, 
-                              MAX_MSG_RESPONSE_LEN+1, 
-                              "%s<%s>", 
-                              msg_response,
-                              epc_call->function->parameters[nr].name);
-
-              switch(epc_call->function->parameters[nr].type)
+              if ( epc__call->function->parameters[nr].mode != C_IN )
                 {
-                case C_STRING:
                   (void) snprintf(msg_response, 
                                   MAX_MSG_RESPONSE_LEN+1, 
-                                  "%s%s", 
-                                  msg_response, 
-                                  (char*)epc_call->function->parameters[nr].data);
-                  break;
+                                  "%s<%s>", 
+                                  msg_response,
+                                  epc__call->function->parameters[nr].name);
+
+                  switch(epc__call->function->parameters[nr].type)
+                    {
+                    case C_STRING:
+                      (void) snprintf(msg_response, 
+                                      MAX_MSG_RESPONSE_LEN+1, 
+                                      "%s%s", 
+                                      msg_response, 
+                                      (char*)epc__call->function->parameters[nr].data);
+                      break;
       
-                case C_INT:
-                  (void) snprintf(msg_response,
-                                  MAX_MSG_RESPONSE_LEN+1, 
-                                  "%s%d", 
-                                  msg_response,
-                                  *((int*)epc_call->function->parameters[nr].data));
-                  break;
+                    case C_INT:
+                      (void) snprintf(msg_response,
+                                      MAX_MSG_RESPONSE_LEN+1, 
+                                      "%s%d", 
+                                      msg_response,
+                                      *((int*)epc__call->function->parameters[nr].data));
+                      break;
 
-                case C_LONG:
-                  (void) snprintf(msg_response,
-                                  MAX_MSG_RESPONSE_LEN+1, 
-                                  "%s%ld", 
-                                  msg_response, 
-                                  *((long*)epc_call->function->parameters[nr].data));
-                  break;
+                    case C_LONG:
+                      (void) snprintf(msg_response,
+                                      MAX_MSG_RESPONSE_LEN+1, 
+                                      "%s%ld", 
+                                      msg_response, 
+                                      *((long*)epc__call->function->parameters[nr].data));
+                      break;
 
-                case C_FLOAT:
-                  (void) snprintf(msg_response,
-                                  MAX_MSG_RESPONSE_LEN+1, 
-                                  "%s%f",
-                                  msg_response,
-                                  (double)(*((float*)epc_call->function->parameters[nr].data)));
-                  break;
+                    case C_FLOAT:
+                      (void) snprintf(msg_response,
+                                      MAX_MSG_RESPONSE_LEN+1, 
+                                      "%s%f",
+                                      msg_response,
+                                      (double)(*((float*)epc__call->function->parameters[nr].data)));
+                      break;
                   
-                case C_DOUBLE:
-                  (void) snprintf(msg_response,
-                                  MAX_MSG_RESPONSE_LEN+1, 
-                                  "%s%f", 
-                                  msg_response,
-                                  *((double*)epc_call->function->parameters[nr].data));
-                  break;
+                    case C_DOUBLE:
+                      (void) snprintf(msg_response,
+                                      MAX_MSG_RESPONSE_LEN+1, 
+                                      "%s%f", 
+                                      msg_response,
+                                      *((double*)epc__call->function->parameters[nr].data));
+                      break;
                           
-                case C_VOID: /* procedure */
-                  assert( epc_call->function->parameters[nr].mode == C_OUT );
-                  break;
+                    case C_VOID: /* procedure */
+                      assert( epc__call->function->parameters[nr].mode == C_OUT );
+                      break;
 
-                default: 
-                  assert( epc_call->function->parameters[nr].type >= C_DATATYPE_MIN &&
-                          epc_call->function->parameters[nr].type <= C_DATATYPE_MAX );
+                    default: 
+                      assert( epc__call->function->parameters[nr].type >= C_DATATYPE_MIN &&
+                              epc__call->function->parameters[nr].type <= C_DATATYPE_MAX );
 
+                    }
+
+                  (void) snprintf(msg_response, MAX_MSG_RESPONSE_LEN+1, "%s</%s>", 
+                                  msg_response, epc__call->function->parameters[nr].name);
                 }
-
-              (void) snprintf(msg_response, MAX_MSG_RESPONSE_LEN+1, "%s</%s>", 
-                              msg_response, epc_call->function->parameters[nr].name);
             }
+
+          (void) snprintf(msg_response, MAX_MSG_RESPONSE_LEN+1, 
+                          "%s</%sResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>", 
+                          msg_response, epc__call->function->name);
+
+          DBUG_PRINT( "info", ( "msg_response: %s", msg_response ) );
         }
-
-      (void) snprintf(msg_response, MAX_MSG_RESPONSE_LEN+1, 
-                      "%s</%sResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>", 
-                      msg_response, epc_call->function->name);
-
-      DBUG_PRINT( "info", ( "msg_response: %s", msg_response ) );
     }
 
   DBUG_LEAVE();
 
-  return epc_call->epc_error;
+  return epc__call->epc__error;
 }
 
 /* =====================================================================
@@ -782,10 +795,10 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
  *======================================================================*/
 
 long
-epc_handle_request( epc_info_t *epc_info, 
-                    epc_call_t *epc_call,
-                    epc_error_t (*recv_request)( epc_info_t *, epc_call_t * ),
-                    epc_error_t (*send_response)( epc_info_t *, epc_call_t * ) )
+epc__handle_request( epc__info_t *epc__info,
+                     epc__call_t *epc__call,
+                     epc__error_t (*recv_request)( epc__info_t *, epc__call_t * ),
+                     epc__error_t (*send_response)( epc__info_t *, epc__call_t * ) )
 
      /* ----------------------------------------------------------------------
       * Handles a single request 
@@ -796,35 +809,30 @@ epc_handle_request( epc_info_t *epc_info,
 {
   long retval = -1L;
 
-  DBUG_ENTER( "epc_handle_request" );
+  DBUG_ENTER( "epc__handle_request" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   do
     {
       /* receive the request */
-      (void) (*recv_request)( epc_info, epc_call );
-
-      if ( epc_call->epc_error == OK )
-        {
-          epc_xml_parse( epc_info, epc_call, epc_call->msg_request, strlen(epc_call->msg_request) );
-        }
-
-      if ( !( epc_call->epc_error == FUNCTION_UNKNOWN ||
-              epc_call->epc_error == INTERFACE_UNKNOWN ||
-              epc_call->epc_error == OK ) )
-        break;
+      (void) (*recv_request)( epc__info, epc__call );
 
       /* do the call */
-      if ( epc_call->epc_error == OK )
-        {
-          epc_exec_call( epc_info, epc_call );
-        }
+      if ( epc__call->epc__error != OK )
+        break;
+
+      epc__exec_call( epc__info, epc__call );
+
+      if ( !( epc__call->epc__error == FUNCTION_UNKNOWN ||
+              epc__call->epc__error == INTERFACE_UNKNOWN ||
+              epc__call->epc__error == OK ) )
+        break;
 
       /* send the response */
-      (*send_response)( epc_info, epc_call );
+      (*send_response)( epc__info, epc__call );
 
-      if ( epc_call->epc_error != OK )
+      if ( epc__call->epc__error != OK )
         break;
 
       retval = 0L;
@@ -834,13 +842,13 @@ epc_handle_request( epc_info_t *epc_info,
   /* GJP 18-10-2004 Do not know why dbms_pipe errors should be ignored */
   /*#define OBSOLETE 1*/
 #ifdef OBSOLETE
-  switch( epc_call->epc_error )
+  switch( epc__call->epc__error )
     {
     case MSG_TIMED_OUT:
     case RECEIVE_ERROR:
     case SEND_ERROR:
     case OK:
-      switch( epc_call->errcode )
+      switch( epc__call->errcode )
         {
         case -6556: /* the pipe is empty, cannot fulfill the unpack_message request */
         case -6558: /* buffer in dbms_pipe package is full. No more items allowed */
@@ -861,16 +869,16 @@ epc_handle_request( epc_info_t *epc_info,
 
   DBUG_PRINT( "output", 
               ( "retval: %ld; error code: %ld; epc status: %s", 
-                retval, (long)epc_call->errcode, get_error_str( epc_call->epc_error ) ) );
+                retval, (long)epc__call->errcode, get_error_str( epc__call->epc__error ) ) );
   DBUG_LEAVE();
 
   return retval;
 }
 
-epc_error_t
-epc_handle_requests(epc_info_t *epc_info, 
-                    epc_error_t (*recv_request)( epc_info_t *, epc_call_t * ),
-                    epc_error_t (*send_response)( epc_info_t *, epc_call_t * ))
+epc__error_t
+epc__handle_requests( epc__info_t *epc__info, 
+                      epc__error_t (*recv_request)( epc__info_t *, epc__call_t * ),
+                      epc__error_t (*send_response)( epc__info_t *, epc__call_t * ) )
      /* ----------------------------------------------------------------------
       * Handles all requests received over the specified database pipe:
       * - receives a request message
@@ -880,15 +888,15 @@ epc_handle_requests(epc_info_t *epc_info,
       * - sends back the results
       * ----------------------------------------------------------------------*/
 {
-  epc_call_t epc_call = EPC_CALL_INIT;
+  epc__call_t epc__call = EPC__CALL_INIT;
 
-  DBUG_ENTER( "epc_handle_requests" );
+  DBUG_ENTER( "epc__handle_requests" );
 
-  DBUG_PRINT( "input", ( "epc_info: %p", (void*)epc_info ) );
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  for ( epc_call.errcode = 0; G_signo == 0; epc_call.errcode = 0 )
+  for ( epc__call.errcode = 0; G_signo == 0; epc__call.errcode = 0 )
     {    
-      if ( epc_handle_request( epc_info, &epc_call, recv_request, send_response ) != 0 )
+      if ( epc__handle_request( epc__info, &epc__call, recv_request, send_response ) != 0 )
         break;
     }
 
@@ -899,41 +907,41 @@ epc_handle_requests(epc_info_t *epc_info,
 
   DBUG_PRINT( "output", 
               ( "error code: %ld; epc status: %s", 
-                (long)epc_call.errcode, get_error_str( epc_call.epc_error ) ) );
+                (long)epc__call.errcode, get_error_str( epc__call.epc__error ) ) );
 
   DBUG_LEAVE();
 
-  return epc_call.epc_error;
+  return epc__call.epc__error;
 }
 
 static
 void
 handle_signal( int signo )
 {
-  epc_set_signal_handlers( 1 );
+  epc__set_signal_handlers( 1 );
 
   (void) fprintf( stderr, "Received signal %d\n", signo );
 
-  if ( G_epc_handle_interrupt != NULL )
+  if ( G_epc__handle_interrupt != NULL )
     {
-      (*G_epc_handle_interrupt)(G_interrupt_epc_info);
+      (*G_epc__handle_interrupt)(G_epc__info_interrupt);
     }
 
   G_signo = signo;
 
-  epc_reset_signal_handlers( 1 );
+  epc__reset_signal_handlers( 1 );
 }
 
 
 void
-epc_set_handle_interrupt(epc_handle_interrupt_t handle_interrupt, epc_info_t *epc_info)
+epc__set_handle_interrupt(epc__handle_interrupt_t handle_interrupt, epc__info_t *epc__info)
 {
-  G_epc_handle_interrupt = handle_interrupt;
-  G_interrupt_epc_info = epc_info;
+  G_epc__handle_interrupt = handle_interrupt;
+  G_epc__info_interrupt = epc__info;
 }
 
 int
-epc_get_signo(void)
+epc__get_signo(void)
 {
   return G_signo;
 }
