@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.23  2002/10/19 14:05:19  gpaulissen
+ * einde signature
+ *
  * Revision 1.22  2002/10/19 13:58:13  gpaulissen
  * function signature instead of function name
  *
@@ -622,6 +625,13 @@ print_function_signature( FILE *pout, idl_function_t *fun )
                             "out" ) ),
                         get_syntax( fun->parameters[nr]->datatype, language ),
                         fun->parameters[nr]->name );
+      if ( length >= 0 )
+        tot_length += length;
+    }
+
+  if ( nr > 0 )
+    {
+      length = fprintf( pout, "%s", " )" );
       if ( length >= 0 )
         tot_length += length;
     }
