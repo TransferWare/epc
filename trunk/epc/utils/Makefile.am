@@ -16,7 +16,9 @@
 ## Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 empty_pipes.html: empty_pipes.prc
-	@PERL@ -S pod2html --infile=$< --outfile=$@
+# MinGW make uses CreateProcess which can not find /usr/bin/perl
+#	@PERL@ -S pod2html --infile=$< --outfile=$@
+	perl -S pod2html --infile=$< --outfile=$@
 
 EXTRA_DIST           = Imakefile empty_pipes.html empty_pipes.prc
 
