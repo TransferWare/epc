@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.13  2001/01/24 16:19:11  gpaulissen
+ * Release 1.6.7
+ *
  * Revision 1.12  2000/08/14 13:47:40  gpaulissen
  * * Added -v command line option for version info.
  * * Updated build support.
@@ -167,32 +170,21 @@ version( void )
     NAME_KW,
     REVISION_KW
   } step_no;
-  char *str = NULL, *instr = NULL, *found = NULL;
+  static char str[2][100] = { "$Name$", "$Revision$" };
+  char *instr[2] = { "Name: ", "Revision: " };
+  char *found = NULL;
 
   for ( step_no = NAME_KW;
 	( found == NULL || *found == '\0' ) && step_no <= REVISION_KW;
 	step_no++ )
     {
-      switch( step_no )
-	{
-	case NAME_KW:
-	  str = "$Name$";
-	  instr = "Name: ";
-	  break;
-
-	case REVISION_KW:
-	  str = "$Revision$";
-	  instr = "Revision: ";
-	  break;
-	}
-
-      found = strstr( str, instr );
+      found = strstr( str[step_no], instr[step_no] );
 
       if ( found != NULL )
 	{
 	  char *space;
 
-	  found += strlen(instr);
+	  found += strlen( instr[step_no] );
 
 	  space = strstr( found, " " );
 
