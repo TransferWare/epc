@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.4  2004/05/21 15:04:34  gpaulissen
+REMARK  Eerste implementatie
+REMARK
 REMARK  Revision 1.3  2004/04/21 11:16:56  gpaulissen
 REMARK  .
 REMARK
@@ -31,9 +34,8 @@ create or replace package epc_clnt as
 --    c) epc_clnt.set_request_send_timeout (optional)
 --    d) epc_clnt.set_response_recv_timeout (optional)
 -- 2) Marshall a function call into a message
---    a) epc_clnt.set_request_header
+--    a) epc_clnt.new_request
 --    b) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)
---    c) epc_clnt.set_request_trailer
 -- 3) Send the message
 --    a) epc_clnt.send_request
 -- 4) Receive the response
@@ -152,19 +154,13 @@ procedure set_response_recv_timeout
 );
 
 /**
--- Set the request header.
+-- Start a new request
 -- 
--- @param p_epc_key         The key
--- @param p_interface_name  The interface name
--- @param p_method_name     The method name
--- @param p_oneway          Must we wait on a response? (0 = NO)
+-- @param p_epc_key    The key
 */
-procedure set_request_header
+procedure new_request
 (
   p_epc_key in epc_key_subtype
-, p_interface_name in epc.interface_name_subtype
-, p_method_name in epc.method_name_subtype
-, p_oneway in pls_integer
 );
 
 /**
@@ -204,24 +200,17 @@ procedure set_request_parameter
 );
 
 /**
--- Set a request trailer. Should be called to after the last
--- set_request_parameter and before send_request.
--- 
--- @param p_epc_key  The key
-*/
-procedure set_request_trailer
-(
-  p_epc_key in epc_key_subtype
-);
-
-/**
 -- Send a request.
 -- 
--- @param p_epc_key  Connection info can be retrieved by the key
+-- @param p_epc_key      Connection info can be retrieved by the key
+-- @param p_method_name  The method name
+-- @param p_oneway       Must we wait on a response? (0 = NO)
 */
 procedure send_request
 ( 
   p_epc_key in epc_key_subtype
+, p_method_name in epc.method_name_subtype
+, p_oneway in pls_integer
 );
 
 /**
