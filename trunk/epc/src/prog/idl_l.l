@@ -13,6 +13,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.11  2000/08/14 12:56:36  gpaulissen
+ * Added version.
+ *
  * Revision 1.10  2000/01/13 16:23:24  gpaulissen
  * Version 1.6.0
  *
@@ -146,9 +149,61 @@ end_include     "%}"
 
 %%
 
-void yyerror( char *s )
+void
+yyerror( char *s )
 {
   printf("%s; line %d: text: '%s'\n", s, lineno, yytext );
+}
+
+static
+char *
+version( void )
+{
+  enum keyword {
+    NAME_KW,
+    REVISION_KW
+  } step_no;
+  char *str = NULL, *instr = NULL, *found = NULL;
+
+  for ( step_no = NAME_KW; found == NULL && step_no <= REVISION_KW; step_no++ )
+    {
+      switch( step_no )
+	{
+	case NAME_KW:
+	  str = "$Name$";
+	  instr = "Name: ";
+	  break;
+
+	case REVISION_KW:
+	  str = "$Revision$";
+	  instr = "Revision: ";
+	  break;
+	}
+
+      found = strstr( str, instr );
+      if ( found != NULL )
+	{
+	  char *space = strstr( found + strlen(instr), " " );
+
+	  if ( space != NULL )
+	    *space = '\0';
+	}
+    }
+  return found != NULL ? found : "";
+}
+
+static
+void
+usage( int argc, char **argv )
+{
+  fprintf( stdout, "\
+Syntax: %s [ -D DBUG_OPTIONS ] [ -h ] [ -v ] <input file>\n\
+\n\
+OPTIONS\n\
+  -h    This message.\n\
+  -v    Print the version.\n\
+  -D    Set DBUG_OPTIONS. See the DBUG package.\n",
+	   argv[0] );
 }
 
 int main ( int argc, char **argv )
@@ -164,11 +219,23 @@ int main ( int argc, char **argv )
 	case '-':
 	  switch( argv[nr][1] )
 	    {
-	    case '#':
+	    case 'D':
+	    case '#': /* for compability reasons */
 	      dbug_options = &argv[nr][2];
+	      break;
+
+	    case 'h':
+	      usage( argc, argv );
+	      exit( EXIT_SUCCESS );
+	      break;
+
+	    case 'v':
+	      fprintf( stdout, "EPC idl version: %s", version() );
+	      exit( EXIT_SUCCESS );
 	      break;
 	    }
 	  break;
+
 	default:
 	  file = argv[nr];
 	  break;
@@ -176,13 +243,13 @@ int main ( int argc, char **argv )
     }
 
   if ( file == NULL ) {
-    fprintf( stderr, "Syntax: %s [ -#<dbug options> ] <input file>\n", argv[0] );
-    exit (-1);
+    usage( argc, argv );
+    exit( EXIT_FAILURE );
   }
 
   if ( (yyin = fopen( file, "r" )) == NULL ) {
     perror(file);
-    exit (-1);
+    exit( EXIT_FAILURE );
   }
 
   DBUG_INIT( dbug_options, NULL );
@@ -204,3 +271,5 @@ int main ( int argc, char **argv )
 
   return 0;
 }
+
+
