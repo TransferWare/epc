@@ -41,25 +41,45 @@ PROCLIB=
 case "$host" in
 *-*-cygwin* | *-*-mingw* )
   # Windows
-  AC_MSG_CHECKING(for the Windows PRO*C library)
-  for dir in $acx_cv_oracle_home/precomp/lib/msvc $acx_cv_oracle_home
+  AC_MSG_CHECKING(for the Windows PRO*C libraries)
+  for dir in $acx_cv_oracle_home/bin
   do
-    for base in orasql9 orasql8 sqllib18
+    # This DLL should define sqlglm()
+    for base in orasql9 orasql8 sqllib18 
     do
       # Windows: ignores case
-      PROCLIB=`find $dir \( -name \*.lib -o -name \*.LIB \) | grep -i $base. 2>/dev/null`
-      if test -n "$PROCLIB"
+      acx_cv_sqlglmlib=`find $dir \( -name \*.dll -o -name \*.DLL \) | grep -i $base.dll 2>/dev/null`
+      if test -n "$acx_cv_sqlglmlib"
       then
-        PROCLIB="-L`dirname $PROCLIB` -l$base"
+	# !!! IMPORTANT !!!
+	# keep the space in front
+        acx_cv_sqlglmlib=" -L`dirname $acx_cv_sqlglmlib` -l$base"
         break;
       fi
     done
+
+    # This DLL should define osnsui()
+    for base in oran9 oran8 oran7
+    do
+      # Windows: ignores case
+      acx_cv_osnsuilib=`find $dir \( -name \*.dll -o -name \*.DLL \) | grep -i $base.dll 2>/dev/null`
+      if test -n "$acx_cv_osnsuilib"
+      then
+	# !!! IMPORTANT !!!
+	# keep the space in front
+        acx_cv_osnsuilib=" -L`dirname $acx_cv_osnsuilib` -l$base"
+        break;
+      fi
+    done
+
+    PROCLIB="$acx_cv_sqlglmlib$acx_cv_osnsuilib"
+
     test -z "$PROCLIB" || break
   done
   ;;
 * )
   # Unix
-  AC_MSG_CHECKING(for the Unix PRO*C library)
+  AC_MSG_CHECKING(for the Unix PRO*C libraries)
   for dir in $acx_cv_oracle_home/lib $acx_cv_oracle_home
   do
     for base in clntsh
@@ -83,7 +103,8 @@ case "$host" in
 esac
 acx_save_LIBS="$LIBS"
 LIBS="$PROCLIB $LIBS"
-AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library not found)])
+AC_TRY_LINK_FUNC(sqlglm, [], [AC_MSG_ERROR(PRO*C library containing sqlglm not found)])
+AC_TRY_LINK_FUNC(osnsui, [], [AC_MSG_ERROR(PRO*C library containing osnsui not found)])
 LIBS=$acx_save_LIBS
 AC_MSG_RESULT($PROCLIB)
 AC_SUBST(PROCLIB)
