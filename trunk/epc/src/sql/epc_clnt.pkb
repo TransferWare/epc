@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.12  2004/12/28 12:51:14  gpaulissen
+REMARK  Test on Amazon
+REMARK
 REMARK  Revision 1.11  2004/12/28 12:18:11  gpaulissen
 REMARK  Test on Amazon
 REMARK
@@ -677,15 +680,15 @@ is
 begin
   if p_data_type = epc.data_type_xml
   then
-    l_extract_type := 'child::node()';
+    l_extract_type := null; -- 'child::node()';
   else
-    l_extract_type := 'child::text()';
+    l_extract_type := '/child::text()';
   end if;
 
   l_xml := 
     epc_info_tab(p_epc_key).doc.extract
     (
-      '//'||p_name||'/'||l_extract_type
+      '//'||p_name||l_extract_type
     , get_xmlns(p_epc_key)||'="'||epc_info_tab(p_epc_key).namespace||'"'
     );
 
