@@ -4,6 +4,8 @@ set trimspool on
 set verify off
 define N = &&1
 
+alter session set nls_numeric_characters = '.,';
+
 execute epctest.nothing1;
 
 spool epctest.lis
