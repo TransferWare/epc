@@ -17,6 +17,14 @@
 
 include ../../lint.am
 
+# Flex does not produce lint quality code
+idl_l.ln: idl_l.c
+	$(LINT.c) +posixlib -nullassign -incondefs -noeffect -evalorder -exitarg -exportlocal $<
+
+# Bison does not produce lint quality code
+idl_y.ln: idl_y.c
+	$(LINT.c) -noeffect -branchstate -usereleased $<
+
 MAINTAINERCLEANFILES = Makefile.in
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr

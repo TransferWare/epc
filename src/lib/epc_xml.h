@@ -5,7 +5,7 @@
 
 extern
 unsigned int
-epc__xml_init( epc__info_t *epc__info );
+epc__xml_init( /*@temp@*/ epc__info_t *epc__info );
 
 extern
 unsigned int

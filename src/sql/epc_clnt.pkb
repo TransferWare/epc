@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.6  2004/10/20 20:38:44  gpaulissen
+REMARK  make lint
+REMARK
 REMARK  Revision 1.5  2004/10/15 20:41:32  gpaulissen
 REMARK  XML namespace bugs solved.
 REMARK
@@ -90,7 +93,8 @@ g_oneway_result_pipe constant epc.pipe_name_subtype := 'N/A';
    this can be checked.
 */
 g_msg_seq pls_integer := c_max_msg_seq;
-
+g_cdata_tag_start constant varchar2(9) := '<![CDATA[';
+g_cdata_tag_end   constant varchar2(3) := ']]>';
 
 -- functions
 function register( p_interface_name in epc.interface_name_subtype )
@@ -216,11 +220,14 @@ procedure set_request_parameter
 )
 is
 begin
-  if p_data_type = epc.data_type_string
+  if p_value is null
+  then
+    raise epc.e_illegal_null_value;
+  elsif p_data_type = epc.data_type_string
   then
     epc_info_tab(p_epc_key).msg :=
       epc_info_tab(p_epc_key).msg
-      ||'<'||p_name||' xsi:type="string">'||p_value||'</'||p_name||'>';
+      ||'<'||p_name||' xsi:type="string">'||g_cdata_tag_start||p_value||g_cdata_tag_end||'</'||p_name||'>';
   else
     raise value_error;
   end if;
@@ -236,7 +243,10 @@ procedure set_request_parameter
 is
   l_data_type varchar2(10);
 begin
-  if p_data_type in ( epc.data_type_int, epc.data_type_long )
+  if p_value is null
+  then
+    raise epc.e_illegal_null_value;
+  elsif p_data_type in ( epc.data_type_int, epc.data_type_long )
   then
     l_data_type := 'integer';
   elsif p_data_type = epc.data_type_float
@@ -331,10 +341,12 @@ procedure send_request
 is
 begin
   epc_info_tab(p_epc_key).msg :=
-'<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
-xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
+'<?xml version="1.0" encoding="iso-8859-1"?>' 
+||'<SOAP-ENV:Envelope'
+||' xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'
+||' xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"'
+||' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+||' xmlns:xsd="http://www.w3.org/2001/XMLSchema">'
 ||'<SOAP-ENV:Body><'
 ||p_method_name
 ||' xmlns="'
@@ -440,9 +452,23 @@ procedure get_response_parameter
 , p_value out varchar2
 )
 is
+  l_value epc.string_subtype;
 begin
-  p_value := epc_info_tab(p_epc_key).doc.extract('//'||p_name||'/child::text()',
+  l_value := epc_info_tab(p_epc_key).doc.extract('//'||p_name||'/child::text()',
       'xmlns="'||epc_info_tab(p_epc_key).interface_name||'"').getstringval();
+  if instr(l_value, g_cdata_tag_start) = 1
+  and instr(l_value, g_cdata_tag_end, length(l_value) - length(g_cdata_tag_end) + 1) > 0
+  then
+    p_value := 
+      substr
+      (
+        l_value
+      , length(g_cdata_tag_start) + 1
+      , length(l_value) - length(g_cdata_tag_start) - length(g_cdata_tag_end)
+      );
+  else
+    p_value := l_value;
+  end if;
 end get_response_parameter;
 
 procedure get_response_parameter

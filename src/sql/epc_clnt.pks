@@ -4,6 +4,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.6  2004/10/20 20:38:44  gpaulissen
+REMARK  make lint
+REMARK
 REMARK  Revision 1.5  2004/10/15 13:53:40  gpaulissen
 REMARK  XML added
 REMARK
@@ -174,7 +177,8 @@ procedure new_request
 -- @param p_data_type  The data type (should be epc.data_type_string)
 -- @param p_value      The value of the parameter
 --
--- @exception e_illegal_null_value  p_value is NULL
+-- @exception epc.e_illegal_null_value  p_value is NULL
+-- @exception value_error               data type is incorrect
 */
 procedure set_request_parameter
 (
@@ -192,7 +196,8 @@ procedure set_request_parameter
 -- @param p_data_type  The data type (should not be epc.data_type_string)
 -- @param p_value      The value of the parameter
 --
--- @exception e_illegal_null_value  p_value is NULL
+-- @exception epc.e_illegal_null_value  p_value is NULL
+-- @exception value_error               data type is incorrect
 */
 procedure set_request_parameter
 (

@@ -21,7 +21,7 @@
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
 typedef struct epc__parameter {
-  char *name;
+  /*@observer@*/ char *name;
   idl_mode_t mode;
   idl_type_t type;
   dword_t size; /* for a string including the terminating zero */
@@ -31,38 +31,40 @@ typedef struct epc__parameter {
 struct epc__call;
 
 typedef struct epc__function {
-  char *name;
+  /*@observer@*/ char *name;
   void (*function)( struct epc__function * );
   dword_t oneway;
   dword_t num_parameters;
-  epc__parameter_t *parameters;
+  /*@dependent@*/ epc__parameter_t *parameters;
 } epc__function_t;
 
 typedef struct epc__interface {
-  char *name;
+  /*@observer@*/ char *name;
   dword_t num_functions;
-  epc__function_t *functions;
+  /*@dependent@*/ epc__function_t *functions;
 } epc__interface_t;
 
 /*
  * epc__info_t: general info for running an EPC server
  */
 typedef struct epc__info {
-  char *logon;
+  /*@only@*/ /*@null@*/ char *logon;
   dword_t connected;
-  char *pipe;
+  /*@only@*/ /*@null@*/ char *pipe;
   dword_t num_interfaces;
-  epc__interface_t **interfaces; /* pointing to a list of interfaces */
-  struct sqlca *sqlca; /* SQLCA area */
-  void *xml_info;
+  /*@only@*/ /*@null@*/ epc__interface_t **interfaces; /* pointing to a list of interfaces */
+  /*@only@*/ /*@null@*/ struct sqlca *sqlca; /* SQLCA area */
+  /*@only@*/ /*@null@*/ void *xml_info;
 } epc__info_t;
+
+typedef /*@null@*/ /*@only@*/ epc__info_t *epc__info_ptr_t;
 
 typedef struct epc__call {
   char msg_info[MSG_INFO_SIZE];
   char msg_request[MSG_REQUEST_SIZE];
   char msg_response[MSG_RESPONSE_SIZE];
-  epc__interface_t *interface;
-  epc__function_t *function;
+  /*@temp@*/ /*@null@*/ epc__interface_t *interface;
+  /*@temp@*/ /*@null@*/ epc__function_t *function;
   long epc__error; /* result of call */
   long errcode;   /* error code returned by transport medium */
 } epc__call_t;

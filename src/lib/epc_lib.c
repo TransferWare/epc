@@ -22,6 +22,7 @@
 #endif
 
 #include <epc.h>
+#include <epc_xml.h>
 #include <dbug.h>
 
 /* include dmalloc/ulib as last one */
@@ -32,11 +33,14 @@
 #endif
 
 static
+/*@null@*/
 epc__handle_interrupt_t G_epc__handle_interrupt = NULL;
 
 /* Can not supply epc__info to standard signal handlers 
    so supply a global */
-static epc__info_t *G_epc__info_interrupt = NULL;
+static
+/*@null@*/
+epc__info_t *G_epc__info_interrupt = NULL;
 
 static
 int
@@ -50,7 +54,7 @@ handle_signal( int signo );
 
 /* index 0 for startup, index 1 in signal handler */
 static struct {
-  void (*func)(int);
+  /*@null@*/ void (*func)(int);
 } signal_handler_info[2][MAX_SIGNO] = {
   {
     { handle_signal },
@@ -123,6 +127,7 @@ static struct {
 };
 
 static
+/*@observer@*/
 char *
 signal_str( int signo )
 {
@@ -224,7 +229,6 @@ signal_str( int signo )
     default:
       return "Unknown signal";
     }
-  return NULL;
 }
 
 void
@@ -337,7 +341,7 @@ epc__set_signal_handlers( const int idx )
     DBUG_PRINT( "info", ( "handler for signal %d (%s): %p", 
                           nr,
                           signal_str(nr),
-                          (void*) signal_handler_info[idx][nr].func ) );
+                          signal_handler_info[idx][nr].func ) );
 
     /* store old handler */
     signal_handler_info[idx][nr].func = signal( nr, signal_handler_info[idx][nr].func );
@@ -393,6 +397,7 @@ epc__cmp_interface( const void *par1, const void *par2 )
 }
 
 static
+/*@observer@*/
 char *
 get_error_str( epc__error_t err )
 {
@@ -442,18 +447,18 @@ epc__init( void )
 
   epc__info = (epc__info_t*)malloc( sizeof(epc__info_t) );
 
-  DBUG_PRINT( "info", ( "epc__info: %p", (void*)epc__info ) );
+  assert( epc__info != NULL );
 
-  if ( epc__info != NULL )
-    {
-      epc__info->logon = NULL;
-      epc__info->connected = 0;
-      epc__info->pipe = NULL;
-      epc__info->num_interfaces = 0;
-      epc__info->interfaces = NULL;
-      epc__info->sqlca = NULL;
-      epc__xml_init( epc__info );
-    }
+  epc__info->logon = NULL;
+  epc__info->connected = 0;
+  epc__info->pipe = NULL;
+  epc__info->num_interfaces = 0;
+  epc__info->interfaces = NULL;
+  epc__info->sqlca = NULL;
+  epc__info->xml_info = NULL;
+  (void) epc__xml_init( epc__info );
+
+  DBUG_PRINT( "info", ( "epc__info: %p", (void*)epc__info ) );
 
   DBUG_LEAVE();
   return epc__info;
@@ -468,14 +473,14 @@ epc__done( epc__info_t **epc__info )
 
   if ( *epc__info != NULL )
     {
-      epc__xml_done( *epc__info );
+      (void) epc__xml_done( *epc__info );
 
       if ( (*epc__info)->sqlca != NULL )
         free( (*epc__info)->sqlca );
 
       if ( (*epc__info)->interfaces != NULL )
         {
-          int inr, fnr, pnr;
+          dword_t inr, fnr, pnr;
 
           for (inr = 0; inr < (*epc__info)->num_interfaces; inr++)
             {
@@ -485,8 +490,6 @@ epc__done( epc__info_t **epc__info )
               for ( fnr = 0; fnr < interface->num_functions; fnr++ )
                 for ( pnr = 0; pnr < interface->functions[fnr].num_parameters; pnr++ )
                   {
-                    size_t size = 0;
-
                     free( interface->functions[fnr].parameters[pnr].data );
                   }
             }
@@ -502,20 +505,6 @@ epc__done( epc__info_t **epc__info )
     }
 
   DBUG_LEAVE();
-}
-
-void
-epc__abort( char *msg )
-{
-  char err_msg[512];
-  size_t buf_len, msg_len;
-
-  (void) printf("\n%s\n", msg);
-  buf_len = sizeof (err_msg);
-  sqlglm(err_msg, &buf_len, &msg_len);
-  (void) printf("%.*s\n", msg_len, err_msg);
-
-  exit(EXIT_FAILURE);
 }
 
 epc__error_t
@@ -547,19 +536,19 @@ epc__add_interface( epc__info_t *epc__info, epc__interface_t *interface )
         }
       else
         {
-          int fnr, pnr;
+          dword_t fnr, pnr;
 
           epc__info->interfaces[epc__info->num_interfaces - 1] = interface;
 
           /* sort the functions */
           qsort( interface->functions,
-                 interface->num_functions,
+                 (size_t)interface->num_functions,
                  sizeof(interface->functions[0]),
                  epc__cmp_function );
 
           /* sort the interfaces */
           qsort( epc__info->interfaces,
-                 epc__info->num_interfaces,
+                 (size_t)epc__info->num_interfaces,
                  sizeof(epc__info->interfaces[0]),
                  epc__cmp_interface );
 
@@ -576,12 +565,11 @@ epc__add_interface( epc__info_t *epc__info, epc__interface_t *interface )
                   case C_LONG:
                   case C_FLOAT:
                   case C_DOUBLE:
-                    size = interface->functions[fnr].parameters[pnr].size;
+                    size = (size_t) interface->functions[fnr].parameters[pnr].size;
                     break;
                   
                   case C_VOID: 
                     continue;
-                    break;
 
                   default: 
                     assert( interface->functions[fnr].parameters[pnr].type >= C_DATATYPE_MIN &&
@@ -673,6 +661,7 @@ epc__set_logon( epc__info_t *epc__info, char *logon )
   return( status );
 }
 
+static
 epc__error_t
 epc__exec_call( epc__info_t * epc__info, epc__call_t * epc__call )
 {
@@ -680,28 +669,83 @@ epc__exec_call( epc__info_t * epc__info, epc__call_t * epc__call )
 
   assert( epc__call->epc__error == OK );
 
-  epc__xml_parse( epc__info, epc__call, epc__call->msg_request, strlen(epc__call->msg_request) );
+  (void) epc__xml_parse( epc__info, epc__call, epc__call->msg_request, strlen(epc__call->msg_request) );
 
   /* TBD: SOAP errors when interface or function unknown */
   if ( epc__call->epc__error != OK )
     {
-      (void) strcpy( epc__call->msg_response, "ERROR" );
+      assert( epc__call->epc__error == FUNCTION_UNKNOWN ||
+              epc__call->epc__error == INTERFACE_UNKNOWN );
+
+      /* Excerpt from http://www.w3schools.com/soap/soap_fault.asp:
+
+        The SOAP Fault Element
+
+        An error message from a SOAP message is carried inside a Fault
+        element.
+
+        If a Fault element is present, it must appear as a child element of
+        the Body element. A Fault element can only appear once in a SOAP
+        message.
+
+        The SOAP Fault element has the following sub elements: 
+        Sub Element     Description 
+        <faultcode>     A code for identifying the fault 
+        <faultstring>   A human readable explanation of the fault 
+        <faultactor>    Information about who caused the fault to happen 
+        <detail>        Holds application specific error information related 
+                        to the Body element
+
+        SOAP Fault Codes
+
+        The faultcode values defined below must be used in the faultcode
+        element when describing faults: 
+        Error           Description 
+        VersionMismatch Found an invalid namespace for the SOAP Envelope element
+        MustUnderstand  An immediate child element of the Header element, with
+                        the mustUnderstand attribute set to "1", was not understood
+        Client          The message was incorrectly formed or contained incorrect 
+                        information
+        Server          There was a problem with the server so the message could not
+                        proceed
+      */
+      /* construct the response */
+      (void) snprintf(epc__call->msg_response,
+                      MAX_MSG_RESPONSE_LEN+1, 
+                      "<?xml version='1.0' encoding='iso-8859-1'?>\
+<SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' \
+xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' \
+xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' \
+xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
+<SOAP-ENV:Body>\
+<SOAP-ENV:Fault>\
+<faultcode>Client</faultcode><faultstring>%s</faultstring>\
+</SOAP-ENV:Fault>\
+</SOAP-ENV:Body>\
+</SOAP-ENV:Envelope>", 
+                      ( epc__call->epc__error == FUNCTION_UNKNOWN 
+                        ? "function unknown" 
+                        : "interface unknown" ));
     }
   else
     {
+      assert( epc__call->interface != NULL );
       assert( epc__call->function != NULL );
 
       (*epc__call->function->function) ( epc__call->function );
 
       /* construct the response */
-      if ( epc__call->function->oneway == 0 )
+      if ( epc__call->function->oneway != 0 )
         {
-          char *msg_response = epc__call->msg_response;
+          (void) strcpy( epc__call->msg_response, "" );
+        }
+      else 
+        {
           dword_t nr;
 
-          (void) snprintf(msg_response,
+          (void) snprintf(epc__call->msg_response,
                           MAX_MSG_RESPONSE_LEN+1, 
-                          "<?xml version='1.0' encoding='UTF-8'?>\
+                          "<?xml version='1.0' encoding='iso-8859-1'?>\
 <SOAP-ENV:Envelope xmlns:SOAP-ENV='http://schemas.xmlsoap.org/soap/envelope/' \
 xmlns:SOAP-ENC='http://schemas.xmlsoap.org/soap/encoding/' \
 xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' \
@@ -712,51 +756,51 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
             {
               if ( epc__call->function->parameters[nr].mode != C_IN )
                 {
-                  (void) snprintf(msg_response, 
+                  (void) snprintf(epc__call->msg_response, 
                                   MAX_MSG_RESPONSE_LEN+1, 
                                   "%s<%s>", 
-                                  msg_response,
+                                  epc__call->msg_response,
                                   epc__call->function->parameters[nr].name);
 
                   switch(epc__call->function->parameters[nr].type)
                     {
                     case C_STRING:
-                      (void) snprintf(msg_response, 
+                      (void) snprintf(epc__call->msg_response, 
                                       MAX_MSG_RESPONSE_LEN+1, 
-                                      "%s%s", 
-                                      msg_response, 
+                                      "%s<![CDATA[%s]]>", 
+                                      epc__call->msg_response, 
                                       (char*)epc__call->function->parameters[nr].data);
                       break;
       
                     case C_INT:
-                      (void) snprintf(msg_response,
+                      (void) snprintf(epc__call->msg_response,
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%d", 
-                                      msg_response,
+                                      epc__call->msg_response,
                                       *((int*)epc__call->function->parameters[nr].data));
                       break;
 
                     case C_LONG:
-                      (void) snprintf(msg_response,
+                      (void) snprintf(epc__call->msg_response,
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%ld", 
-                                      msg_response, 
+                                      epc__call->msg_response, 
                                       *((long*)epc__call->function->parameters[nr].data));
                       break;
 
                     case C_FLOAT:
-                      (void) snprintf(msg_response,
+                      (void) snprintf(epc__call->msg_response,
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%f",
-                                      msg_response,
+                                      epc__call->msg_response,
                                       (double)(*((float*)epc__call->function->parameters[nr].data)));
                       break;
                   
                     case C_DOUBLE:
-                      (void) snprintf(msg_response,
+                      (void) snprintf(epc__call->msg_response,
                                       MAX_MSG_RESPONSE_LEN+1, 
                                       "%s%f", 
-                                      msg_response,
+                                      epc__call->msg_response,
                                       *((double*)epc__call->function->parameters[nr].data));
                       break;
                           
@@ -770,16 +814,14 @@ xmlns:xsd='http://www.w3.org/2001/XMLSchema'>\
 
                     }
 
-                  (void) snprintf(msg_response, MAX_MSG_RESPONSE_LEN+1, "%s</%s>", 
-                                  msg_response, epc__call->function->parameters[nr].name);
+                  (void) snprintf(epc__call->msg_response, MAX_MSG_RESPONSE_LEN+1, "%s</%s>", 
+                                  epc__call->msg_response, epc__call->function->parameters[nr].name);
                 }
             }
 
-          (void) snprintf(msg_response, MAX_MSG_RESPONSE_LEN+1, 
+          (void) snprintf(epc__call->msg_response, MAX_MSG_RESPONSE_LEN+1, 
                           "%s</%sResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>", 
-                          msg_response, epc__call->function->name);
-
-          DBUG_PRINT( "info", ( "msg_response: %s", msg_response ) );
+                          epc__call->msg_response, epc__call->function->name);
         }
     }
 
@@ -818,19 +860,29 @@ epc__handle_request( epc__info_t *epc__info,
       /* receive the request */
       (void) (*recv_request)( epc__info, epc__call );
 
+      DBUG_PRINT( "info", ( "msg_request: %s", epc__call->msg_request ) );
+
       /* do the call */
       if ( epc__call->epc__error != OK )
         break;
 
-      epc__exec_call( epc__info, epc__call );
+      (void) epc__exec_call( epc__info, epc__call );
 
       if ( !( epc__call->epc__error == FUNCTION_UNKNOWN ||
               epc__call->epc__error == INTERFACE_UNKNOWN ||
               epc__call->epc__error == OK ) )
         break;
 
+      DBUG_PRINT( "info", ( "msg_response: %s", epc__call->msg_response ) );
+
+      assert( epc__call->interface != NULL );
+      assert( epc__call->function != NULL );
+
       /* send the response */
-      (*send_response)( epc__info, epc__call );
+      if ( epc__call->function->oneway == 0 )
+        {
+          (void) (*send_response)( epc__info, epc__call );
+        }
 
       if ( epc__call->epc__error != OK )
         break;
