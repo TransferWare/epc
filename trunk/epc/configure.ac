@@ -43,7 +43,7 @@ AC_PROG_LIBTOOL
 
 # Oracle checks
 ACX_PROG_PROC
-AH_BOTTOM([#define SQLPROTOHDR $SQLPROTOHDR])
+ACX_PROG_SQLPLUS
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -65,9 +65,9 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
            sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
-AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile] dnl
-                [Makefile config/Makefile test/Makefile] dnl
-                [examples/Makefile examples/demo/Makefile])dnl
+AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
+AC_CONFIG_FILES([Makefile config/Makefile test/Makefile])
+AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile])
 #AC_CONFIG_FILES([doc/Makefile utils/Makefile])dnl
 
 AC_OUTPUT

@@ -1,4 +1,3 @@
-#SUBDIRS    = sql prog lib
-SUBDIRS    = prog lib
+SUBDIRS    = sql prog lib
 
 EXTRA_DIST = Imakefile
