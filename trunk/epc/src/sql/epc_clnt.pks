@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.9  2004/12/16 18:43:08  gpaulissen
+REMARK  generated HTML added
+REMARK
 REMARK  Revision 1.8  2004/12/16 17:50:31  gpaulissen
 REMARK  REMARK blocks commented for PLDoc
 REMARK
@@ -39,23 +42,23 @@ create or replace package epc_clnt is
 -- This package is used to implement the client side of RPC like functionality
 -- on an Oracle database.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (DBMS_PIPE), HTTP (utl_http) and TCP/IP (UTL_TCP).
+-- supported are database pipes (DBMS_PIPE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
 --
--- The flow of procedure calls will typically look like this:
--- 1) Set connection information.
---    a) epc_clnt.register
---    b) epc_clnt.set_connection_info (optional for database pipes)
---    c) epc_clnt.set_request_send_timeout (optional)
---    d) epc_clnt.set_response_recv_timeout (optional)
--- 2) Marshall a function call into a message
---    a) epc_clnt.new_request
---    b) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)
--- 3) Send the message
---    a) epc_clnt.send_request
--- 4) Receive the response
---    a) epc_clnt.recv_response
--- 5) Unmarshall the message
---    a) epc_clnt.get_response_parameter (for all OUT and IN OUT parameters)
+-- The flow of procedure calls will typically look like this:<br />
+-- 1) Set connection information.<br />
+--    a) epc_clnt.register<br />
+--    b) epc_clnt.set_connection_info (optional for database pipes)<br />
+--    c) epc_clnt.set_request_send_timeout (optional)<br />
+--    d) epc_clnt.set_response_recv_timeout (optional)<br />
+-- 2) Marshall a function call into a message<br />
+--    a) epc_clnt.new_request<br />
+--    b) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)<br />
+-- 3) Send the message<br />
+--    a) epc_clnt.send_request<br />
+-- 4) Receive the response<br />
+--    a) epc_clnt.recv_response<br />
+-- 5) Unmarshall the message<br />
+--    a) epc_clnt.get_response_parameter (for all OUT and IN OUT parameters)<br />
 --
 -- @headcom
 */

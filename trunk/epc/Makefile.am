@@ -37,13 +37,15 @@ force: ;
 
 PLDOC = pldoc.bat
 
+# Create HTML documentation in the source tree
 doc/sql: $(FORCE)
-	@mkdir -p $@
-	@$(PLDOC) -d $@ -doctitle EPC $(top_srcdir)/src/sql/*.pks
+	@cd $(top_srcdir) && mkdir -p $@
+	@cd $(top_srcdir) && $(PLDOC) -d $@ -doctitle EPC src/sql/*.pks
 
 DOXYGEN = doxygen
 
-doc/c: $(top_srcdir)/Doxyfile $(FORCE)
-	@$(DOXYGEN) $<
+# Create HTML documentation in the source tree
+doc/c: $(FORCE)
+	@cd $(top_srcdir) && $(DOXYGEN)
 
 EXTRA_DIST              = VERSION $(generated_html_dirs)
