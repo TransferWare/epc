@@ -27,7 +27,7 @@ AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
 
-EXTRA_DIST           = $(GENERATED_FILES)
+EXTRA_DIST           = 
 
 noinst_DATA          = demo.pls_run
 noinst_PROGRAMS      = demo
@@ -35,6 +35,11 @@ demo_SOURCES         = demo.idl main.c
 demo_LDADD           = $(top_builddir)/src/lib/libepc.la
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
+
+$(GENERATED_FILES): $(IDL)
+
+$(IDL):
+	cd $(top_builddir)/src/prog && make all
 
 @SUFFIXES@: .c .idl .pls_run .pls
 
