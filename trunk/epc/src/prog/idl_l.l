@@ -13,18 +13,12 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.2  1998/02/03 10:06:21  gpauliss
+ * - Added strdup because it is not an ANSI C function.
+ * - String parameter (char *) may contain whitespace instead of only one space.
+ *
  * Revision 1.1  1998/01/25 15:20:19  gpauliss
  * Initial revision
- *
- * Revision 1.3  1997/07/08 14:14:05  hgwouden
- * added DOUBLE datatype
- *
- * Revision 1.2  1997/07/02 14:46:14  hgwouden
- * *** empty log message ***
- *
- * Revision 1.1  1997/06/25 12:22:27  hgwouden
- * Initial revision
- *
  *
  */
 
@@ -40,6 +34,16 @@ int lineno = 1;
 void yyerror( char *s );
 int yyparse( void );
 
+static char *strdup( const char * str )
+{
+	char *tmp = malloc( strlen(str)+1 );
+	if ( tmp )
+	{
+		strcpy( tmp, str );
+	}
+	return tmp;
+}
+
 %}
 
 %%
@@ -49,7 +53,7 @@ int yyparse( void );
 "[out]"					{ yylval.ival = C_OUT; return OUT; }
 "[inout]"				{ yylval.ival = C_INOUT; return INOUT; }
 
-"char *"				{ yylval.ival = C_STRING; return STRING; }
+"char"[ \t]*"*"			{ yylval.ival = C_STRING; return STRING; }
 "int"					{ yylval.ival = C_INT; return INT; }
 "float"					{ yylval.ival = C_FLOAT; return FLOAT; }
 "double"				{ yylval.ival = C_DOUBLE; return DOUBLE; }
@@ -67,7 +71,7 @@ int yyparse( void );
 
 void yyerror( char *s )
 {
-	printf("%d: %s at %s\n", lineno, s, yytext );
+	printf("%d: %s at '%s', keyword: %d\n", lineno, s, yytext, yylval.ival );
 }
 
 int main ( int argc, char **argv )
