@@ -29,12 +29,6 @@ lib_LTLIBRARIES      = libepc.la
 
 libepc_la_SOURCES    = lsnr.c epc.pc epc_dbg.c epc_xml.c epc_xml.h
 
-noinst_PROGRAMS      = xml sax
-
-xml_SOURCES          = xml.c ## epc.pc epc_xml.c epc_xml.h
-
-sax_SOURCES          = SAXSample.c
-
 ##
 ## History of interface versions:
 ## - 0:0:0 start
