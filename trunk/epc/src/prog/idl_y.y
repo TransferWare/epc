@@ -14,6 +14,9 @@
  *
  * --- Revision History --------------------------------------------------
  * $Log$
+ * Revision 1.9  2001/01/24 16:29:10  gpaulissen
+ * Release 2.0.0
+ *
  * Revision 1.8  1999/11/23 16:05:39  gpaulissen
  * DBUG interface changed.
  *
@@ -42,6 +45,7 @@
  */
 
 #include <stdio.h>
+#include "idl_defs.h"
 #include "idl_prs.h"
 
 extern void yyerror( char *s );
@@ -51,23 +55,29 @@ extern int yylex( void );
 
 
 %union {
-	char * sval;
-	int ival;
+  char * sval;
+  int mval;
+  struct {
+    int datatype;
+    unsigned int size;
+  } tval;
 }
 
 %token <sval> INTERFACE 
 %token <sval> NAME 
-%token <ival> IN 
-%token <ival> OUT 
-%token <ival> INOUT 
-%token <ival> VOID 
-%token <ival> STRING 
-%token <ival> INT 
-%token <ival> LONG
-%token <ival> FLOAT
-%token <ival> DOUBLE
+%token <mval> IN 
+%token <mval> OUT 
+%token <mval> INOUT 
+%token <tval> VOID 
+%token ONEWAY
+%token <tval> STRING 
+%token <tval> INT 
+%token <tval> LONG
+%token <tval> FLOAT
+%token <tval> DOUBLE
 
-%type <ival> datatype, parameter_mode
+%type <tval> datatype
+%type <mval> parameter_mode
 %type <sval> interface, interface_name, function_name, parameter_name
 
 %%
@@ -90,8 +100,13 @@ function_list:
 function:
 		datatype 
 		function_name 
-		{ add_function( $2, $1 ); }
+		{ add_function( $2, $1.datatype, 0 ); }
 		'(' parameter_list ')' ';'
+	|       ONEWAY
+		VOID
+		function_name 
+		{ add_function( $3, $2.datatype, 1 ); }
+		'(' in_parameter_list ')' ';'
 
 	;
 
@@ -116,7 +131,7 @@ parameter_list:
 
 parameter:
 		parameter_mode datatype parameter_name
-		{ add_parameter( $3, $1, $2 ); }
+		{ add_parameter( $3, $1, $2.datatype, $2.size ); }
 	;
 
 parameter_mode:
@@ -128,6 +143,18 @@ parameter_mode:
 parameter_name:
 		NAME
 	;
+
+in_parameter_list:
+		/* empty */
+	|	in_parameter 
+	|	in_parameter_list ',' parameter
+	;
+
+in_parameter:
+		IN datatype parameter_name
+		{ add_parameter( $3, $1, $2.datatype, $2.size ); }
+	;
+
 
 
 

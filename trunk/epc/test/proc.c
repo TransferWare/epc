@@ -37,7 +37,12 @@ float proc04 ( float i_par1, float *io_par2, float *o_par3 )
 	return 33.45F;
 }
 
-void nothing( void )
+void nothing1( void )
+{
+	;
+}
+
+void nothing2( void )
 {
 	;
 }
