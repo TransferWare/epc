@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.5  2004/12/16 18:43:08  gpaulissen
+REMARK  generated HTML added
+REMARK
 REMARK  Revision 1.4  2004/12/16 17:50:31  gpaulissen
 REMARK  REMARK blocks commented for PLDoc
 REMARK
@@ -26,7 +29,8 @@ create or replace package epc is
 --
 -- This package is used to implement RPC like functionality on Oracle.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (DBMS_PIPE) and TCP/IP (UTL_TCP).
+-- supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP) 
+-- and TCP/IP (package UTL_TCP).
 --
 -- @headcom
 */

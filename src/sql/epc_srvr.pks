@@ -5,6 +5,9 @@ REMARK
 REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
 REMARK
 REMARK  $Log$
+REMARK  Revision 1.5  2004/12/16 18:43:08  gpaulissen
+REMARK  generated HTML added
+REMARK
 REMARK  Revision 1.4  2004/12/16 17:50:31  gpaulissen
 REMARK  REMARK blocks commented for PLDoc
 REMARK
@@ -25,22 +28,22 @@ create or replace package epc_srvr is
 /**
 --
 -- This package is used to implement the server side of RPC like functionality
--- on an Oracle database.
--- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (DBMS_PIPE) and TCP/IP (UTL_TCP). This package
--- is only needed for database pipe transport. TCP/IP servers should not use
+-- on an Oracle database. Messages are sent by the client to a server. The 
+-- transport mechanisms supported are database pipes (DBMS_PIPE),
+-- HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for 
+-- database pipe transport. TCP/IP servers should not use
 -- the TCP/IP functionality of Oracle, but of the OS instead.
 --
--- The flow of procedure calls will typically look like this:
--- 1) Set connection information.
---    a) epc_srvr.register (once in a database session)
---    b) epc_srvr.set_connection_info
---    c) epc_srvr.set_request_recv_timeout (optional)
--- 2) Receive the request
---    a) epc_srvr.recv_request
--- 3) Process the message (no Oracle calls needed)
--- 4) Send the response
---    a) epc_srvr.send_response
+-- The flow of procedure calls will typically look like this:<br />
+-- 1) Set connection information.<br />
+--    a) epc_srvr.register (once in a database session)<br />
+--    b) epc_srvr.set_connection_info<br />
+--    c) epc_srvr.set_request_recv_timeout (optional)<br />
+-- 2) Receive the request<br />
+--    a) epc_srvr.recv_request<br />
+-- 3) Process the message (no Oracle calls needed)<br />
+-- 4) Send the response<br />
+--    a) epc_srvr.send_response<br />
 --
 -- @headcom
 */
