@@ -41,7 +41,11 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
 EXTRA_DIST           = epctest.ref epctest.sql str.sql test2.client.ref
 
-TESTS = test1 test2
+# test2 is obsolete
+
+#TESTS = test1 test2
+
+TESTS = test1
 
 COUNT = 1000
 
@@ -50,13 +54,20 @@ FORCE = force
 EPCTEST = ./epctest
 DIFF = diff -w
 
+# Ensure the created dummy test scripts are executable (chmod +x)
+
 test1: $(srcdir)/epctest.sql $(FORCE)
+# empty the pipe
+	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
+# run the server
 	$(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1 &
-	sleep 20
+	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
+	sleep 5
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 2>&1 | tee $@.client.log
 	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
-	echo : > $@
+	@echo : > $@
+	@chmod +x $@
 
 test2: $(srcdir)/client.sql $(FORCE)
 # empty the pipe
@@ -66,6 +77,7 @@ test2: $(srcdir)/client.sql $(FORCE)
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 1>$@.client.log 2>&1
 	pid=`ps | grep $(SQLPLUS) | grep -v grep | awk '{ print $$1; }'`; test -z "$$pid" || kill "$$pid"
 	$(DIFF) $@.client.log $(srcdir)/$@.client.ref
-	echo : > $@
+	@echo : > $@
+	@chmod +x $@
 
 force: ;

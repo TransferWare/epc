@@ -28,12 +28,16 @@ EXTRA_DIST      += login.sql
 
 @SUFFIXES@: .pks .pkb .pks_run .pkb_run
 
+# &lt and &gt are used in epc_clnt.pks
+# To prevent asking for the defines, the login.sql sets define off,
+# but since login.sql may not be the build directory SQLPATH must be set 
+# to the source directory.
+
 .pks.pks_run:
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )
 	@touch $@
 
 .pkb.pkb_run:
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
 	@touch $@
-
 
