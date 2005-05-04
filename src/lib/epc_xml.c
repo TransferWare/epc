@@ -16,6 +16,10 @@
 
 #include <dbug.h>
 
+#ifndef _int64
+#define _int64 __int64
+#endif
+
 #include <oratypes.h>
 #include <oraxml.h>
 

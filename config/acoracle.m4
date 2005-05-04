@@ -86,11 +86,11 @@ fi
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib precomp precomp/lib precomp/lib/msvc bin],
                 [sqlglm],
-                [clntsh orasql9 orasql8 orasql7])
+                [clntsh orasql10 orasql9 orasql8 orasql7])
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
-                [clntsh oran9 oran8 oran7])
+                [clntsh oran10 oran9 oran8 oran7])
 
 acx_protohdrs="sqlcpr.h sqlproto.h"
 acx_protohdr=
@@ -166,7 +166,7 @@ fi
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib bin],
                 [xmlinit],
-                [oraxml9 oraxml8])
+                [oraxml10 oraxml9 oraxml8])
 
 acx_xmlhdrs="oraxml.h"
 #acx_xmlhdrs="oraxml.h oratypes.h"
