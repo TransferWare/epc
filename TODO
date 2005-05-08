@@ -4,5 +4,3 @@ Wishlist
 
 * test suite a la dejagnu
 * pldoc for both Unix and Windows (cygwin)
-* detect __int64 / _int64 in configure.ac. See definition in epc_xml.c
-
