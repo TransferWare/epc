@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[4.4.0],[g.paulissen@chello.nl])
+AC_INIT([epc],[4.5.0],[g.paulissen@chello.nl])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -61,10 +61,33 @@ AM_PROG_CC_STDC
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
+# pldoc generates documentation from Oracle package specification files.
+case "$ac_cv_host" in
+*-mingw32)
+	pldoc=pldoc.bat
+	;;
+*-cygwin)
+	pldoc=pldoc.bat
+	;;
+*)
+	pldoc=pldoc.sh
+	;;
+esac
+
+AC_CHECK_PROGS([PLDOC], [$pldoc pldoc], [])
+test -n "$PLDOC" || AC_MSG_ERROR(pldoc not found)
+
+# doxygen generates documentation from C sources.
+AC_CHECK_PROGS([DOXYGEN], [doxygen], [])
+test -n "$DOXYGEN" || AC_MSG_ERROR(doxygen not found)
+
 # Oracle checks
 ACX_PROG_PROC
 ACX_PROG_SQLPLUS
 ACX_PROG_XML
+
+# Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
+AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
 # Checks for header files.
 AC_HEADER_STDC

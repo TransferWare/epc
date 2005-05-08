@@ -41,14 +41,10 @@ FORCE = force
 
 force: ;
 
-PLDOC = pldoc.bat
-
 # Create HTML documentation in the source tree
 doc/sql: $(FORCE)
 	@cd $(top_srcdir) && mkdir -p $@
 	@cd $(top_srcdir) && $(PLDOC) -d $@ -doctitle EPC src/sql/*.pks
-
-DOXYGEN = doxygen
 
 # Create HTML documentation in the source tree
 doc/c: $(FORCE)

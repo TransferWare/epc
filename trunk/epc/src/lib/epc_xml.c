@@ -16,8 +16,24 @@
 
 #include <dbug.h>
 
-#ifndef _int64
+#ifndef HAVE__INT64
+
+#if defined(HAVE___INT64)
+
 #define _int64 __int64
+
+#elif defined(HAVE_UNSIGNED_LONG_LONG)
+
+#define _int64 unsigned long long
+
+#else
+
+typedef struct {
+  unsigned long m1, m2;
+} _int64;
+
+#endif
+
 #endif
 
 #include <oratypes.h>
