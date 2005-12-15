@@ -6,6 +6,13 @@ See the end for copying conditions.
 Please send EPC bug reports to g.paulissen@chello.nl.
 
 
+Release 4.5.0
+
+* Added support for Oracle 10g
+* Testing enhanced
+* Documentation is generated using pldoc and doxygen
+
+
 Release 4.4.0
 
 * Amazon Web services example.
