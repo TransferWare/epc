@@ -42,6 +42,13 @@ An example for Windows:
 LDFLAGS="-Lc:/usr/local/mingw32/lib" ORACLE_HOME="c:/oracle/ora81" \
 CC="gcc -mno-cygwin" --prefix=c:/usr/local/mingw32
 
+Solaris specific
+================
+On SUN Solaris version 9 the library libm has to be added to the list of
+libraries, because the Oracle xml library libxml10 needs it. This can be
+done by specifying LIBS=-lm on the configure command line. For 64 bit
+architectures this should be LIBS=-lm64.
+
 Local Variables:
 fill-column: 72
 End:
