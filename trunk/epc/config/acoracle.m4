@@ -106,10 +106,21 @@ do
     # Windows: ignore case
     # Bug 849475: just return one header by using head -1
     acx_protohdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
-    if test -n "$acx_protohdr"
+
+    test -n "$acx_protohdr" || continue
+
+    AC_MSG_CHECKING([$acx_protohdr])
+
+    # sqlcpr.h.bak is not right, but SQLCPR.H is (at least on Windows)
+    if test `basename "$acx_protohdr" | tr 'A-Z' 'a-z'` = "$file"
     then
       CPPFLAGS="-I`dirname $acx_protohdr` $CPPFLAGS"
+      AC_MSG_RESULT([yes])
       break
+    else
+      acx_protohdr=
+      AC_MSG_RESULT([no])
+      continue
     fi
   done
   # One is enough
@@ -174,27 +185,39 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
 		[],
 		[AC_MSG_ERROR(xmlinit not found)])
 
-acx_xmlhdrs="oraxml.h"
-#acx_xmlhdrs="oraxml.h oratypes.h"
+#acx_xmlhdrs="oraxml.h"
+acx_xmlhdrs="oraxml.h oratypes.h"
 acx_xmlhdr=
-for dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home
+for dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null`
 do
-  test -d $dir || continue
+  # Must be a directory and we must be able to change to the directory
+  test -d $dir -a -x $dir || continue
   for file in $acx_xmlhdrs
   do
     # Windows: ignore case
     # Bug 849475: just return one header by using head -1
     acx_xmlhdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
-    if test -n "$acx_xmlhdr"
+
+    test -n "$acx_xmlhdr" || continue
+
+    AC_MSG_CHECKING([$acx_xmlhdr])
+
+    # oraxml.h.bak is not right, but ORAXML.H is (at least on Windows)
+    if test `basename "$acx_xmlhdr" | tr 'A-Z' 'a-z'` = "$file"
     then
       CPPFLAGS="-I`dirname $acx_xmlhdr` $CPPFLAGS"
+      AC_MSG_RESULT([yes])
       break
+    else
+      acx_xmlhdr=
+      AC_MSG_RESULT([no])
+      continue
     fi
   done
   test -z "$acx_xmlhdr" || break
 done
 
-AC_CHECK_HEADERS([$acx_xmlhdrs], [continue], [AC_MSG_ERROR(XML header not found)])
+AC_CHECK_HEADERS([$acx_xmlhdrs], [continue], [AC_MSG_ERROR(XML header(s) $acx_xmlhdrs not found)])
 ])
 
 dnl $Id$
