@@ -90,7 +90,7 @@ AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([assert.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
-AC_CHECK_HEADERS([sqlproto.h sqlcpr.h])
+AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
