@@ -24,23 +24,16 @@ Installation using the GNU build tools is described in INSTALL.
 
 Windows specific
 ================
-For Windows platforms the Cygwin suite can be used. There is one caveat:
-the libraries should not depend on the Cygwin DLL, but on the Microsoft
-run-time DLLs instead. See the file BUGS in the DBUG distribution for
-more information.
+For Windows platforms the Cygwin suite with GCC and the MinGW extension
+can be used. There is one caveat: the libraries should not depend on the
+Cygwin DLL, but on the Microsoft run-time DLLs instead. See the file
+BUGS in the DBUG distribution for more information.
 
-On Windows systems the environment variable ORACLE_HOME must be known to
-the configure script. The value must have the following syntax:
-<drive>:/<Oracle directory path>. Without this the value for ORACLE_HOME is
-determined by the path to the PRO*C compiler which will result in
-something like /cygdrive/<drive>/<Oracle directory>. This will confuse
-the MinGW compiler.
+An example for Windows using the Cygwin GCC compiler:
 
-An example for Windows:
-
-./configure CPPFLAGS="-Ic:/usr/local/mingw32/include" \
-LDFLAGS="-Lc:/usr/local/mingw32/lib" ORACLE_HOME="c:/oracle/ora81" \
-CC="gcc -mno-cygwin" --prefix=c:/usr/local/mingw32
+./configure CPPFLAGS="-I/cygdrive/c/usr/local/include" \
+LDFLAGS="-L/cygdrive/c/usr/local/lib" \
+CC="gcc -mno-cygwin" --prefix=/cygdrive/c/usr/local
 
 Solaris specific
 ================
