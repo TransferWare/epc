@@ -56,9 +56,10 @@ create or replace package epc_clnt is
 -- The flow of procedure calls will typically look like this:<br />
 -- 1) Set connection information.<br />
 --    a) epc_clnt.register<br />
---    b) epc_clnt.set_connection_info (optional for database pipes)<br />
---    c) epc_clnt.set_request_send_timeout (optional)<br />
---    d) epc_clnt.set_response_recv_timeout (optional)<br />
+--    b) epc_clnt.set_protocol (optional, the default is SOAP)<br />
+--    c) epc_clnt.set_connection_info (optional for database pipes)<br />
+--    d) epc_clnt.set_request_send_timeout (optional)<br />
+--    e) epc_clnt.set_response_recv_timeout (optional)<br />
 -- 2) Marshall a function call into a message<br />
 --    a) epc_clnt.new_request<br />
 --    b) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)<br />
@@ -71,6 +72,45 @@ create or replace package epc_clnt is
 --
 -- @headcom
 */
+
+/* 
+   History of protocols:
+ 
+   1 - original protocol
+       To server: RESULT PIPE, PROTOCOL, INTERFACE, FUNCTION, PARAMETERS IN
+       From server: EXEC CODE, SQL CODE, PARAMETERS OUT
+
+   2 - same as protocol 1, but FUNCTION is now the FUNCTION SIGNATURE.
+
+   3 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, [ RESULT PIPE, ] PARAMETERS IN
+       From server: MSG SEQ, PARAMETERS OUT
+
+       MSG SEQ has been added in order to check for messages which have
+       not been (correctly) processed by the server. 
+
+   4 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
+       From server: MSG SEQ, PARAMETERS OUT
+
+       GJP 07-04-2004
+       RESULT PIPE is v_oneway_result_pipe for oneway functions.
+
+   5 - To server: PROTOCOL, MSG SEQ, SOAP REQUEST MESSAGE [, RESULT PIPE ]
+       From server: MSG SEQ, SOAP RESPONSE MESSAGE
+
+       GJP 21-10-2004
+       RESULT PIPE is empty for oneway functions.
+
+   6 - To server: PROTOCOL, MSG SEQ, XMLRPC REQUEST MESSAGE [, RESULT PIPE ]
+       From server: MSG SEQ, XMLRPC RESPONSE MESSAGE
+
+       GJP 24-07-2007
+
+*/
+
+subtype protocol_subtype is pls_integer;
+
+"SOAP" constant protocol_subtype := 5; -- default protocol
+"XMLRPC" constant protocol_subtype := 6;
 
 subtype epc_key_subtype is binary_integer;
 
@@ -104,6 +144,36 @@ return epc_key_subtype;
 */
 function get_epc_key( p_interface_name in epc.interface_name_subtype )
 return epc_key_subtype;
+
+/* 
+|| Protocol related functions/procedures.
+*/
+
+/**
+-- Set the protocol for later use.
+-- 
+-- @param p_epc_key   The key
+-- @param p_protocol  The protocol
+*/
+procedure set_protocol
+(
+  p_epc_key in epc_key_subtype
+, p_protocol in protocol_subtype
+);
+
+/**
+-- Get the protocol. 
+-- 
+-- @param p_epc_key   The key
+-- @param p_protocol  The protocol
+--
+-- @exception no_data_found  Wrong key
+*/
+procedure get_protocol
+(
+  p_epc_key in epc_key_subtype
+, p_protocol out protocol_subtype
+);
 
 /* 
 || Connection related functions/procedures.

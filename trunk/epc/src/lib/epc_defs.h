@@ -3,19 +3,27 @@
 
 /* Oracle pipe name length is 128.
    Add 1 for the terminating zero and round till next multiple of 4.
-   msg_info contains pipe name and the message sequence number as a 4 
-   character hexadecimal string.
+   msg_info contains:
+   - protocol (5 for SOAP and 6 for XMLRPC, see also package epc_clnt).
+
+   For calls which expect a response (non oneway) this is added to msg_info:
+   - the message sequence number as a 4 character hexadecimal string.
+   - pipe name
  */
 #define MAX_PIPE_NAME_LEN       128
-#define MAX_MSG_INFO_LEN        (4+MAX_PIPE_NAME_LEN)
-#define MSG_INFO_SIZE           (MAX_MSG_INFO_LEN+1+3)
+
+#define PROTOCOL_SOAP '5'
+#define PROTOCOL_XMLRPC '6'
+
+#define MAX_MSG_INFO_LEN        (1+4+MAX_PIPE_NAME_LEN)
+#define MSG_INFO_SIZE           (MAX_MSG_INFO_LEN+1+2)
 #define MAX_MSG_REQUEST_LEN     4046
-#define MSG_REQUEST_SIZE        (MAX_MSG_REQUEST_LEN+1+1)	/* MAX_MSG_REQUEST_LEN+1 rounded till next multiple of 4 */
+#define MSG_REQUEST_SIZE        (MAX_MSG_REQUEST_LEN+1+1)       /* MAX_MSG_REQUEST_LEN+1 rounded till next multiple of 4 */
 #define MAX_MSG_RESPONSE_LEN    4082
-#define MSG_RESPONSE_SIZE       (MAX_MSG_RESPONSE_LEN+1+1)	/* MAX_MSG_RESPONSE_LEN+1 rounded till next multiple of 4 */
+#define MSG_RESPONSE_SIZE       (MAX_MSG_RESPONSE_LEN+1+1)      /* MAX_MSG_RESPONSE_LEN+1 rounded till next multiple of 4 */
 #define INLINE_NAMESPACE_SIZE   32
 
-#include <idl_defs.h>		/* constants used by idl and epc */
+#include <idl_defs.h>           /* constants used by idl and epc */
 
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  * make sure all structs are double word (4 bytes) aligned 
@@ -26,7 +34,7 @@ typedef struct epc__parameter
   /*@observer@ */ char *name;
   idl_mode_t mode;
   idl_type_t type;
-  dword_t size;			/* for a string including the terminating zero */
+  dword_t size;                 /* for a string including the terminating zero */
   void *data;
 } epc__parameter_t;
 
@@ -76,9 +84,9 @@ typedef struct epc__call
   char msg_response[MSG_RESPONSE_SIZE];
   /*@temp@ *//*@null@ */ epc__interface_t *interface;
   /*@temp@ *//*@null@ */ epc__function_t *function;
-  char inline_namespace[INLINE_NAMESPACE_SIZE];	/* ns1 in xmlns:ns1="<interface>" */
-  long epc__error;		/* result of call */
-  long errcode;			/* error code returned by transport medium */
+  char inline_namespace[INLINE_NAMESPACE_SIZE]; /* ns1 in xmlns:ns1="<interface>" */
+  long epc__error;              /* result of call */
+  long errcode;                 /* error code returned by transport medium */
 } epc__call_t;
 
 #define EPC__CALL_INIT { "", "", "", NULL, NULL, "", OK, 0L }
