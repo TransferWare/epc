@@ -108,7 +108,7 @@ begin
       if dbms_pipe.next_item_type != 0
       then
         dbms_pipe.unpack_message(l_result_pipe);
-        p_msg_info := to_char(l_msg_seq, 'FM000X') || l_result_pipe;
+        p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
       else
         p_msg_info := null;
       end if;
@@ -136,8 +136,8 @@ procedure send_response
 )
 is
   l_retval pls_integer;
-  l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 1, 4), 'FM000X');
-  l_result_pipe constant epc.pipe_name_subtype := substr(p_msg_info, 5);
+  l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 2, 4), 'FM000X');
+  l_result_pipe constant epc.pipe_name_subtype := substr(p_msg_info, 6);
 begin
   if p_epc_key = g_epc_key
   then
