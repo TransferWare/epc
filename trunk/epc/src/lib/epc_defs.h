@@ -11,10 +11,6 @@
    - pipe name
  */
 #define MAX_PIPE_NAME_LEN       128
-
-#define PROTOCOL_SOAP '5'
-#define PROTOCOL_XMLRPC '6'
-
 #define MAX_MSG_INFO_LEN        (1+4+MAX_PIPE_NAME_LEN)
 #define MSG_INFO_SIZE           (MAX_MSG_INFO_LEN+1+2)
 #define MAX_MSG_REQUEST_LEN     4046
@@ -88,6 +84,14 @@ typedef struct epc__call
   long epc__error;              /* result of call */
   long errcode;                 /* error code returned by transport medium */
 } epc__call_t;
+
+#define PROTOCOL_SOAP '5'
+#define PROTOCOL_MIN PROTOCOL_SOAP
+
+#define PROTOCOL_XMLRPC '6'
+#define PROTOCOL_MAX PROTOCOL_XMLRPC
+
+#define EPC__CALL_PROTOCOL(epc__call) (epc__call->msg_info[0])
 
 #define EPC__CALL_INIT { "", "", "", NULL, NULL, "", OK, 0L }
 

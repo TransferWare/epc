@@ -9,7 +9,18 @@ whenever oserror exit failure
 
 alter session set nls_numeric_characters = '.,';
 
-execute epctest.nothing1;
+begin
+  epctest.nothing1;
+end;
+/
+
+execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."XMLRPC")
+
+/
+
+execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."SOAP")
+
+/
 
 spool epctest.lis
 declare
@@ -27,6 +38,14 @@ begin
         dbms_output.put_line( 'io_par2: ' || v_par2 );
         dbms_output.put_line( 'o_par3: ' || v_par3 );
 end;
+/
+
+execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."XMLRPC")
+
+/
+
+execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."SOAP")
+
 /
 
 declare

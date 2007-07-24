@@ -110,7 +110,7 @@ begin
         dbms_pipe.unpack_message(l_result_pipe);
         p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
       else
-        p_msg_info := null;
+        p_msg_info := to_char(l_msg_protocol);
       end if;
     elsif l_retval = 1
     then
