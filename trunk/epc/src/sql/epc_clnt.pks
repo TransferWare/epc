@@ -109,8 +109,8 @@ create or replace package epc_clnt is
 
 subtype protocol_subtype is pls_integer;
 
-"SOAP" constant protocol_subtype := 5; -- default protocol
-"XMLRPC" constant protocol_subtype := 6;
+"SOAP" constant protocol_subtype := 5; -- default protocol for HTTP
+"XMLRPC" constant protocol_subtype := 6; -- default protocol for the TCP, DBMS_PIPE
 
 subtype epc_key_subtype is binary_integer;
 

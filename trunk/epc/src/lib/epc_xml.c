@@ -93,8 +93,8 @@ Fault
 </methodResponse>
 */
 
-#define LEVEL_XMLRPC_METHOD 1
-#define LEVEL_XMLRPC_ARGUMENT 4
+#define LEVEL_XMLRPC_METHOD 2
+#define LEVEL_XMLRPC_ARGUMENT 5
 
 /* This structure contains the context while parsing an XML document */
 typedef struct
@@ -109,7 +109,6 @@ typedef struct
                          4 - argument
                          ... - inside XML argument
                       */
-  char interface_name[MAX_INTERFACE_NAME_LEN];
 } epc__xml_ctx_t;
 
 typedef struct xml_info
@@ -382,8 +381,8 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
           /* server side error */
           (void) snprintf (epc__call->msg_response,
                            MAX_MSG_RESPONSE_LEN + 1,
-                           SOAP_HEADER_START "<SOAP-ENV:Fault>\
-<faultcode>Server</faultcode><faultstring>%s</faultstring>\
+                           SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
+<faultcode>Server</faultcode><faultstring>%s</faultstring>\n\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, (char *) msg);
         }
       else
@@ -391,8 +390,8 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
           /* client side error */
           (void) snprintf (epc__call->msg_response,
                            MAX_MSG_RESPONSE_LEN + 1,
-                           SOAP_HEADER_START "<SOAP-ENV:Fault>\
-<faultcode>Client</faultcode><faultstring>%s</faultstring>\
+                           SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
+<faultcode>Client</faultcode><faultstring>%s</faultstring>\n\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, (char *) msg);
         }
       break;
@@ -400,9 +399,9 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
     case PROTOCOL_XMLRPC:
       (void) snprintf (epc__call->msg_response,
                        MAX_MSG_RESPONSE_LEN + 1,
-                       "<methodResponse><fault><value><struct>\
-<member><name>faultCode</name><value><int>1</int></value></member>\
-<member><name>faultString</name><value><string>generic error</string></value></member>\
+                       "<methodResponse><fault><value><struct>\n\
+<member><name>faultCode</name><value><int>1</int></value></member>\n\
+<member><name>faultString</name><value><string>generic error</string></value></member>\n\
 </struct></value></fault></methodResponse>");
       break;
 
@@ -510,36 +509,103 @@ nullify_parameters (epc__call_t *epc__call)
   if (epc__call->interface != NULL && epc__call->function != NULL)
     {
       for (nr = 0; nr < epc__call->function->num_parameters; nr++)
-	switch (epc__call->function->parameters[nr].type)
-	  {
-	  case C_XML:
-	  case C_STRING:
-	    *((char *) epc__call->function->parameters[nr].data) = '\0';
-	    break;
+        switch (epc__call->function->parameters[nr].type)
+          {
+          case C_XML:
+          case C_STRING:
+            *((char *) epc__call->function->parameters[nr].data) = '\0';
+            break;
 
-	  case C_INT:
-	    *((idl_int_t *) epc__call->function->parameters[nr].data) = 0;
-	    break;
+          case C_INT:
+            *((idl_int_t *) epc__call->function->parameters[nr].data) = 0;
+            break;
 
-	  case C_LONG:
-	    *((idl_long_t *) epc__call->function->parameters[nr].data) = 0L;
-	    break;
+          case C_LONG:
+            *((idl_long_t *) epc__call->function->parameters[nr].data) = 0L;
+            break;
 
-	  case C_FLOAT:
-	    *((idl_float_t *) epc__call->function->parameters[nr].data) = 0.0F;
-	    break;
+          case C_FLOAT:
+            *((idl_float_t *) epc__call->function->parameters[nr].data) = 0.0F;
+            break;
 
-	  case C_DOUBLE:
-	    *((idl_double_t *) epc__call->function->parameters[nr].data) = 0.0F;
-	    break;
+          case C_DOUBLE:
+            *((idl_double_t *) epc__call->function->parameters[nr].data) = 0.0F;
+            break;
 
-	  case C_VOID:
-	    break;
+          case C_VOID:
+            break;
 
-	  default:
-	    assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
-		    && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
-	  }
+          default:
+            assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
+                    && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+          }
+    }
+}
+
+/**
+ * @brief Set a parameter value
+ *
+ * @param ch         Character buffer (no terminating zero needed)
+ * @param len        Number of characters in the character buffer
+ * @param parameter  Epc parameter to set the value for
+ *
+ ******************************************************************************/
+static void
+set_parameter(const char *ch, size_t len, epc__parameter_t *parameter)
+{
+  switch (parameter->type)
+    {
+    case C_XML:
+      /* append data */
+      assert ((dword_t) (len + strlen((char *) parameter->data)) <
+              parameter->size);
+      (void) snprintf( ((char *) parameter->data) + 
+                       strlen((char *) parameter->data),
+                       (size_t)(parameter->size -
+                                strlen((char *) parameter->data)),
+                       "%.*s", (int)len, (char *)ch);
+      break;
+
+    case C_STRING:
+      assert ((dword_t) len < parameter->size);
+      if ((dword_t) len >= parameter->size)
+        {
+          len = (size_t) (parameter->size - 1);
+        }
+      (void) strncpy ((char *) parameter->data,
+                      (char *) ch, len);
+      ((char *) parameter->data)[len] = '\0';
+      break;
+
+    case C_INT:
+      *((idl_int_t *) parameter->data) =
+        (int) strtol ((char *) ch, NULL, 10);
+      break;
+
+    case C_LONG:
+      *((idl_long_t *) parameter->data) =
+        strtol ((char *) ch, NULL, 10);
+      break;
+
+    case C_FLOAT:
+      /*@-unrecog@ */
+      *((idl_float_t *) parameter->data) =
+        strtof ((char *) ch, NULL);
+      /*@=unrecog@ */
+      break;
+
+    case C_DOUBLE:
+      *((idl_double_t *) parameter->data) =
+        strtod ((char *) ch, NULL);
+      break;
+
+    case C_VOID:                /* impossible */
+      assert (parameter->type != C_VOID);
+      break;
+
+    default:
+      assert (parameter->type >= C_DATATYPE_MIN &&
+              parameter->type <= C_DATATYPE_MAX);
     }
 }
 
@@ -638,8 +704,8 @@ start_element (void *epc__xml_ctx_ptr,
                 /* construct the response */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
-                                 SOAP_HEADER_START "<SOAP-ENV:Fault>\
-<faultcode>Client</faultcode><faultstring>interface %s unknown</faultstring>\
+                                 SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
+<faultcode>Client</faultcode><faultstring>interface %s unknown</faultstring>\n\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, interface_name);
                 break;
 
@@ -647,8 +713,8 @@ start_element (void *epc__xml_ctx_ptr,
                 /* construct the response */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
-                                 SOAP_HEADER_START "<SOAP-ENV:Fault>\
-<faultcode>Client</faultcode><faultstring>function %s unknown</faultstring>\
+                                 SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
+<faultcode>Client</faultcode><faultstring>function %s unknown</faultstring>\n\
 </SOAP-ENV:Fault>" SOAP_HEADER_END, function_name);
                 break;
 
@@ -662,7 +728,7 @@ start_element (void *epc__xml_ctx_ptr,
               }
 
             /* nullify all parameters */
-	    nullify_parameters(epc__call);
+            nullify_parameters(epc__call);
           }
           break;
 
@@ -749,7 +815,77 @@ start_element (void *epc__xml_ctx_ptr,
       break;
 
     case PROTOCOL_XMLRPC:
-      ++epc__xml_ctx->level;
+      switch (++epc__xml_ctx->level)
+        {
+        case LEVEL_XMLRPC_ARGUMENT:
+          {
+            assert (epc__call->function != NULL);
+
+            (void) dbug_print (__LINE__, "info",
+                               "arguments parsed so far: %d",
+                               (int) epc__xml_ctx->num_parameters);
+
+            /* get next in or inout argument */
+            for (nr = epc__xml_ctx->num_parameters;
+                 nr < epc__call->function->num_parameters; nr++)
+              {
+                if (epc__call->function->parameters[nr].mode != C_OUT) /* in or in/out */ 
+                  {
+                    (void) dbug_print (__LINE__, "info",
+                                       "parameter[%d]: %s",
+                                       (int) nr,
+                                       epc__call->function->parameters[nr].
+                                       name);
+                    break;        /* found */
+                  }
+              }
+
+            assert (nr < epc__call->function->num_parameters);    /* should be found */
+            if (nr >= epc__call->function->num_parameters)
+              {
+                epc__call->epc__error = PARAMETER_UNKNOWN;
+              }
+            else
+              {
+                epc__xml_ctx->num_parameters = nr + 1;    /* next time: search from next parameter */
+
+                switch (epc__call->function->parameters[nr].type)
+                  {
+                  case C_XML:
+                    break;
+
+                  case C_STRING:
+                    if (strcmp ((char *)name, "string") != 0) {
+                      epc__call->epc__error = DATATYPE_UNKNOWN;
+                    }
+                    break;
+
+                  case C_INT:
+                  case C_LONG:
+                    if (strcmp ((char *)name, "int") != 0
+                        && strcmp ((char *)name, "i4") != 0) {
+                      epc__call->epc__error = DATATYPE_UNKNOWN;
+                    }
+                    break;
+
+                  case C_FLOAT:
+                  case C_DOUBLE:
+                    if (strcmp ((char *)name, "double") != 0) {
+                      epc__call->epc__error = DATATYPE_UNKNOWN;
+                    }
+                    break;
+
+                  case C_VOID:                /* impossible */
+                    break;
+
+                  default:
+                    assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN &&
+                            epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+                  }
+              }
+          }
+          break;
+        }
       break;
 
     default:
@@ -855,95 +991,49 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
                      len, (char *) ch);
 
   assert (epc__call != NULL);
-  assert (epc__call->function != NULL);
-  assert (nr >= 0 && nr < epc__call->function->num_parameters);
-  assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
   switch (EPC__CALL_PROTOCOL(epc__call))
     {
     case PROTOCOL_SOAP:
-      switch (epc__call->function->parameters[nr].type)
-        {
-        case C_XML:
-          /* append data */
-          assert ((dword_t) (len + strlen((char *) epc__call->function->parameters[nr].data)) <
-                  epc__call->function->parameters[nr].size);
-          (void) snprintf( ((char *) epc__call->function->parameters[nr].data) + 
-                           strlen((char *) epc__call->function->parameters[nr].data),
-                           (size_t)(epc__call->function->parameters[nr].size -
-				    strlen((char *) epc__call->function->parameters[nr].data)),
-                           "%.*s", (int)len, (char *)ch);
-          break;
+      assert (epc__call->function != NULL);
+      assert (nr >= 0 && nr < epc__call->function->num_parameters);
+      assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
-        case C_STRING:
-          assert ((dword_t) len < epc__call->function->parameters[nr].size);
-          if ((dword_t) len >= epc__call->function->parameters[nr].size)
-            {
-              len = (size_t) (epc__call->function->parameters[nr].size - 1);
-            }
-          (void) strncpy ((char *) epc__call->function->parameters[nr].data,
-                          (char *) ch, len);
-          ((char *) epc__call->function->parameters[nr].data)[len] = '\0';
-          break;
-
-        case C_INT:
-          *((idl_int_t *) epc__call->function->parameters[nr].data) =
-            (int) strtol ((char *) ch, NULL, 10);
-          break;
-
-        case C_LONG:
-          *((idl_long_t *) epc__call->function->parameters[nr].data) =
-            strtol ((char *) ch, NULL, 10);
-          break;
-
-        case C_FLOAT:
-          /*@-unrecog@ */
-          *((idl_float_t *) epc__call->function->parameters[nr].data) =
-            strtof ((char *) ch, NULL);
-          /*@=unrecog@ */
-          break;
-
-        case C_DOUBLE:
-          *((idl_double_t *) epc__call->function->parameters[nr].data) =
-            strtod ((char *) ch, NULL);
-          break;
-
-        case C_VOID:                /* impossible */
-          assert (epc__call->function->parameters[nr].type != C_VOID);
-          break;
-
-        default:
-          assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN &&
-                  epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
-        }
+      set_parameter((const char *)ch, (size_t)len, &epc__call->function->parameters[nr]);
       break;
 
     case PROTOCOL_XMLRPC:
       switch(epc__xml_ctx->level)
         {
         case LEVEL_XMLRPC_METHOD:
+          assert (epc__call->function == NULL);
+
           {
             const char *dot = strchr ((char *) ch, '.');
             const char *function_name = (dot == NULL ? NULL : dot + 1);
+            char interface_name[MAX_INTERFACE_NAME_LEN];
+
+            (void) dbug_print (__LINE__, "info",
+                               "function: %s",
+                               (function_name == NULL ? "(null)" : function_name));
 
             if (dot == NULL) {
-	      epc__call->epc__error = INTERFACE_UNKNOWN;
-	    } else {
-	      (void) strncpy(epc__xml_ctx->interface_name, (char *)ch, (dot - (char *)ch));
-	      epc__xml_ctx->interface_name[(dot - (char *)ch)] = '\0';
+              epc__call->epc__error = INTERFACE_UNKNOWN;
+            } else {
+              (void) strncpy(interface_name, (char *)ch, (dot - (char *)ch));
+              interface_name[(dot - (char *)ch)] = '\0';
 
-	      assert (epc__call->function == NULL);
-	      assert (epc__xml_ctx->interface_name != NULL);
+              (void) dbug_print (__LINE__, "info",
+                                 "interface: %s",
+                                 interface_name);
 
-	      epc__call->inline_namespace[0] = '\0';
+              assert (epc__call->function == NULL);
 
-	      (void) dbug_print (__LINE__, "info",
-				 "method: %s",
-				 function_name);
+              epc__call->inline_namespace[0] = '\0';
 
-	      lookup_interface (epc__xml_ctx->interface_name, epc__info, epc__call);
-	      lookup_function (function_name, epc__info, epc__call);
-	    }
+              lookup_interface (interface_name, epc__info, epc__call);
+              lookup_function (function_name, epc__info, epc__call);
+            }
 
             switch (epc__call->epc__error)
               {
@@ -951,19 +1041,19 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
                 /* construct the response */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
-                                 "<methodResponse><fault><value><struct>\
-<member><name>faultCode</name><value><int>%d</int></value></member>\
-<member><name>faultString</name><value><string>interface %s unknown</string></value></member>\
-</struct></value></fault></methodResponse>", (int)epc__call->epc__error, epc__xml_ctx->interface_name);
+                                 "<methodResponse><fault><value><struct>\n\
+<member><name>faultCode</name><value><int>%d</int></value></member>\n\
+<member><name>faultString</name><value><string>interface %s unknown</string></value></member>\n\
+</struct></value></fault></methodResponse>", (int)epc__call->epc__error, interface_name);
                 break;
 
               case FUNCTION_UNKNOWN:
                 /* construct the response */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
-                                 "<methodResponse><fault><value><struct>\
-<member><name>faultCode</name><value><int>%d</int></value></member>\
-<member><name>faultString</name><value><string>function %s unknown</string></value></member>\
+                                 "<methodResponse><fault><value><struct>\n\
+<member><name>faultCode</name><value><int>%d</int></value></member>\n\
+<member><name>faultString</name><value><string>function %s unknown</string></value></member>\n\
 </struct></value></fault></methodResponse>", (int) epc__call->epc__error, function_name);
                 break;
 
@@ -977,98 +1067,23 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
               }
 
             /* nullify all parameters */
-	    nullify_parameters(epc__call);
+            nullify_parameters(epc__call);
           }
           break;
 
         case LEVEL_XMLRPC_ARGUMENT:
           {
             assert (epc__call->function != NULL);
+            assert (nr >= 0 && nr < epc__call->function->num_parameters);
+            assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
-            /* get next in or inout argument */
-            for (nr = epc__xml_ctx->num_parameters;
-                 nr < epc__call->function->num_parameters; nr++)
-              {
-                if (epc__call->function->parameters[nr].mode != C_OUT) /* in or in/out */ 
-                  {
-                    (void) dbug_print (__LINE__, "info",
-                                       "parameter[%d]: %s",
-                                       (int) nr,
-                                       epc__call->function->parameters[nr].
-                                       name);
-                    break;        /* found */
-                  }
-              }
-
-            assert (nr < epc__call->function->num_parameters);    /* should be found */
-            if (nr >= epc__call->function->num_parameters)
-              {
-                epc__call->epc__error = PARAMETER_UNKNOWN;
-              }
-            else
-              {
-                epc__xml_ctx->num_parameters = nr + 1;    /* next time: search from next parameter */
-
-                switch (epc__call->function->parameters[nr].type)
-                  {
-                  case C_XML:
-                    /* append data */
-                    assert ((dword_t) (len + strlen((char *) epc__call->function->parameters[nr].data)) <
-                            epc__call->function->parameters[nr].size);
-                    (void) snprintf( ((char *) epc__call->function->parameters[nr].data) + 
-                                     strlen((char *) epc__call->function->parameters[nr].data),
-                                     (size_t)(epc__call->function->parameters[nr].size -
-					      strlen((char *) epc__call->function->parameters[nr].data)),
-                                     "%.*s", (int)len, (char *)ch);
-                    break;
-
-                  case C_STRING:
-                    assert ((dword_t) len < epc__call->function->parameters[nr].size);
-                    if ((dword_t) len >= epc__call->function->parameters[nr].size)
-                      {
-                        len = (size_t) (epc__call->function->parameters[nr].size - 1);
-                      }
-                    (void) strncpy ((char *) epc__call->function->parameters[nr].data,
-                                    (char *) ch, len);
-                    ((char *) epc__call->function->parameters[nr].data)[len] = '\0';
-                    break;
-
-                  case C_INT:
-                    *((idl_int_t *) epc__call->function->parameters[nr].data) =
-                      (int) strtol ((char *) ch, NULL, 10);
-                    break;
-
-                  case C_LONG:
-                    *((idl_long_t *) epc__call->function->parameters[nr].data) =
-                      strtol ((char *) ch, NULL, 10);
-                    break;
-
-                  case C_FLOAT:
-                    /*@-unrecog@ */
-                    *((idl_float_t *) epc__call->function->parameters[nr].data) =
-                      strtof ((char *) ch, NULL);
-                    /*@=unrecog@ */
-                    break;
-
-                  case C_DOUBLE:
-                    *((idl_double_t *) epc__call->function->parameters[nr].data) =
-                      strtod ((char *) ch, NULL);
-                    break;
-
-                  case C_VOID:                /* impossible */
-                    assert (epc__call->function->parameters[nr].type != C_VOID);
-                    break;
-
-                  default:
-                    assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN &&
-                            epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
-                  }
-                break;
-              }
+            set_parameter((const char *)ch, (int)len, &epc__call->function->parameters[nr]);
           }
           break;
 
         default:
+          (void) dbug_print (__LINE__, "info",
+                             "level does not denote a method or argument");
           break;
         }
       break;

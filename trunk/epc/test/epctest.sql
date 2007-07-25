@@ -1,25 +1,21 @@
-set serveroutput on size 1000000
+set serveroutput on size 1000000 format trunc
+set linesize 10000 trimspool on
 set feedback off
-set trimspool on
 set verify off
+
 define N = &&1
+define PROTOCOL = &&2
 
 whenever sqlerror exit failure
 whenever oserror exit failure
 
 alter session set nls_numeric_characters = '.,';
 
+REM Just start nothing1 to register the interface and next change the protocol
 begin
   epctest.nothing1;
+  epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."&&PROTOCOL");
 end;
-/
-
-execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."XMLRPC")
-
-/
-
-execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."SOAP")
-
 /
 
 spool epctest.lis
@@ -38,14 +34,6 @@ begin
         dbms_output.put_line( 'io_par2: ' || v_par2 );
         dbms_output.put_line( 'o_par3: ' || v_par3 );
 end;
-/
-
-execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."XMLRPC")
-
-/
-
-execute epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."SOAP")
-
 /
 
 declare

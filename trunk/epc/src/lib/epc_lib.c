@@ -804,128 +804,131 @@ epc__response_soap(epc__call_t * epc__call)
 
   if (epc__call->inline_namespace[0] != '\0')
     {
+      /* copy */
       (void) snprintf (epc__call->msg_response,
-		       MAX_MSG_RESPONSE_LEN + 1,
-		       SOAP_HEADER_START
-		       "<%s:%sResponse xmlns:%s='%s'>",
-		       epc__call->inline_namespace,
-		       epc__call->function->name,
-		       epc__call->inline_namespace,
-		       epc__call->interface->name);
+                       MAX_MSG_RESPONSE_LEN + 1,
+                       SOAP_HEADER_START
+                       "<%s:%sResponse xmlns:%s='%s'>\n",
+                       epc__call->inline_namespace,
+                       epc__call->function->name,
+                       epc__call->inline_namespace,
+                       epc__call->interface->name);
     }
   else
     {
+      /* copy */
       (void) snprintf (epc__call->msg_response,
-		       MAX_MSG_RESPONSE_LEN + 1,
-		       SOAP_HEADER_START "<%sResponse xmlns='%s'>",
-		       epc__call->function->name,
-		       epc__call->interface->name);
+                       MAX_MSG_RESPONSE_LEN + 1,
+                       SOAP_HEADER_START "<%sResponse xmlns='%s'>\n",
+                       epc__call->function->name,
+                       epc__call->interface->name);
     }
 
   for (nr = 0; nr < epc__call->function->num_parameters; nr++)
     {
       if (epc__call->function->parameters[nr].mode != C_IN)
-	{
-	  (void) snprintf (epc__call->msg_response,
-			   MAX_MSG_RESPONSE_LEN + 1,
-			   "%s<%s>",
-			   epc__call->msg_response,
-			   epc__call->function->parameters[nr].name);
+        {
+          /* append */
+          (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                           MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                           "<%s>",
+                           epc__call->function->parameters[nr].name);
 
-	  switch (epc__call->function->parameters[nr].type)
-	    {
-	    case C_XML:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s%s",
-			       epc__call->msg_response,
-			       (char *) epc__call->function->
-			       parameters[nr].data);
-	      break;
+          switch (epc__call->function->parameters[nr].type)
+            {
+            case C_XML:
+              /* append */
+              (void) strncat (epc__call->msg_response,
+                              (char *) epc__call->function->
+                              parameters[nr].data,
+                              MAX_MSG_RESPONSE_LEN -
+                              strlen(epc__call->msg_response));
+              break;
 
-	    case C_STRING:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<![CDATA[%s]]>",
-			       epc__call->msg_response,
-			       (char *) epc__call->function->
-			       parameters[nr].data);
-	      break;
+            case C_STRING:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<![CDATA[%s]]>",
+                               (char *) epc__call->function->
+                               parameters[nr].data);
+              break;
 
-	    case C_INT:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s%d",
-			       epc__call->msg_response,
-			       *((idl_int_t *) epc__call->function->
-				 parameters[nr].data));
-	      break;
+            case C_INT:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%d",
+                               *((idl_int_t *) epc__call->function->
+                                 parameters[nr].data));
+              break;
 
-	    case C_LONG:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s%ld",
-			       epc__call->msg_response,
-			       *((idl_long_t *) epc__call->function->
-				 parameters[nr].data));
-	      break;
+            case C_LONG:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%ld",
+                               *((idl_long_t *) epc__call->function->
+                                 parameters[nr].data));
+              break;
 
-	    case C_FLOAT:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s%f",
-			       epc__call->msg_response,
-			       (double) (*
-					 ((idl_float_t *) epc__call->
-					  function->parameters[nr].
-					  data)));
-	      break;
+            case C_FLOAT:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%f",
+                               (double) (*
+                                         ((idl_float_t *) epc__call->
+                                          function->parameters[nr].
+                                          data)));
+              break;
 
-	    case C_DOUBLE:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s%f",
-			       epc__call->msg_response,
-			       *((idl_double_t *) epc__call->
-				 function->parameters[nr].data));
-	      break;
+            case C_DOUBLE:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%f",
+                               *((idl_double_t *) epc__call->
+                                 function->parameters[nr].data));
+              break;
 
-	    case C_VOID:        /* procedure */
-	      assert (epc__call->function->parameters[nr].mode ==
-		      C_OUT);
-	      break;
+            case C_VOID:        /* procedure */
+              assert (epc__call->function->parameters[nr].mode ==
+                      C_OUT);
+              break;
 
-	    default:
-	      assert (epc__call->function->parameters[nr].type >=
-		      C_DATATYPE_MIN
-		      && epc__call->function->parameters[nr].type <=
-		      C_DATATYPE_MAX);
+            default:
+              assert (epc__call->function->parameters[nr].type >=
+                      C_DATATYPE_MIN
+                      && epc__call->function->parameters[nr].type <=
+                      C_DATATYPE_MAX);
 
-	    }
+            }
 
-	  (void) snprintf (epc__call->msg_response,
-			   MAX_MSG_RESPONSE_LEN + 1, "%s</%s>",
-			   epc__call->msg_response,
-			   epc__call->function->parameters[nr].name);
-	}
+          /* append */
+          (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                           MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                           "</%s>\n",
+                           epc__call->function->parameters[nr].name);
+        }
     }
 
   if (epc__call->inline_namespace[0] != '\0')
     {
-      (void) snprintf (epc__call->msg_response,
-		       MAX_MSG_RESPONSE_LEN + 1,
-		       "%s</%s:%sResponse>" SOAP_HEADER_END,
-		       epc__call->msg_response,
-		       epc__call->inline_namespace,
-		       epc__call->function->name);
+      /* append */
+      (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                       MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                       "</%s:%sResponse>" SOAP_HEADER_END "\n",
+                       epc__call->inline_namespace,
+                       epc__call->function->name);
     }
   else
     {
-      (void) snprintf (epc__call->msg_response,
-		       MAX_MSG_RESPONSE_LEN + 1,
-		       "%s</%sResponse>" SOAP_HEADER_END,
-		       epc__call->msg_response,
-		       epc__call->function->name);
+      /* append */
+      (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                       MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                       "</%sResponse>" SOAP_HEADER_END "\n",
+                       epc__call->function->name);
     }
 }
 
@@ -934,89 +937,90 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 {
   dword_t nr;
 
+  /* copy (strncy does not always add a terminating zero but snprintf does) */
   (void) snprintf (epc__call->msg_response,
-		   MAX_MSG_RESPONSE_LEN + 1,
-		   "<methodResponse><params>");
+                   MAX_MSG_RESPONSE_LEN + 1,
+                   "<methodResponse><params>\n");
 
   for (nr = 0; nr < epc__call->function->num_parameters; nr++)
     {
       if (epc__call->function->parameters[nr].mode != C_IN)
-	{
-	  (void) snprintf (epc__call->msg_response,
-			   MAX_MSG_RESPONSE_LEN + 1,
-			   "%s<param><value>",
-			   epc__call->msg_response);
+        {
+          /* append */
+          (void) strncat (epc__call->msg_response,
+                          "<param><value>",
+                          MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response));
 
-	  switch (epc__call->function->parameters[nr].type)
-	    {
-	    case C_XML:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<string>%s</string>",
-			       epc__call->msg_response,
-			       (char *) epc__call->function->parameters[nr].data);
-	      break;
+          switch (epc__call->function->parameters[nr].type)
+            {
+            case C_XML:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<string>%s</string>",
+                               (char *) epc__call->function->parameters[nr].data);
+              break;
 
-	    case C_STRING:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<string><![CDATA[%s]]></string>",
-			       epc__call->msg_response,
-			       (char *) epc__call->function->parameters[nr].data);
-	      break;
+            case C_STRING:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<string><![CDATA[%s]]></string>",
+                               (char *) epc__call->function->parameters[nr].data);
+              break;
 
-	    case C_INT:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<int>%d</int>",
-			       epc__call->msg_response,
-			       *((idl_int_t *) epc__call->function->parameters[nr].data));
-	      break;
+            case C_INT:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<int>%d</int>",
+                               *((idl_int_t *) epc__call->function->parameters[nr].data));
+              break;
 
-	    case C_LONG:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<int>%ld</int>",
-			       epc__call->msg_response,
-			       *((idl_long_t *) epc__call->function->parameters[nr].data));
-	      break;
+            case C_LONG:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<int>%ld</int>",
+                               *((idl_long_t *) epc__call->function->parameters[nr].data));
+              break;
 
-	    case C_FLOAT:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<double>%f</double>",
-			       epc__call->msg_response,
-			       (double) (*((idl_float_t *) epc__call->function->parameters[nr].data)));
-	      break;
+            case C_FLOAT:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<double>%f</double>",
+                               (double) (*((idl_float_t *) epc__call->function->parameters[nr].data)));
+              break;
 
-	    case C_DOUBLE:
-	      (void) snprintf (epc__call->msg_response,
-			       MAX_MSG_RESPONSE_LEN + 1,
-			       "%s<double>%f</double>",
-			       epc__call->msg_response,
-			       *((idl_double_t *) epc__call->function->parameters[nr].data));
-	      break;
+            case C_DOUBLE:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "<double>%f</double>",
+                               *((idl_double_t *) epc__call->function->parameters[nr].data));
+              break;
 
-	    case C_VOID:        /* procedure */
-	      assert (epc__call->function->parameters[nr].mode == C_OUT);
-	      break;
+            case C_VOID:        /* procedure */
+              assert (epc__call->function->parameters[nr].mode == C_OUT);
+              break;
 
-	    default:
-	      assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
-		      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+            default:
+              assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
+                      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
 
-	    }
+            }
 
-	  (void) snprintf (epc__call->msg_response,
-			   MAX_MSG_RESPONSE_LEN + 1, "%s</value></param>",
-			   epc__call->msg_response);
-	}
+          /* append */
+          (void) strncat (epc__call->msg_response,
+                          "</value></param>\n",
+                          MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response));
+        }
     }
 
-  (void) snprintf (epc__call->msg_response,
-		   MAX_MSG_RESPONSE_LEN + 1,
-		   "%s</params></methodResponse>",
-		   epc__call->msg_response);
+  (void) strncat (epc__call->msg_response,
+                  "</params></methodResponse>\n",
+                  MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response));
 }
 
 static epc__error_t
@@ -1045,16 +1049,16 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
       /* construct the response for non oneway functions */
       if (epc__call->function->oneway == 0)
         {
-	  switch (EPC__CALL_PROTOCOL(epc__call))
-	    {
-	    case PROTOCOL_SOAP:
-	      epc__response_soap(epc__call);
-	      break;
+          switch (EPC__CALL_PROTOCOL(epc__call))
+            {
+            case PROTOCOL_SOAP:
+              epc__response_soap(epc__call);
+              break;
 
-	    case PROTOCOL_XMLRPC:
-	      epc__response_xmlrpc(epc__call);
-	      break;
-	    }
+            case PROTOCOL_XMLRPC:
+              epc__response_xmlrpc(epc__call);
+              break;
+            }
         }
     }
 
