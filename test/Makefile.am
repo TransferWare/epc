@@ -45,7 +45,7 @@ EXTRA_DIST           = epctest.ref epctest.sql str.sql test2.client.ref
 
 #TESTS = test1 test2
 
-TESTS = test1
+TESTS = test1 test2 test3
 
 COUNT = 1000
 
@@ -63,13 +63,26 @@ test1: $(srcdir)/epctest.sql $(FORCE)
 	$(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1 &
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
-	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 2>&1 | tee $@.client.log
+	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) SOAP 2>&1 | tee $@.client.log
 	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	@echo : > $@
 	@chmod +x $@
 
-test2: $(srcdir)/client.sql $(FORCE)
+test2: $(srcdir)/epctest.sql $(FORCE)
+# empty the pipe
+	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
+# run the server
+	$(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1 &
+	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
+	sleep 5
+	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) XMLRPC 2>&1 | tee $@.client.log
+	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
+	$(DIFF) epctest.lis $(srcdir)/epctest.ref
+	@echo : > $@
+	@chmod +x $@
+
+test3: $(srcdir)/client.sql $(FORCE)
 # empty the pipe
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
 #	sleep 5

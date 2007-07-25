@@ -111,7 +111,7 @@ type epc_info_rectype is record (
   interface_name epc.interface_name_subtype,
 
   /* Protocol information */
-  protocol protocol_subtype default "SOAP",
+  protocol protocol_subtype default "XMLRPC",
 
   /* SOAP related information */
   namespace epc.namespace_subtype,
@@ -221,6 +221,7 @@ is
 begin
   epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_HTTP;
   epc_info_tab(p_epc_key).http_connection := p_connection;
+  epc_info_tab(p_epc_key).protocol := epc_clnt."SOAP";
 end set_connection_info;
 
 procedure get_connection_info
@@ -247,6 +248,7 @@ is
 begin
   epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_TCP;
   epc_info_tab(p_epc_key).tcp_connection := p_connection;
+  epc_info_tab(p_epc_key).protocol := epc_clnt."XMLRPC";
 end set_connection_info;
 
 procedure get_connection_info
@@ -273,6 +275,7 @@ is
 begin
   epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_DBMS_PIPE;
   epc_info_tab(p_epc_key).request_pipe := p_pipe_name;
+  epc_info_tab(p_epc_key).protocol := epc_clnt."XMLRPC";
 end set_connection_info;
 
 procedure get_connection_info
@@ -388,10 +391,14 @@ begin
             ||g_cdata_tag_start
             ||p_value
             ||g_cdata_tag_end
-            ||'</string></value></param>';
+            ||'</string></value></param>'
+            ||chr(10);
         else
           raise value_error;
         end if; 
+
+      else
+        raise program_error;
     end case;            
   end if;
 end set_request_parameter;
@@ -459,7 +466,11 @@ begin
           epc_info_tab(p_epc_key).msg
           ||'<param><value><'||l_data_type||'>'
           ||to_char(p_value)
-          ||'</'||l_data_type||'></value></param>';
+          ||'</'||l_data_type||'></value></param>'
+          ||chr(10);
+
+      else
+        raise program_error;
     end case;
   end if;
 end set_request_parameter;
@@ -479,9 +490,9 @@ begin
   dbms_pipe.pack_message( p_protocol );
   g_msg_seq := g_msg_seq + 1;
   if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
-  -- dbms_output.put_line('msg seq: ' || g_msg_seq);
+  --/*DBUG*/ dbms_output.put_line('msg seq: ' || g_msg_seq);
   dbms_pipe.pack_message( g_msg_seq );
-  -- dbms_output.put_line('xml request: ' || substr(p_xml_request, 1, 200));
+  --/*DBUG*/ dbms_output.put_line(substr('xml request: ' || p_xml_request, 1, 255));
   dbms_pipe.pack_message( p_xml_request );
   if p_oneway = 0
   then
@@ -577,6 +588,9 @@ begin
         epc_info_tab(p_epc_key).http_connection.http_req
       , 'Content-Length', length(p_xml_request)
       );
+
+    else
+      raise program_error;
   end case;
 
   utl_http.write_text
@@ -675,19 +689,26 @@ begin
     then 
       epc_info_tab(p_epc_key).msg :=
         '<methodCall>'
+        ||chr(10)
         ||'<methodName>'
         ||epc_info_tab(p_epc_key).interface_name||'.'||p_method_name
         ||'</methodName>'
+        ||chr(10)
         ||'<params>'
+        ||chr(10)
         ||epc_info_tab(p_epc_key).msg
         ||'</params>'
-        ||'</methodCall>';
+        ||chr(10)
+        ||'</methodCall>'
+        ||chr(10);
 
+    else
+      raise program_error;
   end case;
 
   epc_info_tab(p_epc_key).doc := 
     xmltype.createxml( epc_info_tab(p_epc_key).msg );
-  -- epc.print(epc_info_tab(p_epc_key).doc.getstringval());
+  --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
 
   case epc_info_tab(p_epc_key).connection_method
     when CONNECTION_METHOD_DBMS_PIPE
@@ -709,6 +730,9 @@ begin
           , epc_info_tab(p_epc_key).protocol
           , epc_info_tab(p_epc_key).msg
           );
+
+        else
+          raise program_error;
       end case;  
 
     when CONNECTION_METHOD_UTL_HTTP
@@ -730,6 +754,9 @@ begin
           , p_protocol => epc_info_tab(p_epc_key).protocol
           , p_xml_request => epc_info_tab(p_epc_key).msg
           );
+
+        else
+          raise program_error;
       end case;  
   end case;
 end send_request;
@@ -897,15 +924,18 @@ begin
         ( '/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()'
         , epc."xmlns:SOAP-ENV"
         );
-      -- epc.print(epc_info_tab(p_epc_key).doc.getstringval());
+      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
       check_soap_fault(epc_info_tab(p_epc_key).doc);
     
     when "XMLRPC"
     then 
-      -- epc.print(epc_info_tab(p_epc_key).doc.getstringval());
+      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
       check_xmlrpc_fault(epc_info_tab(p_epc_key).doc);
 
       epc_info_tab(p_epc_key).next_out_parameter := 1;
+
+    else
+      raise program_error;
   end case;
 end recv_response;
 
@@ -940,17 +970,45 @@ begin
     
     when "XMLRPC"
     then 
+      --/*DBUG*/ dbms_output.put_line('next out parameter: ' || epc_info_tab(p_epc_key).next_out_parameter);
+
+      case p_data_type
+        when epc.data_type_xml
+        then
+          null;
+        when epc.data_type_string
+        then
+          l_extract_type := 'string' || l_extract_type;
+        when epc.data_type_int
+        then
+          l_extract_type := 'int' || l_extract_type;
+        when epc.data_type_long
+        then
+          l_extract_type := 'int' || l_extract_type;
+        when epc.data_type_float
+        then
+          l_extract_type := 'double' || l_extract_type;
+        when epc.data_type_double
+        then
+          l_extract_type := 'double' || l_extract_type;
+        else
+          raise value_error;
+      end case;
+
       l_xml := 
         epc_info_tab(p_epc_key).doc.extract
         (
           '/methodResponse/params/param['
           ||epc_info_tab(p_epc_key).next_out_parameter
-          ||']'
+          ||']/value/'
           ||l_extract_type
         );
+
       epc_info_tab(p_epc_key).next_out_parameter :=
         epc_info_tab(p_epc_key).next_out_parameter + 1;
 
+    else
+      raise program_error;
   end case;   
 
   l_value := l_xml.getstringval();
