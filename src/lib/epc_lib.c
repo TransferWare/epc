@@ -802,6 +802,9 @@ epc__response_soap(epc__call_t * epc__call)
 {
   dword_t nr;
 
+  assert(epc__call->function != NULL);
+  assert(epc__call->interface != NULL);
+
   if (epc__call->inline_namespace[0] != '\0')
     {
       /* copy */
@@ -941,6 +944,8 @@ epc__response_xmlrpc(epc__call_t * epc__call)
   (void) snprintf (epc__call->msg_response,
                    MAX_MSG_RESPONSE_LEN + 1,
                    "<methodResponse><params>\n");
+
+  assert(epc__call->function != NULL);
 
   for (nr = 0; nr < epc__call->function->num_parameters; nr++)
     {
