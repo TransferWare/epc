@@ -19,11 +19,11 @@ include ../../lint.am
 
 # Flex does not produce lint quality code
 idl_l.ln: idl_l.c
-	$(LINT.c) +posixlib -nullassign -incondefs -noeffect -evalorder -exitarg -exportlocal $<
+	$(LINT_c) +posixlib -temptrans -nullassign -incondefs -noeffect -evalorder -exitarg -exportlocal $<
 
 # Bison does not produce lint quality code
 idl_y.ln: idl_y.c
-	$(LINT.c) -noeffect -branchstate -usereleased -exportlocal $<
+	$(LINT_c) -noeffect -branchstate -usereleased -exportlocal $<
 
 MAINTAINERCLEANFILES = Makefile.in
 

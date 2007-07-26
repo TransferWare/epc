@@ -121,7 +121,7 @@ typedef struct xml_info
 /* SAX callback functions */
 
 static
-  void
+void
 error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode);
 
 static sword start_document (void *epc__xml_ctx_ptr);
@@ -129,7 +129,7 @@ static sword start_document (void *epc__xml_ctx_ptr);
 static sword end_document (void *epc__xml_ctx_ptr);
 
 static
-  sword
+sword
 start_element (void *epc__xml_ctx_ptr,
                const oratext *qname,
                const oratext *name,
@@ -138,16 +138,16 @@ start_element (void *epc__xml_ctx_ptr,
 static sword end_element (void *epc__xml_ctx_ptr, const oratext * name);
 
 static
-  sword
+sword
 element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len);
 
 static
-  void
+void
 lookup_interface (const char *interface_name, epc__info_t * epc__info,
                   epc__call_t * epc__call);
 
 static
-  void
+void
 lookup_function (const char *function_name, epc__info_t * epc__info,
                  epc__call_t * epc__call);
 
@@ -379,6 +379,7 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       if (errcode <= 99)
         {
           /* server side error */
+	  /* copy */
           (void) snprintf (epc__call->msg_response,
                            MAX_MSG_RESPONSE_LEN + 1,
                            SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -388,6 +389,7 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       else
         {
           /* client side error */
+	  /* copy */
           (void) snprintf (epc__call->msg_response,
                            MAX_MSG_RESPONSE_LEN + 1,
                            SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -397,6 +399,7 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       break;
 
     case PROTOCOL_XMLRPC:
+      /* copy */
       (void) snprintf (epc__call->msg_response,
                        MAX_MSG_RESPONSE_LEN + 1,
                        "<methodResponse><fault><value><struct>\n\
@@ -551,7 +554,7 @@ nullify_parameters (epc__call_t *epc__call)
  *
  ******************************************************************************/
 static void
-set_parameter(const char *ch, size_t len, epc__parameter_t *parameter)
+set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
 {
   switch (parameter->type)
     {
@@ -702,6 +705,7 @@ start_element (void *epc__xml_ctx_ptr,
               {
               case INTERFACE_UNKNOWN:
                 /* construct the response */
+		/* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -711,6 +715,7 @@ start_element (void *epc__xml_ctx_ptr,
 
               case FUNCTION_UNKNOWN:
                 /* construct the response */
+		/* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -806,6 +811,7 @@ start_element (void *epc__xml_ctx_ptr,
                 /*@=mustfreefresh@*/
               }
 
+	    /* append */
             (void) snprintf(data + strlen(data),
                             (size_t)(epc__call->function->parameters[nr].size - strlen(data)),
                             ">");
@@ -923,6 +929,8 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
 
   (void) dbug_leave (__LINE__, NULL);
 
+  assert(epc__call != NULL);
+
   switch(EPC__CALL_PROTOCOL(epc__call))
     {
     case PROTOCOL_SOAP:
@@ -1010,17 +1018,19 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
 
           {
             const char *dot = strchr ((char *) ch, '.');
-            const char *function_name = (dot == NULL ? NULL : dot + 1);
-            char interface_name[MAX_INTERFACE_NAME_LEN];
-
-            (void) dbug_print (__LINE__, "info",
-                               "function: %s",
-                               (function_name == NULL ? "(null)" : function_name));
+	    char interface_name[MAX_INTERFACE_NAME_LEN] = "";
+	    char *function_name = NULL;
 
             if (dot == NULL) {
               epc__call->epc__error = INTERFACE_UNKNOWN;
             } else {
-              (void) strncpy(interface_name, (char *)ch, (dot - (char *)ch));
+	      function_name = dot + 1;
+
+	      (void) dbug_print (__LINE__, "info",
+				 "function: %s",
+				 function_name);
+
+              (void) strncpy(interface_name, (char *)ch, (size_t)(dot - (char *)ch));
               interface_name[(dot - (char *)ch)] = '\0';
 
               (void) dbug_print (__LINE__, "info",
@@ -1039,6 +1049,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
               {
               case INTERFACE_UNKNOWN:
                 /* construct the response */
+		/* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  "<methodResponse><fault><value><struct>\n\
@@ -1048,7 +1059,9 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
                 break;
 
               case FUNCTION_UNKNOWN:
+		assert(function_name != NULL);
                 /* construct the response */
+		/* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  "<methodResponse><fault><value><struct>\n\
@@ -1077,7 +1090,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
             assert (nr >= 0 && nr < epc__call->function->num_parameters);
             assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
-            set_parameter((const char *)ch, (int)len, &epc__call->function->parameters[nr]);
+            set_parameter((const char *)ch, (size_t)len, &epc__call->function->parameters[nr]);
           }
           break;
 

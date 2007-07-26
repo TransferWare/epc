@@ -7,6 +7,8 @@ rem
 set serveroutput on size 1000000
 set verify off feedback off
 
+alter session set nls_numeric_characters = '.,';
+
 declare
   v_request_pipe epc.pipe_name_subtype := 'EPC_REQUEST_PIPE';
   c_result_pipe constant epc.pipe_name_subtype := dbms_pipe.unique_session_name;
