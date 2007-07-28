@@ -514,8 +514,9 @@ nullify_parameters (epc__call_t *epc__call)
       for (nr = 0; nr < epc__call->function->num_parameters; nr++)
         switch (epc__call->function->parameters[nr].type)
           {
-          case C_XML:
           case C_STRING:
+          case C_XML:
+          case C_DATE:
             *((char *) epc__call->function->parameters[nr].data) = '\0';
             break;
 
@@ -570,6 +571,7 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
       break;
 
     case C_STRING:
+    case C_DATE:
       assert ((dword_t) len < parameter->size);
       if ((dword_t) len >= parameter->size)
         {
@@ -857,11 +859,17 @@ start_element (void *epc__xml_ctx_ptr,
 
                 switch (epc__call->function->parameters[nr].type)
                   {
-                  case C_XML:
+                  case C_XML: // TODO: no XML for XMLRPC
                     break;
 
                   case C_STRING:
                     if (strcmp ((char *)name, "string") != 0) {
+                      epc__call->epc__error = DATATYPE_UNKNOWN;
+                    }
+                    break;
+
+                  case C_DATE:
+                    if (strcmp ((char *)name, "dateTime.iso8601") != 0) {
                       epc__call->epc__error = DATATYPE_UNKNOWN;
                     }
                     break;

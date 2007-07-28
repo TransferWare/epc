@@ -690,8 +690,9 @@ epc__add_interface (epc__info_t * epc__info, epc__interface_t * interface)
 
                 switch (interface->functions[fnr].parameters[pnr].type)
                   {
-                  case C_XML:
                   case C_STRING:
+                  case C_XML:
+                  case C_DATE:
                   case C_INT:
                   case C_LONG:
                   case C_FLOAT:
@@ -840,6 +841,7 @@ epc__response_soap(epc__call_t * epc__call)
           switch (epc__call->function->parameters[nr].type)
             {
             case C_XML:
+            case C_DATE:
               /* append */
               (void) strncat (epc__call->msg_response,
                               (char *) epc__call->function->
@@ -958,11 +960,11 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 
           switch (epc__call->function->parameters[nr].type)
             {
-            case C_XML:
+            case C_DATE:
               /* append */
               (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
                                MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
-                               "<string>%s</string>",
+                               "<dateTime.iso8601>%s</dateTime.iso8601>",
                                (char *) epc__call->function->parameters[nr].data);
               break;
 

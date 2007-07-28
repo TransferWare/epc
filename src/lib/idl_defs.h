@@ -108,8 +108,9 @@ enum idl_type {
   C_FLOAT = 4,
   C_DOUBLE = 5,
   C_VOID = 6,
-  C_XML = 7
-#define C_DATATYPE_MAX C_XML
+  C_XML = 7,
+  C_DATE = 8
+#define C_DATATYPE_MAX C_DATE
 };
 
 /* align structures in non LINT mode */
@@ -141,5 +142,7 @@ typedef float idl_float_t;
 typedef double idl_double_t;
 typedef char *idl_string_t;
 typedef char *idl_xml_t;
+#define MAX_DATE_LEN            17 /* ISO date */
+typedef char *idl_date_t;
 
 #endif

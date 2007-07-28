@@ -50,7 +50,7 @@ REMARK  New interface for epc
 REMARK
 REMARK
 REMARK
-
+/* line 53 */
 create or replace package body epc_clnt as
 
 subtype connection_method_subtype is pls_integer;
@@ -150,6 +150,8 @@ g_result_pipe epc.pipe_name_subtype := null;
 g_msg_seq pls_integer := c_max_msg_seq;
 g_cdata_tag_start constant varchar2(9) := '<![CDATA[';
 g_cdata_tag_end   constant varchar2(3) := ']]>';
+
+g_decimal_char varchar2(1);
 
 -- functions
 function register( p_interface_name in epc.interface_name_subtype )
@@ -440,7 +442,7 @@ begin
         epc_info_tab(p_epc_key).msg :=
           epc_info_tab(p_epc_key).msg 
           ||'<'||p_name||' xsi:type="xsd:'||l_data_type||'">'
-          ||to_char(p_value)
+          ||replace(to_char(p_value), g_decimal_char, '.')
           ||'</'||p_name||'>';
 
       when "XMLRPC"
@@ -465,7 +467,48 @@ begin
         epc_info_tab(p_epc_key).msg :=
           epc_info_tab(p_epc_key).msg
           ||'<param><value><'||l_data_type||'>'
-          ||to_char(p_value)
+          ||replace(to_char(p_value), g_decimal_char, '.')
+          ||'</'||l_data_type||'></value></param>'
+          ||chr(10);
+
+      else
+        raise program_error;
+    end case;
+  end if;
+end set_request_parameter;
+
+procedure set_request_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value in date
+)
+is
+  l_data_type constant varchar2(16) := 'dateTime.iso8601';
+begin
+  if p_value is null
+  then
+    raise epc.e_illegal_null_value;
+  else
+    case epc_info_tab(p_epc_key).protocol
+      when "XMLRPC"
+      then
+        case p_data_type
+          when epc.data_type_date
+          then
+            null;
+
+          else
+            raise value_error;
+        end case;
+
+        epc_info_tab(p_epc_key).msg :=
+          epc_info_tab(p_epc_key).msg
+          ||'<param><value><'||l_data_type||'>'
+          ||to_char(p_value, 'yyyymmdd')
+	  ||'T'
+          ||to_char(p_value, 'hh24:mi:ss')
           ||'</'||l_data_type||'></value></param>'
           ||chr(10);
 
@@ -573,11 +616,11 @@ begin
         epc_info_tab(p_epc_key).http_connection.http_req
       , 'User-Agent', 'EPC/1.0'
       );
-      utl_http.set_header
+/*      utl_http.set_header
       (
         epc_info_tab(p_epc_key).http_connection.http_req
       , 'Host', utl_inaddr.get_host_name
-      );
+      );*/
       utl_http.set_header
       (
         epc_info_tab(p_epc_key).http_connection.http_req
@@ -824,6 +867,7 @@ begin
   exception
     when others
     then
+      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).msg);
       utl_http.end_response(http_resp);
       raise;
   end;
@@ -914,6 +958,7 @@ begin
       recv_response_utl_http(p_epc_key);
   end case;
 
+  --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).msg);
   epc_info_tab(p_epc_key).doc := xmltype.createxml(epc_info_tab(p_epc_key).msg);
 
   case epc_info_tab(p_epc_key).protocol
@@ -949,7 +994,7 @@ procedure get_response_parameter
 is
   l_value epc.string_subtype;
   l_xml XMLType;
-  l_extract_type varchar2(20);
+  l_extract_type varchar2(100);
 begin
   if p_data_type = epc.data_type_xml
   then
@@ -991,6 +1036,9 @@ begin
         when epc.data_type_double
         then
           l_extract_type := 'double' || l_extract_type;
+        when epc.data_type_date
+        then
+          l_extract_type := 'dateTime.iso8601' || l_extract_type;
         else
           raise value_error;
       end case;
@@ -1055,10 +1103,36 @@ begin
   , p_data_type => p_data_type
   , p_value => l_value
   );
-  p_value := to_number(l_value);
+  p_value := to_number(replace(l_value, '.', g_decimal_char));
 end get_response_parameter;
 
+procedure get_response_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value out date
+)
+is
+  l_value epc.string_subtype;
+begin
+  epc_clnt.get_response_parameter
+  (
+    p_epc_key => p_epc_key
+  , p_name => p_name
+  , p_data_type => p_data_type
+  , p_value => l_value
+  );
+  p_value := to_date(replace(l_value, 'T'), 'yyyymmddhh24:mi:ss');
+end get_response_parameter;
+
+begin
+  select  substr(value, 1, 1) as decimal_char
+  into    g_decimal_char
+  from    nls_session_parameters
+  where   parameter = 'NLS_NUMERIC_CHARACTERS';
 end epc_clnt;
 /
 
 show errors
+
