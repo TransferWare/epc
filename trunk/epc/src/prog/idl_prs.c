@@ -226,9 +226,14 @@ keyword keywords[] = {
    },
   {C_XML,
    {
-    /* string is a typedef */
     {C, "idl_xml_t", "C_XML"},
     {PLSQL, "epc.xml_subtype", "epc.data_type_xml"}
+    }
+   },
+  {C_DATE,
+   {
+    {C, "idl_date_t", "C_DATE"},
+    {PLSQL, "epc.date_subtype", "epc.data_type_date"}
     }
    },
   {C_IN,
@@ -297,9 +302,13 @@ init_parameter ( /*@out@ */ idl_parameter_t * parm, char *name,
   parm->datatype = datatype;
   switch (datatype)
     {
-    case C_XML:
     case C_STRING:
+    case C_XML:
       parm->size = size;
+      break;
+
+    case C_DATE:
+      parm->size = MAX_DATE_LEN;
       break;
 
     case C_VOID:
@@ -418,8 +427,9 @@ get_size (const idl_parameter_t * idl_parameter)
 
   switch (idl_parameter->datatype)
     {
-    case C_XML:
     case C_STRING:
+    case C_XML:
+    case C_DATE:
       (void) snprintf (size_str, sizeof (size_str), "%ld+1",
                        (long) idl_parameter->size);
       break;
@@ -461,7 +471,7 @@ print_formal_parameter (FILE * pout,
     case C:
       (void) fprintf (pout, "%s %s%s",
                       get_syntax (datatype, lang),
-                      (mode != C_IN && ( datatype != C_STRING && datatype != C_XML ) ? "*" : ""),
+                      (mode != C_IN && ( datatype != C_STRING && datatype != C_XML && datatype != C_DATE ) ? "*" : ""),
                       name);
       break;
 
@@ -486,7 +496,7 @@ print_actual_parameter (FILE * pout, idl_parameter_t * parm, idl_lang_t lang)
     case C:
       (void) fprintf (pout, "%sl_%s",
                       (parm->mode == C_IN
-                       && ( parm->datatype != C_STRING && parm->datatype != C_XML ) ? "*" : ""),
+                       && ( parm->datatype != C_STRING && parm->datatype != C_XML && parm->datatype != C_DATE ) ? "*" : ""),
                       parm->proc_name);
       break;
     case PLSQL:
@@ -522,8 +532,9 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
                           get_syntax (parm->datatype, C), parameter_nr);
           break;
 
-        case C_XML:
         case C_STRING:
+        case C_XML:
+        case C_DATE:
           (void) fprintf (pout,
                           "%s l_%s = (%s)function->parameters[%d].data",
                           get_syntax (parm->datatype, C),
@@ -546,10 +557,15 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
                           parm->name, get_syntax (parm->datatype, PLSQL));
           break;
 
-        case C_XML:
+        case C_DATE:
+          (void) fprintf (pout, "l_%s DATE", parm->name);
+          break;
+
         case C_STRING:
+        case C_XML:
           (void) fprintf (pout, "l_%s VARCHAR2(%ld)", parm->name, parm->size);
           break;
+
         case C_VOID:
           break;
         }
@@ -1007,19 +1023,25 @@ print_c_debug_info (FILE * pout, char *name, idl_type_t datatype)
     case C_INT:
       (void) fprintf (pout, "\"%s: %%d\", *l_%s ) );\n", name, name);
       break;
+
     case C_LONG:
       (void) fprintf (pout, "\"%s: %%ld\", *l_%s ) );\n", name, name);
       break;
+
     case C_FLOAT:
       (void) fprintf (pout, "\"%s: %%f\", *l_%s ) );\n", name, name);
       break;
+
     case C_DOUBLE:
       (void) fprintf (pout, "\"%s: %%lf\", *l_%s ) );\n", name, name);
       break;
-    case C_XML:
+
     case C_STRING:
+    case C_XML:
+    case C_DATE:
       (void) fprintf (pout, "\"%s: '%%s'\", l_%s ) );\n", name, name);
       break;
+
     default:
       (void) fprintf (stderr,
                       "print_c_debug_info#Unknown datatype (%ld) for %s\n",
@@ -1109,8 +1131,9 @@ generate_c_function (FILE * pout, idl_function_t * fun)
     case C_VOID:
       break;
 
-    case C_XML:
     case C_STRING:
+    case C_XML:
+    case C_DATE:
       (void) fprintf (pout, "(void) strncpy( l_%s, ",
                       fun->return_value.proc_name);
       break;
@@ -1137,13 +1160,14 @@ generate_c_function (FILE * pout, idl_function_t * fun)
     case C_VOID:
       break;
 
-    case C_XML:
     case C_STRING:
+    case C_XML:
+    case C_DATE:
       /* zero terminate to be sure */
-      (void) fprintf (pout, ", %ld );\n%s  l_%s[%ld] = '\\0'",
+      (void) fprintf (pout, ", %ld );\n  l_%s[%ld] = '\\0'",
                       fun->return_value.size,
-                      "",
-                      fun->return_value.proc_name, fun->return_value.size);
+                      fun->return_value.proc_name,
+		      fun->return_value.size);
       break;
 
     default:

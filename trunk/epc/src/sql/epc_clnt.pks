@@ -350,23 +350,20 @@ procedure set_request_parameter
 , p_value in varchar2
 );
 
-/**
--- Set a request parameter (IN or IN OUT).
--- 
--- @param p_epc_key    The key
--- @param p_name       The name of the parameter
--- @param p_data_type  The data type (should not be epc.data_type_string)
--- @param p_value      The value of the parameter
---
--- @exception epc.e_illegal_null_value  p_value is NULL
--- @exception value_error               data type is incorrect
-*/
 procedure set_request_parameter
 (
   p_epc_key in epc_key_subtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in number
+);
+
+procedure set_request_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value in date
 );
 
 /**
@@ -411,20 +408,20 @@ procedure get_response_parameter
 , p_value out varchar2
 );
 
-/**
--- Get a response parameter (OUT or IN OUT).
--- 
--- @param p_epc_key    The key
--- @param p_name       The name of the parameter
--- @param p_data_type  The data type (should not be epc.data_type_string)
--- @param p_value      The value of the parameter
-*/
 procedure get_response_parameter
 (
   p_epc_key in epc_key_subtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out number
+);
+
+procedure get_response_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value out date
 );
 
 end epc_clnt;

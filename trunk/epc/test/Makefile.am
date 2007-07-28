@@ -45,7 +45,7 @@ EXTRA_DIST           = epctest.ref epctest.sql str.sql test2.client.ref
 
 #TESTS = test1 test2
 
-TESTS = test1 test2 test3
+TESTS = test1 test2
 
 COUNT = 1000
 
@@ -64,7 +64,7 @@ test1: $(srcdir)/epctest.sql $(FORCE)
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) SOAP 2>&1 | tee $@.client.log
-	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
+	-@for p in `ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; do kill -INT $$p; sleep 1; kill -KILL $$p; done
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	@echo : > $@
 	@chmod +x $@
@@ -77,7 +77,7 @@ test2: $(srcdir)/epctest.sql $(FORCE)
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) XMLRPC 2>&1 | tee $@.client.log
-	pid=`ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; kill "$$pid"
+	-@for p in `ps | grep epctest | grep -v grep | awk '{ print $$1; }'`; do kill -INT $$p; sleep 1; kill -KILL $$p; done
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	@echo : > $@
 	@chmod +x $@
@@ -88,7 +88,7 @@ test3: $(srcdir)/client.sql $(FORCE)
 #	sleep 5
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql false 1>$@.server.log 2>&1 &
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$< $(COUNT) 1>$@.client.log 2>&1
-	pid=`ps | grep $(SQLPLUS) | grep -v grep | awk '{ print $$1; }'`; test -z "$$pid" || kill "$$pid"
+	-@pid=`ps | grep $(SQLPLUS) | grep -v grep | awk '{ print $$1; }'`; test -z "$$pid" || kill "$$pid"
 	$(DIFF) $@.client.log $(srcdir)/$@.client.ref
 	@echo : > $@
 	@chmod +x $@

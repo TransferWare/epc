@@ -273,6 +273,8 @@ string          "char"[ \t]*"*"|"string"
                                           yylval.tval.datatype = C_FLOAT; return FLOAT; }
 <NORMAL>"double"			{ DBUG_PRINT( "info", ("<NORMAL>\"double\" '%s'", yytext));
                                           yylval.tval.datatype = C_DOUBLE; return DOUBLE; }
+<NORMAL>"date"				{ DBUG_PRINT( "info", ("<NORMAL>\"date\" '%s'", yytext));
+                                          yylval.tval.datatype = C_DATE; return DATE; }
 <NORMAL>"void"				{ DBUG_PRINT( "info", ("<NORMAL>\"void\" '%s'", yytext));
                                           yylval.tval.datatype = C_VOID; return VOID; }
 <NORMAL>"oneway"			{ DBUG_PRINT( "info", ("<NORMAL>\"oneway\" '%s'", yytext));

@@ -58,6 +58,7 @@ subtype float_subtype is float;
 subtype double_subtype is double precision;
 subtype string_subtype is varchar2(32767);
 subtype xml_subtype is varchar2(32767);
+subtype date_subtype is date; /* ISO date format, e.g. 19980717T14:08:55 */
 
 "xmlns:SOAP-ENV" constant varchar2(1000) := 
   'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
@@ -124,6 +125,12 @@ return data_type_subtype;
 -- Get the double data type constant.
 */
 function data_type_double
+return data_type_subtype;
+
+/**
+-- Get the date data type constant.
+*/
+function data_type_date
 return data_type_subtype;
 
 /**

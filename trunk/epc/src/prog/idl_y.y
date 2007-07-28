@@ -113,6 +113,7 @@ yylex( void );
 %token <tval> LONG
 %token <tval> FLOAT
 %token <tval> DOUBLE
+%token <tval> DATE
 
 %type <tval> datatype
 %type <mval> parameter_mode
@@ -153,6 +154,7 @@ datatype:
         |       LONG
         |       FLOAT
         |       DOUBLE
+        |       DATE
         |       VOID
         ;
 

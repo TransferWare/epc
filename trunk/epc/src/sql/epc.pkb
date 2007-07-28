@@ -1,11 +1,6 @@
 create or replace package body epc as
 
-function data_type_xml
-return data_type_subtype
-is
-begin
-  return 7;
-end data_type_xml;
+/* numbers for each data_type function: see idl_defs.h */
 
 function data_type_string
 return data_type_subtype
@@ -41,6 +36,20 @@ is
 begin
   return 5;
 end data_type_double;
+
+function data_type_xml
+return data_type_subtype
+is
+begin
+  return 7;
+end data_type_xml;
+
+function data_type_date
+return data_type_subtype
+is
+begin
+  return 8;
+end data_type_date;
 
 procedure print(p_msg in varchar2)
 is
