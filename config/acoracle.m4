@@ -22,7 +22,7 @@ dnl
 # platform may reside in various subdirectories. For instance the orasql9
 # library may be found in $ORACLE_HOME/precomp/lib/msvc, but also in
 # $ORACLE_HOME/precomp/lib. On Unix systems the library is called clntsh and
-# can be found in $ORACLE_HOME/lib.
+# can be found in $ORACLE_HOME/lib (or $ORACLE_HOME/lib32 for 64 bit systems like AIX).
 #
 # The Cygwin compiler is also able to link to DLLs on a Windows platform.
 # However this will likely result in static libraries being built.
@@ -84,15 +84,15 @@ then
 fi
 
 ACX_SEARCH_LIBS([$acx_oracle_home],
-                [lib precomp precomp/lib precomp/lib/msvc bin],
+                [lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [sqlglm],
-                [clntsh orasql10 orasql9 orasql8 orasql7],
+                [clntsh orasql11 orasql10 orasql9 orasql8 orasql7],
 		[],
                 [AC_MSG_ERROR(sqlglm not found)])
 ACX_SEARCH_LIBS([$acx_oracle_home],
-                [lib precomp precomp/lib precomp/lib/msvc bin],
+                [lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
-                [clntsh oran10 oran9 oran8 oran7],
+                [clntsh oran11 oran10 oran9 oran8 oran7],
 		[],
 		[AC_MSG_ERROR(osnsui not found)])
 
@@ -179,9 +179,9 @@ then
 fi
 
 ACX_SEARCH_LIBS([$acx_oracle_home],
-                [lib bin],
+                [lib32 lib bin],
                 [xmlinit],
-                [xml10 oraxml10 oraxml9 oraxml8],
+                [xml11 xml10 oraxml11 oraxml10 oraxml9 oraxml8],
 		[],
 		[AC_MSG_ERROR(xmlinit not found)])
 
