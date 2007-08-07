@@ -167,6 +167,7 @@ epc__main (int argc, char **argv, epc__interface_t * epc_interface)
  * The following command line arguments are recognised:
  * <table>
  *   <tr><td>-D OPTIONS</td><td>Turn on debugging using the DBUG library.</td></tr>
+ *   <tr><td>-P</td><td>Purge the request pipe.</td></tr>
  *   <tr><td>-h</td><td>Print a help message.</td></tr>
  *   <tr><td>-p REQUEST_PIPE</td><td>Set the request pipe.</td></tr>
  *   <tr><td>-u USERID</td><td>Use this connect string for the Oracle logon.</td></tr>
@@ -188,6 +189,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 #endif
   char *logon = NULL;
   char *request_pipe = NULL;
+  dword_t purge_pipe = 0;
   int nr;
   /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
   epc__error_t ret;
@@ -201,6 +203,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 	  switch (argv[nr][1])
 	    {
 	    case 'D':
+	      /* Is it -D... or -D ... */
 	      if (argv[nr][2] != '\0')
 		{
 		  dbug_options = (char *) malloc (strlen (&argv[nr][2]) + 1);
@@ -216,11 +219,16 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 		}
 	      break;
 
+	    case 'P':
+	      purge_pipe = 1;
+	      break;
+
 	    case 'h':
 	      help (argv[0]);
 	      return OK;
 
 	    case 'p':
+	      /* Is it -p... or -p ... */
 	      if (argv[nr][2] != '\0')
 		request_pipe = &argv[nr][2];
 	      else
@@ -228,6 +236,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 	      break;
 
 	    case 'u':
+	      /* Is it -u... or -u ... */
 	      if (argv[nr][2] != '\0')
 		logon = &argv[nr][2];
 	      else
@@ -270,6 +279,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 	}
 
       nr++;			/* 2 */
+      epc__info->purge_pipe = purge_pipe;
       if ((ret = epc__set_logon (epc__info, logon)) != OK)
 	break;
 
@@ -352,6 +362,7 @@ Syntax: %s -D <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n\
         D       set dbug options\n\
+        P       purge the request pipe\n\
         h       this help\n\
         p       set name of request pipe\n\
         u       user connect string for database logon, e.g. SCOTT/TIGER@DB\n\

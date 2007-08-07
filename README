@@ -22,6 +22,15 @@ INSTALLATION
 ============
 Installation using the GNU build tools is described in INSTALL. 
 
+An important feature is enabling/disabling server interrupts. Because
+the EPC server waits forever for a message using
+dbms_pipe.receieve_message, it may be difficult to stop the server
+gracefully. The --enable-server-interrupt configure option enables the
+EPC server to be killed by an interrupt (CTRL-C). The default is NOT to
+enable this, since it means that a second Oracle session is started
+which waits for the interrupt and then sends an empty message into the
+request pipe so the EPC server can exit.
+
 Windows specific
 ================
 For Windows platforms the Cygwin suite with GCC and the MinGW extension
@@ -37,10 +46,10 @@ CC="gcc -mno-cygwin" --prefix=/cygdrive/c/usr/local
 
 Solaris specific
 ================
-On SUN Solaris version 9 the library libm has to be added to the list of
-libraries, because the Oracle xml library libxml10 needs it. This can be
-done by specifying LIBS=-lm on the configure command line. For 64 bit
-architectures this should be LIBS=-lm64.
+On SUN Solaris version 9 or higher the library libm has to be added to
+the list of libraries, because the Oracle xml library libxml10 needs
+it. This can be done by specifying LIBS=-lm on the configure command
+line. For 64 bit architectures this should be LIBS=-lm64.
 
 Local Variables:
 fill-column: 72

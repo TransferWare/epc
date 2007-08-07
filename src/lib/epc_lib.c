@@ -32,6 +32,8 @@
 #include <u_alloc.h>
 #endif
 
+#ifdef SERVER_INTERRUPT
+
 static
 /*@null@*/
 epc__handle_interrupt_t G_epc__handle_interrupt = NULL;
@@ -41,6 +43,8 @@ epc__handle_interrupt_t G_epc__handle_interrupt = NULL;
 static
 /*@null@*/
 epc__info_t *G_epc__info_interrupt = NULL;
+
+#endif
 
 static int G_signo = 0;
 
@@ -1228,16 +1232,21 @@ handle_signal (int signo)
 
   (void) fprintf (stderr, "Received signal %d\n", signo);
 
+#ifdef SERVER_INTERRUPT
+
   if (G_epc__handle_interrupt != NULL)
     {
       (*G_epc__handle_interrupt) (G_epc__info_interrupt);
     }
+
+#endif
 
   G_signo = signo;
 
   epc__reset_signal_handlers (1);
 }
 
+#ifdef SERVER_INTERRUPT
 
 void
 epc__set_handle_interrupt (epc__handle_interrupt_t handle_interrupt,
@@ -1246,6 +1255,8 @@ epc__set_handle_interrupt (epc__handle_interrupt_t handle_interrupt,
   G_epc__handle_interrupt = handle_interrupt;
   G_epc__info_interrupt = epc__info;
 }
+
+#endif
 
 int
 epc__get_signo (void)

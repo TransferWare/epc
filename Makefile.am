@@ -16,7 +16,7 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AUTOMAKE_OPTIONS 	= 
-SUBDIRS 		= doc src examples test utils
+SUBDIRS 		= doc replace src examples test utils
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 ACLOCAL			= aclocal -I $(ac_aux_dir)
@@ -51,3 +51,6 @@ doc/c: $(FORCE)
 	@cd $(top_srcdir) && $(DOXYGEN)
 
 EXTRA_DIST              = VERSION $(generated_html_dirs)
+
+dist-hook:
+	chmod +x $(top_srcdir)/config/install-sh

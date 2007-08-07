@@ -260,6 +260,7 @@ EXEC SQL END DECLARE SECTION;
   However they seem to work exactly the same as on Unix platforms.
 */
 
+#ifdef SERVER_INTERRUPT
 
 /* user side interrupt set */
 extern
@@ -316,18 +317,25 @@ handle_interrupt(epc__info_t *epc__info)
   /* Use the interrupt context */
   EXEC SQL CONTEXT USE :interrupt_context;
 
-  DBUG_PRINT( "info", ( "context switched" ) );
+  DBUG_PRINT( "info", ( "context switched; sqlca.sqlcode: %ld", (long)sqlca.sqlcode ) );
 
-  EXEC SQL EXECUTE
-  BEGIN
-    epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
-  END;
-  END-EXEC;
+  switch (sqlca.sqlcode) 
+    {
+    case -12152: /* TNS:unable to send break message */
+    default:
+      EXEC SQL EXECUTE
+	BEGIN
+	epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
+      END;
+      END-EXEC;
+    }
 
-  DBUG_PRINT( "info", ( "sqlca.sqlcode: %ld", (long)sqlca.sqlcode ) );
+  DBUG_PRINT( "info", ( "sqlca.sqlcode after epc_srvr.send_request_interrupt: %ld", (long)sqlca.sqlcode ) );
 
   DBUG_LEAVE();
 }
+
+#endif /* #ifdef SERVER_INTERRUPT */
 
 static
 void
@@ -358,6 +366,7 @@ epc__connect( epc__info_t *epc__info )
   char *logon = epc__info->logon;
   char *request_pipe = epc__info->pipe;
   short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
+  int purge_pipe = epc__info->purge_pipe;
   EXEC SQL END DECLARE SECTION;
   epc__error_t status = OK;
 
@@ -391,20 +400,27 @@ epc__connect( epc__info_t *epc__info )
 
       EXEC SQL CONNECT :logon;
 
+#ifdef SERVER_INTERRUPT
+
       EXEC SQL CONTEXT ALLOCATE :interrupt_context;
 
       EXEC SQL CONTEXT USE :interrupt_context;
 
       EXEC SQL CONNECT :logon;
 
+#endif
+
       printf( "Connected to database....\n" );
       epc__info->connected = 1;
     
+#ifdef SERVER_INTERRUPT
       epc__set_handle_interrupt(handle_interrupt, epc__info);
+#endif
       epc__set_signal_handlers( 0 );
 
       fflush( stdout ); /* flush because of DBUG package */
 
+#ifdef SERVER_INTERRUPT
       EXEC SQL CONTEXT USE :interrupt_context;
 
       EXEC SQL EXECUTE
@@ -418,6 +434,7 @@ epc__connect( epc__info_t *epc__info )
         end if;
       end;
       END-EXEC;
+#endif
 
       EXEC SQL CONTEXT USE DEFAULT;
 
@@ -432,7 +449,10 @@ epc__connect( epc__info_t *epc__info )
           epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
         end if;
         epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
-        dbms_pipe.purge( l_pipe_name );
+        if :purge_pipe != 0
+        then
+          dbms_pipe.purge( l_pipe_name );
+        end if;
       end;
       END-EXEC;
     }
@@ -464,9 +484,11 @@ epc__disconnect( epc__info_t *epc__info )
     switch ( epc__get_signo() )
       {
       case 0:
+#ifdef SERVER_INTERRUPT
         EXEC SQL CONTEXT USE :interrupt_context;
 
         EXEC SQL COMMIT WORK RELEASE;
+#endif
 
         EXEC SQL CONTEXT USE DEFAULT;
 
@@ -474,16 +496,21 @@ epc__disconnect( epc__info_t *epc__info )
         break;
 
       default:
+#ifdef SERVER_INTERRUPT
         EXEC SQL CONTEXT USE :interrupt_context;
 
         EXEC SQL ROLLBACK RELEASE;
+#endif
 
         EXEC SQL CONTEXT USE DEFAULT;
 
         EXEC SQL ROLLBACK RELEASE;
+	break;
       }
 
+#ifdef SERVER_INTERRUPT
     EXEC SQL CONTEXT FREE :interrupt_context;
+#endif
 
     if ( sqlca.sqlcode != 0 ) {
       status = DISCONNECT_ERROR;
@@ -545,8 +572,10 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
   EXEC SQL CONTEXT USE DEFAULT;
 
+#ifdef SERVER_INTERRUPT
   /* set up my user interrupt handler */
   (void) osnsui(&handle, handle_interrupt, epc__info);
+#endif
 
   EXEC SQL EXECUTE
   declare
@@ -568,7 +597,9 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   end;
   END-EXEC;
 
+#ifdef SERVER_INTERRUPT
   (void) osncui(handle);
+#endif
 
   DBUG_PRINT( "info", ( "retval: %ld", retval ) );
 

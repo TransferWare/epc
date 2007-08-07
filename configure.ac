@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[4.6.0],[g.paulissen@chello.nl])
+AC_INIT([epc],[5.0.0],[g.paulissen@chello.nl])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -96,11 +96,29 @@ AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
 AC_C_CONST
 
 # Checks for library functions.
+AC_CONFIG_LIBOBJ_DIR([replace])
 AC_FUNC_MALLOC
+AC_REPLACE_FUNCS([strtof])
+AC_LIBOBJ([malloc])
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([strstr strdup])
 LIBS="-ldbug $LIBS"
 AC_CHECK_FUNC([dbug_enter],[],[AC_MSG_ERROR(dbug_enter not found)])
+
+AC_ARG_ENABLE([server-interrupt],
+              AS_HELP_STRING([--enable-server-interrupt],
+                             [enable interrupting the server [[default=no]]]),
+              [case "$enableval" in
+                 yes) acx_cv_use_server_interrupt=true ;;
+                 no)  acx_cv_use_server_interrupt=false ;;
+                 *)   AC_MSG_ERROR([bad value ${enableval} for --enable-server-interrupt]) ;;
+               esac],
+              [acx_cv_use_server_interrupt=false])
+
+if test x$acx_cv_use_server_interrupt = xtrue
+then
+  AC_DEFINE([SERVER_INTERRUPT], [1], [Is the server interruptable?])
+fi
 
 # This is necessary so that .o files in LIBOBJS are also built via
 # the ANSI2KNR-filtering rules.
@@ -110,6 +128,7 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
            sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
+AC_CONFIG_FILES([replace/Makefile])
 AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
 AC_CONFIG_FILES([Makefile test/Makefile])
 AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile examples/soap/Makefile examples/xmlrpc/Makefile])

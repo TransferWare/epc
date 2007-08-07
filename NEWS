@@ -6,6 +6,13 @@ See the end for copying conditions.
 Please send EPC bug reports to g.paulissen@chello.nl.
 
 
+Release 5.0.0
+
+* The feature server-interrupt has been added to configure. See the README.
+* The manual describes how to recover from EPC commnication errors (epc.e_comm_error).
+* Several portability issues solved for Solaris (rpt_malloc, strtof).
+
+
 Release 4.5.0
 
 * Added support for Oracle 10g
