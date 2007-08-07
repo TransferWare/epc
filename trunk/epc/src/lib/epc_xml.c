@@ -595,7 +595,7 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
     case C_FLOAT:
       /*@-unrecog@ */
       *((idl_float_t *) parameter->data) =
-        strtof ((char *) ch, NULL);
+	strtof ((char *) ch, NULL);
       /*@=unrecog@ */
       break;
 

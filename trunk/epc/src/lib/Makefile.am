@@ -48,9 +48,11 @@ libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c
 ## - 3:0:0 2004-10-21 funtion namespace changed: epc_ -> epc__
 ## - 4:0:0 2004-12-16 1) result paramater renamed to return conform XML SOAP.
 ##                    2) namespace introduced (used by web services)
+## - 5:0:0 2007-08-07 readding dbms_pipe support (no XML data just the Oracle interface)
 
-libepc_la_LDFLAGS     = -no-undefined -version-info 4:0:0
-libepc_la_LIBADD      = $(libdir)/libdbug.la
+libepc_la_LDFLAGS     = -no-undefined -version-info 5:0:0
+libepc_la_LIBADD      = $(libdir)/libdbug.la $(top_builddir)/replace/libreplace.la
+#libepc_la_LIBADD      = -lxml10 $(top_builddir)/replace/libreplace.la
 
 .pc.c:
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$< ONAME=$@

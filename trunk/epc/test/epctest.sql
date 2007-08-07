@@ -90,26 +90,47 @@ end;
 prompt Performance test doing a null block
 
 BEGIN
-        NULL;
+	epc_clnt.set_response_recv_timeout(epc_clnt.get_epc_key('epctest'), 10);
 END;
 /
+
+define function = nothing1
 
 prompt Performance test doing &&N number of calls doing nothing with results returned.
+DECLARE
+	l_count pls_integer := 0;
+	l_line varchar2(255);
+	l_status integer;
 BEGIN
         FOR     v_nr IN 1..&&N
         LOOP
-                epctest.nothing1;
+	BEGIN
+                epctest.&&function;
+		l_count := l_count + 1;
+	EXCEPTION
+		WHEN epc.e_comm_error
+		THEN
+			-- try again Sam
+			-- retrieve the error message so it does not clobber the output
+			dbms_output.get_line
+			(	l_line
+			,	l_status
+			);
+                	epctest.&&function;
+			l_count := l_count + 1;
+		WHEN OTHERS
+		THEN
+			dbms_output.put_line(substr(sqlerrm, 1, 255));
+	END;
         END LOOP;
+	dbms_output.put_line('&&function count: ' || l_count);
 END;
 /
 
+define function = nothing2
+
 prompt Performance test doing &&N number of calls doing nothing without results returned.
-BEGIN
-        FOR     v_nr IN 1..&&N
-        LOOP
-                epctest.nothing2;
-        END LOOP;
-END;
+
 /
 
 prompt Finished.

@@ -69,6 +69,7 @@ typedef struct epc__info
   /*@only@ *//*@null@ */ struct sqlca *sqlca;
   /* SQLCA area */
   /*@only@ *//*@null@ */ struct xml_info *xml_info;
+  dword_t purge_pipe;
 } epc__info_t;
 
 typedef /*@null@ *//*@only@ */ epc__info_t *epc__info_ptr_t;
