@@ -56,7 +56,7 @@ test.soap: $(FORCE)
 # empty the pipe
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
 # run the server
-	perl $(srcdir)/daemon.pl $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
+	perl $(top_srcdir)/utils/daemon.pl $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) SOAP 2>&1 | tee $@.client.log
@@ -70,7 +70,7 @@ test.xmlrpc: $(FORCE)
 # empty the pipe
 	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
 # run the server
-	perl $(srcdir)/daemon.pl $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
+	perl $(top_srcdir)/utils/daemon.pl $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) XMLRPC 2>&1 | tee $@.client.log
