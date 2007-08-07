@@ -22,6 +22,9 @@ INSTALLATION
 ============
 Installation using the GNU build tools is described in INSTALL. 
 
+The EPC needs to Oracle XML C SDK. Download this from OTN and install it
+into $ORACLE_HOME/xdk.
+
 An important feature is enabling/disabling server interrupts. Because
 the EPC server waits forever for a message using
 dbms_pipe.receieve_message, it may be difficult to stop the server
