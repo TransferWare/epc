@@ -34,10 +34,11 @@ AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
 bin_SCRIPTS          = epcdaemon epcdaemon.cmd epcdaemon.pl
 bin_PROGRAMS         = idl
 idl_SOURCES          = idl_l.l idl_prs.c idl_y.y idl_kwrd.h idl_prs.h yy.h yywrap.c
-idl_LDADD            = $(top_builddir)/replace/libreplace.la $(libdir)/libdbug.la
+#idl_LDADD            = $(top_builddir)/replace/libreplace.la $(libdir)/libdbug.la
+idl_LDADD            = $(top_builddir)/replace/libreplace.la
 
 AM_YFLAGS            = -d
 
-EXTRA_DIST           = epcdaemon.in epcdaemon.cmd.in epcdaemon.pl.in
+EXTRA_DIST           = epcdaemon epcdaemon.cmd epcdaemon.pl.in
 
 idl_l.c: idl_y.h
