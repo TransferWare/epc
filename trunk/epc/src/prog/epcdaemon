@@ -1,0 +1,4 @@
+#!/bin/sh
+perl_script="$0.pl"
+exec perl $perl_script "$@"
+

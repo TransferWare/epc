@@ -1,0 +1,192 @@
+#!@PERL@
+
+=pod
+
+=head1 NAME
+
+epcdaemon.pl - Start a program in daemon mode.
+
+=head1 SYNOPSIS
+
+epcdaemon.pl [option...] program [program option...]
+
+  Options:
+    --forever           Restart the program when it stops
+    --help              This help
+    --verbose           Verbose logging
+    --version           Display version info
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<--forever>
+
+Restart the program when it stops.
+
+=item B<--help>
+
+Print a help message and exits.
+
+=item B<--verbose>
+
+Print verbose logging during the process.
+
+=item B<--version>
+
+Prints the version and exits.
+
+=back
+
+=head1 DESCRIPTION
+
+B<This program> starts another program in daemon mode:
+
+=over 4
+
+=item *
+
+Close the standard input and output file handles, except when in verbose mode.
+
+=item *
+
+Fork a subprocess and use setsid() to create a session and set the process
+group ID.
+
+=item *
+
+Duplicate standard error to standard out.
+
+=item *
+
+Start the program using the system() call. When the program stops, provide
+information (in verbose mode) about why it stops. Next restart the program
+when it must be restarted forever.
+
+=back
+
+=head1 NOTES
+
+This script is portable: it works on Windows and Unix platforms.
+
+=head1 AUTHOR
+
+Gert-Jan Paulissen
+
+=head1 HISTORY
+
+=over 4
+
+=item 08-08-2007
+
+G.J. Paulissen  
+
+First revision.
+
+=back
+
+=cut
+
+# pragmas
+use strict;
+use warnings;
+
+# Perl modules
+use Carp qw(carp croak);
+use Getopt::Long;
+use File::Basename;
+use File::Spec;
+use Pod::Usage;
+
+our ($VERSION);
+
+BEGIN {
+    $VERSION = '@PACKAGE_VERSION@';
+}
+
+# options
+my $g_forever = 0;
+my $g_verbose = 0;
+
+# prototypes
+sub main ();
+sub process_command_line ();
+sub daemonize ();
+sub check_exit_status ($$@);
+
+main();
+
+sub main () {
+    process_command_line();
+
+    daemonize();
+
+    do {
+        my $status = system(@ARGV);
+
+        check_exit_status($status, $?, @ARGV);
+    } while ($g_forever);
+}
+
+# process_command_line - process command line arguments and set sensible defaults
+sub process_command_line () {
+    my %options = ( 'forever' => \$g_forever,
+                    'verbose' => \$g_verbose );
+
+    # options
+    Getopt::Long::Configure(qw(require_order));
+
+    #
+    GetOptions(\%options,
+               # general options
+               'help' => sub { pod2usage(-verbose => 2) },
+               'version' => sub { print basename($0), " version $VERSION\n"; exit(0); },
+               # other options
+               'forever',
+               'verbose')
+      or pod2usage(-verbose => 0);
+
+    #
+    pod2usage(-message => "$0: must have at least a program to start --help option.\n")
+      if (@ARGV == 0);
+}
+
+sub daemonize () {
+    if (!$g_verbose) {
+        my ($stdin_file, $stdout_file) = (File::Spec->devnull(), File::Spec->devnull());
+
+        open STDIN, "< $stdin_file"
+            or croak("Can't read from $stdin_file: $!");
+        open STDOUT, "> $stdout_file"
+            or croak("Can't write to $stdout_file: $!");
+    }
+
+    defined(my $pid = fork)   or croak("Can't fork: $!");
+
+    exit if $pid; # keep the child
+
+    eval {
+        use POSIX qw(setsid);
+
+        setsid                    or croak("Can't start a new session: $!");
+    };
+    if ($@ && $@ !~ m/POSIX::setsid not implemented on this architecture/) {
+        die $@;
+    }
+    open STDERR, '>&STDOUT'   or croak("Can't dup stdout: $!");
+}
+
+# check_exit_status - check the exit status of a process (die on error) 
+sub check_exit_status ($$@) {
+    my ($status, $errmsg, @args) = @_;
+
+    # The W* macros'from POSIX module would be more appropiate,
+    # but they are not implemented by MSWin32 Perl.
+    if ($status == -1) {
+        croak("@args failed to execute: $errmsg");
+    } elsif ($status & 127) {
+        carp("@args killed by signal ", ($status & 127));
+    } elsif ($status >> 8 != 0) {
+        carp("@args exited with ", $status >> 8);
+    } # else: OK
+}
