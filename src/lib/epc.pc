@@ -290,47 +290,37 @@ osncui( dword_t handle );
 
 
 /*
-  GJP 22-02-2004
-  In order to be able to interrupt epc_srvr.recv_request()
-  a different session (and a different context) is used.
-  In a interrupt handler epc_srvr.send_request_interrupt()
-  is invoked.
-*/
-
-EXEC SQL BEGIN DECLARE SECTION;
-static sql_context interrupt_context;
-EXEC SQL END DECLARE SECTION;
-
-/*
 ** User interrupt handler template.
 */
 static
 void
 handle_interrupt(epc__info_t *epc__info)
 {
+  int status;
+  char command[1000+1];
+
   DBUG_ENTER( "handle_interrupt" );
 
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  EXEC SQL WHENEVER SQLERROR CONTINUE;
+  (void) snprintf(command, sizeof(command),
+                  "epcdaemon --verbose %s -I %s %s -u %s",
+                  epc__info->program,
+                  (epc__info->pipe != NULL ? "-p" : ""),
+                  (epc__info->pipe != NULL ? epc__info->pipe : ""),
+                  epc__info->logon);
 
-  /* Use the interrupt context */
-  EXEC SQL CONTEXT USE :interrupt_context;
+  DBUG_PRINT( "input", ( "command: %s", command ) );
 
-  DBUG_PRINT( "info", ( "context switched; sqlca.sqlcode: %ld", (long)sqlca.sqlcode ) );
+  status = system(command);
 
-  switch (sqlca.sqlcode) 
+  DBUG_PRINT( "input", ( "status: %d; errno: %d", status, errno ) ); 
+
+  if (status == -1)
     {
-    case -12152: /* TNS:unable to send break message */
-    default:
-      EXEC SQL EXECUTE
-	BEGIN
-	epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
-      END;
-      END-EXEC;
+      /* fork failed */
+      exit(EXIT_FAILURE);
     }
-
-  DBUG_PRINT( "info", ( "sqlca.sqlcode after epc_srvr.send_request_interrupt: %ld", (long)sqlca.sqlcode ) );
 
   DBUG_LEAVE();
 }
@@ -396,19 +386,7 @@ epc__connect( epc__info_t *epc__info )
       /* log on to database */
       EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
-      EXEC SQL CONTEXT USE DEFAULT;
-
       EXEC SQL CONNECT :logon;
-
-#ifdef SERVER_INTERRUPT
-
-      EXEC SQL CONTEXT ALLOCATE :interrupt_context;
-
-      EXEC SQL CONTEXT USE :interrupt_context;
-
-      EXEC SQL CONNECT :logon;
-
-#endif
 
       printf( "Connected to database....\n" );
       epc__info->connected = 1;
@@ -419,24 +397,6 @@ epc__connect( epc__info_t *epc__info )
       epc__set_signal_handlers( 0 );
 
       fflush( stdout ); /* flush because of DBUG package */
-
-#ifdef SERVER_INTERRUPT
-      EXEC SQL CONTEXT USE :interrupt_context;
-
-      EXEC SQL EXECUTE
-      declare
-        l_epc_key epc_srvr.epc_key_subtype;
-      begin
-        l_epc_key := epc_srvr.register;
-        if ( :request_pipe:request_pipe_nl is not null )
-        then
-          epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
-        end if;
-      end;
-      END-EXEC;
-#endif
-
-      EXEC SQL CONTEXT USE DEFAULT;
 
       EXEC SQL EXECUTE
       declare
@@ -456,6 +416,28 @@ epc__connect( epc__info_t *epc__info )
       end;
       END-EXEC;
     }
+
+  DBUG_LEAVE();
+
+  return status;
+}
+
+epc__error_t
+epc__interrupt( epc__info_t *epc__info )
+{
+  epc__error_t status = OK;
+
+  DBUG_ENTER( "epc__interrupt" );
+
+  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL EXECUTE
+  begin
+    epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
+  end;
+  END-EXEC;
 
   DBUG_LEAVE();
 
@@ -484,33 +466,13 @@ epc__disconnect( epc__info_t *epc__info )
     switch ( epc__get_signo() )
       {
       case 0:
-#ifdef SERVER_INTERRUPT
-        EXEC SQL CONTEXT USE :interrupt_context;
-
-        EXEC SQL COMMIT WORK RELEASE;
-#endif
-
-        EXEC SQL CONTEXT USE DEFAULT;
-
         EXEC SQL COMMIT WORK RELEASE;
         break;
 
       default:
-#ifdef SERVER_INTERRUPT
-        EXEC SQL CONTEXT USE :interrupt_context;
-
         EXEC SQL ROLLBACK RELEASE;
-#endif
-
-        EXEC SQL CONTEXT USE DEFAULT;
-
-        EXEC SQL ROLLBACK RELEASE;
-	break;
+        break;
       }
-
-#ifdef SERVER_INTERRUPT
-    EXEC SQL CONTEXT FREE :interrupt_context;
-#endif
 
     if ( sqlca.sqlcode != 0 ) {
       status = DISCONNECT_ERROR;

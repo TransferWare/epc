@@ -47,6 +47,10 @@ typedef struct {
 #define LEVEL_SOAP_METHOD 3
 #define LEVEL_SOAP_ARGUMENT 4
 
+#ifndef HAVE_STRTOF
+extern float strtof(const char* s, char** endptr);
+#endif
+
 /*
 
 Method call
@@ -379,7 +383,7 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       if (errcode <= 99)
         {
           /* server side error */
-	  /* copy */
+          /* copy */
           (void) snprintf (epc__call->msg_response,
                            MAX_MSG_RESPONSE_LEN + 1,
                            SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -389,7 +393,7 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       else
         {
           /* client side error */
-	  /* copy */
+          /* copy */
           (void) snprintf (epc__call->msg_response,
                            MAX_MSG_RESPONSE_LEN + 1,
                            SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -595,7 +599,7 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
     case C_FLOAT:
       /*@-unrecog@ */
       *((idl_float_t *) parameter->data) =
-	strtof ((char *) ch, NULL);
+        strtof ((char *) ch, NULL);
       /*@=unrecog@ */
       break;
 
@@ -707,7 +711,7 @@ start_element (void *epc__xml_ctx_ptr,
               {
               case INTERFACE_UNKNOWN:
                 /* construct the response */
-		/* copy */
+                /* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -717,7 +721,7 @@ start_element (void *epc__xml_ctx_ptr,
 
               case FUNCTION_UNKNOWN:
                 /* construct the response */
-		/* copy */
+                /* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  SOAP_HEADER_START "<SOAP-ENV:Fault>\n\
@@ -813,7 +817,7 @@ start_element (void *epc__xml_ctx_ptr,
                 /*@=mustfreefresh@*/
               }
 
-	    /* append */
+            /* append */
             (void) snprintf(data + strlen(data),
                             (size_t)(epc__call->function->parameters[nr].size - strlen(data)),
                             ">");
@@ -1026,17 +1030,17 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
 
           {
             const char *dot = strchr ((char *) ch, '.');
-	    char interface_name[MAX_INTERFACE_NAME_LEN] = "";
-	    char *function_name = NULL;
+            char interface_name[MAX_INTERFACE_NAME_LEN] = "";
+            char *function_name = NULL;
 
             if (dot == NULL) {
               epc__call->epc__error = INTERFACE_UNKNOWN;
             } else {
-	      function_name = dot + 1;
+              function_name = ((char *)dot) + 1;
 
-	      (void) dbug_print (__LINE__, "info",
-				 "function: %s",
-				 function_name);
+              (void) dbug_print (__LINE__, "info",
+                                 "function: %s",
+                                 function_name);
 
               (void) strncpy(interface_name, (char *)ch, (size_t)(dot - (char *)ch));
               interface_name[(dot - (char *)ch)] = '\0';
@@ -1057,7 +1061,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
               {
               case INTERFACE_UNKNOWN:
                 /* construct the response */
-		/* copy */
+                /* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  "<methodResponse><fault><value><struct>\n\
@@ -1067,9 +1071,9 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
                 break;
 
               case FUNCTION_UNKNOWN:
-		assert(function_name != NULL);
+                assert(function_name != NULL);
                 /* construct the response */
-		/* copy */
+                /* copy */
                 (void) snprintf (epc__call->msg_response,
                                  MAX_MSG_RESPONSE_LEN + 1,
                                  "<methodResponse><fault><value><struct>\n\

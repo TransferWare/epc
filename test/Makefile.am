@@ -53,29 +53,25 @@ DIFF = diff -w
 # Ensure the created dummy test scripts are executable (chmod +x)
 
 test.soap: $(FORCE)
-# empty the pipe
-	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
-# run the server
-	perl $(top_srcdir)/utils/daemon.pl $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
+# run the server in the background
+	@PERL@ $(top_builddir)/src/prog/epcdaemon.pl --verbose $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) SOAP 2>&1 | tee $@.client.log
 	-@echo "Killing server at `date`"
-	-@for p in `ps -U $$LOGNAME | grep epctest | grep -v grep | awk '{ print $$1; }'`; do kill -INT $$p; sleep 1; kill -KILL $$p; done
+	$(EPCTEST) -I -u$(USERID)
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	@echo : > $@
 	@chmod +x $@
 
 test.xmlrpc: $(FORCE)
-# empty the pipe
-	echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/server.sql true
-# run the server
-	perl $(top_srcdir)/utils/daemon.pl $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
+# run the server in the background
+	@PERL@ $(top_builddir)/src/prog/epcdaemon.pl --verbose $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) XMLRPC 2>&1 | tee $@.client.log
 	-@echo "Killing server at `date`"
-	-@for p in `ps -U $$LOGNAME | grep epctest | grep -v grep | awk '{ print $$1; }'`; do kill -INT $$p; sleep 1; kill -KILL $$p; done
+	$(EPCTEST) -I -u$(USERID)
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	@echo : > $@
 	@chmod +x $@
