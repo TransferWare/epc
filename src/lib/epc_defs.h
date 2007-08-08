@@ -71,7 +71,7 @@ typedef struct epc__info
   /*@only@ *//*@null@ */ struct xml_info *xml_info;
   dword_t purge_pipe;
   dword_t interrupt;
-  char *program;
+  /*@null@ */ /*@observer@ */ char *program;
 } epc__info_t;
 
 typedef /*@null@ *//*@only@ */ epc__info_t *epc__info_ptr_t;

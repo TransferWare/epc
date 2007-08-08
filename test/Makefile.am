@@ -53,8 +53,8 @@ DIFF = diff -w
 # Ensure the created dummy test scripts are executable (chmod +x)
 
 test.soap: $(FORCE)
-# run the server in the background
-	@PERL@ $(top_builddir)/src/prog/epcdaemon.pl --verbose $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
+# run the server in the background and purge the request pipe
+	@PERL@ $(top_builddir)/src/prog/epcdaemon.pl --verbose $(EPCTEST) -P -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) SOAP 2>&1 | tee $@.client.log
@@ -65,8 +65,8 @@ test.soap: $(FORCE)
 	@chmod +x $@
 
 test.xmlrpc: $(FORCE)
-# run the server in the background
-	@PERL@ $(top_builddir)/src/prog/epcdaemon.pl --verbose $(EPCTEST) -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
+# run the server in the background and purge the request pipe
+	@PERL@ $(top_builddir)/src/prog/epcdaemon.pl --verbose $(EPCTEST) -P -Dd,g,t,o -u$(USERID) 1>$@.server.log 2>&1
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) XMLRPC 2>&1 | tee $@.client.log
