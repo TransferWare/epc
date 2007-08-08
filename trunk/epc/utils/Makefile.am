@@ -20,7 +20,7 @@ empty_pipes.html: empty_pipes.prc
 #	@PERL@ -S pod2html --infile=$< --outfile=$@
 	perl -S pod2html --infile=$< --outfile=$@
 
-EXTRA_DIST           = empty_pipes.html empty_pipes.prc daemon.pl
+EXTRA_DIST           = empty_pipes.html empty_pipes.prc
 
 CLEANFILES           = empty_pipes.html pod2htm*.tmp
 

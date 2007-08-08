@@ -39,7 +39,7 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 # first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
 
-EXTRA_DIST           = epctest.ref epctest.sql str.sql test2.client.ref
+EXTRA_DIST           = epctest.ref epctest.sql str.sql
 
 TESTS = test.soap test.xmlrpc
 
