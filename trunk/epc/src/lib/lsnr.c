@@ -103,7 +103,7 @@ const char vcid[] = "$Id$";
 #include <epc.h>
 #include <dbug.h>
 
-#ifndef  ORA_PROC		/* skip during precompiling */
+#ifndef  ORA_PROC               /* skip during precompiling */
 # if defined(HAVE_SQLPROTO_H) && HAVE_SQLPROTO_H
 #  include <sqlproto.h>
 # elif defined(HAVE_SQLCPR_H) && HAVE_SQLCPR_H
@@ -167,6 +167,7 @@ epc__main (int argc, char **argv, epc__interface_t * epc_interface)
  * The following command line arguments are recognised:
  * <table>
  *   <tr><td>-D OPTIONS</td><td>Turn on debugging using the DBUG library.</td></tr>
+ *   <tr><td>-I</td><td>Interrupt the server waiting on the request pipe.</td></tr>
  *   <tr><td>-P</td><td>Purge the request pipe.</td></tr>
  *   <tr><td>-h</td><td>Print a help message.</td></tr>
  *   <tr><td>-p REQUEST_PIPE</td><td>Set the request pipe.</td></tr>
@@ -190,6 +191,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
   char *logon = NULL;
   char *request_pipe = NULL;
   dword_t purge_pipe = 0;
+  dword_t interrupt = 0;
   int nr;
   /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
   epc__error_t ret;
@@ -199,60 +201,64 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
   for (nr = 0; nr < argc; nr++)
     {
       if (argv[nr][0] == '-')
-	{
-	  switch (argv[nr][1])
-	    {
-	    case 'D':
-	      /* Is it -D... or -D ... */
-	      if (argv[nr][2] != '\0')
-		{
-		  dbug_options = (char *) malloc (strlen (&argv[nr][2]) + 1);
-		  assert (dbug_options != NULL);
-		  strcpy (dbug_options, &argv[nr][2]);
-		}
-	      else
-		{
-		  ++nr;
-		  dbug_options = (char *) malloc (strlen (&argv[nr][0]) + 1);
-		  assert (dbug_options != NULL);
-		  strcpy (dbug_options, &argv[nr][0]);
-		}
-	      break;
+        {
+          switch (argv[nr][1])
+            {
+            case 'D':
+              /* Is it -D... or -D ... */
+              if (argv[nr][2] != '\0')
+                {
+                  dbug_options = (char *) malloc (strlen (&argv[nr][2]) + 1);
+                  assert (dbug_options != NULL);
+                  strcpy (dbug_options, &argv[nr][2]);
+                }
+              else
+                {
+                  ++nr;
+                  dbug_options = (char *) malloc (strlen (&argv[nr][0]) + 1);
+                  assert (dbug_options != NULL);
+                  strcpy (dbug_options, &argv[nr][0]);
+                }
+              break;
 
-	    case 'P':
-	      purge_pipe = 1;
-	      break;
+            case 'I':
+              interrupt = 1;
+              break;
 
-	    case 'h':
-	      help (argv[0]);
-	      return OK;
+            case 'P':
+              purge_pipe = 1;
+              break;
 
-	    case 'p':
-	      /* Is it -p... or -p ... */
-	      if (argv[nr][2] != '\0')
-		request_pipe = &argv[nr][2];
-	      else
-		request_pipe = &argv[++nr][0];
-	      break;
+            case 'h':
+              help (argv[0]);
+              return OK;
 
-	    case 'u':
-	      /* Is it -u... or -u ... */
-	      if (argv[nr][2] != '\0')
-		logon = &argv[nr][2];
-	      else
-		logon = &argv[++nr][0];
-	      break;
+            case 'p':
+              /* Is it -p... or -p ... */
+              if (argv[nr][2] != '\0')
+                request_pipe = &argv[nr][2];
+              else
+                request_pipe = &argv[++nr][0];
+              break;
 
-	    case 'v':
-	      (void) fprintf (stdout, "EPC listener version: %s\n",
-			      version ());
-	      return OK;
+            case 'u':
+              /* Is it -u... or -u ... */
+              if (argv[nr][2] != '\0')
+                logon = &argv[nr][2];
+              else
+                logon = &argv[++nr][0];
+              break;
 
-	    default:
-	      help (argv[0]);
-	      return OK;
-	    }
-	}
+            case 'v':
+              (void) fprintf (stdout, "EPC listener version: %s\n",
+                              version ());
+              return OK;
+
+            default:
+              help (argv[0]);
+              return OK;
+            }
+        }
     }
 
   if (dbug_options == NULL)
@@ -268,56 +274,60 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
     {
       nr = 0;
       if ((ret = dbug_init (dbug_options, argv[0])) != OK)
-	break;
+        break;
 
-      nr++;			/* 1 */
+      nr++;                     /* 1 */
       epc__info = epc__init ();
       if (epc__info == NULL)
-	{
-	  ret = MEMORY_ERROR;
-	  break;
-	}
+        {
+          ret = MEMORY_ERROR;
+          break;
+        }
 
-      nr++;			/* 2 */
+      nr++;                     /* 2 */
+      epc__info->interrupt = interrupt;
       epc__info->purge_pipe = purge_pipe;
+      epc__info->program = argv[0];
       if ((ret = epc__set_logon (epc__info, logon)) != OK)
-	break;
+        break;
 
-      nr++;			/* 3 */
+      nr++;                     /* 3 */
       if ((ret = epc__set_pipe (epc__info, request_pipe)) != OK)
-	break;
+        break;
 
-      nr++;			/* 4 */
+      nr++;                     /* 4 */
       {
-	va_list ap;
+        va_list ap;
 
-	va_start (ap, epc_interface);
-	for (; ret == OK && epc_interface != NULL;)
-	  {
-	    ret = epc__add_interface (epc__info, epc_interface);
-	    epc_interface = va_arg (ap, epc__interface_t *);
-	  }
-	va_end (ap);
+        va_start (ap, epc_interface);
+        for (; ret == OK && epc_interface != NULL;)
+          {
+            ret = epc__add_interface (epc__info, epc_interface);
+            epc_interface = va_arg (ap, epc__interface_t *);
+          }
+        va_end (ap);
       }
       if (ret != OK)
-	break;
+        break;
 
-      nr++;			/* 5 */
+      nr++;                     /* 5 */
       if ((ret = epc__connect (epc__info)) != OK)
-	break;
+        break;
 
-      nr++;			/* 6 */
+      nr++;                     /* 6 */
       if ((ret =
-	   epc__handle_requests (epc__info, epc_recv_request_pipe,
-				 epc_send_response_pipe)) != OK)
-	break;
+           ( epc__info->interrupt == 0
+             ? epc__handle_requests (epc__info, epc_recv_request_pipe,
+                                     epc_send_response_pipe)
+             : epc__interrupt (epc__info) )) != OK)
+        break;
 
       nr++;
     }
   while (0);
 
   /*@-branchstate@ */
-  switch (nr)			/* last step */
+  switch (nr)                   /* last step */
     {
     case 7:
     case 6:
@@ -362,6 +372,7 @@ Syntax: %s -D <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n\
         D       set dbug options\n\
+        I       interrupt the server waiting on the request pipe\n\
         P       purge the request pipe\n\
         h       this help\n\
         p       set name of request pipe\n\

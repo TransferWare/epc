@@ -61,6 +61,9 @@ extern epc__error_t
 epc__connect ( /*@notnull@ */ epc__info_t * epc__info);
 
 extern epc__error_t
+epc__interrupt( /*@notnull@ */ epc__info_t *epc__info );
+
+extern epc__error_t
 epc__disconnect ( /*@notnull@ */ epc__info_t * epc__info);
 
 #endif
