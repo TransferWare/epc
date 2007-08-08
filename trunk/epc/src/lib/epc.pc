@@ -304,7 +304,7 @@ handle_interrupt(epc__info_t *epc__info)
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   (void) snprintf(command, sizeof(command),
-                  "epcdaemon --verbose %s -I %s %s -u %s",
+                  "epcdaemon %s -I %s %s -u %s",
                   epc__info->program,
                   (epc__info->pipe != NULL ? "-p" : ""),
                   (epc__info->pipe != NULL ? epc__info->pipe : ""),

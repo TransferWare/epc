@@ -595,6 +595,9 @@ epc__init (void)
   epc__info->interfaces = NULL;
   epc__info->sqlca = NULL;
   epc__info->xml_info = NULL;
+  epc__info->purge_pipe = 0;
+  epc__info->interrupt = 0;
+  epc__info->program = NULL;
   (void) epc__xml_init (epc__info);
 
   DBUG_PRINT ("info", ("epc__info: %p", (void *) epc__info));

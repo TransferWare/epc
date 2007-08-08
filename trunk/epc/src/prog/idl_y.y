@@ -87,6 +87,8 @@ yylex( void );
 /*@-predboolint@*/
 /*@-usedef@*/
 /*@-boolops@*/
+/*@-warnlintcomments@*/
+/*@-observertrans@*/
 
 %}
 
@@ -149,7 +151,7 @@ function:
 
 datatype:
                 XML
-	|	STRING
+        |       STRING
         |       INT
         |       LONG
         |       FLOAT
