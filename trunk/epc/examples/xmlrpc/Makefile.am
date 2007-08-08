@@ -27,7 +27,7 @@ MOSTLYCLEANFILES     = $(GENERATED_FILES)
 CLEANFILES           = currentTime.pls_run
 CLEANFILES          += mirror.pls_run
 
-EXTRA_DIST           = 
+EXTRA_DIST           = currentTime.idl currentTime.sql mirror.idl mirror.sql
 
 noinst_DATA          = currentTime.pls_run
 noinst_DATA         += mirror.pls_run

@@ -15,7 +15,7 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include ../../lint.am
+include $(top_srcdir)/lint.am
 
 # too difficult to lint epc_xml.c
 #epc_xml_ln = epc_xml.ln

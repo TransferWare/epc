@@ -1,10 +1,9 @@
 interface epctest
 {
-	char *proc01 ( [in] char[20] i_par1, [inout] char[30] io_par2, [out] char[40] o_par3  );
+	char[4] proc01 ( [in] char[4] i_par1, [inout] char[12] io_par2, [out] char[31] o_par3  );
 	int proc02 ( [inout] int io_par1, [out] int o_par2, [in] int i_par3 );
 	double proc03 ( [out] double o_par1, [in] double i_par2, [inout] double io_par3 );
 	float proc04 ( [in] float i_par1, [inout] float io_par2, [out] float o_par3  );
 	void nothing1( );
 	oneway void nothing2( );
 }
-

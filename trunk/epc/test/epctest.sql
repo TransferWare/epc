@@ -20,10 +20,10 @@ end;
 
 spool epctest.lis
 declare
-        v_par1  varchar2(100) := 'dhsd';
-        v_par2  varchar2(200) := '1234';
-        v_par3  varchar2(300);
-        v_result varchar2(10);
+        v_par1  varchar2(4) := 'dhsd';
+        v_par2  varchar2(12) := '1234';
+        v_par3  varchar2(31);
+        v_result varchar2(4);
 begin
         dbms_output.put_line( 'proc01' );
         dbms_output.put_line( 'i_par1: ' || v_par1 );

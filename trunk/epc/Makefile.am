@@ -20,37 +20,24 @@ SUBDIRS 		= doc replace src examples test utils
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 ACLOCAL			= aclocal -I $(ac_aux_dir)
+EXTRA_DIST              = VERSION lint.am
 
-dist: lint
+lintdirs		= $(top_builddir)/src/lib $(top_builddir)/src/prog
+docdirs			= $(top_builddir)/doc $(top_builddir)/utils
 
-lint:
-	cd $(top_builddir)/src/lib && make lint
-	cd $(top_builddir)/src/prog && make lint
-
-generated_html_dirs     = doc/sql doc/c
-
-doc: $(generated_html_dirs)
-
-docdir			= $(top_builddir)/utils
-
-doc:
-	@echo Making $@ in $(docdir)
-	@cd $(docdir) && make $@
-
-FORCE = force
+FORCE                   = force
 
 force: ;
 
-# Create HTML documentation in the source tree
-doc/sql: $(FORCE)
-	@cd $(top_srcdir) && mkdir -p $@
-	@cd $(top_srcdir) && $(PLDOC) -d $@ -doctitle EPC src/sql/*.pks
+dist: lint doc
 
-# Create HTML documentation in the source tree
-doc/c: $(FORCE)
-	@cd $(top_srcdir) && $(DOXYGEN)
+lint:
+	@echo Making $@ in $(lintdirs)
+	@for d in $(lintdirs); do (cd $$d && make $@); done
 
-EXTRA_DIST              = VERSION $(generated_html_dirs)
+doc: $(FORCE)
+	@echo Making $@ in $(docdirs)
+	@for d in $(docdirs); do (cd $$d && make $@); done
 
 dist-hook:
 	chmod +x $(top_srcdir)/config/install-sh
