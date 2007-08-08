@@ -134,7 +134,7 @@ AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefil
 AC_CONFIG_FILES([src/prog/epcdaemon.pl])
 AC_CONFIG_FILES([Makefile test/Makefile])
 AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile examples/soap/Makefile examples/xmlrpc/Makefile])
-AC_CONFIG_FILES([doc/Makefile utils/Makefile])dnl
+AC_CONFIG_FILES([doc/Makefile doc/Doxyfile utils/Makefile])dnl
 
 AC_OUTPUT
 

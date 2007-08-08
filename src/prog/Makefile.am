@@ -15,7 +15,7 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-include ../../lint.am
+include $(top_srcdir)/lint.am
 
 # Flex does not produce lint quality code
 idl_l.ln: idl_l.c

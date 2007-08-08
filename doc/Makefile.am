@@ -15,5 +15,24 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-EXTRA_DIST           = epcman.doc EPC-optimize.doc
+generated_html_dirs  = sql c
+
+EXTRA_DIST           = epcman.doc EPC-optimize.doc epcdistr.rtf epcpf.xls problems&changes.xls $(generated_html_dirs)
+
+FORCE = force
+
+force: ;
+
+doc: $(generated_html_dirs)
+
+# Create HTML documentation in the source tree
+sql: $(FORCE)
+	@cd $(srcdir) && mkdir -p $@
+#	@cd $(srcdir) && pwd && $(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
+	@$(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
+
+# Create HTML documentation in the source tree
+c: $(FORCE)
+	@cd $(srcdir) && mkdir -p $@
+	@cat $(builddir)/Doxyfile | (cd $(srcdir) && $(DOXYGEN) -)
 

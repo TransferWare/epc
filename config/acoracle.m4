@@ -41,6 +41,7 @@ AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
 if test "$acx_cv_search_$3" = no; then
   for acx_subdir in $2; do
     acx_dir="$1/$acx_subdir"
+    test -d $acx_dir || continue
     LDFLAGS="-L$acx_dir $acx_func_search_save_LDFLAGS"
     for acx_lib in $4; do
       LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"

@@ -26,7 +26,7 @@ MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
 CLEANFILES           = qotd.pls_run aws.pls_run
 
-EXTRA_DIST           = 
+EXTRA_DIST           = qotd.idl aws.idl
 
 noinst_DATA          = qotd.pls_run aws.pls_run
 

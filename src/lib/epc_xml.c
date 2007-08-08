@@ -47,9 +47,8 @@ typedef struct {
 #define LEVEL_SOAP_METHOD 3
 #define LEVEL_SOAP_ARGUMENT 4
 
-#ifndef HAVE_STRTOF
-extern float strtof(const char* s, char** endptr);
-#endif
+/* strtof is not a standard function */
+extern float strtof(const char* s, /*@null@ */ char** endptr);
 
 /*
 
@@ -597,10 +596,8 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
       break;
 
     case C_FLOAT:
-      /*@-unrecog@ */
       *((idl_float_t *) parameter->data) =
-        strtof ((char *) ch, NULL);
-      /*@=unrecog@ */
+	strtof ((char *) ch, NULL);
       break;
 
     case C_DOUBLE:
