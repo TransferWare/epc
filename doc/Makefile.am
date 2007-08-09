@@ -29,12 +29,12 @@ doc: $(generated_html_dirs)
 
 # Create HTML documentation in the source tree
 sql: $(FORCE)
-	@cd $(srcdir); rm -fr $@; mkdir -p $@
+	@cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
 #	@cd $(srcdir) && pwd && $(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
 	@$(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
 
 # Create HTML documentation in the source tree
 c: $(FORCE)
-	@cd $(srcdir); rm -fr $@; mkdir -p $@
+	@cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
 	@cat $(builddir)/Doxyfile | (cd $(srcdir) && $(DOXYGEN) -)
 

@@ -23,6 +23,8 @@ MOSTLYCLEANFILES      =
 
 AM_CPPFLAGS           =
 
+EXTRA_DIST            = malloc.c strtof.c
+
 noinst_LTLIBRARIES    = libreplace.la
 
 libreplace_la_SOURCES = 
