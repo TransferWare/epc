@@ -25,4 +25,6 @@ AM_CPPFLAGS           =
 
 noinst_LTLIBRARIES    = libreplace.la
 
-libreplace_la_SOURCES = strtof.c malloc.c
+libreplace_la_SOURCES = 
+libreplace_la_LIBADD  = @LTLIBOBJS@
+libreplace_la_LDFLAGS = -static
