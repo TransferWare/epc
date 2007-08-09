@@ -22,6 +22,8 @@ GENERATED_FILES     += str.c str.h str.c str.pkb str.pke str.pks str.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
 
+CLEANFILES           = $(TESTS) *.log epctest.lis
+
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)

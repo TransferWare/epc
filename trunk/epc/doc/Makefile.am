@@ -19,6 +19,8 @@ generated_html_dirs  = sql c
 
 EXTRA_DIST           = epcman.doc EPC-optimize.doc epcdistr.rtf epcpf.xls problems&changes.xls $(generated_html_dirs)
 
+CLEANFILES           = sql/* c/*
+
 FORCE = force
 
 force: ;
@@ -27,12 +29,12 @@ doc: $(generated_html_dirs)
 
 # Create HTML documentation in the source tree
 sql: $(FORCE)
-	@cd $(srcdir) && mkdir -p $@
+	@cd $(srcdir); rm -fr $@; mkdir -p $@
 #	@cd $(srcdir) && pwd && $(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
 	@$(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
 
 # Create HTML documentation in the source tree
 c: $(FORCE)
-	@cd $(srcdir) && mkdir -p $@
+	@cd $(srcdir); rm -fr $@; mkdir -p $@
 	@cat $(builddir)/Doxyfile | (cd $(srcdir) && $(DOXYGEN) -)
 
