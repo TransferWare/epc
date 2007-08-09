@@ -89,6 +89,7 @@ yylex( void );
 /*@-boolops@*/
 /*@-warnlintcomments@*/
 /*@-observertrans@*/
+/*@-paramuse@*/
 
 %}
 
