@@ -182,7 +182,7 @@ fi
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib32 lib bin],
                 [xmlinit],
-                [xml11 xml10 oraxml11 oraxml10 oraxml9 oraxml8],
+                [nmemso xml11 xml10 oraxml11 oraxml10 oraxml9 oraxml8],
 		[],
 		[AC_MSG_ERROR(xmlinit not found)])
 
