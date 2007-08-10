@@ -8,9 +8,23 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 
 Release 5.0.0
 
-* The feature server-interrupt has been added to configure. See the README.
-* The manual describes how to recover from EPC commnication errors (epc.e_comm_error).
+* Backwards compatibility for subtypes and exceptions which are part of
+  the EPC package specification.
+* The feature server-interrupt has been added to configure. See the
+  README.
+* The manual describes how to recover from EPC communication errors 
+  (epc.e_comm_error).
+* The EPC communication error message can be retrieved via SQLERRM
+  instead of DBMS_OUTPUT.GET_LINE(S).
 * Several portability issues solved for Solaris (rpt_malloc, strtof).
+* The first (shared) library to try for xmlinit is now -lnmemso, which
+  solved linking problems on the Mac OS X, because libxml10.a is a
+  static library.
+* The EPC library has been checked for allocation errors using dmalloc
+  (http://dmalloc.com/).
+* Generated PL/SQL packages now have bounds checking enabled for
+  strings.
+* EPC exceptions have been mapped to error numbers.
 
 
 Release 4.5.0

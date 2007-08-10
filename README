@@ -29,10 +29,10 @@ An important feature is enabling/disabling server interrupts. Because
 the EPC server waits forever for a message using
 dbms_pipe.receieve_message, it may be difficult to stop the server
 gracefully. The --enable-server-interrupt configure option enables the
-EPC server to be killed by an interrupt (CTRL-C). The default is NOT to
-enable this, since it means that a second Oracle session is started
-which waits for the interrupt and then sends an empty message into the
-request pipe so the EPC server can exit.
+EPC server to be killed by an interrupt (CTRL-C). The default is to
+enable this, but this means that a second Oracle session is started
+which sends an empty message into the request pipe so the EPC server can
+exit. This can be disabled by --disable-server-interrupt.
 
 Windows specific
 ================
