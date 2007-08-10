@@ -42,6 +42,11 @@ typedef struct {
 #define string_defined
 #include <epc_xml.h>
 
+/* include dmalloc as last one */
+#ifdef WITH_DMALLOC
+#include "dmalloc.h"
+#endif
+
 #define LEVEL_SOAP_ENVELOPE 1
 #define LEVEL_SOAP_BODY 2
 #define LEVEL_SOAP_METHOD 3
@@ -406,9 +411,9 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       (void) snprintf (epc__call->msg_response,
                        MAX_MSG_RESPONSE_LEN + 1,
                        "<methodResponse><fault><value><struct>\n\
-<member><name>faultCode</name><value><int>1</int></value></member>\n\
-<member><name>faultString</name><value><string>generic error</string></value></member>\n\
-</struct></value></fault></methodResponse>");
+<member><name>faultCode</name><value><int>%d</int></value></member>\n\
+<member><name>faultString</name><value><string>%s</string></value></member>\n\
+</struct></value></fault></methodResponse>", (int) errcode, (char *) msg);
       break;
 
     default:
@@ -437,7 +442,7 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
  *
  * @param epc__xml_ctx_ptr  Callback data.
  *
- * @return XMLERR_OK
+ * @return XMLERR_xxx
  *
  ******************************************************************************/
 static sword
@@ -445,6 +450,7 @@ start_document (void *epc__xml_ctx_ptr)
 {
   epc__xml_ctx_t *epc__xml_ctx = (epc__xml_ctx_t *) epc__xml_ctx_ptr;
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
+  sword ecode = XMLERR_OK;
 
   /* Do not use DBUG_ENTER since the corresponding dbug_leave is called in end_document() */
   (void) dbug_enter (__FILE__, "document", __LINE__, NULL);
@@ -459,7 +465,7 @@ start_document (void *epc__xml_ctx_ptr)
 
   /* Do not use dbug_leave here since the corresponding dbug_leave is called in end_document() */
 
-  return XMLERR_OK;
+  return ecode;
 }
 
 /**
@@ -470,7 +476,7 @@ start_document (void *epc__xml_ctx_ptr)
  *
  * @param epc__xml_ctx_ptr  Callback data.
  *
- * @return XMLERR_OK
+ * @return XMLERR_xxx
  *
  ******************************************************************************/
 static sword
@@ -479,6 +485,7 @@ end_document (void *epc__xml_ctx_ptr)
   epc__xml_ctx_t *epc__xml_ctx = (epc__xml_ctx_t *) epc__xml_ctx_ptr;
   epc__call_t *epc__call = (epc__call_t *) epc__xml_ctx->epc__call;
   dword_t nr;
+  sword ecode = XMLERR_OK;
 
   assert (epc__call != NULL);
 
@@ -498,7 +505,7 @@ end_document (void *epc__xml_ctx_ptr)
   /* The corresponding dbug_enter is in start_document() */
   (void) dbug_leave (__LINE__, NULL);
 
-  return XMLERR_OK;
+  return ecode;
 }
 
 /**
@@ -557,32 +564,41 @@ nullify_parameters (epc__call_t *epc__call)
  * @param parameter  Epc parameter to set the value for
  *
  ******************************************************************************/
-static void
+static sword
 set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
 {
+  sword ecode = XMLERR_OK;
+
   switch (parameter->type)
     {
     case C_XML:
       /* append data */
-      assert ((dword_t) (len + strlen((char *) parameter->data)) <
-              parameter->size);
-      (void) snprintf( ((char *) parameter->data) + 
-                       strlen((char *) parameter->data),
-                       (size_t)(parameter->size -
-                                strlen((char *) parameter->data)),
-                       "%.*s", (int)len, (char *)ch);
+      if ((dword_t) (len + strlen((char *) parameter->data)) < parameter->size)
+        {
+          (void) snprintf( ((char *) parameter->data) + 
+                           strlen((char *) parameter->data),
+                           (size_t)(parameter->size -
+                                    strlen((char *) parameter->data)),
+                           "%.*s", (int)len, (char *)ch);
+        }
+      else
+        {
+          ecode = XMLERR_BUFFER_OVERFLOW;
+        }
       break;
 
     case C_STRING:
     case C_DATE:
-      assert ((dword_t) len < parameter->size);
-      if ((dword_t) len >= parameter->size)
+      if ((dword_t) len < parameter->size)
         {
-          len = (size_t) (parameter->size - 1);
+          (void) strncpy ((char *) parameter->data,
+                          (char *) ch, len);
+          ((char *) parameter->data)[len] = '\0';
         }
-      (void) strncpy ((char *) parameter->data,
-                      (char *) ch, len);
-      ((char *) parameter->data)[len] = '\0';
+      else
+        {
+          ecode = XMLERR_BUFFER_OVERFLOW;
+        }
       break;
 
     case C_INT:
@@ -597,7 +613,7 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
 
     case C_FLOAT:
       *((idl_float_t *) parameter->data) =
-	strtof ((char *) ch, NULL);
+        strtof ((char *) ch, NULL);
       break;
 
     case C_DOUBLE:
@@ -613,6 +629,8 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
       assert (parameter->type >= C_DATATYPE_MIN &&
               parameter->type <= C_DATATYPE_MAX);
     }
+
+  return ecode;
 }
 
 /**
@@ -633,7 +651,7 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
  * @param namespace         Namespace of the element (http://schemas.xmlsoap.org/soap/envelope/).
  * @param attrs             Attributes.
  *
- * @return XMLERR_OK
+ * @return XMLERR_xxx
  *
  ******************************************************************************/
 static sword
@@ -646,6 +664,7 @@ start_element (void *epc__xml_ctx_ptr,
   epc__info_t *epc__info = epc__xml_ctx->epc__info;
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
   dword_t nr;
+  sword ecode = XMLERR_OK;
 
   /* Do not use DBUG_ENTER since the corresponding dbug_leave is called in end_element() */
   (void) dbug_enter (__FILE__, (char *) name, __LINE__, NULL);
@@ -912,7 +931,7 @@ start_element (void *epc__xml_ctx_ptr,
   (void) dbug_print (__LINE__, "info", "epc__error: %d",
                      (int) epc__call->epc__error);
 
-  return XMLERR_OK;
+  return ecode;
 }
 
 /**
@@ -923,7 +942,7 @@ start_element (void *epc__xml_ctx_ptr,
  * @param epc__xml_ctx_ptr  Callback data.
  * @param name              Name of the element.
  *
- * @return XMLERR_OK
+ * @return XMLERR_xxx
  *
  ******************************************************************************/
 static sword
@@ -931,6 +950,7 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
 {
   epc__xml_ctx_t *epc__xml_ctx = (epc__xml_ctx_t *) epc__xml_ctx_ptr;
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
+  sword ecode = XMLERR_OK;
 
   (void) dbug_print (__LINE__, "info", "name: %s; level: %u",
                      (char *) name,
@@ -979,7 +999,7 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
       break;
     }
 
-  return XMLERR_OK;
+  return ecode;
 }
 
 
@@ -992,7 +1012,7 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
  * @param ch                Characters.
  * @param len               Length of ch.
  *
- * @return XMLERR_OK
+ * @return XMLERR_xxx
  *
  ******************************************************************************/
 static sword
@@ -1002,6 +1022,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
   epc__info_t *epc__info = epc__xml_ctx->epc__info;
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
   dword_t nr = epc__xml_ctx->num_parameters - 1;
+  sword ecode = XMLERR_OK;
 
   (void) dbug_print (__LINE__, "info", "level: %u; element content: %*s",
                      epc__xml_ctx->level,
@@ -1016,7 +1037,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
       assert (nr >= 0 && nr < epc__call->function->num_parameters);
       assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
-      set_parameter((const char *)ch, (size_t)len, &epc__call->function->parameters[nr]);
+      ecode = set_parameter((const char *)ch, (size_t)len, &epc__call->function->parameters[nr]);
       break;
 
     case PROTOCOL_XMLRPC:
@@ -1099,7 +1120,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
             assert (nr >= 0 && nr < epc__call->function->num_parameters);
             assert (epc__call->function->parameters[nr].mode != C_OUT);   /* in or in/out */
 
-            set_parameter((const char *)ch, (size_t)len, &epc__call->function->parameters[nr]);
+            ecode = set_parameter((const char *)ch, (size_t)len, &epc__call->function->parameters[nr]);
           }
           break;
 
@@ -1116,7 +1137,7 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
       break;
     }
 
-  return XMLERR_OK;
+  return ecode;
 }
 
 /**
@@ -1172,8 +1193,8 @@ lookup_interface (const char *interface_name, epc__info_t * epc__info,
  *
  ******************************************************************************/
 static void
-lookup_function (const char *function_name, /*@unused@ */
-                 epc__info_t * epc__info,
+lookup_function (const char *function_name,
+                 /*@unused@ */ epc__info_t * epc__info,
                  epc__call_t * epc__call)
 {
   dword_t fnr;

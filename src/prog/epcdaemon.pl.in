@@ -13,6 +13,7 @@ epcdaemon.pl [option...] program [program option...]
   Options:
     --forever           Restart the program when it stops
     --help              This help
+    --timeout TIMEOUT   Wait TIMEOUT seconds before restarting
     --verbose           Verbose logging
     --version           Display version info
 
@@ -27,6 +28,10 @@ Restart the program when it stops.
 =item B<--help>
 
 Print a help message and exits.
+
+=item B<--timeout>
+
+Wait TIMEOUT seconds before restarting. The default is to wait 1 second.
 
 =item B<--verbose>
 
@@ -106,6 +111,7 @@ BEGIN {
 
 # options
 my $g_forever = 0;
+my $g_timeout = 1;
 my $g_verbose = 0;
 
 # prototypes
@@ -121,16 +127,21 @@ sub main () {
 
     daemonize();
 
-    do {
+    while (1) {
         my $status = system(@ARGV);
 
         check_exit_status($status, $?, @ARGV);
-    } while ($g_forever);
+
+        last unless $g_forever;
+
+        sleep($g_timeout);
+    }
 }
 
 # process_command_line - process command line arguments and set sensible defaults
 sub process_command_line () {
     my %options = ( 'forever' => \$g_forever,
+                    'timeout' => \$g_timeout,
                     'verbose' => \$g_verbose );
 
     # options
@@ -143,12 +154,17 @@ sub process_command_line () {
                'version' => sub { print basename($0), " version $VERSION\n"; exit(0); },
                # other options
                'forever',
+               'timeout=i',
                'verbose')
       or pod2usage(-verbose => 0);
 
     #
-    pod2usage(-message => "$0: must have at least a program to start --help option.\n")
-      if (@ARGV == 0);
+    pod2usage(-message => "$0: must have at least a program to start. See also the --help option.\n")
+        if (@ARGV == 0);
+
+    #
+    pod2usage(-message => "$0: must have a timeout of at least 0. See also the --help option.\n")
+        unless ($g_timeout >= 0);
 }
 
 sub daemonize () {
@@ -170,8 +186,12 @@ sub daemonize () {
 
         setsid                    or croak("Can't start a new session: $!");
     };
-    if ($@ && $@ !~ m/POSIX::setsid not implemented on this architecture/) {
-        die $@;
+    if ($@) {
+        if ($@ =~ m/POSIX::setsid not implemented on this architecture/) {
+            warn $@;
+        } else {
+            die $@;
+        }
     }
     open STDERR, '>&STDOUT'   or croak("Can't dup stdout: $!");
 }

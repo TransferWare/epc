@@ -52,6 +52,12 @@ subtype data_type_subtype is pls_integer;
 subtype parameter_mode_subtype is pls_integer;
 subtype pipe_name_subtype is varchar2(128);
 
+/* Start of backwards compatibility for subtypes. See epc.pls (package 4.0.0). */
+subtype datatype_t is data_type_subtype;
+subtype parameter_mode_t is parameter_mode_subtype;
+subtype pipe_name_t is pipe_name_subtype;
+/* End of backwards compatibility for subtypes. */
+
 subtype int_subtype is integer;
 subtype long_subtype is integer;
 subtype float_subtype is float;
@@ -82,12 +88,83 @@ SOAP_HEADER_START constant varchar2(1000) :=
 SOAP_HEADER_END constant varchar2(1000) := 
   '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
+/* 
+  Exceptions are raised using raise_application_error(error_number, ...),
+  which expects error numbers in the range -20000 uptill -20999.
+  The EPC uses -20100 uptill -20106.
+  
+  We have to map exceptions to an error number using the pragma lines,
+  otherwise the exceptions starting with e_ (new naming convention) and
+  without the e_ (old naming convention) would be distinct. So for backwards
+  compatibility we must map them.
+
+  Proof: run the following PL/SQL block:
+
+  declare
+    e_something exception;
+  --  pragma exception_init(e_something, -20000);
+    something exception;
+  --  pragma exception_init(something, -20000);
+  begin
+    raise e_something;
+  exception
+    when something
+    then
+      dbms_output.put_line('something');
+      null;     
+  end;
+  
+  This does not catch e_something. 
+
+  When you uncomment the pragma lines, the exception is catched.
+*/
 e_illegal_null_value exception;
+c_illegal_null_value constant pls_integer := -20100;
+pragma exception_init(e_illegal_null_value, -20100);
+
 e_wrong_protocol     exception;
+c_wrong_protocol     constant pls_integer := -20101;
+pragma exception_init(e_wrong_protocol, -20101);
+
 e_comm_error         exception;
+c_comm_error         constant pls_integer := -20102;
+pragma exception_init(e_comm_error, -20102);
+
 e_msg_timed_out      exception;
+c_msg_timed_out      constant pls_integer := -20103;
+pragma exception_init(e_msg_timed_out, -20103);
+
 e_msg_too_big        exception;
+c_msg_too_big        constant pls_integer := -20104;
+pragma exception_init(e_msg_too_big, -20104);
+
 e_msg_interrupted    exception;
+c_msg_interrupted    constant pls_integer := -20105;
+pragma exception_init(e_msg_interrupted, -20105);
+
+e_parse_error        exception;
+c_parse_error        constant pls_integer := -20106;
+pragma exception_init(e_parse_error, -20106);
+
+/* Start of backwards compatibility for exceptions. See epc.pls (package 4.0.0). */
+illegal_null_value exception;
+pragma exception_init(illegal_null_value, -20100);
+
+wrong_protocol     exception;
+pragma exception_init(wrong_protocol, -20101);
+
+comm_error         exception;
+pragma exception_init(comm_error, -20102);
+
+msg_timed_out      exception;
+pragma exception_init(msg_timed_out, -20103);
+
+msg_too_big        exception;
+pragma exception_init(msg_too_big, -20104);
+
+msg_interrupted    exception;
+pragma exception_init(msg_interrupted, -20105);
+/* End of backwards compatibility for exceptions. */
 
 /*ORA-06558 is raised if the message buffer overflows (currently 4096 bytes)*/
 
@@ -147,3 +224,5 @@ procedure print
 
 end epc;
 /
+
+show errors
