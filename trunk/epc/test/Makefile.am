@@ -54,7 +54,7 @@ DIFF = diff -w
 
 # run the server in the background and purge the request pipe
 START_SERVER = @PERL@ $(top_builddir)/src/prog/epcdaemon.pl \
-               --forever --timeout 1 --verbose $(EPCTEST) -P -Dd,g,t,o -u$(USERID)
+               --verbose $(EPCTEST) -P -Dd,g,t,o -u$(USERID)
 
 STOP_SERVER = echo "Killing server at `date`" && $(EPCTEST) -I -u$(USERID)
 

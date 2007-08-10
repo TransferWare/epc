@@ -630,15 +630,24 @@ epc__done (epc__info_t * epc__info)
             for (pnr = 0; pnr < interface->functions[fnr].num_parameters;
                  pnr++)
               {
-                free (interface->functions[fnr].parameters[pnr].data);
+                /* detected by dmalloc */
+                if (interface->functions[fnr].parameters[pnr].data != NULL) {
+                  free (interface->functions[fnr].parameters[pnr].data);
+                  interface->functions[fnr].parameters[pnr].data = NULL;
+                }
               }
         }
 
       free (epc__info->interfaces);
     }
 
+  /* not freeing epc__info->logon detected by dmalloc */
+  if (epc__info->logon != NULL)
+    free(epc__info->logon);
+
   if (epc__info->pipe != NULL)
-    free (epc__info->pipe);
+    free(epc__info->pipe);
+
   free (epc__info);
 
   DBUG_LEAVE ();
@@ -747,9 +756,10 @@ epc__set_pipe (epc__info_t * epc__info, char *pipe)
   else if (pipe == NULL)
     {
       if (epc__info->pipe != NULL)
-        free (epc__info->pipe);
-
-      epc__info->pipe = NULL;
+        {
+          free (epc__info->pipe);
+          epc__info->pipe = NULL;
+        }
     }
   else
     {
@@ -782,9 +792,10 @@ epc__set_logon (epc__info_t * epc__info, char *logon)
   else if (logon == NULL)
     {
       if (epc__info->logon != NULL)
-        free (epc__info->logon);
-
-      epc__info->logon = NULL;
+        {
+          free (epc__info->logon);
+          epc__info->logon = NULL;
+        }
     }
   else
     {

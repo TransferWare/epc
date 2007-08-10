@@ -366,7 +366,7 @@ static void
 help (char *procname)
 {
   (void) printf ("\
-Syntax: %s -D <dbug options> -d -h -p <request pipe> -u <user connect> -v\n\
+Syntax: %s -D <dbug options> -I -P -h -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n\
         D       set dbug options\n\

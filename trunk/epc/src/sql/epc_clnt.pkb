@@ -567,14 +567,14 @@ begin
     then raise_application_error
          ( epc.c_comm_error
          , '(epc_clnt.send_request_dbms_pipe) ' ||
-           'Timed out while sending message number ' || to_char(g_msg_seq)
+           'Timed out while sending message number ' || to_char(g_msg_seq) || '.'
          );
 
     when 3 -- message-interrupted
     then raise_application_error
          ( epc.c_comm_error
          , '(epc_clnt.send_request_dbms_pipe) ' ||
-           'Interrupted while sending message number ' || to_char(g_msg_seq)
+           'Interrupted while sending message number ' || to_char(g_msg_seq) || '.'
          );
 
     else
@@ -837,7 +837,7 @@ begin
       raise_application_error
       ( epc.c_comm_error
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Timed out while receiving message number ' || to_char(g_msg_seq)
+        'Timed out while receiving message number ' || to_char(g_msg_seq) || '.'
       );
 
     when 2 -- Record in the pipe is too large for the buffer. (This should not happen.)
@@ -845,7 +845,7 @@ begin
       raise_application_error
       ( epc.c_comm_error
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Message too big while receiving message number ' || to_char(g_msg_seq)
+        'Message too big while receiving message number ' || to_char(g_msg_seq) || '.'
       );
 
     when 3 -- An interrupt occurred.
@@ -853,7 +853,7 @@ begin
       raise_application_error
       ( epc.c_comm_error
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Interrupted while receiving message number ' || to_char(g_msg_seq)
+        'Interrupted while receiving message number ' || to_char(g_msg_seq) || '.'
       );
 
     else -- no more return codes according to the documentation
@@ -872,7 +872,7 @@ begin
     , '(epc_clnt.recv_response_dbms_pipe) ' ||
       'Wrong message number received. ' ||
       'Expected "' || to_char(g_msg_seq) || '"' ||
-      ' but received "' || to_char(l_msg_seq_result) || '"'
+      ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
     );
   end if;
 
