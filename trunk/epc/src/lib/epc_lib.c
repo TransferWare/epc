@@ -25,11 +25,9 @@
 #include <epc_xml.h>
 #include <dbug.h>
 
-/* include dmalloc/ulib as last one */
-#if defined(HASDMALLOC) && HASDMALLOC != 0
-#include <dmalloc.h>
-#elif defined(HASULIB) && HASULIB != 0
-#include <u_alloc.h>
+/* include dmalloc as last one */
+#ifdef WITH_DMALLOC
+#include "dmalloc.h"
 #endif
 
 #ifdef SERVER_INTERRUPT

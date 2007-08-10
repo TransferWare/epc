@@ -39,6 +39,7 @@ AC_CONFIG_SRCDIR([test/main.c])
 AM_CONFIG_HEADER([config.h])
 AM_INIT_AUTOMAKE
 AM_C_PROTOTYPES
+AM_WITH_DMALLOC
 
 # Checks for programs.
 AC_PATH_PROG([PERL],[perl])
@@ -89,7 +90,7 @@ AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
+AC_CHECK_HEADERS([assert.h errno.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
 AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.

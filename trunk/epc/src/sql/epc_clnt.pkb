@@ -507,7 +507,7 @@ begin
           epc_info_tab(p_epc_key).msg
           ||'<param><value><'||l_data_type||'>'
           ||to_char(p_value, 'yyyymmdd')
-	  ||'T'
+          ||'T'
           ||to_char(p_value, 'hh24:mi:ss')
           ||'</'||l_data_type||'></value></param>'
           ||chr(10);
@@ -526,8 +526,6 @@ procedure send_request_dbms_pipe(
 )
 is
   l_retval pls_integer := -1;
-
-  e_send_error exception;
 begin
   dbms_pipe.reset_buffer;
   dbms_pipe.pack_message( p_protocol );
@@ -560,18 +558,28 @@ begin
       epc_info_tab(p_epc_key).request_pipe
     , epc_info_tab(p_epc_key).send_timeout 
     );
-  if l_retval <> 0
-  then
-    raise e_send_error;
-  end if;
-exception
-  when e_send_error
-  then
-    dbms_output.put_line( '(epc_clnt.send_request_dbms_pipe) ' ||
-                          'Error sending message.' || chr(10) ||
-                          'Return value: ' || to_char(l_retval) || chr(10) ||
-                          'Current message number: ' || g_msg_seq );
-    raise epc.e_comm_error;
+
+  case l_retval
+    when 0 -- OK
+    then null;
+
+    when 1 -- time-out
+    then raise_application_error
+         ( epc.c_comm_error
+         , '(epc_clnt.send_request_dbms_pipe) ' ||
+           'Timed out while sending message number ' || to_char(g_msg_seq)
+         );
+
+    when 3 -- message-interrupted
+    then raise_application_error
+         ( epc.c_comm_error
+         , '(epc_clnt.send_request_dbms_pipe) ' ||
+           'Interrupted while sending message number ' || to_char(g_msg_seq)
+         );
+
+    else
+      raise program_error; -- there are no more return codes
+  end case;
 end send_request_dbms_pipe;
 
 procedure send_request_utl_http( 
@@ -811,8 +819,6 @@ procedure recv_response_dbms_pipe
 is
   l_retval pls_integer := -1;
   l_msg_seq_result pls_integer;
-
-  e_recv_error exception;
 begin
   l_retval :=
     dbms_pipe.receive_message
@@ -820,37 +826,57 @@ begin
       g_result_pipe
     , epc_info_tab(p_epc_key).recv_timeout 
     );
-  if l_retval <> 0
-  then
-    raise e_recv_error;
-  end if;
+
+  case l_retval
+    when 0 -- Success
+    then 
+      null;
+
+    when 1 -- Timed out. If the pipe was implicitly-created and is empty, then it is removed.
+    then
+      raise_application_error
+      ( epc.c_comm_error
+      , '(epc_clnt.recv_response_dbms_pipe) ' ||
+        'Timed out while receiving message number ' || to_char(g_msg_seq)
+      );
+
+    when 2 -- Record in the pipe is too large for the buffer. (This should not happen.)
+    then
+      raise_application_error
+      ( epc.c_comm_error
+      , '(epc_clnt.recv_response_dbms_pipe) ' ||
+        'Message too big while receiving message number ' || to_char(g_msg_seq)
+      );
+
+    when 3 -- An interrupt occurred.
+    then
+      raise_application_error
+      ( epc.c_comm_error
+      , '(epc_clnt.recv_response_dbms_pipe) ' ||
+        'Interrupted while receiving message number ' || to_char(g_msg_seq)
+      );
+
+    else -- no more return codes according to the documentation
+      raise program_error;
+  end case;
 
   /* Get the message sequence */
   dbms_pipe.unpack_message( l_msg_seq_result );
-  if l_msg_seq_result <> g_msg_seq
+
+  if l_msg_seq_result = g_msg_seq
   then
-    raise epc.e_wrong_protocol;
+    null;
+  else
+    raise_application_error
+    ( epc.c_wrong_protocol
+    , '(epc_clnt.recv_response_dbms_pipe) ' ||
+      'Wrong message number received. ' ||
+      'Expected "' || to_char(g_msg_seq) || '"' ||
+      ' but received "' || to_char(l_msg_seq_result) || '"'
+    );
   end if;
 
   dbms_pipe.unpack_message( epc_info_tab(p_epc_key).msg );
-exception
-  when e_recv_error
-  then
-    dbms_output.put_line( '(epc_clnt.recv_response_dbms_pipe) ' ||
-                          'Error receiving message.' || chr(10) ||
-                          'Return value: ' || to_char(l_retval) || chr(10) ||
-                          'Current message number: ' || g_msg_seq );
---  epc.purge( g_result_pipe );
-    raise epc.e_comm_error;
-
-  when epc.e_wrong_protocol
-  then
-    dbms_output.put_line( '(epc_clnt.recv_response_dbms_pipe) ' ||
-                          'Wrong message number received.' || chr(10) ||
-                          'Current message number: ' || g_msg_seq || chr(10) ||
-                          'Received message number: ' || l_msg_seq_result );
---  epc.purge( g_result_pipe );
-    raise epc.e_comm_error;
 end recv_response_dbms_pipe;
 
 procedure recv_response_utl_http(
@@ -913,7 +939,7 @@ begin
         '/SOAP-ENV:Fault/faultstring/child::text()'
       , epc."xmlns:SOAP-ENV"
       ).getstringval();
-    raise_application_error(-20000, fault_code || ' - ' || fault_string);
+    raise_application_error(epc.c_parse_error, fault_code || ' - ' || fault_string);
   end if;
 end check_soap_fault;
 
@@ -934,7 +960,7 @@ begin
       (
         '/value/struct/member/value/string/child::text()'
       ).getstringval();
-    raise_application_error(-20000, fault_code || ' - ' || fault_string);
+    raise_application_error(epc.c_parse_error, fault_code || ' - ' || fault_string);
   end if;
 end check_xmlrpc_fault;
 
@@ -1135,4 +1161,3 @@ end epc_clnt;
 /
 
 show errors
-

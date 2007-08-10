@@ -38,6 +38,6 @@ EXTRA_DIST      += login.sql
 	@touch $@
 
 .pkb.pkb_run:
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )
 	@touch $@
 

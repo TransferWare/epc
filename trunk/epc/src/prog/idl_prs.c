@@ -160,6 +160,11 @@
 
 #include <dbug.h>
 
+/* include dmalloc as last one */
+#ifdef WITH_DMALLOC
+#include "dmalloc.h"
+#endif
+
 /*
 || Defines
 */
@@ -169,9 +174,12 @@
   GJP 03-01-2005 
   Do not define local variables anymore. 
   Bounds checking is disabled.
+
+  GJP 10-08-2007
+  Enable bounds checking again
 */
 
-#define PLSQL_CHECK_BOUNDS 0
+#define PLSQL_CHECK_BOUNDS 1
 
 /*
 || Forward declaration of static procedures
@@ -563,7 +571,7 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
 
         case C_STRING:
         case C_XML:
-          (void) fprintf (pout, "l_%s VARCHAR2(%ld)", parm->name, parm->size);
+          (void) fprintf (pout, "l_%s VARCHAR2(%ld BYTE)", parm->name, parm->size);
           break;
 
         case C_VOID:
@@ -1167,7 +1175,7 @@ generate_c_function (FILE * pout, idl_function_t * fun)
       (void) fprintf (pout, ", %ld );\n  l_%s[%ld] = '\\0'",
                       fun->return_value.size,
                       fun->return_value.proc_name,
-		      fun->return_value.size);
+                      fun->return_value.size);
       break;
 
     default:
