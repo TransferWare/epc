@@ -452,8 +452,7 @@ start_document (void *epc__xml_ctx_ptr)
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
   sword ecode = XMLERR_OK;
 
-  /* Do not use DBUG_ENTER since the corresponding dbug_leave is called in end_document() */
-  (void) dbug_enter (__FILE__, "document", __LINE__, NULL);
+  DBUG_ENTER("start_document");
 
   assert (epc__call != NULL);
 
@@ -463,7 +462,7 @@ start_document (void *epc__xml_ctx_ptr)
   epc__xml_ctx->num_parameters = 0;
   epc__xml_ctx->level = 0;
 
-  /* Do not use dbug_leave here since the corresponding dbug_leave is called in end_document() */
+  DBUG_LEAVE ();
 
   return ecode;
 }
@@ -487,23 +486,24 @@ end_document (void *epc__xml_ctx_ptr)
   dword_t nr;
   sword ecode = XMLERR_OK;
 
+  DBUG_ENTER("end_document");
+
   assert (epc__call != NULL);
 
-  (void) dbug_print (__LINE__, "info", "method: %s",
-                     (epc__call->function !=
-                      NULL ? epc__call->function->name : "(null)"));
+  DBUG_PRINT ("info", ("method: %s",
+		       (epc__call->function !=
+			NULL ? epc__call->function->name : "(null)")));
 
   if (epc__call->function != NULL)
     {
       for (nr = 0; nr < epc__call->function->num_parameters; nr++)
         {
-          (void) dbug_print (__LINE__, "info", "argument %d; name: %s",
-                             nr, epc__call->function->parameters[nr].name);
-        }
+          DBUG_PRINT ("info", ("argument %d; name: %s",
+			       nr, epc__call->function->parameters[nr].name));
+	}
     }
 
-  /* The corresponding dbug_enter is in start_document() */
-  (void) dbug_leave (__LINE__, NULL);
+  DBUG_LEAVE ();
 
   return ecode;
 }
@@ -666,12 +666,11 @@ start_element (void *epc__xml_ctx_ptr,
   dword_t nr;
   sword ecode = XMLERR_OK;
 
-  /* Do not use DBUG_ENTER since the corresponding dbug_leave is called in end_element() */
-  (void) dbug_enter (__FILE__, (char *) name, __LINE__, NULL);
-  (void) dbug_print (__LINE__, "input", "qname: %s; name: %s; namespace: %s; level: %u",
-                     (char *) qname, (char *) name,
-                     (namespace == NULL ? "(null)" : (char *) namespace),
-                     epc__xml_ctx->level);
+  DBUG_ENTER ("start_element");
+  DBUG_PRINT ("input", ("qname: %s; name: %s; namespace: %s; level: %u",
+			(char *) qname, (char *) name,
+			(namespace == NULL ? "(null)" : (char *) namespace),
+			epc__xml_ctx->level));
 
   assert (epc__call != NULL);
 
@@ -684,7 +683,7 @@ start_element (void *epc__xml_ctx_ptr,
         case LEVEL_SOAP_BODY:
           assert((strncmp ((const char *) qname, "SOAP", 4) == 0 ||
                   strncmp ((const char *) qname, "soap", 4) == 0));
-          (void) dbug_print (__LINE__, "info", "skipping SOAP element");
+          DBUG_PRINT ("info", ("skipping SOAP element"));
           break;
 
         case LEVEL_SOAP_METHOD:
@@ -716,9 +715,9 @@ start_element (void *epc__xml_ctx_ptr,
                 epc__call->inline_namespace[0] = '\0';
               }
 
-            (void) dbug_print (__LINE__, "info",
-                               "method: %s; inline namespace: %s",
-                               function_name, epc__call->inline_namespace);
+            DBUG_PRINT ("info",
+                        ("method: %s; inline namespace: %s",
+			 function_name, epc__call->inline_namespace));
 
             lookup_interface (interface_name, epc__info, epc__call);
             lookup_function (function_name, epc__info, epc__call);
@@ -766,7 +765,7 @@ start_element (void *epc__xml_ctx_ptr,
             assert (epc__call->function != NULL);
 
             /* element is an argument or part of an xml argument */
-            (void) dbug_print (__LINE__, "info", "argument: %s", (char *) name);
+            DBUG_PRINT ("info", ("argument: %s", (char *) name));
 
             /* get next in or inout argument */
             for (nr = epc__xml_ctx->num_parameters;
@@ -774,11 +773,11 @@ start_element (void *epc__xml_ctx_ptr,
               {
                 if (epc__call->function->parameters[nr].mode != C_OUT) /* in or in/out */ 
                   {
-                    (void) dbug_print (__LINE__, "info",
-                                       "parameter[%d]: %s; argument_name: %s",
-                                       (int) nr,
-                                       epc__call->function->parameters[nr].
-                                       name, argument_name);
+                    DBUG_PRINT ("info",
+				("parameter[%d]: %s; argument_name: %s",
+				 (int) nr,
+				 epc__call->function->parameters[nr].
+				 name, argument_name));
                     assert(strcmp(epc__call->function->parameters[nr].name, argument_name) == 0);
                     break;        /* found */
                   }
@@ -849,9 +848,9 @@ start_element (void *epc__xml_ctx_ptr,
           {
             assert (epc__call->function != NULL);
 
-            (void) dbug_print (__LINE__, "info",
-                               "arguments parsed so far: %d",
-                               (int) epc__xml_ctx->num_parameters);
+            DBUG_PRINT ("info",
+                        ("arguments parsed so far: %d",
+			 (int) epc__xml_ctx->num_parameters));
 
             /* get next in or inout argument */
             for (nr = epc__xml_ctx->num_parameters;
@@ -859,11 +858,11 @@ start_element (void *epc__xml_ctx_ptr,
               {
                 if (epc__call->function->parameters[nr].mode != C_OUT) /* in or in/out */ 
                   {
-                    (void) dbug_print (__LINE__, "info",
-                                       "parameter[%d]: %s",
-                                       (int) nr,
-                                       epc__call->function->parameters[nr].
-                                       name);
+                    DBUG_PRINT ("info",
+                                ("parameter[%d]: %s",
+				 (int) nr,
+				 epc__call->function->parameters[nr].
+				 name));
                     break;        /* found */
                   }
               }
@@ -928,8 +927,9 @@ start_element (void *epc__xml_ctx_ptr,
       break;
     }
 
-  (void) dbug_print (__LINE__, "info", "epc__error: %d",
-                     (int) epc__call->epc__error);
+  DBUG_PRINT ("info", ("epc__error: %d", (int) epc__call->epc__error));
+
+  DBUG_LEAVE ();
 
   return ecode;
 }
@@ -952,11 +952,10 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
   epc__call_t *epc__call = epc__xml_ctx->epc__call;
   sword ecode = XMLERR_OK;
 
-  (void) dbug_print (__LINE__, "info", "name: %s; level: %u",
-                     (char *) name,
-                     epc__xml_ctx->level);
-
-  (void) dbug_leave (__LINE__, NULL);
+  DBUG_ENTER ("end_element");
+  DBUG_PRINT ("info", ("name: %s; level: %u",
+		       (char *) name,
+		       epc__xml_ctx->level));
 
   assert(epc__call != NULL);
 
@@ -999,6 +998,8 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
       break;
     }
 
+  DBUG_LEAVE ();
+
   return ecode;
 }
 
@@ -1024,9 +1025,11 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
   dword_t nr = epc__xml_ctx->num_parameters - 1;
   sword ecode = XMLERR_OK;
 
-  (void) dbug_print (__LINE__, "info", "level: %u; element content: %*s",
-                     epc__xml_ctx->level,
-                     len, (char *) ch);
+  DBUG_ENTER ("element_content");
+
+  DBUG_PRINT ("info", ("level: %u; element content: %*s",
+		       epc__xml_ctx->level,
+		       len, (char *) ch));
 
   assert (epc__call != NULL);
 
@@ -1056,16 +1059,16 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
             } else {
               function_name = ((char *)dot) + 1;
 
-              (void) dbug_print (__LINE__, "info",
-                                 "function: %s",
-                                 function_name);
+              DBUG_PRINT ("info",
+			  ("function: %s",
+			   function_name));
 
               (void) strncpy(interface_name, (char *)ch, (size_t)(dot - (char *)ch));
               interface_name[(dot - (char *)ch)] = '\0';
 
-              (void) dbug_print (__LINE__, "info",
-                                 "interface: %s",
-                                 interface_name);
+              DBUG_PRINT ("info",
+                          ("interface: %s",
+			   interface_name));
 
               assert (epc__call->function == NULL);
 
@@ -1125,8 +1128,8 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
           break;
 
         default:
-          (void) dbug_print (__LINE__, "info",
-                             "level does not denote a method or argument");
+          DBUG_PRINT ("info",
+                      ("level does not denote a method or argument"));
           break;
         }
       break;
@@ -1136,6 +1139,8 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
              EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
       break;
     }
+
+  DBUG_LEAVE ();
 
   return ecode;
 }

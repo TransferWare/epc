@@ -338,9 +338,10 @@ procedure new_request
 -- @param p_name       The name of the parameter
 -- @param p_data_type  The data type (should be epc.data_type_string)
 -- @param p_value      The value of the parameter
+-- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
 --
 -- @exception epc.e_illegal_null_value  p_value is NULL
--- @exception value_error               data type is incorrect
+-- @exception value_error               data type is incorrect or maximum length reached
 */
 procedure set_request_parameter
 (
@@ -348,6 +349,7 @@ procedure set_request_parameter
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in varchar2
+, p_max_bytes in integer default null
 );
 
 procedure set_request_parameter
@@ -399,6 +401,9 @@ procedure recv_response
 -- @param p_name       The name of the parameter
 -- @param p_data_type  The data type (should be epc.data_type_string)
 -- @param p_value      The value of the parameter
+-- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
+--
+-- @exception value_error                or maximum length reached
 */
 procedure get_response_parameter
 (
@@ -406,6 +411,7 @@ procedure get_response_parameter
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out varchar2
+, p_max_bytes in integer default null
 );
 
 procedure get_response_parameter

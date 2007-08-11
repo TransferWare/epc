@@ -350,12 +350,16 @@ procedure set_request_parameter
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in varchar2
+, p_max_bytes in integer
 )
 is
 begin
   if p_value is null
   then
     raise epc.e_illegal_null_value;
+  elsif p_max_bytes is not null and lengthb(p_value) > p_max_bytes
+  then
+    raise value_error;
   else
     case epc_info_tab(p_epc_key).protocol
       when "SOAP"
@@ -1016,6 +1020,7 @@ procedure get_response_parameter
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out varchar2
+, p_max_bytes in integer
 )
 is
   l_value epc.string_subtype;
@@ -1109,6 +1114,11 @@ begin
       );
   else
     p_value := l_value;
+  end if;
+
+  if p_max_bytes is not null and lengthb(p_value) > p_max_bytes
+  then
+    raise value_error;
   end if;
 end get_response_parameter;
 
