@@ -183,9 +183,6 @@ epc__main (int argc, char **argv, epc__interface_t * epc_interface)
 epc__error_t
 epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 {
-#if defined(HASULIB) && HASULIB != 0
-  unsigned int chk = AllocStartCheckPoint ();
-#endif
   char *logon = NULL;
   char *request_pipe = NULL;
   dword_t purge_pipe = 0;
@@ -193,7 +190,9 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
   int nr;
   /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
   epc__error_t ret;
+#ifndef DBUG_OFF
   /*@only@ *//*@null@ */ char *dbug_options = NULL;
+#endif
 
   /* process command line parameters */
   for (nr = 0; nr < argc; nr++)
@@ -202,6 +201,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
         {
           switch (argv[nr][1])
             {
+#ifndef DBUG_OFF
             case 'D':
               /* Is it -D... or -D ... */
               if (argv[nr][2] != '\0')
@@ -218,6 +218,7 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
                   strcpy (dbug_options, &argv[nr][0]);
                 }
               break;
+#endif
 
             case 'I':
               interrupt = 1;
@@ -259,20 +260,24 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
         }
     }
 
+#ifndef DBUG_OFF
   if (dbug_options == NULL)
     {
       dbug_options = (char *) malloc (1);
       assert (dbug_options != NULL);
       dbug_options[0] = '\0';
     }
+#endif
 
   assert (OK == 0);
 
   do
     {
       nr = 0;
+#ifndef DBUG_OFF
       if ((ret = dbug_init (dbug_options, argv[0])) != OK)
         break;
+#endif
 
       nr++;                     /* 1 */
       epc__info = epc__init ();
@@ -340,7 +345,9 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
       /*@fallthrough@ */
 
     case 1:
+#ifndef DBUG_OFF
       (void) dbug_done ();
+#endif
       /*@fallthrough@ */
 
     case 0:
@@ -352,10 +359,8 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
     }
   /*@=branchstate@ */
 
+#ifndef DBUG_OFF
   free (dbug_options);
-
-#if defined(HASULIB) && HASULIB != 0
-  (void) AllocStopCheckPoint (chk);
 #endif
 
   return ret;
@@ -365,11 +370,20 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 static void
 help (char *procname)
 {
+  /* In standard C "A" "B" will be concatenated */
   (void) printf ("\
-Syntax: %s -D <dbug options> -I -P -h -p <request pipe> -u <user connect> -v\n\
+Syntax: %s "
+#ifndef DBUG_OFF
+"-D <dbug options> "
+#endif
+"-I -P -h -p <request pipe> -u <user connect> -v\n\
 \n\
-Flags:\n\
-        D       set dbug options\n\
+Flags:\n"
+#ifndef DBUG_OFF
+"\
+        D       set dbug options\n"
+#endif
+"\
         I       interrupt the server waiting on the request pipe\n\
         P       purge the request pipe\n\
         h       this help\n\

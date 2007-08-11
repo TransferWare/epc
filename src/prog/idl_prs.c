@@ -176,10 +176,9 @@
   Bounds checking is disabled.
 
   GJP 10-08-2007
-  Enable bounds checking again
+  Enable bounds checking again but now as an extra length parameter to 
+  set_request_parameter/get_response_parameter
 */
-
-#define PLSQL_CHECK_BOUNDS 1
 
 /*
 || Forward declaration of static procedures
@@ -549,6 +548,7 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
                           parm->proc_name,
                           get_syntax (parm->datatype, C), parameter_nr);
           break;
+
         case C_VOID:
           break;
         }
@@ -692,18 +692,6 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
   generate_plsql_function (pout, fun);
   (void) fprintf (pout, "\n  IS\n");
 
-#if PLSQL_CHECK_BOUNDS != 0
-  /* define local variables for all parameters: needed for bounds checking */
-  for (nr = 0; nr < fun->num_parameters; nr++)
-    {
-      parm = fun->parameters[nr];
-
-      (void) fprintf (pout, "    ");
-      print_variable_definition (pout, parm, PLSQL, (int) nr);
-      (void) fprintf (pout, ";\n");
-    }
-#endif
-
   /* RETURN VARIABLE */
   if (fun->return_value.datatype != C_VOID)
     {
@@ -722,20 +710,36 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
     {
       parm = fun->parameters[nr];
 
-      if (parm->mode != C_OUT)
-#if PLSQL_CHECK_BOUNDS != 0
-        (void) fprintf (pout,
-                        "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, l_%s);\n",
-                        parm->name,
-                        get_constant_name (parm->datatype, PLSQL),
-                        parm->name);
-#else
-        (void) fprintf (pout,
-                        "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s);\n",
-                        parm->name,
-                        get_constant_name (parm->datatype, PLSQL),
-                        parm->name);
-#endif
+      if (parm->mode != C_OUT) 
+	{
+	  switch (parm->datatype)
+	    {
+	    case C_INT:
+	    case C_LONG:
+	    case C_FLOAT:
+	    case C_DOUBLE:
+	    case C_DATE:
+	      (void) fprintf (pout,
+			      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s);\n",
+			      parm->name,
+			      get_constant_name (parm->datatype, PLSQL),
+			      parm->name);
+	      break;
+
+	    case C_STRING:
+	    case C_XML:
+	      (void) fprintf (pout,
+			      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s, %ld);\n",
+			      parm->name,
+			      get_constant_name (parm->datatype, PLSQL),
+			      parm->name,
+			      parm->size);
+	      break;
+
+	    case C_VOID:
+	      break;
+	    }
+	}
     }
 
   (void) fprintf (pout,
@@ -753,21 +757,33 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun)
       parm = fun->parameters[nr];
       if (parm->mode != C_IN)
         {
-#if PLSQL_CHECK_BOUNDS != 0
-          (void) fprintf (pout,
-                          "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n    %s := l_%s;\n",
-                          parm->name,
-                          get_constant_name (parm->datatype, PLSQL),
-                          parm->name,
-                          parm->name,
-                          parm->name);
-#else
-          (void) fprintf (pout,
-                          "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n",
-                          parm->name,
-                          get_constant_name (parm->datatype, PLSQL),
-                          parm->name);
-#endif
+	  switch (parm->datatype)
+	    {
+	    case C_INT:
+	    case C_LONG:
+	    case C_FLOAT:
+	    case C_DOUBLE:
+	    case C_DATE:
+	      (void) fprintf (pout,
+			      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n",
+			      parm->name,
+			      get_constant_name (parm->datatype, PLSQL),
+			      parm->name);
+	      break;
+
+	    case C_STRING:
+	    case C_XML:
+	      (void) fprintf (pout,
+			      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s, %ld);\n",
+			      parm->name,
+			      get_constant_name (parm->datatype, PLSQL),
+			      parm->name,
+			      parm->size);
+	      break;
+
+	    case C_VOID:
+	      break;
+	    }
         }
     }
 
@@ -1257,6 +1273,9 @@ generate_c_source (FILE * pout, /*@null@ */ const char *include_text)
     }
 
   (void) fprintf (pout, "\
+#if HAVE_CONFIG_H\n\
+#include <config.h>\n\
+#endif\n\
 #include <string.h>\n\
 #include <stdlib.h>\n\
 #include <epc.h>\n");

@@ -80,6 +80,9 @@ AC_CHECK_PROGS([PLDOC], [$pldoc pldoc], [])
 # doxygen generates documentation from C sources.
 AC_CHECK_PROGS([DOXYGEN], [doxygen], [])
 
+# dbug package ?
+AMX_WITH_DBUG
+
 # Oracle checks
 ACX_PROG_PROC
 ACX_PROG_SQLPLUS
@@ -103,8 +106,6 @@ AC_REPLACE_FUNCS([strtof])
 AC_LIBOBJ([malloc])
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([strstr strdup])
-LIBS="-ldbug $LIBS"
-AC_CHECK_FUNC([dbug_enter],[],[AC_MSG_ERROR(dbug_enter not found)])
 
 AC_ARG_ENABLE([server-interrupt],
               AS_HELP_STRING([--enable-server-interrupt],

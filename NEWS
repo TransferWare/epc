@@ -8,6 +8,7 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 
 Release 5.0.0
 
+* Package dbug can be used or not (--without-dbug).
 * Backwards compatibility for subtypes and exceptions which are part of
   the EPC package specification.
 * The feature server-interrupt has been added to configure. See the
