@@ -1049,13 +1049,29 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 static epc__error_t
 epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
 {
+  unsigned int result;
+
   DBUG_ENTER ("epc__exec_call");
 
   assert (epc__call->epc__error == OK);
 
-  if (epc__xml_parse
-      (epc__info, epc__call, epc__call->msg_request,
-       strlen (epc__call->msg_request)) != 0 || epc__call->epc__error != OK)
+  switch (EPC__CALL_PROTOCOL(epc__call))
+    {
+    case PROTOCOL_DBMS_PIPE:
+
+      break;
+
+    case PROTOCOL_SOAP:
+    case PROTOCOL_XMLRPC:
+      result = epc__xml_parse (epc__info, epc__call, epc__call->msg_request,
+			       strlen (epc__call->msg_request));
+      break;
+
+    default:
+      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN && EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
+    }
+
+  if (result != 0 || epc__call->epc__error != OK)
     {
       assert (epc__call->epc__error == PARSE_ERROR ||
               epc__call->epc__error == INTERFACE_UNKNOWN ||

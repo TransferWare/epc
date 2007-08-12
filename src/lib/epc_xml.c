@@ -417,8 +417,8 @@ error_handler (void *epc__xml_ctx_ptr, const oratext * msg, uword errcode)
       break;
 
     default:
-      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN ||
-             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
+      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_XML_MIN ||
+             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_XML_MAX);
       break;
     }
 
@@ -922,8 +922,8 @@ start_element (void *epc__xml_ctx_ptr,
       break;
 
     default:
-      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN ||
-             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
+      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_XML_MIN ||
+             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_XML_MAX);
       break;
     }
 
@@ -993,8 +993,8 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
       break;
 
     default:
-      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN ||
-             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
+      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_XML_MIN ||
+             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_XML_MAX);
       break;
     }
 
@@ -1135,8 +1135,8 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
       break;
 
     default:
-      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN ||
-             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
+      assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_XML_MIN ||
+             EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_XML_MAX);
       break;
     }
 
