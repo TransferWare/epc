@@ -92,7 +92,7 @@ create or replace package epc_clnt is
        From server: MSG SEQ, PARAMETERS OUT
 
        GJP 07-04-2004
-       RESULT PIPE is v_oneway_result_pipe for oneway functions.
+       RESULT PIPE is 'N/A' for oneway functions.
 
    5 - To server: PROTOCOL, MSG SEQ, SOAP REQUEST MESSAGE [, RESULT PIPE ]
        From server: MSG SEQ, SOAP RESPONSE MESSAGE
@@ -109,8 +109,11 @@ create or replace package epc_clnt is
 
 subtype protocol_subtype is pls_integer;
 
+"N/A" constant epc.pipe_name_subtype := 'N/A';
+
+"DBMS_PIPE" constant protocol_subtype := 4; -- default protocol for DBMS_PIPE
 "SOAP" constant protocol_subtype := 5; -- default protocol for HTTP
-"XMLRPC" constant protocol_subtype := 6; -- default protocol for the TCP, DBMS_PIPE
+"XMLRPC" constant protocol_subtype := 6; -- default protocol for the TCP
 
 subtype epc_key_subtype is binary_integer;
 
@@ -325,10 +328,16 @@ procedure set_inline_namespace
 -- Start a new request
 -- 
 -- @param p_epc_key    The key
+-- @param p_method_name  The method name
+-- @param p_oneway       Is the procedure call a oneway call,
+                         i.e. do we NOT wait on a response? 
+                         0 means we wait on a response.
 */
 procedure new_request
 (
   p_epc_key in epc_key_subtype
+, p_method_name in epc.method_name_subtype
+, p_oneway in pls_integer
 );
 
 /**
@@ -372,16 +381,10 @@ procedure set_request_parameter
 -- Send a request.
 -- 
 -- @param p_epc_key      Connection info can be retrieved by the key
--- @param p_method_name  The method name
--- @param p_oneway       Is the procedure call a oneway call,
-                         i.e. do we NOT wait on a response? 
-                         0 means we wait on a response.
 */
 procedure send_request
 ( 
   p_epc_key in epc_key_subtype
-, p_method_name in epc.method_name_subtype
-, p_oneway in pls_integer
 );
 
 /**

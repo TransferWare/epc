@@ -89,6 +89,8 @@ procedure recv_request
 ( 
   p_epc_key in epc_key_subtype
 , p_msg_request out varchar2
+, p_interface_name out varchar2
+, p_function_name out varchar2
 , p_msg_info out epc_srvr.msg_info_subtype
 )
 is
@@ -104,14 +106,31 @@ begin
     then
       dbms_pipe.unpack_message(l_msg_protocol);
       dbms_pipe.unpack_message(l_msg_seq);
-      dbms_pipe.unpack_message(p_msg_request);
-      if dbms_pipe.next_item_type != 0
-      then
-        dbms_pipe.unpack_message(l_result_pipe);
-        p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
-      else
-        p_msg_info := to_char(l_msg_protocol);
-      end if;
+
+      case 
+        when l_msg_protocol = epc_clnt."DBMS_PIPE"
+	then
+    	  dbms_pipe.unpack_message( p_interface_name );
+    	  dbms_pipe.unpack_message( p_function_name );
+          dbms_pipe.unpack_message(l_result_pipe);
+	  if l_result_pipe != epc_clnt."N/A"
+	  then
+            p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
+          else
+            p_msg_info := to_char(l_msg_protocol);
+          end if;
+
+	when l_msg_protocol in (epc_clnt."SOAP", epc_clnt."XMLRPC")
+	then
+          dbms_pipe.unpack_message(p_msg_request);
+          if dbms_pipe.next_item_type != 0
+          then
+            dbms_pipe.unpack_message(l_result_pipe);
+            p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
+          else
+            p_msg_info := to_char(l_msg_protocol);
+          end if;
+      end case;
     elsif l_retval = 1
     then
       raise epc.e_msg_timed_out;

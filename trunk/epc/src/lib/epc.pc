@@ -516,6 +516,12 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   char *msg_request = epc__call->msg_request;
   EXEC SQL VAR msg_request IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
   short msg_request_nl; /* null indicator */
+  char *interface_name = call->interface_name;
+  EXEC SQL VAR interface_name IS STRING(MAX_INTERFACE_NAME_LEN+1);
+  short interface_name_nl; /* null indicator */
+  char *function_name = call->function_name;
+  EXEC SQL VAR function_name IS STRING(MAX_FUNC_NAME_LEN+1);
+  short function_name_nl; /* null indicator */
   const int msg_timed_out = MSG_TIMED_OUT;
   const int msg_too_big = MSG_TOO_BIG;
   const int msg_interrupted = MSG_INTERRUPTED;
@@ -543,7 +549,13 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   EXEC SQL EXECUTE
   declare
   begin
-    epc_srvr.recv_request(epc_srvr.get_epc_key, :msg_request:msg_request_nl, :msg_info:msg_info_nl);
+    epc_srvr.recv_request
+    ( epc_srvr.get_epc_key
+    , :msg_request:msg_request_nl
+    , :msg_info:msg_info_nl
+    , :interface_name:interface_name_nl
+    , :function_name:function_name_nl
+    );
   exception
     when epc.e_msg_timed_out
     then

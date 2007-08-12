@@ -108,10 +108,13 @@ CONNECTION_METHOD_UTL_HTTP constant connection_method_subtype := 3;
 
 -- types
 type epc_info_rectype is record (
-  interface_name epc.interface_name_subtype,
+  interface_name epc.interface_name_subtype, /* the key */
+
+  method_name epc.method_name_subtype,
+  oneway pls_integer,
 
   /* Protocol information */
-  protocol protocol_subtype default "XMLRPC",
+  protocol protocol_subtype default "DBMS_PIPE",
 
   /* SOAP related information */
   namespace epc.namespace_subtype,
@@ -277,7 +280,7 @@ is
 begin
   epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_DBMS_PIPE;
   epc_info_tab(p_epc_key).request_pipe := p_pipe_name;
-  epc_info_tab(p_epc_key).protocol := epc_clnt."XMLRPC";
+  epc_info_tab(p_epc_key).protocol := epc_clnt."DBMS_PIPE";
 end set_connection_info;
 
 procedure get_connection_info
@@ -338,10 +341,47 @@ end set_inline_namespace;
 procedure new_request
 (
   p_epc_key in epc_key_subtype
+, p_method_name in epc.method_name_subtype
+, p_oneway in pls_integer
 )
 is
 begin
   epc_info_tab(p_epc_key).msg := null;
+  epc_info_tab(p_epc_key).method_name := p_method_name;
+  epc_info_tab(p_epc_key).oneway := p_oneway;
+
+  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
+  then
+    dbms_pipe.reset_buffer;
+    dbms_pipe.pack_message( epc_info_tab(p_epc_key).protocol );
+    g_msg_seq := g_msg_seq + 1;
+    if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
+    --/*DBUG*/ dbms_output.put_line('msg seq: ' || g_msg_seq);
+    dbms_pipe.pack_message( g_msg_seq );
+
+    if epc_info_tab(p_epc_key).protocol = "DBMS_PIPE"
+    then
+      dbms_pipe.pack_message( epc_info_tab(p_epc_key).interface_name );
+      dbms_pipe.pack_message( epc_info_tab(p_epc_key).method_name );
+      if epc_info_tab(p_epc_key).oneway = 0
+      then
+        if g_result_pipe is null
+        then
+          g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
+
+          /* 
+          || GJP 08-01-2001 
+          || Emptying the result pipe seems to prevent timeouts on receipt. 
+          */
+
+          dbms_pipe.purge( g_result_pipe );
+        end if;
+        dbms_pipe.pack_message( g_result_pipe );
+      else
+        dbms_pipe.pack_message( epc_clnt."N/A" );
+      end if;
+    end if;
+  end if;
 end new_request;
 
 procedure set_request_parameter
@@ -524,36 +564,31 @@ end set_request_parameter;
 
 procedure send_request_dbms_pipe( 
   p_epc_key in epc_key_subtype
-, p_protocol in protocol_subtype
 , p_xml_request in varchar2
-, p_oneway in pls_integer
 )
 is
   l_retval pls_integer := -1;
 begin
-  dbms_pipe.reset_buffer;
-  dbms_pipe.pack_message( p_protocol );
-  g_msg_seq := g_msg_seq + 1;
-  if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
-  --/*DBUG*/ dbms_output.put_line('msg seq: ' || g_msg_seq);
-  dbms_pipe.pack_message( g_msg_seq );
-  --/*DBUG*/ dbms_output.put_line(substr('xml request: ' || p_xml_request, 1, 255));
-  dbms_pipe.pack_message( p_xml_request );
-  if p_oneway = 0
+  if epc_info_tab(p_epc_key).protocol in ("SOAP", "XMLRPC")
   then
-    if g_result_pipe is null
+    --/*DBUG*/ dbms_output.put_line(substr('xml request: ' || p_xml_request, 1, 255));
+    dbms_pipe.pack_message( p_xml_request );
+    if epc_info_tab(p_epc_key).oneway = 0
     then
-      g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
+      if g_result_pipe is null
+      then
+        g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
 
-      /* 
-      || GJP 08-01-2001 
-      || Emptying the result pipe seems to prevent timeouts on receipt. 
-      */
+        /* 
+        || GJP 08-01-2001 
+        || Emptying the result pipe seems to prevent timeouts on receipt. 
+        */
 
-      dbms_pipe.purge( g_result_pipe );
+        dbms_pipe.purge( g_result_pipe );
+      end if;
+
+      dbms_pipe.pack_message( g_result_pipe );
     end if;
-
-    dbms_pipe.pack_message( g_result_pipe );
   end if;
 
   l_retval := 
@@ -717,18 +752,20 @@ end get_xmlns;
 procedure send_request
 ( 
   p_epc_key in epc_key_subtype
-, p_method_name in epc.method_name_subtype
-, p_oneway in pls_integer
 )
 is
 begin
   case epc_info_tab(p_epc_key).protocol
+    when "DBMS_PIPE"
+    then
+      null;
+
     when "SOAP"
     then
       epc_info_tab(p_epc_key).msg :=
         epc.SOAP_HEADER_START
         ||'<'
-        ||get_method_name(p_epc_key, p_method_name)
+        ||get_method_name(p_epc_key, epc_info_tab(p_epc_key).method_name)
         ||' '
         ||get_xmlns(p_epc_key)
         ||'="'
@@ -736,7 +773,7 @@ begin
         ||'">'
         ||epc_info_tab(p_epc_key).msg
         ||'</'
-        ||get_method_name(p_epc_key, p_method_name)
+        ||get_method_name(p_epc_key, epc_info_tab(p_epc_key).method_name)
         ||'>'
         ||epc.SOAP_HEADER_END;
     
@@ -746,7 +783,7 @@ begin
         '<methodCall>'
         ||chr(10)
         ||'<methodName>'
-        ||epc_info_tab(p_epc_key).interface_name||'.'||p_method_name
+        ||epc_info_tab(p_epc_key).interface_name||'.'||epc_info_tab(p_epc_key).method_name
         ||'</methodName>'
         ||chr(10)
         ||'<params>'
@@ -761,9 +798,17 @@ begin
       raise program_error;
   end case;
 
-  epc_info_tab(p_epc_key).doc := 
-    xmltype.createxml( epc_info_tab(p_epc_key).msg );
-  --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
+  case 
+    when epc_info_tab(p_epc_key).protocol = "DBMS_PIPE"
+    then
+      null;
+
+    when epc_info_tab(p_epc_key).protocol in ("SOAP", "XMLRPC")
+    then
+      epc_info_tab(p_epc_key).doc := 
+        xmltype.createxml( epc_info_tab(p_epc_key).msg );
+      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
+  end case;
 
   case epc_info_tab(p_epc_key).connection_method
     when CONNECTION_METHOD_DBMS_PIPE
@@ -772,7 +817,6 @@ begin
       ( p_epc_key
       , epc_info_tab(p_epc_key).protocol
       , epc_info_tab(p_epc_key).msg
-      , p_oneway
       );
 
     when CONNECTION_METHOD_UTL_TCP
