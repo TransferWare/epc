@@ -57,6 +57,9 @@ epc__handle_requests ( /*@notnull@ */ epc__info_t * epc__info,
                        epc__error_t (*recv_request) (epc__info_t *, epc__call_t *),
                        epc__error_t (*send_response) (epc__info_t *, epc__call_t *));
 
+extern void
+epc__abort( char *msg );
+
 extern epc__error_t
 epc__connect ( /*@notnull@ */ epc__info_t * epc__info);
 

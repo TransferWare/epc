@@ -34,7 +34,7 @@ typedef struct epc__parameter
   void *data;
 } epc__parameter_t;
 
-struct epc__call;
+struct epc__function;
 
 typedef struct epc__function
 {

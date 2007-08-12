@@ -135,19 +135,50 @@ procedure send_response
 , p_msg_info in epc_srvr.msg_info_subtype
 )
 is
-  l_retval pls_integer;
+begin
+  new_response(p_epc_key, p_msg_info);
+  dbms_pipe.pack_message(p_msg_response);
+  send_response(p_epc_key, p_msg_info);
+end send_response;
+
+procedure new_response
+( 
+  p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
+)
+is
   l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 2, 4), 'FM000X');
-  l_result_pipe constant epc.pipe_name_subtype := substr(p_msg_info, 6);
 begin
   if p_epc_key = g_epc_key
   then
     dbms_pipe.pack_message(l_msg_seq);
-    dbms_pipe.pack_message(p_msg_response);
+  end if;
+end new_response;
+
+procedure send_response
+( 
+  p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
+)
+is
+  l_retval pls_integer;
+  l_result_pipe constant epc.pipe_name_subtype := substr(p_msg_info, 6);
+begin
+  if p_epc_key = g_epc_key
+  then
     l_retval := dbms_pipe.send_message(l_result_pipe, g_response_send_timeout);
-    if l_retval <> 0
-    then
-      raise epc.e_comm_error;
-    end if;
+    case l_retval
+      when 1
+      then
+        raise epc.msg_timed_out;
+
+      when 3
+      then
+        raise epc.msg_interrupted;
+
+      else
+        raise value_error;
+    end case;
   end if;
 end send_response;
 
@@ -163,6 +194,18 @@ begin
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( 'INTERRUPT' );
     l_retval := dbms_pipe.send_message(g_pipe_name);
+    case l_retval
+      when 1
+      then
+        raise epc.msg_timed_out;
+
+      when 3
+      then
+        raise epc.msg_interrupted;
+
+      else
+        raise value_error;
+    end case;
   end if;
 end send_request_interrupt;
 
