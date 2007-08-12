@@ -329,7 +329,6 @@ handle_interrupt(epc__info_t *epc__info)
 
 #endif /* #ifdef SERVER_INTERRUPT */
 
-static
 void
 epc__abort( char *msg )
 {

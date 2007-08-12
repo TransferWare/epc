@@ -41,9 +41,14 @@ create or replace package epc_srvr is
 --    c) epc_srvr.set_request_recv_timeout (optional)<br />
 -- 2) Receive the request<br />
 --    a) epc_srvr.recv_request<br />
--- 3) Process the message (no Oracle calls needed)<br />
+-- 3) Process the message<br />
 -- 4) Send the response<br />
---    a) epc_srvr.send_response<br />
+--    a) epc_srvr.send_response(epc_srvr.get_epc_key, p_msg_response, p_msg_info)<br /> OR
+--    b) epc_srvr.new_response(epc_srvr.get_epc_key, p_msg_info)<br />
+--       dbms_pipe.pack_message(output argument 1)
+--       .
+--       dbms_pipe.pack_message(output argument N)
+--       epc_srvr.send_response(epc_srvr.get_epc_key, p_msg_info)<br />
 --
 -- @headcom
 */
@@ -132,6 +137,28 @@ procedure send_response
 , p_msg_info in epc_srvr.msg_info_subtype
 );
 
+/**
+-- Create a new response, i.e. clear the dbms pipe and put the first results into it.
+-- 
+-- @param p_epc_key       Needed for the connection info
+-- @param p_msg_info      The message information as received by recv_request
+*/
+procedure new_response
+( 
+  p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
+);
+
+/**
+-- Send a response.
+-- 
+-- @param p_epc_key       Needed for the connection info
+*/
+procedure send_response
+( 
+  p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
+);
 
 /**
 -- Interrupt the receipt of a request. When database

@@ -17,7 +17,7 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = demo.c demo.h demo.c demo.pkb \
+GENERATED_FILES      = demo.pc demo.h demo.c demo.pkb \
                        demo.pke demo.pks demo.pls
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES)
@@ -46,6 +46,7 @@ $(IDL):
 
 .idl.c:
 	$(IDL) $<
+	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 # Before running the compiler first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
 	@touch $(@:.c=.pls_run)
@@ -53,5 +54,4 @@ $(IDL):
 .pls.pls_run:
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
 	@touch $@
-
 
