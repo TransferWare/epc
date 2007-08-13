@@ -1049,7 +1049,7 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 static epc__error_t
 epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
 {
-  unsigned int result;
+  unsigned int result = 0;
 
   DBUG_ENTER ("epc__exec_call");
 
