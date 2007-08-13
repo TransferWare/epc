@@ -1058,13 +1058,12 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
   switch (EPC__CALL_PROTOCOL(epc__call))
     {
     case PROTOCOL_DBMS_PIPE:
-
       break;
 
     case PROTOCOL_SOAP:
     case PROTOCOL_XMLRPC:
       result = epc__xml_parse (epc__info, epc__call, epc__call->msg_request,
-			       strlen (epc__call->msg_request));
+                               strlen (epc__call->msg_request));
       break;
 
     default:
@@ -1090,6 +1089,9 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
         {
           switch (EPC__CALL_PROTOCOL(epc__call))
             {
+            case PROTOCOL_DBMS_PIPE:
+              break;
+
             case PROTOCOL_SOAP:
               epc__response_soap(epc__call);
               break;
@@ -1290,4 +1292,95 @@ int
 epc__get_signo (void)
 {
   return G_signo;
+}
+
+
+/**
+ * @brief Lookup the interface in the list of interfaces.
+ *
+ * @param interface_name  The interface name
+ * @param epc__info       The EPC run-time information
+ * @param epc__call       The interface member is set if the interface is found.
+ *                        If not found the epc__error member is set to
+ *                        INTERFACE_UNKNOWN.
+ *
+ ******************************************************************************/
+void
+epc__lookup_interface (const char *interface_name, epc__info_t * epc__info,
+                       epc__call_t * epc__call)
+{
+  dword_t inr;
+  int result;
+
+  assert (epc__info->interfaces != NULL);
+  assert ( interface_name != NULL );
+
+  epc__call->interface = NULL;
+  /* get the interface */
+  for (inr = 0; inr < epc__info->num_interfaces; inr++)
+    if ((result =
+         strcmp (interface_name, epc__info->interfaces[inr]->name)) == 0)
+      {
+        epc__call->interface = epc__info->interfaces[inr];
+        break;
+      }
+    else if (result < 0)        /* interfaces sorted ascending */
+      {
+        break;
+      }
+
+  if (epc__call->interface == NULL)
+    {
+      /* interface not found */
+      fprintf (stderr, "ERROR: interface %s not found\n", interface_name);
+      epc__call->epc__error = INTERFACE_UNKNOWN;
+    }
+}
+
+/**
+ * @brief Lookup the function in the list of functions of an interface.
+ *
+ * @param function_name   The function name
+ * @param epc__info       The EPC run-time information
+ * @param epc__call       The interface member is set if the interface is found.
+ *                        If not found the epc__error member is set to 
+ *                        FUNCTION_UNKNOWN.
+ *
+ ******************************************************************************/
+void
+epc__lookup_function (const char *function_name,
+                      /*@unused@ */ epc__info_t * epc__info,
+                      epc__call_t * epc__call)
+{
+  dword_t fnr;
+  int result;
+
+  assert(function_name != NULL);
+
+  epc__call->function = NULL;
+
+  if (epc__call->interface != NULL)
+    {
+      /* get the function */
+      for (fnr = 0;
+           fnr < epc__call->interface->num_functions; fnr++)
+        if ((result =
+             strcmp (function_name,
+                     epc__call->interface->functions[fnr].name)) == 0)
+          {
+            epc__call->function = &epc__call->interface->functions[fnr];
+            break;
+          }
+        else if (result < 0)    /* interface functions sorted ascending */
+          {
+            break;
+          }
+    }
+
+  if (epc__call->function == NULL)
+    {
+      /* interface not found */
+      fprintf (stderr, "ERROR: function '%s' not found\n", function_name);
+      epc__call->epc__error = FUNCTION_UNKNOWN;
+    }
 }

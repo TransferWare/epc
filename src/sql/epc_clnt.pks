@@ -106,8 +106,7 @@ create or replace package epc_clnt is
        GJP 24-07-2007
 
    7 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
-       From server: a) MSG SEQ, PARAMETERS OUT or
-                    b) ERROR CODE STRING
+       From server: MSG SEQ, ERROR CODE STRING, PARAMETERS OUT
 
        GJP 13-08-2004
        RESULT PIPE is 'N/A' for oneway functions.

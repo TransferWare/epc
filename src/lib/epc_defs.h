@@ -88,15 +88,16 @@ typedef struct epc__call
   long errcode;                 /* error code returned by transport medium */
 } epc__call_t;
 
-#define PROTOCOL_DBMS_PIPE '4'
-#define PROTOCOL_MIN PROTOCOL_DBMS_PIPE
-
 #define PROTOCOL_SOAP '5'
+#define PROTOCOL_MIN PROTOCOL_SOAP
 #define PROTOCOL_XML_MIN PROTOCOL_SOAP
 
 #define PROTOCOL_XMLRPC '6'
 #define PROTOCOL_XML_MAX PROTOCOL_XMLRPC
-#define PROTOCOL_MAX PROTOCOL_XMLRPC
+
+#define PROTOCOL_DBMS_PIPE '7'
+#define PROTOCOL_MAX PROTOCOL_DBMS_PIPE
+
 
 #define EPC__CALL_PROTOCOL(epc__call) (epc__call->msg_info[0])
 

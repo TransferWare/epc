@@ -19,6 +19,15 @@ extern void epc__call_print ( /*@notnull@ */ epc__call_t * call);
 extern int epc__get_signo (void);
 
 extern void
+epc__lookup_interface (const char *interface_name, epc__info_t * epc__info,
+                       epc__call_t * epc__call);
+
+extern void
+epc__lookup_function (const char *function_name,
+                      /*@unused@ */ epc__info_t * epc__info,
+                      epc__call_t * epc__call);
+
+extern void
 epc__set_handle_interrupt (epc__handle_interrupt_t handle_interrupt,
                            epc__info_t * epc__info);
 
@@ -68,5 +77,17 @@ epc__interrupt( /*@notnull@ */ epc__info_t *epc__info );
 
 extern epc__error_t
 epc__disconnect ( /*@notnull@ */ epc__info_t * epc__info);
+
+extern epc__error_t
+epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call );
+
+extern void
+epc__request_native(epc__info_t * epc__info, epc__call_t * epc__call);
+
+extern void
+epc__response_native(epc__info_t * epc__info, epc__call_t * epc__call);
+
+extern epc__error_t
+epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call );
 
 #endif

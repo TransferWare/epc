@@ -88,82 +88,77 @@ end set_response_send_timeout;
 procedure recv_request
 ( 
   p_epc_key in epc_key_subtype
+, p_msg_info out epc_srvr.msg_info_subtype
 , p_msg_request out varchar2
 , p_interface_name out varchar2
 , p_function_name out varchar2
-, p_msg_info out epc_srvr.msg_info_subtype
 )
 is
   l_retval pls_integer;
   l_msg_protocol pls_integer;
   l_msg_seq pls_integer;
-  l_result_pipe epc.pipe_name_subtype;
+  l_result_pipe epc.pipe_name_subtype := null;
 begin
   if p_epc_key = g_epc_key
   then
     l_retval := dbms_pipe.receive_message(g_pipe_name); /* wait forever */
-    if l_retval = 0 /* OK */
-    then
-      dbms_pipe.unpack_message(l_msg_protocol);
-      dbms_pipe.unpack_message(l_msg_seq);
+    case l_retval
+      when 0 /* OK */
+      then
+        dbms_pipe.unpack_message(l_msg_protocol);
+        dbms_pipe.unpack_message(l_msg_seq);
 
-      case 
-        when l_msg_protocol = epc_clnt."DBMS_PIPE"
-	then
-    	  dbms_pipe.unpack_message( p_interface_name );
-    	  dbms_pipe.unpack_message( p_function_name );
-          dbms_pipe.unpack_message(l_result_pipe);
-	  if l_result_pipe != epc_clnt."N/A"
-	  then
-            p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
-          else
-            p_msg_info := to_char(l_msg_protocol);
-          end if;
-
-	when l_msg_protocol in (epc_clnt."SOAP", epc_clnt."XMLRPC")
-	then
-          dbms_pipe.unpack_message(p_msg_request);
-          if dbms_pipe.next_item_type != 0
+        case 
+          when l_msg_protocol = epc_clnt."NATIVE"
           then
+            dbms_pipe.unpack_message(p_interface_name);
+            dbms_pipe.unpack_message(p_function_name);
             dbms_pipe.unpack_message(l_result_pipe);
-            p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
-          else
-            p_msg_info := to_char(l_msg_protocol);
-          end if;
-      end case;
-    elsif l_retval = 1
-    then
-      raise epc.e_msg_timed_out;
-    elsif l_retval = 2
-    then
-      raise epc.e_msg_too_big;
-    elsif l_retval = 3
-    then
-      raise epc.e_msg_interrupted;
-    else
-      /* ?? */
-      raise value_error;
-    end if;
+            if l_result_pipe = epc_clnt."N/A"
+            then
+              l_result_pipe := null;
+            end if;
+
+          when l_msg_protocol in (epc_clnt."SOAP", epc_clnt."XMLRPC")
+          then
+            dbms_pipe.unpack_message(p_msg_request);
+            if dbms_pipe.next_item_type != 0
+            then
+              dbms_pipe.unpack_message(l_result_pipe);
+            end if;
+        end case;
+
+        if l_result_pipe is not null
+        then
+          p_msg_info := to_char(l_msg_protocol) || to_char(l_msg_seq, 'FM000X') || l_result_pipe;
+        else
+          p_msg_info := to_char(l_msg_protocol);
+        end if;
+
+      when 1
+      then
+        raise epc.e_msg_timed_out;
+
+      when 2
+      then
+         raise epc.e_msg_too_big;
+
+      when 3
+      then
+        raise epc.e_msg_interrupted;
+
+      else
+        /* ?? */
+        raise value_error;
+    end case;
   end if;
 end recv_request;
-
-procedure send_response
-( 
-  p_epc_key in epc_key_subtype
-, p_msg_response in varchar2
-, p_msg_info in epc_srvr.msg_info_subtype
-)
-is
-begin
-  new_response(p_epc_key, p_msg_info);
-  dbms_pipe.pack_message(p_msg_response);
-  send_response(p_epc_key, p_msg_info);
-end send_response;
 
 procedure new_response
 ( 
   p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
+, p_error_code in varchar2
 )
 is
   l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 2, 4), 'FM000X');
@@ -171,6 +166,10 @@ begin
   if p_epc_key = g_epc_key
   then
     dbms_pipe.pack_message(l_msg_seq);
+    if p_error_code is not null
+    then
+      dbms_pipe.pack_message(p_error_code);
+    end if;
   end if;
 end new_response;
 
@@ -199,6 +198,19 @@ begin
         raise value_error;
     end case;
   end if;
+end send_response;
+
+procedure send_response
+( 
+  p_epc_key in epc_key_subtype
+, p_msg_response in varchar2
+, p_msg_info in epc_srvr.msg_info_subtype
+)
+is
+begin
+  new_response(p_epc_key => p_epc_key, p_msg_info => p_msg_info, p_error_code => null);
+  dbms_pipe.pack_message(p_msg_response);
+  send_response(p_epc_key => p_epc_key, p_msg_info => p_msg_info);
 end send_response;
 
 procedure send_request_interrupt

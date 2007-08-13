@@ -149,16 +149,6 @@ static
 sword
 element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len);
 
-static
-void
-lookup_interface (const char *interface_name, epc__info_t * epc__info,
-                  epc__call_t * epc__call);
-
-static
-void
-lookup_function (const char *function_name, epc__info_t * epc__info,
-                 epc__call_t * epc__call);
-
 /* GLOBAL functions */
 
 /**
@@ -491,16 +481,16 @@ end_document (void *epc__xml_ctx_ptr)
   assert (epc__call != NULL);
 
   DBUG_PRINT ("info", ("method: %s",
-		       (epc__call->function !=
-			NULL ? epc__call->function->name : "(null)")));
+                       (epc__call->function !=
+                        NULL ? epc__call->function->name : "(null)")));
 
   if (epc__call->function != NULL)
     {
       for (nr = 0; nr < epc__call->function->num_parameters; nr++)
         {
           DBUG_PRINT ("info", ("argument %d; name: %s",
-			       nr, epc__call->function->parameters[nr].name));
-	}
+                               nr, epc__call->function->parameters[nr].name));
+        }
     }
 
   DBUG_LEAVE ();
@@ -668,9 +658,9 @@ start_element (void *epc__xml_ctx_ptr,
 
   DBUG_ENTER ("start_element");
   DBUG_PRINT ("input", ("qname: %s; name: %s; namespace: %s; level: %u",
-			(char *) qname, (char *) name,
-			(namespace == NULL ? "(null)" : (char *) namespace),
-			epc__xml_ctx->level));
+                        (char *) qname, (char *) name,
+                        (namespace == NULL ? "(null)" : (char *) namespace),
+                        epc__xml_ctx->level));
 
   assert (epc__call != NULL);
 
@@ -717,10 +707,10 @@ start_element (void *epc__xml_ctx_ptr,
 
             DBUG_PRINT ("info",
                         ("method: %s; inline namespace: %s",
-			 function_name, epc__call->inline_namespace));
+                         function_name, epc__call->inline_namespace));
 
-            lookup_interface (interface_name, epc__info, epc__call);
-            lookup_function (function_name, epc__info, epc__call);
+            epc__lookup_interface (interface_name, epc__info, epc__call);
+            epc__lookup_function (function_name, epc__info, epc__call);
 
             switch (epc__call->epc__error)
               {
@@ -774,10 +764,10 @@ start_element (void *epc__xml_ctx_ptr,
                 if (epc__call->function->parameters[nr].mode != C_OUT) /* in or in/out */ 
                   {
                     DBUG_PRINT ("info",
-				("parameter[%d]: %s; argument_name: %s",
-				 (int) nr,
-				 epc__call->function->parameters[nr].
-				 name, argument_name));
+                                ("parameter[%d]: %s; argument_name: %s",
+                                 (int) nr,
+                                 epc__call->function->parameters[nr].
+                                 name, argument_name));
                     assert(strcmp(epc__call->function->parameters[nr].name, argument_name) == 0);
                     break;        /* found */
                   }
@@ -850,7 +840,7 @@ start_element (void *epc__xml_ctx_ptr,
 
             DBUG_PRINT ("info",
                         ("arguments parsed so far: %d",
-			 (int) epc__xml_ctx->num_parameters));
+                         (int) epc__xml_ctx->num_parameters));
 
             /* get next in or inout argument */
             for (nr = epc__xml_ctx->num_parameters;
@@ -860,9 +850,9 @@ start_element (void *epc__xml_ctx_ptr,
                   {
                     DBUG_PRINT ("info",
                                 ("parameter[%d]: %s",
-				 (int) nr,
-				 epc__call->function->parameters[nr].
-				 name));
+                                 (int) nr,
+                                 epc__call->function->parameters[nr].
+                                 name));
                     break;        /* found */
                   }
               }
@@ -954,8 +944,8 @@ end_element (void *epc__xml_ctx_ptr, const oratext * name)
 
   DBUG_ENTER ("end_element");
   DBUG_PRINT ("info", ("name: %s; level: %u",
-		       (char *) name,
-		       epc__xml_ctx->level));
+                       (char *) name,
+                       epc__xml_ctx->level));
 
   assert(epc__call != NULL);
 
@@ -1028,8 +1018,8 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
   DBUG_ENTER ("element_content");
 
   DBUG_PRINT ("info", ("level: %u; element content: %*s",
-		       epc__xml_ctx->level,
-		       len, (char *) ch));
+                       epc__xml_ctx->level,
+                       len, (char *) ch));
 
   assert (epc__call != NULL);
 
@@ -1060,22 +1050,22 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
               function_name = ((char *)dot) + 1;
 
               DBUG_PRINT ("info",
-			  ("function: %s",
-			   function_name));
+                          ("function: %s",
+                           function_name));
 
               (void) strncpy(interface_name, (char *)ch, (size_t)(dot - (char *)ch));
               interface_name[(dot - (char *)ch)] = '\0';
 
               DBUG_PRINT ("info",
                           ("interface: %s",
-			   interface_name));
+                           interface_name));
 
               assert (epc__call->function == NULL);
 
               epc__call->inline_namespace[0] = '\0';
 
-              lookup_interface (interface_name, epc__info, epc__call);
-              lookup_function (function_name, epc__info, epc__call);
+              epc__lookup_interface (interface_name, epc__info, epc__call);
+              epc__lookup_function (function_name, epc__info, epc__call);
             }
 
             switch (epc__call->epc__error)
@@ -1145,92 +1135,3 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
   return ecode;
 }
 
-/**
- * @brief Lookup the interface in the list of interfaces.
- *
- * @param interface_name  The interface name
- * @param epc__info       The EPC run-time information
- * @param epc__call       The interface member is set if the interface is found.
- *                        If not found the epc__error member is set to
- *                        INTERFACE_UNKNOWN.
- *
- ******************************************************************************/
-static void
-lookup_interface (const char *interface_name, epc__info_t * epc__info,
-                  epc__call_t * epc__call)
-{
-  dword_t inr;
-  int result;
-
-  assert (epc__info->interfaces != NULL);
-  assert ( interface_name != NULL );
-
-  epc__call->interface = NULL;
-  /* get the interface */
-  for (inr = 0; inr < epc__info->num_interfaces; inr++)
-    if ((result =
-         strcmp (interface_name, epc__info->interfaces[inr]->name)) == 0)
-      {
-        epc__call->interface = epc__info->interfaces[inr];
-        break;
-      }
-    else if (result < 0)        /* interfaces sorted ascending */
-      {
-        break;
-      }
-
-  if (epc__call->interface == NULL)
-    {
-      /* interface not found */
-      fprintf (stderr, "ERROR: interface %s not found\n", interface_name);
-      epc__call->epc__error = INTERFACE_UNKNOWN;
-    }
-}
-
-/**
- * @brief Lookup the function in the list of functions of an interface.
- *
- * @param function_name   The function name
- * @param epc__info       The EPC run-time information
- * @param epc__call       The interface member is set if the interface is found.
- *                        If not found the epc__error member is set to 
- *                        FUNCTION_UNKNOWN.
- *
- ******************************************************************************/
-static void
-lookup_function (const char *function_name,
-                 /*@unused@ */ epc__info_t * epc__info,
-                 epc__call_t * epc__call)
-{
-  dword_t fnr;
-  int result;
-
-  assert(function_name != NULL);
-
-  epc__call->function = NULL;
-
-  if (epc__call->interface != NULL)
-    {
-      /* get the function */
-      for (fnr = 0;
-           fnr < epc__call->interface->num_functions; fnr++)
-        if ((result =
-             strcmp (function_name,
-                     epc__call->interface->functions[fnr].name)) == 0)
-          {
-            epc__call->function = &epc__call->interface->functions[fnr];
-            break;
-          }
-        else if (result < 0)    /* interface functions sorted ascending */
-          {
-            break;
-          }
-    }
-
-  if (epc__call->function == NULL)
-    {
-      /* interface not found */
-      fprintf (stderr, "ERROR: function '%s' not found\n", function_name);
-      epc__call->epc__error = FUNCTION_UNKNOWN;
-    }
-}

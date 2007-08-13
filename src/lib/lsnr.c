@@ -118,13 +118,6 @@ const char vcid[] = "$Id$";
 #include "dmalloc.h"
 #endif
 
-extern
-  epc__error_t
-epc_recv_request_pipe (epc__info_t * epc__info, epc__call_t * epc__call);
-extern
-  epc__error_t
-epc_send_response_pipe (epc__info_t * epc__info, epc__call_t * epc__call);
-
 /* declarations */
 
 static void help (char *procname);
@@ -320,8 +313,8 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
       nr++;                     /* 6 */
       if ((ret =
            ( epc__info->interrupt == 0
-             ? epc__handle_requests (epc__info, epc_recv_request_pipe,
-                                     epc_send_response_pipe)
+             ? epc__handle_requests (epc__info, epc__recv_request_pipe,
+                                     epc__send_response_pipe)
              : epc__interrupt (epc__info) )) != OK)
         break;
 

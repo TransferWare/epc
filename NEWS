@@ -8,6 +8,8 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 
 Release 5.0.0
 
+* The installation directories of the DBUG package are used.
+* On Solaris the math library (-lm) is added to $LIBS (if unset).
 * Package dbug can be used or not (--without-dbug).
 * Backwards compatibility for subtypes and exceptions which are part of
   the EPC package specification.

@@ -41,7 +41,9 @@ can be used. There is one caveat: the libraries should not depend on the
 Cygwin DLL, but on the Microsoft run-time DLLs instead. See the file
 BUGS in the DBUG distribution for more information.
 
-An example for Windows using the Cygwin GCC compiler:
+The configure script will try to set the environment correctly. In case
+that fails the following configure command may be tried (provided dbug
+is installed into /cygdrive/c/usr/local):
 
 ./configure CPPFLAGS="-I/cygdrive/c/usr/local/include" \
 LDFLAGS="-L/cygdrive/c/usr/local/lib" \
@@ -51,8 +53,12 @@ Solaris specific
 ================
 On SUN Solaris version 9 or higher the library libm has to be added to
 the list of libraries, because the Oracle xml library libxml10 needs
-it. This can be done by specifying LIBS=-lm on the configure command
-line. For 64 bit architectures this should be LIBS=-lm64.
+it. 
+
+The configure script will try to set the environment correctly. In case
+that fails the following configure command may be tried:
+
+./configure LIBS="-lm"
 
 Local Variables:
 fill-column: 72
