@@ -114,7 +114,7 @@ type epc_info_rectype is record (
   oneway pls_integer,
 
   /* Protocol information */
-  protocol protocol_subtype default "DBMS_PIPE",
+  protocol protocol_subtype default "NATIVE",
 
   /* SOAP related information */
   namespace epc.namespace_subtype,
@@ -154,228 +154,36 @@ g_msg_seq pls_integer := c_max_msg_seq;
 g_cdata_tag_start constant varchar2(9) := '<![CDATA[';
 g_cdata_tag_end   constant varchar2(3) := ']]>';
 
-g_decimal_char varchar2(1);
+g_decimal_char varchar2(1); -- needed to convert numbers to/from strings
 
--- functions
-function register( p_interface_name in epc.interface_name_subtype )
-return epc_key_subtype
-is
-  l_idx epc_key_subtype;
-begin
-  begin
-    l_idx := get_epc_key( p_interface_name );
-  exception
-    when no_data_found
-    then
-      l_idx := epc_info_tab.count+1;
-      epc_info_tab(l_idx).interface_name := p_interface_name;
-      epc_info_tab(l_idx).namespace := p_interface_name;
-      epc_info_tab(l_idx).inline_namespace := 'ns1';
-  end;
-  return l_idx;
-end register;
-
-function get_epc_key( p_interface_name in epc.interface_name_subtype )
-return epc_key_subtype
-is
-begin
-  if epc_info_tab.count > 0 
-  then
-    for l_idx in epc_info_tab.first .. epc_info_tab.last
-    loop
-      if epc_info_tab(l_idx).interface_name = p_interface_name
-      then
-        return l_idx;
-      end if;
-    end loop;
-  end if;
-  raise no_data_found;
-end get_epc_key;
-
-procedure set_protocol
-(
-  p_epc_key in epc_key_subtype
-, p_protocol in protocol_subtype
-)
-is
-begin
-  if p_protocol in ( "SOAP", "XMLRPC" )
-  then
-    epc_info_tab(p_epc_key).protocol := p_protocol;
-  else
-    raise value_error;
-  end if;
-end set_protocol;
-
-procedure get_protocol
-(
-  p_epc_key in epc_key_subtype
-, p_protocol out protocol_subtype
-)
-is
-begin
-  p_protocol := epc_info_tab(p_epc_key).protocol;
-end get_protocol;
-
-procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_connection in http_connection_subtype
-)
-is
-begin
-  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_HTTP;
-  epc_info_tab(p_epc_key).http_connection := p_connection;
-  epc_info_tab(p_epc_key).protocol := epc_clnt."SOAP";
-end set_connection_info;
-
-procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_connection out http_connection_subtype
-)
-is
-begin
-  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_HTTP
-  then
-    p_connection := epc_info_tab(p_epc_key).http_connection;
-  else
-    raise no_data_found;
-  end if;
-end get_connection_info;
-
-procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_connection in utl_tcp.connection
-)
-is
-begin
-  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_TCP;
-  epc_info_tab(p_epc_key).tcp_connection := p_connection;
-  epc_info_tab(p_epc_key).protocol := epc_clnt."XMLRPC";
-end set_connection_info;
-
-procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_connection out utl_tcp.connection
-)
-is
-begin
-  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_TCP
-  then
-    p_connection := epc_info_tab(p_epc_key).tcp_connection;
-  else
-    raise no_data_found;
-  end if;
-end get_connection_info;
-
-procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_pipe_name in epc.pipe_name_subtype
-)
-is
-begin
-  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_DBMS_PIPE;
-  epc_info_tab(p_epc_key).request_pipe := p_pipe_name;
-  epc_info_tab(p_epc_key).protocol := epc_clnt."DBMS_PIPE";
-end set_connection_info;
-
-procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_pipe_name out epc.pipe_name_subtype
-)
-is
-begin
-  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
-  then
-    p_pipe_name := epc_info_tab(p_epc_key).request_pipe;
-  else
-    raise no_data_found;
-  end if;
-end get_connection_info;
-
-procedure set_request_send_timeout
-(
-  p_epc_key in epc_key_subtype
-, p_request_send_timeout in pls_integer
-)
-is
-begin
-  epc_info_tab(p_epc_key).send_timeout := p_request_send_timeout;
-end set_request_send_timeout;
-
-procedure set_response_recv_timeout
-(
-  p_epc_key in epc_key_subtype
-, p_response_recv_timeout in pls_integer
-)
-is
-begin
-  epc_info_tab(p_epc_key).recv_timeout := p_response_recv_timeout;
-end set_response_recv_timeout;
-
-procedure set_namespace
-(
-  p_epc_key in epc_key_subtype
-, p_namespace in varchar2
-)
-is
-begin
-  epc_info_tab(p_epc_key).namespace := p_namespace;
-end set_namespace;
-
-procedure set_inline_namespace
-(
-  p_epc_key in epc_key_subtype
-, p_inline_namespace in varchar2
-)
-is
-begin
-  epc_info_tab(p_epc_key).inline_namespace := p_inline_namespace;
-end set_inline_namespace;
+-- LOCAL
 
 procedure new_request
-(
-  p_epc_key in epc_key_subtype
-, p_method_name in epc.method_name_subtype
+( p_method_name in epc.method_name_subtype
 , p_oneway in pls_integer
+, p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
 begin
-  epc_info_tab(p_epc_key).msg := null;
-  epc_info_tab(p_epc_key).method_name := p_method_name;
-  epc_info_tab(p_epc_key).oneway := p_oneway;
+  p_epc_info_rec.msg := null;
+  p_epc_info_rec.method_name := p_method_name;
+  p_epc_info_rec.oneway := p_oneway;
 
-  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
+  if p_epc_info_rec.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
     dbms_pipe.reset_buffer;
-    dbms_pipe.pack_message( epc_info_tab(p_epc_key).protocol );
+    dbms_pipe.pack_message( p_epc_info_rec.protocol );
     g_msg_seq := g_msg_seq + 1;
     if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
     --/*DBUG*/ dbms_output.put_line('msg seq: ' || g_msg_seq);
     dbms_pipe.pack_message( g_msg_seq );
 
-    if epc_info_tab(p_epc_key).protocol = "DBMS_PIPE"
+    if p_epc_info_rec.protocol = "NATIVE"
     then
-      dbms_pipe.pack_message( epc_info_tab(p_epc_key).interface_name );
-      dbms_pipe.pack_message( epc_info_tab(p_epc_key).method_name );
-      if epc_info_tab(p_epc_key).oneway = 0
+      dbms_pipe.pack_message( p_epc_info_rec.interface_name );
+      dbms_pipe.pack_message( p_epc_info_rec.method_name );
+      if p_epc_info_rec.oneway = 0
       then
-        if g_result_pipe is null
-        then
-          g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
-
-          /* 
-          || GJP 08-01-2001 
-          || Emptying the result pipe seems to prevent timeouts on receipt. 
-          */
-
-          dbms_pipe.purge( g_result_pipe );
-        end if;
         dbms_pipe.pack_message( g_result_pipe );
       else
         dbms_pipe.pack_message( epc_clnt."N/A" );
@@ -385,12 +193,11 @@ begin
 end new_request;
 
 procedure set_request_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
+( p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in varchar2
 , p_max_bytes in integer
+, p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
 begin
@@ -401,14 +208,18 @@ begin
   then
     raise value_error;
   else
-    case epc_info_tab(p_epc_key).protocol
+    case p_epc_info_rec.protocol
+      when "NATIVE"
+      then
+        dbms_pipe.pack_message(p_value);
+
       when "SOAP"
       then
         case p_data_type
           when epc.data_type_string
           then
-            epc_info_tab(p_epc_key).msg :=
-              epc_info_tab(p_epc_key).msg
+            p_epc_info_rec.msg :=
+              p_epc_info_rec.msg
               ||'<'||p_name||' xsi:type="string">'
               ||g_cdata_tag_start
               ||p_value
@@ -417,8 +228,8 @@ begin
 
           when epc.data_type_xml
           then
-            epc_info_tab(p_epc_key).msg :=
-              epc_info_tab(p_epc_key).msg
+            p_epc_info_rec.msg :=
+              p_epc_info_rec.msg
               ||'<'||p_name||'>'
               ||p_value
               ||'</'||p_name||'>';
@@ -431,8 +242,8 @@ begin
       then
         if p_data_type in (epc.data_type_string, epc.data_type_xml)
         then
-          epc_info_tab(p_epc_key).msg :=
-            epc_info_tab(p_epc_key).msg
+          p_epc_info_rec.msg :=
+            p_epc_info_rec.msg
             ||'<param><value><string>'
             ||g_cdata_tag_start
             ||p_value
@@ -450,11 +261,10 @@ begin
 end set_request_parameter;
 
 procedure set_request_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
+( p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in number
+, p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
   l_data_type varchar2(10);
@@ -463,7 +273,11 @@ begin
   then
     raise epc.e_illegal_null_value;
   else
-    case epc_info_tab(p_epc_key).protocol
+    case p_epc_info_rec.protocol
+      when "NATIVE"
+      then
+        dbms_pipe.pack_message(p_value);
+
       when "SOAP"
       then
         case p_data_type
@@ -483,8 +297,8 @@ begin
             raise value_error;
         end case;
 
-        epc_info_tab(p_epc_key).msg :=
-          epc_info_tab(p_epc_key).msg 
+        p_epc_info_rec.msg :=
+          p_epc_info_rec.msg 
           ||'<'||p_name||' xsi:type="xsd:'||l_data_type||'">'
           ||replace(to_char(p_value), g_decimal_char, '.')
           ||'</'||p_name||'>';
@@ -508,8 +322,8 @@ begin
             raise value_error;
         end case;
 
-        epc_info_tab(p_epc_key).msg :=
-          epc_info_tab(p_epc_key).msg
+        p_epc_info_rec.msg :=
+          p_epc_info_rec.msg
           ||'<param><value><'||l_data_type||'>'
           ||replace(to_char(p_value), g_decimal_char, '.')
           ||'</'||l_data_type||'></value></param>'
@@ -522,39 +336,47 @@ begin
 end set_request_parameter;
 
 procedure set_request_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
+( p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in date
+, p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
-  l_data_type constant varchar2(16) := 'dateTime.iso8601';
+  l_value constant varchar2(17) := 
+    to_char(p_value, 'yyyymmdd')
+    ||'T'
+    ||to_char(p_value, 'hh24:mi:ss');
 begin
   if p_value is null
   then
     raise epc.e_illegal_null_value;
   else
-    case epc_info_tab(p_epc_key).protocol
+    case p_epc_info_rec.protocol
+      when "NATIVE"
+      then
+        dbms_pipe.pack_message(l_value);
+
       when "XMLRPC"
       then
-        case p_data_type
-          when epc.data_type_date
-          then
-            null;
+        declare
+          l_data_type constant varchar2(16) := 'dateTime.iso8601';
+        begin
+          case p_data_type
+            when epc.data_type_date
+            then
+              null;
 
-          else
-            raise value_error;
-        end case;
+            else
+              raise value_error;
+          end case;
 
-        epc_info_tab(p_epc_key).msg :=
-          epc_info_tab(p_epc_key).msg
-          ||'<param><value><'||l_data_type||'>'
-          ||to_char(p_value, 'yyyymmdd')
-          ||'T'
-          ||to_char(p_value, 'hh24:mi:ss')
-          ||'</'||l_data_type||'></value></param>'
-          ||chr(10);
+          p_epc_info_rec.msg :=
+            p_epc_info_rec.msg
+            ||'<param><value><'||l_data_type||'>'
+            ||l_value
+            ||'</'||l_data_type||'></value></param>'
+            ||chr(10);
+        end;
 
       else
         raise program_error;
@@ -562,31 +384,47 @@ begin
   end if;
 end set_request_parameter;
 
-procedure send_request_dbms_pipe( 
-  p_epc_key in epc_key_subtype
-, p_xml_request in varchar2
+function get_method_name
+( p_epc_info_rec in epc_info_rectype
+)
+return varchar2
+is
+begin
+  if p_epc_info_rec.inline_namespace is null
+  then
+    return p_epc_info_rec.method_name;
+  else
+    return p_epc_info_rec.inline_namespace
+    ||':'
+    ||p_epc_info_rec.method_name;
+  end if;
+end get_method_name;
+
+function get_xmlns
+( p_epc_info_rec in epc_info_rectype
+)
+return varchar2
+is
+begin
+  if p_epc_info_rec.inline_namespace is null
+  then
+    return 'xmlns';
+  else
+    return 'xmlns:' || p_epc_info_rec.inline_namespace;
+  end if;
+end get_xmlns;
+
+procedure send_request_dbms_pipe
+( p_epc_info_rec in epc_info_rectype
 )
 is
   l_retval pls_integer := -1;
 begin
-  if epc_info_tab(p_epc_key).protocol in ("SOAP", "XMLRPC")
+  if p_epc_info_rec.protocol in ("SOAP", "XMLRPC")
   then
-    --/*DBUG*/ dbms_output.put_line(substr('xml request: ' || p_xml_request, 1, 255));
-    dbms_pipe.pack_message( p_xml_request );
-    if epc_info_tab(p_epc_key).oneway = 0
+    dbms_pipe.pack_message( p_epc_info_rec.msg );
+    if p_epc_info_rec.oneway = 0
     then
-      if g_result_pipe is null
-      then
-        g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
-
-        /* 
-        || GJP 08-01-2001 
-        || Emptying the result pipe seems to prevent timeouts on receipt. 
-        */
-
-        dbms_pipe.purge( g_result_pipe );
-      end if;
-
       dbms_pipe.pack_message( g_result_pipe );
     end if;
   end if;
@@ -594,8 +432,8 @@ begin
   l_retval := 
     dbms_pipe.send_message
     ( 
-      epc_info_tab(p_epc_key).request_pipe
-    , epc_info_tab(p_epc_key).send_timeout 
+      p_epc_info_rec.request_pipe
+    , p_epc_info_rec.send_timeout 
     );
 
   case l_retval
@@ -621,38 +459,36 @@ begin
   end case;
 end send_request_dbms_pipe;
 
-procedure send_request_utl_http( 
-  p_epc_key in epc_key_subtype
-, p_protocol in protocol_subtype
-, p_xml_request in varchar2
+procedure send_request_utl_http
+( p_epc_info_rec in out nocopy epc_info_rectype
 , p_soap_action in varchar2 default null
 )
 is
 begin
-  epc_info_tab(p_epc_key).http_connection.http_req := 
+  p_epc_info_rec.http_connection.http_req := 
     utl_http.begin_request
     (
-      epc_info_tab(p_epc_key).http_connection.url
-    , epc_info_tab(p_epc_key).http_connection.method
-    , epc_info_tab(p_epc_key).http_connection.version
+      p_epc_info_rec.http_connection.url
+    , p_epc_info_rec.http_connection.method
+    , p_epc_info_rec.http_connection.version
     );
 
-  case p_protocol
+  case p_epc_info_rec.protocol
     when "SOAP"
     then
       utl_http.set_header
       (
-        epc_info_tab(p_epc_key).http_connection.http_req
+        p_epc_info_rec.http_connection.http_req
       , 'Content-Type', 'text/xml'
       );
       utl_http.set_header
       (
-        epc_info_tab(p_epc_key).http_connection.http_req
-      , 'Content-Length', length(p_xml_request)
+        p_epc_info_rec.http_connection.http_req
+      , 'Content-Length', length(p_epc_info_rec.msg)
       );
       utl_http.set_header
       (
-        epc_info_tab(p_epc_key).http_connection.http_req
+        p_epc_info_rec.http_connection.http_req
       , 'SOAPAction', p_soap_action
       );
 
@@ -660,23 +496,18 @@ begin
     then
       utl_http.set_header
       (
-        epc_info_tab(p_epc_key).http_connection.http_req
-      , 'User-Agent', 'EPC/1.0'
+        p_epc_info_rec.http_connection.http_req
+      , 'User-Agent', 'EPC'
       );
-/*      utl_http.set_header
-      (
-        epc_info_tab(p_epc_key).http_connection.http_req
-      , 'Host', utl_inaddr.get_host_name
-      );*/
       utl_http.set_header
       (
-        epc_info_tab(p_epc_key).http_connection.http_req
+        p_epc_info_rec.http_connection.http_req
       , 'Content-Type', 'text/xml'
       );
       utl_http.set_header
       (
-        epc_info_tab(p_epc_key).http_connection.http_req
-      , 'Content-Length', length(p_xml_request)
+        p_epc_info_rec.http_connection.http_req
+      , 'Content-Length', length(p_epc_info_rec.msg)
       );
 
     else
@@ -685,18 +516,16 @@ begin
 
   utl_http.write_text
   (
-    epc_info_tab(p_epc_key).http_connection.http_req
-  , p_xml_request
+    p_epc_info_rec.http_connection.http_req
+  , p_epc_info_rec.msg
   );
 end send_request_utl_http;
 
-procedure send_request_utl_tcp( 
-  p_epc_key in epc_key_subtype
-, p_protocol in protocol_subtype
-, p_xml_request in varchar2
+procedure send_request_utl_tcp
+( p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
-  l_length pls_integer := length(p_xml_request);
+  l_length pls_integer := length(p_epc_info_rec.msg);
   l_offset pls_integer := 1;
   l_bytes_written pls_integer;
 begin
@@ -704,8 +533,8 @@ begin
   loop
     l_bytes_written := 
       utl_tcp.write_text
-      ( c => epc_info_tab(p_epc_key).tcp_connection
-      , data => substr(p_xml_request, l_offset, l_length)
+      ( c => p_epc_info_rec.tcp_connection
+      , data => substr(p_epc_info_rec.msg, l_offset, l_length)
       , len => l_length
       );
 
@@ -716,79 +545,45 @@ begin
   end loop;
 end send_request_utl_tcp;
 
-function get_method_name
-(
-  p_epc_key in epc_key_subtype
-, p_method_name in epc.method_name_subtype
-)
-return varchar2
-is
-begin
-  if epc_info_tab(p_epc_key).inline_namespace is null
-  then
-    return p_method_name;
-  else
-    return epc_info_tab(p_epc_key).inline_namespace
-    ||':'
-    ||p_method_name;
-  end if;
-end get_method_name;
-
-function get_xmlns
-(
-  p_epc_key in epc_key_subtype
-)
-return varchar2
-is
-begin
-  if epc_info_tab(p_epc_key).inline_namespace is null
-  then
-    return 'xmlns';
-  else
-    return 'xmlns:' || epc_info_tab(p_epc_key).inline_namespace;
-  end if;
-end get_xmlns;
-
 procedure send_request
-( 
-  p_epc_key in epc_key_subtype
+( p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
 begin
-  case epc_info_tab(p_epc_key).protocol
-    when "DBMS_PIPE"
+  case p_epc_info_rec.protocol
+    when "NATIVE"
     then
       null;
 
     when "SOAP"
     then
-      epc_info_tab(p_epc_key).msg :=
+      p_epc_info_rec.msg :=
         epc.SOAP_HEADER_START
         ||'<'
-        ||get_method_name(p_epc_key, epc_info_tab(p_epc_key).method_name)
+        ||get_method_name(p_epc_info_rec)
         ||' '
-        ||get_xmlns(p_epc_key)
+        ||get_xmlns(p_epc_info_rec)
         ||'="'
-        ||epc_info_tab(p_epc_key).namespace
+        ||p_epc_info_rec.namespace
         ||'">'
-        ||epc_info_tab(p_epc_key).msg
+        ||p_epc_info_rec.msg
         ||'</'
-        ||get_method_name(p_epc_key, epc_info_tab(p_epc_key).method_name)
+        ||get_method_name(p_epc_info_rec)
         ||'>'
         ||epc.SOAP_HEADER_END;
     
     when "XMLRPC"
     then 
-      epc_info_tab(p_epc_key).msg :=
+      p_epc_info_rec.msg :=
         '<methodCall>'
         ||chr(10)
         ||'<methodName>'
-        ||epc_info_tab(p_epc_key).interface_name||'.'||epc_info_tab(p_epc_key).method_name
+        ||p_epc_info_rec.interface_name||'.'||p_epc_info_rec.method_name
         ||'</methodName>'
         ||chr(10)
         ||'<params>'
         ||chr(10)
-        ||epc_info_tab(p_epc_key).msg
+        ||p_epc_info_rec.msg
         ||'</params>'
         ||chr(10)
         ||'</methodCall>'
@@ -799,36 +594,31 @@ begin
   end case;
 
   case 
-    when epc_info_tab(p_epc_key).protocol = "DBMS_PIPE"
+    when p_epc_info_rec.protocol = "NATIVE"
     then
       null;
 
-    when epc_info_tab(p_epc_key).protocol in ("SOAP", "XMLRPC")
+    when p_epc_info_rec.protocol in ("SOAP", "XMLRPC")
     then
-      epc_info_tab(p_epc_key).doc := 
-        xmltype.createxml( epc_info_tab(p_epc_key).msg );
-      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
+      null;
+/*
+      p_epc_info_rec.doc := 
+        xmltype.createxml( p_epc_info_rec.msg );
+*/
+      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
   end case;
 
-  case epc_info_tab(p_epc_key).connection_method
+  case p_epc_info_rec.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
     then
-      send_request_dbms_pipe
-      ( p_epc_key
-      , epc_info_tab(p_epc_key).protocol
-      , epc_info_tab(p_epc_key).msg
-      );
+      send_request_dbms_pipe(p_epc_info_rec);
 
     when CONNECTION_METHOD_UTL_TCP
     then
-      case epc_info_tab(p_epc_key).protocol
+      case p_epc_info_rec.protocol
         when "XMLRPC"
         then
-          send_request_utl_tcp
-          ( p_epc_key
-          , epc_info_tab(p_epc_key).protocol
-          , epc_info_tab(p_epc_key).msg
-          );
+          send_request_utl_tcp(p_epc_info_rec);
 
         else
           raise program_error;
@@ -836,22 +626,18 @@ begin
 
     when CONNECTION_METHOD_UTL_HTTP
     then
-      case epc_info_tab(p_epc_key).protocol
+      case p_epc_info_rec.protocol
         when "SOAP"
         then
           send_request_utl_http
-          ( p_epc_key => p_epc_key
-          , p_protocol => epc_info_tab(p_epc_key).protocol
-          , p_xml_request => epc_info_tab(p_epc_key).msg
-          , p_soap_action => epc_info_tab(p_epc_key).namespace || '#' || p_method_name
+          ( p_epc_info_rec => p_epc_info_rec
+          , p_soap_action => p_epc_info_rec.namespace || '#' || p_epc_info_rec.method_name
           );
 
         when "XMLRPC"
         then
           send_request_utl_http
-          ( p_epc_key => p_epc_key
-          , p_protocol => epc_info_tab(p_epc_key).protocol
-          , p_xml_request => epc_info_tab(p_epc_key).msg
+          ( p_epc_info_rec => p_epc_info_rec
           );
 
         else
@@ -861,8 +647,7 @@ begin
 end send_request;
 
 procedure recv_response_dbms_pipe
-( 
-  p_epc_key in epc_key_subtype
+( p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
   l_retval pls_integer := -1;
@@ -872,7 +657,7 @@ begin
     dbms_pipe.receive_message
     ( 
       g_result_pipe
-    , epc_info_tab(p_epc_key).recv_timeout 
+    , p_epc_info_rec.recv_timeout
     );
 
   case l_retval
@@ -909,54 +694,79 @@ begin
   end case;
 
   /* Get the message sequence */
-  dbms_pipe.unpack_message( l_msg_seq_result );
+  declare
+    l_error_code_string varchar2(4000);
+    e_wrong_datatype_requested exception;
+    pragma exception_init(e_wrong_datatype_requested, -6559);
+  begin
+    dbms_pipe.unpack_message( l_msg_seq_result );
 
-  if l_msg_seq_result = g_msg_seq
+    if l_msg_seq_result = g_msg_seq
+    then
+      null;
+    else
+      raise_application_error
+      ( epc.c_wrong_protocol
+      , '(epc_clnt.recv_response_dbms_pipe) ' ||
+        'Wrong message number received. ' ||
+        'Expected "' || to_char(g_msg_seq) || '"' ||
+        ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
+      );
+    end if;
+  exception
+    when e_wrong_datatype_requested -- server did send error code string
+    then
+      if p_epc_info_rec.protocol = "NATIVE"
+      then
+        dbms_pipe.unpack_message( l_error_code_string );
+        raise_application_error
+        ( epc.c_comm_error
+        , '(epc_clnt.recv_response_dbms_pipe) ' ||
+          'Server error code "' || l_error_code_string ||
+          '" while receiving message number ' || to_char(g_msg_seq) || '.'
+        );
+
+      else
+        raise;
+      end if;
+  end;
+
+  if p_epc_info_rec.protocol in ("SOAP", "XMLRPC")
   then
-    null;
-  else
-    raise_application_error
-    ( epc.c_wrong_protocol
-    , '(epc_clnt.recv_response_dbms_pipe) ' ||
-      'Wrong message number received. ' ||
-      'Expected "' || to_char(g_msg_seq) || '"' ||
-      ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
-    );
+    dbms_pipe.unpack_message( p_epc_info_rec.msg );
   end if;
-
-  dbms_pipe.unpack_message( epc_info_tab(p_epc_key).msg );
 end recv_response_dbms_pipe;
 
-procedure recv_response_utl_http(
-  p_epc_key in epc_key_subtype
+procedure recv_response_utl_http
+( p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
   http_resp utl_http.resp;
 begin
-  http_resp := 
-    utl_http.get_response(epc_info_tab(p_epc_key).http_connection.http_req);
+  http_resp :=
+    utl_http.get_response(p_epc_info_rec.http_connection.http_req);
   begin
-    utl_http.read_text(http_resp, epc_info_tab(p_epc_key).msg);
+    utl_http.read_text(http_resp, p_epc_info_rec.msg);
     utl_http.end_response(http_resp);
   exception
     when others
     then
-      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).msg);
+      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
       utl_http.end_response(http_resp);
       raise;
   end;
 end recv_response_utl_http;
 
-procedure recv_response_utl_tcp(
-  p_epc_key in epc_key_subtype
+procedure recv_response_utl_tcp
+( p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
   l_bytes_read pls_integer;
 begin
   l_bytes_read := 
     utl_tcp.read_text
-    ( c => epc_info_tab(p_epc_key).tcp_connection
-    , data => epc_info_tab(p_epc_key).msg
+    ( c => p_epc_info_rec.tcp_connection
+    , data => p_epc_info_rec.msg
     , len => 32767
     );
 exception
@@ -968,90 +778,96 @@ exception
     raise;
 end recv_response_utl_tcp;
 
-procedure check_soap_fault(p_doc in out nocopy xmltype) as
-  fault_node   xmltype;
-  fault_code   varchar2(256);
-  fault_string varchar2(32767);
+procedure check_soap_fault
+( p_doc in out nocopy xmltype
+)
+as
+  l_fault_node   xmltype;
+  l_fault_code   varchar2(256);
+  l_fault_string varchar2(32767);
 begin
-  fault_node := p_doc.extract('/SOAP-ENV:Fault', epc."xmlns:SOAP-ENV");
-  if (fault_node is not null) then
-    fault_code := 
-      fault_node.extract
+  l_fault_node := p_doc.extract('/SOAP-ENV:Fault', epc."xmlns:SOAP-ENV");
+  if (l_fault_node is not null) then
+    l_fault_code := 
+      l_fault_node.extract
       (
         '/SOAP-ENV:Fault/faultcode/child::text()'
       , epc."xmlns:SOAP-ENV"
       ).getstringval();
-    fault_string := 
-      fault_node.extract
+    l_fault_string := 
+      l_fault_node.extract
       (
         '/SOAP-ENV:Fault/faultstring/child::text()'
       , epc."xmlns:SOAP-ENV"
       ).getstringval();
-    raise_application_error(epc.c_parse_error, fault_code || ' - ' || fault_string);
+    raise_application_error(epc.c_parse_error, l_fault_code || ' - ' || l_fault_string);
   end if;
 end check_soap_fault;
 
-procedure check_xmlrpc_fault(p_doc in out nocopy xmltype) as
-  fault_node   xmltype;
-  fault_code   varchar2(256);
-  fault_string varchar2(32767);
+procedure check_xmlrpc_fault
+( p_doc in out nocopy xmltype
+)
+as
+  l_fault_node   xmltype;
+  l_fault_code   varchar2(256);
+  l_fault_string varchar2(32767);
 begin
-  fault_node := p_doc.extract('/methodResponse/fault');
-  if (fault_node is not null) then
-    fault_code := 
-      fault_node.extract
+  l_fault_node := p_doc.extract('/methodResponse/fault');
+  if (l_fault_node is not null) then
+    l_fault_code := 
+      l_fault_node.extract
       (
         '/value/struct/member/value/int/child::text()'
       ).getstringval();
-    fault_string := 
-      fault_node.extract
+    l_fault_string := 
+      l_fault_node.extract
       (
         '/value/struct/member/value/string/child::text()'
       ).getstringval();
-    raise_application_error(epc.c_parse_error, fault_code || ' - ' || fault_string);
+    raise_application_error(epc.c_parse_error, l_fault_code || ' - ' || l_fault_string);
   end if;
 end check_xmlrpc_fault;
 
 procedure recv_response
-( 
-  p_epc_key in epc_key_subtype
+( p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
 begin
-  case epc_info_tab(p_epc_key).connection_method
+  case p_epc_info_rec.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
     then
-      recv_response_dbms_pipe(p_epc_key);
+      recv_response_dbms_pipe(p_epc_info_rec);
 
     when CONNECTION_METHOD_UTL_TCP
     then
-      recv_response_utl_tcp(p_epc_key);
+      recv_response_utl_tcp(p_epc_info_rec);
 
     when CONNECTION_METHOD_UTL_HTTP
     then
-      recv_response_utl_http(p_epc_key);
+      recv_response_utl_http(p_epc_info_rec);
   end case;
 
-  --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).msg);
-  epc_info_tab(p_epc_key).doc := xmltype.createxml(epc_info_tab(p_epc_key).msg);
-
-  case epc_info_tab(p_epc_key).protocol
+  case p_epc_info_rec.protocol
     when "SOAP"
     then
-      epc_info_tab(p_epc_key).doc :=
-        epc_info_tab(p_epc_key).doc.extract
+      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
+      p_epc_info_rec.doc :=
+        xmltype.createxml(p_epc_info_rec.msg).extract
         ( '/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()'
         , epc."xmlns:SOAP-ENV"
         );
-      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
-      check_soap_fault(epc_info_tab(p_epc_key).doc);
+      --/*DBUG*/ epc.print(p_epc_info_rec.doc.getstringval());
+      check_soap_fault(p_epc_info_rec.doc);
     
     when "XMLRPC"
     then 
-      --/*DBUG*/ epc.print(epc_info_tab(p_epc_key).doc.getstringval());
-      check_xmlrpc_fault(epc_info_tab(p_epc_key).doc);
+      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
+      p_epc_info_rec.doc := xmltype.createxml(p_epc_info_rec.msg);
 
-      epc_info_tab(p_epc_key).next_out_parameter := 1;
+      --/*DBUG*/ epc.print(p_epc_info_rec.doc.getstringval());
+      check_xmlrpc_fault(p_epc_info_rec.doc);
+
+      p_epc_info_rec.next_out_parameter := 1;
 
     else
       raise program_error;
@@ -1059,105 +875,109 @@ begin
 end recv_response;
 
 procedure get_response_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
+( p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out varchar2
 , p_max_bytes in integer
+, p_epc_info_rec in out nocopy epc_info_rectype
 )
 is
   l_value epc.string_subtype;
   l_xml XMLType;
   l_extract_type varchar2(100);
 begin
-  if p_data_type = epc.data_type_xml
+  if p_epc_info_rec.protocol = "NATIVE"
   then
-    l_extract_type := null; -- 'child::node()';
+    dbms_pipe.unpack_message(p_value);
   else
-    l_extract_type := '/child::text()';
-  end if;
-
-  case epc_info_tab(p_epc_key).protocol
-    when "SOAP"
+    if p_data_type = epc.data_type_xml
     then
-      l_xml := 
-        epc_info_tab(p_epc_key).doc.extract
-        (
-          '//'||p_name||l_extract_type
-        , get_xmlns(p_epc_key)||'="'||epc_info_tab(p_epc_key).namespace||'"'
-        );
-    
-    when "XMLRPC"
-    then 
-      --/*DBUG*/ dbms_output.put_line('next out parameter: ' || epc_info_tab(p_epc_key).next_out_parameter);
-
-      case p_data_type
-        when epc.data_type_xml
-        then
-          null;
-        when epc.data_type_string
-        then
-          l_extract_type := 'string' || l_extract_type;
-        when epc.data_type_int
-        then
-          l_extract_type := 'int' || l_extract_type;
-        when epc.data_type_long
-        then
-          l_extract_type := 'int' || l_extract_type;
-        when epc.data_type_float
-        then
-          l_extract_type := 'double' || l_extract_type;
-        when epc.data_type_double
-        then
-          l_extract_type := 'double' || l_extract_type;
-        when epc.data_type_date
-        then
-          l_extract_type := 'dateTime.iso8601' || l_extract_type;
-        else
-          raise value_error;
-      end case;
-
-      l_xml := 
-        epc_info_tab(p_epc_key).doc.extract
-        (
-          '/methodResponse/params/param['
-          ||epc_info_tab(p_epc_key).next_out_parameter
-          ||']/value/'
-          ||l_extract_type
-        );
-
-      epc_info_tab(p_epc_key).next_out_parameter :=
-        epc_info_tab(p_epc_key).next_out_parameter + 1;
-
+      l_extract_type := null; -- 'child::node()';
     else
-      raise program_error;
-  end case;   
-
-  l_value := l_xml.getstringval();
-
-  if p_data_type = epc.data_type_string
-  then
-    if instr(l_value, g_cdata_tag_start) = 1
-    and instr(l_value, g_cdata_tag_end, length(l_value) - length(g_cdata_tag_end) + 1) > 0
-    then
-      l_value :=
-        substr
-        (
-          l_value
-        , length(g_cdata_tag_start) + 1
-        , length(l_value) - length(g_cdata_tag_start) - length(g_cdata_tag_end)
-        );
+      l_extract_type := '/child::text()';
     end if;
 
-    p_value := 
-      dbms_xmlgen.convert
-      (
-        xmlData => l_value
-      , flag => dbms_xmlgen.entity_decode
-      );
-  else
-    p_value := l_value;
+    case p_epc_info_rec.protocol
+      when "SOAP"
+      then
+        l_xml := 
+          p_epc_info_rec.doc.extract
+          (
+            '//'||p_name||l_extract_type
+          , get_xmlns(p_epc_info_rec)||'="'||p_epc_info_rec.namespace||'"'
+          );
+      
+      when "XMLRPC"
+      then 
+        --/*DBUG*/ dbms_output.put_line('next out parameter: ' || p_epc_info_rec.next_out_parameter);
+
+        case p_data_type
+          when epc.data_type_xml
+          then
+            null;
+          when epc.data_type_string
+          then
+            l_extract_type := 'string' || l_extract_type;
+          when epc.data_type_int
+          then
+            l_extract_type := 'int' || l_extract_type;
+          when epc.data_type_long
+          then
+            l_extract_type := 'int' || l_extract_type;
+          when epc.data_type_float
+          then
+            l_extract_type := 'double' || l_extract_type;
+          when epc.data_type_double
+          then
+            l_extract_type := 'double' || l_extract_type;
+          when epc.data_type_date
+          then
+            l_extract_type := 'dateTime.iso8601' || l_extract_type;
+          else
+            raise value_error;
+        end case;
+
+        l_xml := 
+          p_epc_info_rec.doc.extract
+          (
+            '/methodResponse/params/param['
+            ||p_epc_info_rec.next_out_parameter
+            ||']/value/'
+            ||l_extract_type
+          );
+
+        p_epc_info_rec.next_out_parameter :=
+          p_epc_info_rec.next_out_parameter + 1;
+
+      else
+        raise program_error;
+    end case;   
+
+    l_value := l_xml.getstringval();
+
+    if p_data_type = epc.data_type_string
+    then
+      if instr(l_value, g_cdata_tag_start) = 1
+      and instr(l_value, g_cdata_tag_end, length(l_value) - length(g_cdata_tag_end) + 1) > 0
+      then
+        l_value :=
+          substr
+          (
+            l_value
+          , length(g_cdata_tag_start) + 1
+          , length(l_value) - length(g_cdata_tag_start) - length(g_cdata_tag_end)
+          );
+      end if;
+
+      p_value := 
+        dbms_xmlgen.convert
+        (
+          xmlData => l_value
+        , flag => dbms_xmlgen.entity_decode
+        );
+    else
+      p_value := l_value;
+    end if;
   end if;
 
   if p_max_bytes is not null and lengthb(p_value) > p_max_bytes
@@ -1167,43 +987,355 @@ begin
 end get_response_parameter;
 
 procedure get_response_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value out number
+, p_epc_info_rec in out nocopy epc_info_rectype
+)
+is
+  l_value epc.string_subtype;
+begin
+  if p_epc_info_rec.protocol = "NATIVE"
+  then
+    dbms_pipe.unpack_message(p_value);
+  else
+    epc_clnt.get_response_parameter
+    ( p_name => p_name
+    , p_data_type => p_data_type
+    , p_value => l_value
+    , p_max_bytes => null
+    , p_epc_info_rec => p_epc_info_rec
+    );
+    p_value := to_number(replace(l_value, '.', g_decimal_char));
+  end if;
+end get_response_parameter;
+
+procedure get_response_parameter
+( p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value out date
+, p_epc_info_rec in out nocopy epc_info_rectype
+)
+is
+  l_value epc.string_subtype;
+begin
+  if p_epc_info_rec.protocol = "NATIVE"
+  then
+    dbms_pipe.unpack_message(p_value);
+  else
+    epc_clnt.get_response_parameter
+    ( p_name => p_name
+    , p_data_type => p_data_type
+    , p_value => l_value
+    , p_max_bytes => null
+    , p_epc_info_rec => p_epc_info_rec
+    );
+    p_value := to_date(replace(l_value, 'T'), 'yyyymmddhh24:mi:ss');
+  end if;
+end get_response_parameter;
+
+-- GLOBAL
+function register
+( p_interface_name in epc.interface_name_subtype
+)
+return epc_key_subtype
+is
+  l_idx epc_key_subtype;
+begin
+  begin
+    l_idx := get_epc_key( p_interface_name );
+  exception
+    when no_data_found
+    then
+      l_idx := epc_info_tab.count+1;
+      epc_info_tab(l_idx).interface_name := p_interface_name;
+      epc_info_tab(l_idx).namespace := p_interface_name;
+      epc_info_tab(l_idx).inline_namespace := 'ns1';
+  end;
+  return l_idx;
+end register;
+
+function get_epc_key
+( p_interface_name in epc.interface_name_subtype
+)
+return epc_key_subtype
+is
+begin
+  if epc_info_tab.count > 0 
+  then
+    for l_idx in epc_info_tab.first .. epc_info_tab.last
+    loop
+      if epc_info_tab(l_idx).interface_name = p_interface_name
+      then
+        return l_idx;
+      end if;
+    end loop;
+  end if;
+  raise no_data_found;
+end get_epc_key;
+
+procedure set_protocol
+( p_epc_key in epc_key_subtype
+, p_protocol in protocol_subtype
+)
+is
+begin
+  if p_protocol in ( "SOAP", "XMLRPC" )
+  then
+    epc_info_tab(p_epc_key).protocol := p_protocol;
+  else
+    raise value_error;
+  end if;
+end set_protocol;
+
+procedure get_protocol
+( p_epc_key in epc_key_subtype
+, p_protocol out protocol_subtype
+)
+is
+begin
+  p_protocol := epc_info_tab(p_epc_key).protocol;
+end get_protocol;
+
+procedure set_connection_info
+( p_epc_key in epc_key_subtype
+, p_connection in http_connection_subtype
+)
+is
+begin
+  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_HTTP;
+  epc_info_tab(p_epc_key).http_connection := p_connection;
+  epc_info_tab(p_epc_key).protocol := epc_clnt."SOAP";
+end set_connection_info;
+
+procedure get_connection_info
+( p_epc_key in epc_key_subtype
+, p_connection out http_connection_subtype
+)
+is
+begin
+  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_HTTP
+  then
+    p_connection := epc_info_tab(p_epc_key).http_connection;
+  else
+    raise no_data_found;
+  end if;
+end get_connection_info;
+
+procedure set_connection_info
+( p_epc_key in epc_key_subtype
+, p_connection in utl_tcp.connection
+)
+is
+begin
+  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_UTL_TCP;
+  epc_info_tab(p_epc_key).tcp_connection := p_connection;
+  epc_info_tab(p_epc_key).protocol := epc_clnt."XMLRPC";
+end set_connection_info;
+
+procedure get_connection_info
+( p_epc_key in epc_key_subtype
+, p_connection out utl_tcp.connection
+)
+is
+begin
+  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_UTL_TCP
+  then
+    p_connection := epc_info_tab(p_epc_key).tcp_connection;
+  else
+    raise no_data_found;
+  end if;
+end get_connection_info;
+
+procedure set_connection_info
+( p_epc_key in epc_key_subtype
+, p_pipe_name in epc.pipe_name_subtype
+)
+is
+begin
+  epc_info_tab(p_epc_key).connection_method := CONNECTION_METHOD_DBMS_PIPE;
+  epc_info_tab(p_epc_key).request_pipe := p_pipe_name;
+  epc_info_tab(p_epc_key).protocol := epc_clnt."NATIVE";
+end set_connection_info;
+
+procedure get_connection_info
+( p_epc_key in epc_key_subtype
+, p_pipe_name out epc.pipe_name_subtype
+)
+is
+begin
+  if epc_info_tab(p_epc_key).connection_method = CONNECTION_METHOD_DBMS_PIPE
+  then
+    p_pipe_name := epc_info_tab(p_epc_key).request_pipe;
+  else
+    raise no_data_found;
+  end if;
+end get_connection_info;
+
+procedure set_request_send_timeout
+( p_epc_key in epc_key_subtype
+, p_request_send_timeout in pls_integer
+)
+is
+begin
+  epc_info_tab(p_epc_key).send_timeout := p_request_send_timeout;
+end set_request_send_timeout;
+
+procedure set_response_recv_timeout
+( p_epc_key in epc_key_subtype
+, p_response_recv_timeout in pls_integer
+)
+is
+begin
+  epc_info_tab(p_epc_key).recv_timeout := p_response_recv_timeout;
+end set_response_recv_timeout;
+
+procedure set_namespace
+( p_epc_key in epc_key_subtype
+, p_namespace in varchar2
+)
+is
+begin
+  epc_info_tab(p_epc_key).namespace := p_namespace;
+end set_namespace;
+
+procedure set_inline_namespace
+( p_epc_key in epc_key_subtype
+, p_inline_namespace in varchar2
+)
+is
+begin
+  epc_info_tab(p_epc_key).inline_namespace := p_inline_namespace;
+end set_inline_namespace;
+
+procedure new_request
+( p_epc_key in epc_key_subtype
+, p_method_name in epc.method_name_subtype
+, p_oneway in pls_integer
+)
+is
+begin
+  new_request
+  ( p_method_name
+  , p_oneway
+  , epc_info_tab(p_epc_key)
+  );
+end new_request;
+
+procedure set_request_parameter
+( p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value in varchar2
+, p_max_bytes in integer
+)
+is
+begin
+  set_request_parameter
+  ( p_name
+  , p_data_type
+  , p_value
+  , p_max_bytes
+  , epc_info_tab(p_epc_key)
+  );
+end set_request_parameter;
+
+procedure set_request_parameter
+( p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value in number
+)
+is
+begin
+  set_request_parameter
+  ( p_name
+  , p_data_type
+  , p_value
+  , epc_info_tab(p_epc_key)
+  );
+end set_request_parameter;
+
+procedure set_request_parameter
+( p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value in date
+)
+is
+begin
+  set_request_parameter
+  ( p_name
+  , p_data_type
+  , p_value
+  , epc_info_tab(p_epc_key)
+  );
+end set_request_parameter;
+
+procedure send_request
+( p_epc_key in epc_key_subtype
+)
+is
+begin
+  send_request(epc_info_tab(p_epc_key));
+end send_request;
+
+procedure recv_response
+( p_epc_key in epc_key_subtype
+)
+is
+begin
+  recv_response(epc_info_tab(p_epc_key));
+end recv_response;
+
+procedure get_response_parameter
+( p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value out varchar2
+, p_max_bytes in integer
+)
+is
+begin
+ get_response_parameter
+ ( p_name
+ , p_data_type
+ , p_value
+ , p_max_bytes
+ , epc_info_tab(p_epc_key)
+ );
+end get_response_parameter;
+
+procedure get_response_parameter
+( p_epc_key in epc_key_subtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out number
 )
 is
-  l_value epc.string_subtype;
 begin
-  epc_clnt.get_response_parameter
-  (
-    p_epc_key => p_epc_key
-  , p_name => p_name
-  , p_data_type => p_data_type
-  , p_value => l_value
+  get_response_parameter
+  ( p_name
+  , p_data_type
+  , p_value
+  , epc_info_tab(p_epc_key)
   );
-  p_value := to_number(replace(l_value, '.', g_decimal_char));
 end get_response_parameter;
 
 procedure get_response_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_key in epc_key_subtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out date
 )
 is
-  l_value epc.string_subtype;
 begin
-  epc_clnt.get_response_parameter
-  (
-    p_epc_key => p_epc_key
-  , p_name => p_name
-  , p_data_type => p_data_type
-  , p_value => l_value
+  get_response_parameter
+  ( p_name
+  , p_data_type
+  , p_value
+  , epc_info_tab(p_epc_key)
   );
-  p_value := to_date(replace(l_value, 'T'), 'yyyymmddhh24:mi:ss');
 end get_response_parameter;
 
 begin
@@ -1211,6 +1343,15 @@ begin
   into    g_decimal_char
   from    nls_session_parameters
   where   parameter = 'NLS_NUMERIC_CHARACTERS';
+
+  g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
+
+  /* 
+  || GJP 08-01-2001 
+  || Emptying the result pipe seems to prevent timeouts on receipt. 
+  */
+
+  dbms_pipe.purge( g_result_pipe );
 end epc_clnt;
 /
 
