@@ -46,10 +46,10 @@ $(IDL):
 
 .idl.c:
 	$(IDL) $<
-	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 # Before running the compiler first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
 	@touch $(@:.c=.pls_run)
+	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
 .pls.pls_run:
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?

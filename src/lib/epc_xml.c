@@ -41,6 +41,7 @@ typedef struct {
 
 #define string_defined
 #include <epc_xml.h>
+#include <epc.h>
 
 /* include dmalloc as last one */
 #ifdef WITH_DMALLOC

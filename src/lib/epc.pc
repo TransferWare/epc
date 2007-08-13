@@ -640,9 +640,55 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   return retval;
 }
 
+epc__error_t
+epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
+{
+  EXEC SQL BEGIN DECLARE SECTION;
+  char *msg_info = epc__call->msg_info;
+  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
+  char *msg_response = epc__call->msg_response;
+  EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
+  EXEC SQL END DECLARE SECTION;
+
+  DBUG_ENTER( "epc__send_response_pipe" );
+
+  epc__call->epc__error = OK;
+
+  assert( epc__call->function == NULL || epc__call->function->oneway == 0 );
+
+  sqlca.sqlcode = 0;
+  epc__call->errcode = 0;
+
+  if ( msg_info[0] != '\0' )
+    {
+      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+      EXEC SQL EXECUTE
+      begin
+        epc_srvr.send_response
+        ( p_epc_key => epc_srvr.get_epc_key
+        , p_msg_response => :msg_response
+        , p_msg_info => :msg_info
+        );
+      end;
+      END-EXEC;
+    }
+
+  DBUG_PRINT( "output", 
+              ( "error code: %ld; epc error: %ld", 
+                (long)epc__call->errcode, (long)epc__call->epc__error ) );
+
+  DBUG_LEAVE();
+
+  return epc__call->epc__error;
+}
+
+#ifdef sqlca
+#undef sqlca
+#endif
 
 void
-epc__request_native(epc__info_t * epc__info, epc__call_t * epc__call)
+epc__request_native(epc__call_t * epc__call)
 {
   dword_t nr;
 
@@ -728,7 +774,7 @@ epc__request_native(epc__info_t * epc__info, epc__call_t * epc__call)
 
 
 void
-epc__response_native(epc__info_t * epc__info, epc__call_t * epc__call)
+epc__response_native(epc__call_t * epc__call)
 {
   dword_t nr;
 
@@ -812,47 +858,4 @@ epc__response_native(epc__info_t * epc__info, epc__call_t * epc__call)
   DBUG_LEAVE ();
 }
 
-
-epc__error_t
-epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
-{
-  EXEC SQL BEGIN DECLARE SECTION;
-  char *msg_info = epc__call->msg_info;
-  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-  char *msg_response = epc__call->msg_response;
-  EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
-  EXEC SQL END DECLARE SECTION;
-
-  DBUG_ENTER( "epc__send_response_pipe" );
-
-  epc__call->epc__error = OK;
-
-  assert( epc__call->function == NULL || epc__call->function->oneway == 0 );
-
-  sqlca.sqlcode = 0;
-  epc__call->errcode = 0;
-
-  if ( msg_info[0] != '\0' )
-    {
-      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
-
-      EXEC SQL EXECUTE
-      begin
-        epc_srvr.send_response
-        ( p_epc_key => epc_srvr.get_epc_key
-        , p_msg_response => :msg_response
-        , p_msg_info => :msg_info
-        );
-      end;
-      END-EXEC;
-    }
-
-  DBUG_PRINT( "output", 
-              ( "error code: %ld; epc error: %ld", 
-                (long)epc__call->errcode, (long)epc__call->epc__error ) );
-
-  DBUG_LEAVE();
-
-  return epc__call->epc__error;
-}
-
+/* sqlca is undefined here */
