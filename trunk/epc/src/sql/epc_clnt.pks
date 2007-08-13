@@ -51,7 +51,7 @@ create or replace package epc_clnt is
 -- This package is used to implement the client side of RPC like functionality
 -- on an Oracle database.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (DBMS_PIPE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
+-- supported are database pipes (NATIVE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
 --
 -- The flow of procedure calls will typically look like this:<br />
 -- 1) Set connection information.<br />
@@ -105,15 +105,22 @@ create or replace package epc_clnt is
 
        GJP 24-07-2007
 
+   7 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
+       From server: a) MSG SEQ, PARAMETERS OUT or
+                    b) ERROR CODE STRING
+
+       GJP 13-08-2004
+       RESULT PIPE is 'N/A' for oneway functions.
+
 */
 
 subtype protocol_subtype is pls_integer;
 
 "N/A" constant epc.pipe_name_subtype := 'N/A';
 
-"DBMS_PIPE" constant protocol_subtype := 4; -- default protocol for DBMS_PIPE
 "SOAP" constant protocol_subtype := 5; -- default protocol for HTTP
 "XMLRPC" constant protocol_subtype := 6; -- default protocol for the TCP
+"NATIVE" constant protocol_subtype := 7; -- default protocol for DBMS_PIPE
 
 subtype epc_key_subtype is binary_integer;
 
@@ -327,7 +334,7 @@ procedure set_inline_namespace
 /**
 -- Start a new request
 -- 
--- @param p_epc_key    The key
+-- @param p_epc_key      The key
 -- @param p_method_name  The method name
 -- @param p_oneway       Is the procedure call a oneway call,
                          i.e. do we NOT wait on a response? 
