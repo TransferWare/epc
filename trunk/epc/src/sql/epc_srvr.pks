@@ -80,8 +80,7 @@ return epc_key_subtype;
 -- @param p_pipe_name  The request pipe name
 */
 procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
+( p_epc_key in epc_key_subtype
 , p_pipe_name in epc.pipe_name_subtype
 );
 
@@ -92,8 +91,7 @@ procedure set_connection_info
 -- @param p_pipe_name  The request pipe name
 */
 procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
+( p_epc_key in epc_key_subtype
 , p_pipe_name out epc.pipe_name_subtype
 );
 
@@ -104,23 +102,52 @@ procedure get_connection_info
 -- @param p_response_send_timeout  The response send timeout
 */
 procedure set_response_send_timeout
-(
-  p_epc_key in epc_key_subtype
+( p_epc_key in epc_key_subtype
 , p_response_send_timeout in pls_integer
 );
 
 /**
 -- Receive a request.
 -- 
--- @param p_epc_key      Needed for the connection info
--- @param p_msg_request  The XML describing the request
--- @param p_msg_info     The message information
+-- @param p_epc_key         Needed for the connection info
+-- @param p_msg_info        The message information
+-- @param p_msg_request     The XML describing the request
+--                          (when protocol stored in p_msg_info is SOAP/XMLRPC)
+-- @param p_interface_name  The interface name of the request
+--                          (when protocol stored in p_msg_info is NATIVE)
+-- @param p_function_name   The function name of the request
+--                          (when protocol stored in p_msg_info is NATIVE)
 */
 procedure recv_request
-( 
-  p_epc_key in epc_key_subtype
-, p_msg_request out varchar2
+( p_epc_key in epc_key_subtype
 , p_msg_info out epc_srvr.msg_info_subtype
+, p_msg_request out varchar2
+, p_interface_name out varchar2
+, p_function_name out varchar2
+);
+
+/**
+-- Create a new response, i.e. clear the database pipe and put the metadata into it.
+-- 
+-- @param p_epc_key     Needed for the connection info
+-- @param p_msg_info    The message information as received by recv_request
+-- @param p_error_code  The error code string (OK means no error)
+*/
+procedure new_response
+( p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
+, p_error_code in varchar2
+);
+
+/**
+-- Send a response after all metadata and date has been put into the database pipe.
+-- 
+-- @param p_epc_key   Needed for the connection info
+-- @param p_msg_info  The message information as received by recv_request
+*/
+procedure send_response
+( p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
 );
 
 /**
@@ -134,29 +161,6 @@ procedure send_response
 ( 
   p_epc_key in epc_key_subtype
 , p_msg_response in varchar2
-, p_msg_info in epc_srvr.msg_info_subtype
-);
-
-/**
--- Create a new response, i.e. clear the dbms pipe and put the first results into it.
--- 
--- @param p_epc_key       Needed for the connection info
--- @param p_msg_info      The message information as received by recv_request
-*/
-procedure new_response
-( 
-  p_epc_key in epc_key_subtype
-, p_msg_info in epc_srvr.msg_info_subtype
-);
-
-/**
--- Send a response.
--- 
--- @param p_epc_key       Needed for the connection info
-*/
-procedure send_response
-( 
-  p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
 );
 

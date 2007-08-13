@@ -235,6 +235,7 @@ EXEC SQL INCLUDE sqlca;
 #ifndef ORA_PROC
 #include <dbug.h>
 #include <epc.h>
+#include <idl_defs.h>
 #endif
 
 EXEC SQL BEGIN DECLARE SECTION;
@@ -450,8 +451,6 @@ epc__disconnect( epc__info_t *epc__info )
 {
   epc__error_t status = OK;
 
-  EXEC SQL WHENEVER SQLERROR CONTINUE;
-
   DBUG_ENTER( "epc__disconnect" );
 
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
@@ -462,11 +461,13 @@ epc__disconnect( epc__info_t *epc__info )
 
     (void) printf( "Disconnecting from database....\n" );
 
+    /* All exceptions should be handled within the PL/SQL block hence 
+       this default. */
     EXEC SQL WHENEVER SQLERROR CONTINUE;
 
     switch ( epc__get_signo() )
       {
-      case 0:
+      case 0: /* no signal: OK */
         EXEC SQL COMMIT WORK RELEASE;
         break;
 
@@ -490,7 +491,7 @@ epc__disconnect( epc__info_t *epc__info )
 
 
 epc__error_t
-epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
+epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
      /* ----------------------------------------------------------------------
       * Receives a clients' request from the specified database pipe
       *
@@ -516,10 +517,10 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   char *msg_request = epc__call->msg_request;
   EXEC SQL VAR msg_request IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
   short msg_request_nl; /* null indicator */
-  char *interface_name = call->interface_name;
+  char interface_name[MAX_INTERFACE_NAME_LEN+1];
   EXEC SQL VAR interface_name IS STRING(MAX_INTERFACE_NAME_LEN+1);
   short interface_name_nl; /* null indicator */
-  char *function_name = call->function_name;
+  char function_name[MAX_FUNC_NAME_LEN+1];
   EXEC SQL VAR function_name IS STRING(MAX_FUNC_NAME_LEN+1);
   short function_name_nl; /* null indicator */
   const int msg_timed_out = MSG_TIMED_OUT;
@@ -528,18 +529,14 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   const int receive_error = RECEIVE_ERROR;
   EXEC SQL END DECLARE SECTION;
 
-  DBUG_ENTER( "receive_request" );
+  DBUG_ENTER( "epc__recv_request_pipe" );
 
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   sqlca.sqlcode = 0;
   epc__call->errcode = 0;
 
-  /* All exceptions should be handled within the PL/SQL block hence 
-     this default. */
   EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
-
-  EXEC SQL CONTEXT USE DEFAULT;
 
 #ifdef SERVER_INTERRUPT
   /* set up my user interrupt handler */
@@ -550,11 +547,11 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   declare
   begin
     epc_srvr.recv_request
-    ( epc_srvr.get_epc_key
-    , :msg_request:msg_request_nl
-    , :msg_info:msg_info_nl
-    , :interface_name:interface_name_nl
-    , :function_name:function_name_nl
+    ( p_epc_key => epc_srvr.get_epc_key
+    , p_msg_info => :msg_info:msg_info_nl
+    , p_msg_request => :msg_request:msg_request_nl
+    , p_interface_name => :interface_name:interface_name_nl
+    , p_function_name => :function_name:function_name_nl
     );
   exception
     when epc.e_msg_timed_out
@@ -580,6 +577,10 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
   if ( retval == OK )
     {
+      /* either msg_request OR interface and function must be set */
+      assert( (msg_request_nl == -1 && interface_name_nl != -1 && function_name_nl != -1) ||
+              (msg_request_nl != -1 && interface_name_nl == -1 && function_name_nl == -1) );
+
       if ( msg_request_nl == -1 )
         msg_request[0] = '\0';
 
@@ -592,9 +593,42 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
       DBUG_PRINT( "info", ( "msg_info: %s", msg_info ) );
 
+      if ( interface_name_nl == -1 )
+        interface_name[0] = '\0';
+
+      assert(strlen(interface_name) <= MAX_INTERFACE_NAME_LEN);
+              
+      if ( function_name_nl == -1 )
+        function_name[0] = '\0';
+      
+      assert(strlen(function_name) <= MAX_FUNC_NAME_LEN);
+
 #ifndef DBUG_OFF
       epc__call_print( epc__call );
 #endif
+
+      if (msg_request[0] == '\0')
+        {
+          epc__lookup_interface (interface_name, epc__info, epc__call);
+          epc__lookup_function (function_name, epc__info, epc__call);
+
+          switch (epc__call->epc__error)
+            {
+            case INTERFACE_UNKNOWN:
+              break;
+              
+            case FUNCTION_UNKNOWN:
+              break;
+
+            case OK:
+              break;
+
+            default:
+              assert (epc__call->epc__error == INTERFACE_UNKNOWN
+                      || epc__call->epc__error == FUNCTION_UNKNOWN
+                      || epc__call->epc__error == OK);
+            }
+        }
     }
 
   epc__call->epc__error = retval;
@@ -607,8 +641,180 @@ epc_recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 }
 
 
+void
+epc__request_native(epc__info_t * epc__info, epc__call_t * epc__call)
+{
+  dword_t nr;
+
+  DBUG_ENTER ("epc__request_native");
+
+  assert(epc__call->function != NULL);
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  for (nr = 0; nr < epc__call->function->num_parameters; nr++)
+    {
+      if (epc__call->function->parameters[nr].mode != C_OUT)
+        {
+          /* All input should be not null, hence we do not need indicator variables */
+          EXEC SQL BEGIN DECLARE SECTION;
+          char *l_string = (char *) epc__call->function->parameters[nr].data;
+          EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
+          int *l_int = (idl_int_t *) epc__call->function->parameters[nr].data;
+          long *l_long = (idl_long_t *) epc__call->function->parameters[nr].data;
+          float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
+          double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
+          EXEC SQL END DECLARE SECTION;
+
+          switch (epc__call->function->parameters[nr].type)
+            {
+            case C_DATE:
+            case C_STRING:
+            case C_XML:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.unpack_message(:l_string);
+              end;
+              END-EXEC;
+              assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
+              break;
+
+            case C_INT:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.unpack_message(:l_int);
+              end;
+              END-EXEC;
+              break;
+
+            case C_LONG:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.unpack_message(:l_long);
+              end;
+              END-EXEC;
+              break;
+
+            case C_FLOAT:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.unpack_message(:l_float);
+              end;
+              END-EXEC;
+              break;
+
+            case C_DOUBLE:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.unpack_message(:l_double);
+              end;
+              END-EXEC;
+              break;
+
+            case C_VOID:        /* procedure */
+              assert (epc__call->function->parameters[nr].mode == C_OUT);
+              break;
+
+            default:
+              assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
+                      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+
+            }
+        }
+    }
+
+  DBUG_LEAVE ();
+}
+
+
+void
+epc__response_native(epc__info_t * epc__info, epc__call_t * epc__call)
+{
+  dword_t nr;
+
+  DBUG_ENTER ("epc__response_native");
+
+  assert(epc__call->function != NULL);
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  for (nr = 0; nr < epc__call->function->num_parameters; nr++)
+    {
+      if (epc__call->function->parameters[nr].mode != C_IN)
+        {
+          /* All input should be not null, hence we do not need indicator variables */
+          EXEC SQL BEGIN DECLARE SECTION;
+          char *l_string = (char *) epc__call->function->parameters[nr].data;
+          EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
+          int *l_int = (idl_int_t *) epc__call->function->parameters[nr].data;
+          long *l_long = (idl_long_t *) epc__call->function->parameters[nr].data;
+          float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
+          double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
+          EXEC SQL END DECLARE SECTION;
+
+          switch (epc__call->function->parameters[nr].type)
+            {
+            case C_DATE:
+            case C_STRING:
+            case C_XML:
+              assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.pack_message(:l_string);
+              end;
+              END-EXEC;
+              break;
+
+            case C_INT:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.pack_message(:l_int);
+              end;
+              END-EXEC;
+              break;
+
+            case C_LONG:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.pack_message(:l_long);
+              end;
+              END-EXEC;
+              break;
+
+            case C_FLOAT:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.pack_message(:l_float);
+              end;
+              END-EXEC;
+              break;
+
+            case C_DOUBLE:
+              EXEC SQL EXECUTE
+              begin
+                dbms_pipe.pack_message(:l_double);
+              end;
+              END-EXEC;
+              break;
+
+            case C_VOID:        /* procedure */
+              assert (epc__call->function->parameters[nr].mode == C_OUT);
+              break;
+
+            default:
+              assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
+                      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+
+            }
+        }
+    }
+
+  DBUG_LEAVE ();
+}
+
+
 epc__error_t
-epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
+epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 {
   EXEC SQL BEGIN DECLARE SECTION;
   char *msg_info = epc__call->msg_info;
@@ -617,7 +823,7 @@ epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
   EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
   EXEC SQL END DECLARE SECTION;
 
-  DBUG_ENTER( "send_response" );
+  DBUG_ENTER( "epc__send_response_pipe" );
 
   epc__call->epc__error = OK;
 
@@ -630,10 +836,7 @@ epc_send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
     {
       EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
-      EXEC SQL CONTEXT USE DEFAULT;
-
       EXEC SQL EXECUTE
-      declare
       begin
         epc_srvr.send_response
         ( p_epc_key => epc_srvr.get_epc_key

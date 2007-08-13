@@ -695,15 +695,22 @@ begin
 
   /* Get the message sequence */
   declare
-    l_error_code_string varchar2(4000);
-    e_wrong_datatype_requested exception;
-    pragma exception_init(e_wrong_datatype_requested, -6559);
+    l_error_code varchar2(4000);
   begin
     dbms_pipe.unpack_message( l_msg_seq_result );
 
     if l_msg_seq_result = g_msg_seq
     then
-      null;
+      dbms_pipe.unpack_message( l_error_code );
+      if l_error_code != 'OK'
+      then
+        raise_application_error
+        ( epc.c_comm_error
+        , '(epc_clnt.recv_response_dbms_pipe) ' ||
+          'Server error code "' || l_error_code ||
+          '" while receiving message number ' || to_char(g_msg_seq) || '.'
+        );
+      end if;
     else
       raise_application_error
       ( epc.c_wrong_protocol
@@ -713,22 +720,6 @@ begin
         ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
       );
     end if;
-  exception
-    when e_wrong_datatype_requested -- server did send error code string
-    then
-      if p_epc_info_rec.protocol = "NATIVE"
-      then
-        dbms_pipe.unpack_message( l_error_code_string );
-        raise_application_error
-        ( epc.c_comm_error
-        , '(epc_clnt.recv_response_dbms_pipe) ' ||
-          'Server error code "' || l_error_code_string ||
-          '" while receiving message number ' || to_char(g_msg_seq) || '.'
-        );
-
-      else
-        raise;
-      end if;
   end;
 
   if p_epc_info_rec.protocol in ("SOAP", "XMLRPC")

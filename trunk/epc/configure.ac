@@ -37,7 +37,23 @@ fi
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_SRCDIR([test/main.c])
 AM_CONFIG_HEADER([config.h])
+
+AC_CANONICAL_HOST
+
+case ${host} in
+*-cygwin)
+	test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
+	;;
+*solaris*)
+	test "$LIBS" = "" && LIBS="-lm" && export LIBS
+	;;
+?*)	;;
+*)	AC_MSG_ERROR([Host not set])
+	;;
+esac
+
 AM_INIT_AUTOMAKE
+
 AM_C_PROTOTYPES
 AM_WITH_DMALLOC
 
@@ -50,6 +66,7 @@ x)
 	;;
 esac
 dnl AC_ARG_VAR(PERL,[The program name of Perl.])
+
 AC_PROG_CC
 AM_PROG_LEX
 if test "$LEX" != flex; then
@@ -69,6 +86,7 @@ case "$ac_cv_host" in
 	;;
 *-cygwin)
 	pldoc=pldoc.bat
+	test "$CC" = "" && CC="gcc -mno-cygwin"
 	;;
 *)
 	pldoc=pldoc.sh
@@ -81,7 +99,7 @@ AC_CHECK_PROGS([PLDOC], [$pldoc pldoc], [])
 AC_CHECK_PROGS([DOXYGEN], [doxygen], [])
 
 # dbug package ?
-AMX_WITH_DBUG
+ACX_WITH_DBUG
 
 # Oracle checks
 ACX_PROG_PROC
@@ -152,5 +170,3 @@ Configuration:
 
   See config.h for further configuration information.
 ------------------------------------------------------------------------"
-
-
