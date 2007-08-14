@@ -405,6 +405,7 @@ epc__connect( epc__info_t *epc__info )
         l_pipe_name epc.pipe_name_subtype;
         l_epc_key epc_srvr.epc_key_subtype;
       begin
+        dbms_output.enable(1000000);
         l_epc_key := epc_srvr.register;
         if ( :request_pipe:request_pipe_nl is not null )
         then
@@ -477,6 +478,8 @@ epc__disconnect( epc__info_t *epc__info )
         then :status := 1;
       end;
       END-EXEC;
+
+      DBUG_PRINT( "input", ("dbms_output.get_line; line: %s; status: %d", line, status) );
 
       if (status == 1) {
         break;
