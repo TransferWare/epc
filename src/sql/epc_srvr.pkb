@@ -158,7 +158,7 @@ procedure new_response
 ( 
   p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
-, p_error_code in varchar2
+, p_error_code in pls_integer
 )
 is
   l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 2, 4), 'FM000X');
@@ -166,7 +166,7 @@ begin
   if p_epc_key = g_epc_key
   then
     dbms_pipe.pack_message(l_msg_seq);
-    if p_error_code is not null
+    if p_error_code is not null -- for protocol native
     then
       dbms_pipe.pack_message(p_error_code);
     end if;

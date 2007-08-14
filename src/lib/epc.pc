@@ -646,15 +646,15 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
   EXEC SQL BEGIN DECLARE SECTION;
   char *msg_info = epc__call->msg_info;
   EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-  char *msg_response = epc__call->msg_response;
-  EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
   EXEC SQL END DECLARE SECTION;
 
   DBUG_ENTER( "epc__send_response_pipe" );
 
   epc__call->epc__error = OK;
 
+  assert(epc__call != NULL);
   assert( epc__call->function == NULL || epc__call->function->oneway == 0 );
+  assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
 
   sqlca.sqlcode = 0;
   epc__call->errcode = 0;
@@ -663,15 +663,44 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
     {
       EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
-      EXEC SQL EXECUTE
-      begin
-        epc_srvr.send_response
-        ( p_epc_key => epc_srvr.get_epc_key
-        , p_msg_response => :msg_response
-        , p_msg_info => :msg_info
-        );
-      end;
-      END-EXEC;
+      switch (EPC__CALL_PROTOCOL(epc__call))
+        {
+        case PROTOCOL_NATIVE:
+          EXEC SQL EXECUTE
+          begin
+            epc_srvr.send_response
+            ( p_epc_key => epc_srvr.get_epc_key
+            , p_msg_info => :msg_info
+            );
+          end;
+          END-EXEC;
+          break;
+
+        case PROTOCOL_SOAP:
+        case PROTOCOL_XMLRPC:
+          {
+            EXEC SQL BEGIN DECLARE SECTION;
+            char *msg_response = epc__call->msg_response;
+            EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
+            EXEC SQL END DECLARE SECTION;
+
+            EXEC SQL EXECUTE
+            begin
+              epc_srvr.send_response
+              ( p_epc_key => epc_srvr.get_epc_key
+              , p_msg_response => :msg_response
+              , p_msg_info => :msg_info
+              );
+            end;
+            END-EXEC;
+          }
+          break;
+
+        default:
+          assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_XML_MIN ||
+                 EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_XML_MAX);
+          break;
+        }
     }
 
   DBUG_PRINT( "output", 
@@ -694,7 +723,9 @@ epc__request_native(epc__call_t * epc__call)
 
   DBUG_ENTER ("epc__request_native");
 
+  assert(epc__call != NULL);
   assert(epc__call->function != NULL);
+  assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
 
   EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
@@ -776,13 +807,31 @@ epc__request_native(epc__call_t * epc__call)
 void
 epc__response_native(epc__call_t * epc__call)
 {
+  EXEC SQL BEGIN DECLARE SECTION;
+  char *msg_info = epc__call->msg_info;
+  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
+  char *error_code = epc__get_error_str(epc__call->epc__error);
+  EXEC SQL VAR error_code IS STRING;
+  EXEC SQL END DECLARE SECTION;
   dword_t nr;
 
   DBUG_ENTER ("epc__response_native");
 
+  assert(epc__call != NULL);
   assert(epc__call->function != NULL);
+  assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
 
   EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL EXECUTE
+  begin
+    epc_srvr.new_response
+    ( p_epc_key => epc_srvr.get_epc_key
+    , p_msg_info => :msg_info
+      , p_error_code => :error_code
+    );
+  end;
+  END-EXEC;
 
   for (nr = 0; nr < epc__call->function->num_parameters; nr++)
     {

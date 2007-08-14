@@ -695,14 +695,14 @@ begin
 
   /* Get the message sequence */
   declare
-    l_error_code varchar2(4000);
+    l_error_code pls_integer;
   begin
     dbms_pipe.unpack_message( l_msg_seq_result );
 
     if l_msg_seq_result = g_msg_seq
     then
       dbms_pipe.unpack_message( l_error_code );
-      if l_error_code != 'OK'
+      if l_error_code != 0
       then
         raise_application_error
         ( epc.c_comm_error

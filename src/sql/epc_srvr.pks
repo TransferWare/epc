@@ -131,12 +131,12 @@ procedure recv_request
 -- 
 -- @param p_epc_key     Needed for the connection info
 -- @param p_msg_info    The message information as received by recv_request
--- @param p_error_code  The error code string (OK means no error)
+-- @param p_error_code  The error code (0 means no error)
 */
 procedure new_response
 ( p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
-, p_error_code in varchar2
+, p_error_code in pls_integer
 );
 
 /**

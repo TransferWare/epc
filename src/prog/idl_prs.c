@@ -154,6 +154,7 @@
 #include <assert.h>
 #endif
 
+#include "epc.h"
 #include "idl_prs.h"
 #include "idl_defs.h"
 #include "idl_kwrd.h"
@@ -173,7 +174,8 @@
 #define EPC_PREFIX "_epc_"
 
  /* GJP 6-6-2003 Do not send epc__error nor sqlcode back to the client */
-#define SEND_EPC__ERROR 0
+ /* GJP 14-8-2007 Do send epc__error as error_code back to the client */
+#define SEND_EPC__ERROR 1
 #define SEND_SQLCODE 0
 
 /*
@@ -732,7 +734,7 @@ generate_plsql_function (FILE * pout, idl_function_t * fun, const int package_ty
 #if SEND_EPC__ERROR != 0
                 case 1:
                   print_formal_parameter( pout,
-                                          "epc__error",
+                                          "error_code",
                                           C_IN,
                                           C_INT,
                                           PLSQL );
@@ -859,7 +861,9 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
         {
         case STUB:
           /* SETUP OF CLIENT SIDE FUNCTION CALL */
-          (void) fprintf (pout, "    epc_clnt.new_request(g_epc_key);\n");
+          (void) fprintf (pout,
+                          "    epc_clnt.new_request(g_epc_key, '%s', %ld);\n",
+                          fun->name, fun->oneway);
 
           for (nr = 0; nr < fun->num_parameters; nr++)
             {
@@ -898,8 +902,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
             }
 
           (void) fprintf (pout,
-                          "    epc_clnt.send_request(g_epc_key, '%s', %ld);\n",
-                          fun->name, fun->oneway);
+                          "    epc_clnt.send_request(g_epc_key);\n");
 
           if (fun->oneway == 0)
             {
@@ -959,12 +962,12 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
            * Send the results
            * ---------------- */
           (void) fprintf( pout, "\
-    epc_srvr.new_response( epc_srvr.get_epc_key, msg_info );\n" );
+    epc_srvr.new_response( epc_srvr.get_epc_key, msg_info, error_code );\n" );
 
 #if SEND_EPC__ERROR != 0
           (void) fprintf( pout, "\
-    IF ( epc__error = 0 )\n\
-    THEN\n" );
+    IF ( error_code = %d )\n\
+    THEN\n", OK );
 #endif
           /*
            * Set the in/out and out parameters
@@ -1004,8 +1007,6 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
       sqlcode := SQLCODE;\n" );
 #else
           (void) fprintf( pout, "\
-    DECLARE\n\
-      v_result PLS_INTEGER;\n\
     BEGIN\n\
       epc_srvr.send_response( epc_srvr.get_epc_key, msg_info );\n\
     END;\n" );
@@ -1365,24 +1366,30 @@ generate_c_function (FILE * pout, idl_function_t * fun, const int pc_source)
 
   DBUG_ENTER ("generate_c_function");
 
-  (void) fprintf (pout, "void %s%s ( epc__call_t *call )\n",
+  (void) fprintf (pout, "void %s%s ( epc__call_t *call )\n{\n",
                   EPC_PREFIX, fun->name);
-  (void) fprintf (pout, "{\n");
 
-  if (pc_source != 0) {
-    (void) fprintf( pout, "\
+  if (pc_source != 0)
+    {
+      (void) fprintf( pout, "\
 #ifdef SQLCA\n\
 #undef SQLCA\n\
 #endif\n\
 EXEC SQL INCLUDE sqlca;\n\n" );
-  }
+    }
 
   (void) fprintf( pout, "  epc__function_t *function = call->function;\n" );
-  if (pc_source != 0) {
-    (void) fprintf( pout, "  %s;\n", EXEC_SQL_BEGIN_DECLARE_SECTION );
-    (void) fprintf( pout, "  long sqlcode = 0;\n" );
-    (void) fprintf( pout, "  const char *msg_info = call->msg_info;\n" );
-  }
+
+  if (pc_source != 0) 
+    {
+      (void) fprintf( pout, "\
+  %s;\n\
+  long *error_code = &call->epc__error;\n\
+  long sqlcode = 0;\n\
+  const char *msg_info = call->msg_info;\n\
+  EXEC SQL VAR msg_info IS STRING;\n",
+                    EXEC_SQL_BEGIN_DECLARE_SECTION );
+    }
 
   /* PARAMETERS */
   generate_c_parameters (pout, fun, pc_source);
@@ -1400,54 +1407,61 @@ EXEC SQL INCLUDE sqlca;\n\n" );
       break;
     }
 
-  if (pc_source != 0) {
-    (void) fprintf( pout, "  %s;\n", EXEC_SQL_END_DECLARE_SECTION );
-  }
+  if (pc_source != 0)
+    {
+      (void) fprintf( pout, "  %s;\n", EXEC_SQL_END_DECLARE_SECTION );
+    }
 
   (void) fprintf (pout, "\n  DBUG_ENTER( \"%s\" );\n", fun->name);
 
-  if (pc_source == 0) {
-
-    (void) fprintf( pout, "\
-  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_DBMS_PIPE) {\n\
+  if (pc_source == 0)
+    {
+      (void) fprintf( pout, "\
+  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
+  {\n\
     epc__request_native(call);\n\
   }\n");
+    }
+  else
+    {
+      /*
+       * Get the in and in/out parameters
+       */
+      if ( exists_plsql_function( fun, SKEL_RECV ) != 0 )
+        {
+          (void) fprintf( pout, "\
+  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
+  {\n" );
 
-  } else {
-    /*
-     * Get the in and in/out parameters
-     */
-    if ( exists_plsql_function( fun, SKEL_RECV ) != 0 )
-      {
-        (void) fprintf( pout, "\
-  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_DBMS_PIPE) {\n" );
-
-        /* call the recv function */
-        (void) fprintf( pout, "\
+          /* call the recv function */
+          (void) fprintf( pout, "\
     EXEC SQL WHENEVER SQLERROR DO epc__abort(\"-- Oracle error --\");\n\
     EXEC SQL EXECUTE\n\
     BEGIN\n\
       %s%s.%s", _interface.name, package_type_str[SKEL_RECV], fun->name );
 
-        for ( nr = nr_actual_parameters = 0; nr < fun->num_parameters; nr++ )
-          {
-            idl_parameter_t * parm = fun->parameters[nr];
+          for ( nr = nr_actual_parameters = 0; nr < fun->num_parameters; nr++ )
+            {
+              idl_parameter_t * parm = fun->parameters[nr];
 
-            if ( parm->mode == C_IN || parm->mode == C_INOUT )
-              {
-                (void) fprintf( pout, "%s:l_%s",
-                                ( nr_actual_parameters++ == 0 ? "( " : ", " ), parm->proc_name ); 
-              }
-          }
+              if ( parm->mode == C_IN || parm->mode == C_INOUT )
+                {
+                  (void) fprintf( pout, "%s:l_%s",
+                                  ( nr_actual_parameters++ == 0 ? "( " : ", " ), parm->proc_name ); 
+                }
+            }
 
-        /* close the parameter list if there are actual parameters */
-        (void) fprintf( pout, "%s;\n\
+          /* close the parameter list if there are actual parameters */
+          (void) fprintf( pout, "%s;\n\
+    EXCEPTION\n\
+      WHEN OTHERS\n\
+      THEN :sqlcode := SQLCODE;\n\
     END;\n\
     END-EXEC;\n\
   }\n",
-                        ( nr_actual_parameters == 0 ? "" : " )" ) );
-      }
-  }
+                          ( nr_actual_parameters == 0 ? "" : " )" ) );
+        }
+    }
 
   /* ---------------------------------------------------------------
    * Print the in and in/out parameters, including Oracle error code
@@ -1458,21 +1472,21 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
   (void) fprintf (pout, "\n");
 
-  if (pc_source != 0) {
-    (void) fprintf( pout, "\
+  if (pc_source != 0)
+    {
+      (void) fprintf( pout, "\
   if ( sqlcode != 0 )\n\
   {\n\
-    call->epc__error = RECEIVE_ERROR;\n\
+    *error_code = RECEIVE_ERROR;\n\
   }\n\
   else\n\
   {\n" );
-  }
+    }
 
   /* ---------------
    * THE ACTUAL CALL 
    * --------------- */
   (void) fprintf (pout, "  ");
-
 
   /* set return value if any. Use strncpy for strings */
 
@@ -1484,11 +1498,17 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     case C_STRING:
     case C_XML:
     case C_DATE:
-      (void) fprintf (pout, "%s(void) strncpy( l_%s, ", (pc_source != 0 ? "  " : ""), fun->return_value.proc_name);
+      (void) fprintf (pout,
+                      "%s(void) strncpy( l_%s, ",
+                      (pc_source != 0 ? "  " : ""),
+                      fun->return_value.proc_name);
       break;
 
     default:
-      (void) fprintf (pout, "%s*l_%s = ", (pc_source != 0 ? "  " : ""), fun->return_value.proc_name);
+      (void) fprintf (pout,
+                      "%s*l_%s = ",
+                      (pc_source != 0 ? "  " : ""),
+                      fun->return_value.proc_name);
       break;
     }
 
@@ -1534,7 +1554,8 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
   if (pc_source == 0) {
     (void) fprintf( pout, "\
-  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_DBMS_PIPE) {\n\
+  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
+  {\n\
     epc__response_native(call);\n\
   }\n");
   } else {
@@ -1544,14 +1565,17 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     if ( exists_plsql_function( fun, SKEL_SEND ) != 0 )
       {
         (void) fprintf( pout, "\
-  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_DBMS_PIPE) {\n" );
+  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
+  {\n" );
         /* call the send function */
         (void) fprintf( pout, "\
     EXEC SQL WHENEVER SQLERROR DO epc__abort(\"-- Oracle error --\");\n\
     EXEC SQL EXECUTE\n\
     BEGIN\n\
       %s%s.%s",
-                        _interface.name, package_type_str[SKEL_SEND], fun->name );
+                        _interface.name,
+                        package_type_str[SKEL_SEND],
+                        fun->name );
 
         /*
          * Set the in/out and out parameters
@@ -1563,23 +1587,28 @@ EXEC SQL INCLUDE sqlca;\n\n" );
             if ( parm->mode != C_IN )
               {
                 (void) fprintf( pout, "%s:l_%s",
-                                ( nr_actual_parameters++ == 0 ? "( " : ", " ), parm->proc_name ); 
+                                ( nr_actual_parameters++ == 0 ? "( " : ", " ),
+                                parm->proc_name ); 
               }
           }
         if ( fun->return_value.datatype != C_VOID )
           {
             (void) fprintf( pout, "%s:l_%s",
-                            ( nr_actual_parameters++ == 0 ? "( " : ", " ), fun->return_value.proc_name ); 
+                            ( nr_actual_parameters++ == 0 ? "( " : ", " ),
+                            fun->return_value.proc_name ); 
           }
         (void) fprintf( pout, "%s:%s",
-                        ( nr_actual_parameters++ == 0 ? "( " : ", " ), "msg_info" ); 
+                        ( nr_actual_parameters++ == 0 ? "( " : ", " ),
+                        "msg_info" ); 
 #if SEND_EPC__ERROR != 0
         (void) fprintf( pout, "%s:%s",
-                        ( nr_actual_parameters++ == 0 ? "( " : ", " ), "epc__error" ); 
+                        ( nr_actual_parameters++ == 0 ? "( " : ", " ),
+                        "error_code" ); 
 #endif
 #if SEND_SQLCODE != 0
         (void) fprintf( pout, "%s:%s",
-                      ( nr_actual_parameters++ == 0 ? "( " : ", " ), "sqlcode" );
+                      ( nr_actual_parameters++ == 0 ? "( " : ", " ),
+                        "sqlcode" );
 #endif
 
         (void) fprintf( pout, " );\n\
