@@ -99,6 +99,11 @@ is
   l_msg_seq pls_integer;
   l_result_pipe epc.pipe_name_subtype := null;
 begin
+/*DBUG
+  dbug.enter('epc_srvr.recv_request');
+  dbug.print('input', 'p_epc_key: %s', p_epc_key);
+/*DBUG*/
+
   if p_epc_key = g_epc_key
   then
     l_retval := dbms_pipe.receive_message(g_pipe_name); /* wait forever */
@@ -152,6 +157,14 @@ begin
         raise value_error;
     end case;
   end if;
+
+/*DBUG
+  dbug.print('output', 'p_msg_info: %s', p_msg_info);
+  dbug.print('output', 'p_msg_request: %s', p_msg_request);
+  dbug.print('output', 'p_interface_name: %s', p_interface_name);
+  dbug.print('output', 'p_function_name: %s', p_function_name);
+  dbug.leave;
+/*DBUG*/
 end recv_request;
 
 procedure new_response
@@ -163,6 +176,13 @@ procedure new_response
 is
   l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 2, 4), 'FM000X');
 begin
+/*DBUG
+  dbug.enter('epc_srvr.new_response');
+  dbug.print('input', 'p_epc_key: %s', p_epc_key);
+  dbug.print('input', 'p_msg_info: %s', p_msg_info);
+  dbug.print('input', 'p_error_code: %s', p_error_code);
+/*DBUG*/
+
   if p_epc_key = g_epc_key
   then
     dbms_pipe.pack_message(l_msg_seq);
@@ -171,6 +191,10 @@ begin
       dbms_pipe.pack_message(p_error_code);
     end if;
   end if;
+
+/*DBUG
+  dbug.leave;
+/*DBUG*/
 end new_response;
 
 procedure send_response
@@ -182,6 +206,12 @@ is
   l_retval pls_integer;
   l_result_pipe constant epc.pipe_name_subtype := substr(p_msg_info, 6);
 begin
+/*DBUG
+  dbug.enter('epc_srvr.send_response (1)');
+  dbug.print('input', 'p_epc_key: %s', p_epc_key);
+  dbug.print('input', 'p_msg_info: %s', p_msg_info);
+/*DBUG*/
+
   if p_epc_key = g_epc_key
   then
     l_retval := dbms_pipe.send_message(l_result_pipe, g_response_send_timeout);
@@ -202,6 +232,10 @@ begin
         raise value_error;
     end case;
   end if;
+
+/*DBUG
+  dbug.leave;
+/*DBUG*/
 end send_response;
 
 procedure send_response
@@ -212,9 +246,20 @@ procedure send_response
 )
 is
 begin
+/*DBUG
+  dbug.enter('epc_srvr.send_response (2)');
+  dbug.print('input', 'p_epc_key: %s', p_epc_key);
+  dbug.print('input', 'p_msg_response: %s', p_msg_response);
+  dbug.print('input', 'p_msg_info: %s', p_msg_info);
+/*DBUG*/
+
   new_response(p_epc_key => p_epc_key, p_msg_info => p_msg_info, p_error_code => null);
   dbms_pipe.pack_message(p_msg_response);
   send_response(p_epc_key => p_epc_key, p_msg_info => p_msg_info);
+
+/*DBUG
+  dbug.leave;
+/*DBUG*/
 end send_response;
 
 procedure send_request_interrupt
@@ -224,6 +269,11 @@ procedure send_request_interrupt
 is
   l_retval pls_integer;
 begin
+/*DBUG
+  dbug.enter('epc_srvr.send_request_interrupt');
+  dbug.print('input', 'p_epc_key: %s', p_epc_key);
+/*DBUG*/
+
   if p_epc_key = g_epc_key
   then
     dbms_pipe.reset_buffer;
@@ -246,7 +296,16 @@ begin
         raise value_error;
     end case;
   end if;
+
+/*DBUG
+  dbug.leave;
+/*DBUG*/
 end send_request_interrupt;
 
+begin
+/*DBUG
+  dbug.activate('LOG4PLSQL');
+/*DBUG*/
+  null;
 end epc_srvr;
 /

@@ -1414,6 +1414,9 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
   (void) fprintf (pout, "\n  DBUG_ENTER( \"%s\" );\n", fun->name);
 
+  /*
+   * Get the in and in/out parameters
+   */
   if (pc_source == 0)
     {
       (void) fprintf( pout, "\
@@ -1424,9 +1427,6 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     }
   else
     {
-      /*
-       * Get the in and in/out parameters
-       */
       if ( exists_plsql_function( fun, SKEL_RECV ) != 0 )
         {
           (void) fprintf( pout, "\
@@ -1484,7 +1484,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     }
 
   /* ---------------
-   * THE ACTUAL CALL 
+   * The actual call 
    * --------------- */
   (void) fprintf (pout, "  ");
 
@@ -1552,20 +1552,20 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 
   (void) fprintf (pout, "\n");
 
+  /* ----------------
+   * Send the results
+   * ---------------- */
   if (pc_source == 0) {
     (void) fprintf( pout, "\
-  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
+  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE && call->function->oneway == 0)\n\
   {\n\
     epc__response_native(call);\n\
   }\n");
   } else {
-    /* ----------------
-     * Send the results
-     * ---------------- */
     if ( exists_plsql_function( fun, SKEL_SEND ) != 0 )
       {
         (void) fprintf( pout, "\
-  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
+  if (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE && call->function->oneway == 0)\n\
   {\n" );
         /* call the send function */
         (void) fprintf( pout, "\
