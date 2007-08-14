@@ -165,12 +165,19 @@ procedure new_request
 )
 is
 begin
+/*DBUG
+  dbug.enter('epc_clnt.new_request');
+/*DBUG*/
+
   p_epc_info_rec.msg := null;
   p_epc_info_rec.method_name := p_method_name;
   p_epc_info_rec.oneway := p_oneway;
 
   if p_epc_info_rec.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
+/*DBUG
+    dbug.print('info', 'resetting buffer');
+/*DBUG*/
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( p_epc_info_rec.protocol );
     g_msg_seq := g_msg_seq + 1;
@@ -190,6 +197,10 @@ begin
       end if;
     end if;
   end if;
+
+/*DBUG
+  dbug.leave;
+/*DBUG*/
 end new_request;
 
 procedure set_request_parameter
@@ -653,6 +664,14 @@ is
   l_retval pls_integer := -1;
   l_msg_seq_result pls_integer;
 begin
+/*DBUG
+  dbug.enter('epc_clnt.recv_response_dbms_pipe');
+/*DBUG*/
+
+/*DBUG
+  dbug.print('info', 'receiving from %s', g_result_pipe);
+/*DBUG*/
+
   l_retval :=
     dbms_pipe.receive_message
     ( 
@@ -726,6 +745,10 @@ begin
       ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
     );
   end if;
+
+/*DBUG
+  dbug.leave;
+/*DBUG*/
 end recv_response_dbms_pipe;
 
 procedure recv_response_utl_http
