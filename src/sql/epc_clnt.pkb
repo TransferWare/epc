@@ -182,7 +182,9 @@ begin
     dbms_pipe.pack_message( p_epc_info_rec.protocol );
     g_msg_seq := g_msg_seq + 1;
     if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
-    --/*DBUG*/ dbms_output.put_line('msg seq: ' || g_msg_seq);
+/*DBUG
+    dbug.print('info', 'g_msg_seq: %s', g_msg_seq);
+/*DBUG*/
     dbms_pipe.pack_message( g_msg_seq );
 
     if p_epc_info_rec.protocol = "NATIVE"
@@ -616,7 +618,9 @@ begin
       p_epc_info_rec.doc := 
         xmltype.createxml( p_epc_info_rec.msg );
 */
-      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
+/*DBUG
+      epc.print(p_epc_info_rec.msg);
+/*DBUG*/
   end case;
 
   case p_epc_info_rec.connection_method
@@ -765,7 +769,9 @@ begin
   exception
     when others
     then
-      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
+/*DBUG
+      epc.print(p_epc_info_rec.msg);
+/*DBUG*/
       utl_http.end_response(http_resp);
       raise;
   end;
@@ -868,21 +874,29 @@ begin
 
     when "SOAP"
     then
-      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
+/*DBUG
+      epc.print(p_epc_info_rec.msg);
+/*DBUG*/
       p_epc_info_rec.doc :=
         xmltype.createxml(p_epc_info_rec.msg).extract
         ( '/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()'
         , epc."xmlns:SOAP-ENV"
         );
-      --/*DBUG*/ epc.print(p_epc_info_rec.doc.getstringval());
+/*DBUG
+      epc.print(p_epc_info_rec.doc.getstringval());
+/*DBUG*/
       check_soap_fault(p_epc_info_rec.doc);
     
     when "XMLRPC"
     then 
-      --/*DBUG*/ epc.print(p_epc_info_rec.msg);
+/*DBUG
+      epc.print(p_epc_info_rec.msg);
+/*DBUG*/
       p_epc_info_rec.doc := xmltype.createxml(p_epc_info_rec.msg);
 
-      --/*DBUG*/ epc.print(p_epc_info_rec.doc.getstringval());
+/*DBUG
+      epc.print(p_epc_info_rec.doc.getstringval());
+/*DBUG*/
       check_xmlrpc_fault(p_epc_info_rec.doc);
 
       p_epc_info_rec.next_out_parameter := 1;
@@ -927,8 +941,6 @@ begin
       
       when "XMLRPC"
       then 
-        --/*DBUG*/ dbms_output.put_line('next out parameter: ' || p_epc_info_rec.next_out_parameter);
-
         case p_data_type
           when epc.data_type_xml
           then
