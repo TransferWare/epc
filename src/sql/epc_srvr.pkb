@@ -186,6 +186,10 @@ begin
   then
     l_retval := dbms_pipe.send_message(l_result_pipe, g_response_send_timeout);
     case l_retval
+      when 0 -- OK
+      then
+        null;
+
       when 1
       then
         raise epc.msg_timed_out;
@@ -226,6 +230,10 @@ begin
     dbms_pipe.pack_message( 'INTERRUPT' );
     l_retval := dbms_pipe.send_message(g_pipe_name);
     case l_retval
+      when 0 -- OK
+      then
+        null;
+
       when 1
       then
         raise epc.msg_timed_out;

@@ -694,37 +694,37 @@ begin
   end case;
 
   /* Get the message sequence */
-  declare
-    l_error_code pls_integer;
-  begin
-    dbms_pipe.unpack_message( l_msg_seq_result );
+  dbms_pipe.unpack_message( l_msg_seq_result );
 
-    if l_msg_seq_result = g_msg_seq
-    then
-      dbms_pipe.unpack_message( l_error_code );
-      if l_error_code != 0
-      then
-        raise_application_error
-        ( epc.c_comm_error
-        , '(epc_clnt.recv_response_dbms_pipe) ' ||
-          'Server error code "' || l_error_code ||
-          '" while receiving message number ' || to_char(g_msg_seq) || '.'
-        );
-      end if;
-    else
-      raise_application_error
-      ( epc.c_wrong_protocol
-      , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Wrong message number received. ' ||
-        'Expected "' || to_char(g_msg_seq) || '"' ||
-        ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
-      );
-    end if;
-  end;
-
-  if p_epc_info_rec.protocol in ("SOAP", "XMLRPC")
+  if l_msg_seq_result = g_msg_seq
   then
-    dbms_pipe.unpack_message( p_epc_info_rec.msg );
+    if p_epc_info_rec.protocol = "NATIVE"
+    then
+      declare
+        l_error_code pls_integer;
+      begin
+        dbms_pipe.unpack_message( l_error_code );
+        if l_error_code != 0
+        then
+          raise_application_error
+          ( epc.c_comm_error
+          , '(epc_clnt.recv_response_dbms_pipe) ' ||
+            'Server error code "' || l_error_code ||
+            '" while receiving message number ' || to_char(g_msg_seq) || '.'
+          );
+        end if;
+      end;
+    else
+      dbms_pipe.unpack_message( p_epc_info_rec.msg );
+    end if;
+  else
+    raise_application_error
+    ( epc.c_wrong_protocol
+    , '(epc_clnt.recv_response_dbms_pipe) ' ||
+      'Wrong message number received. ' ||
+      'Expected "' || to_char(g_msg_seq) || '"' ||
+      ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
+    );
   end if;
 end recv_response_dbms_pipe;
 
@@ -839,6 +839,10 @@ begin
   end case;
 
   case p_epc_info_rec.protocol
+    when "NATIVE"
+    then
+      null;
+
     when "SOAP"
     then
       --/*DBUG*/ epc.print(p_epc_info_rec.msg);
@@ -1071,7 +1075,7 @@ procedure set_protocol
 )
 is
 begin
-  if p_protocol in ( "SOAP", "XMLRPC" )
+  if p_protocol in ( "NATIVE", "SOAP", "XMLRPC" )
   then
     epc_info_tab(p_epc_key).protocol := p_protocol;
   else

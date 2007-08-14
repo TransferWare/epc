@@ -458,8 +458,36 @@ epc__disconnect( epc__info_t *epc__info )
   epc__reset_signal_handlers( 0 );
 
   if ( epc__info->connected != 0 ) {
+    EXEC SQL BEGIN DECLARE SECTION;
+    char line[255+1];
+    EXEC SQL VAR line IS STRING(255+1);
+    short line_nl;
+    int status;
+    EXEC SQL END DECLARE SECTION;
 
     (void) printf( "Disconnecting from database....\n" );
+    (void) printf( "Showing dbms_output....\n" );
+
+    while (1) {
+      EXEC SQL EXECUTE
+      begin
+        dbms_output.get_line(:line INDICATOR :line_nl, :status);
+      exception
+        when others
+        then :status := 1;
+      end;
+      END-EXEC;
+
+      if (status == 1) {
+        break;
+      }
+
+      if (line_nl == -1)
+        {
+          line[0] = '\0';
+        }
+      (void) printf( "%s\n", line );
+    }
 
     /* All exceptions should be handled within the PL/SQL block hence 
        this default. */
@@ -654,10 +682,11 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 
   assert(epc__call != NULL);
   assert( epc__call->function == NULL || epc__call->function->oneway == 0 );
-  assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
 
   sqlca.sqlcode = 0;
   epc__call->errcode = 0;
+
+  DBUG_PRINT ("info", ("msg_info: %s", msg_info));
 
   if ( msg_info[0] != '\0' )
     {
@@ -683,6 +712,8 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
             char *msg_response = epc__call->msg_response;
             EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
             EXEC SQL END DECLARE SECTION;
+
+            DBUG_PRINT ("info", ("msg_response: %s", msg_response));
 
             EXEC SQL EXECUTE
             begin
@@ -724,8 +755,11 @@ epc__request_native(epc__call_t * epc__call)
   DBUG_ENTER ("epc__request_native");
 
   assert(epc__call != NULL);
+  assert(epc__call->interface != NULL);
   assert(epc__call->function != NULL);
   assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
+
+  DBUG_PRINT ("info", ("method: %s.%s", epc__call->interface->name, epc__call->function->name));
 
   EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
@@ -742,6 +776,10 @@ epc__request_native(epc__call_t * epc__call)
           float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
           double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
           EXEC SQL END DECLARE SECTION;
+
+          DBUG_PRINT ("info", ("parameter: %s (%p)",
+                               epc__call->function->parameters[nr].name,
+                               epc__call->function->parameters[nr].data));
 
           switch (epc__call->function->parameters[nr].type)
             {
@@ -810,16 +848,18 @@ epc__response_native(epc__call_t * epc__call)
   EXEC SQL BEGIN DECLARE SECTION;
   char *msg_info = epc__call->msg_info;
   EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-  char *error_code = epc__get_error_str(epc__call->epc__error);
-  EXEC SQL VAR error_code IS STRING;
+  long error_code = epc__call->epc__error;
   EXEC SQL END DECLARE SECTION;
   dword_t nr;
 
   DBUG_ENTER ("epc__response_native");
 
   assert(epc__call != NULL);
+  assert(epc__call->interface != NULL);
   assert(epc__call->function != NULL);
   assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
+
+  DBUG_PRINT ("info", ("method: %s.%s", epc__call->interface->name, epc__call->function->name));
 
   EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
@@ -828,7 +868,7 @@ epc__response_native(epc__call_t * epc__call)
     epc_srvr.new_response
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info
-      , p_error_code => :error_code
+    , p_error_code => :error_code
     );
   end;
   END-EXEC;
@@ -846,6 +886,10 @@ epc__response_native(epc__call_t * epc__call)
           float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
           double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
           EXEC SQL END DECLARE SECTION;
+
+          DBUG_PRINT ("info", ("parameter: %s (%p)",
+                               epc__call->function->parameters[nr].name,
+                               epc__call->function->parameters[nr].data));
 
           switch (epc__call->function->parameters[nr].type)
             {

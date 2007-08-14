@@ -40,10 +40,11 @@ IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 	$(IDL) $<
 # first compile the package
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
+#	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
 
 EXTRA_DIST           = epctest.ref epctest.sql str.sql
 
-TESTS = test.soap test.xmlrpc
+TESTS = test.soap test.xmlrpc test.native
 
 COUNT = 1000
 
@@ -74,6 +75,15 @@ test.xmlrpc: $(FORCE)
 	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
 	sleep 5
 	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) XMLRPC 2>&1 | tee $@.client.log
+	@$(STOP_SERVER)
+	$(DIFF) epctest.lis $(srcdir)/epctest.ref
+	@echo : > $@ && chmod +x $@
+
+test.native: $(FORCE)
+	$(START_SERVER) 1>$@.server.log 2>&1
+	while ! grep "Connected to database...." $@.server.log; do sleep 1; done
+	sleep 5
+	time echo exit SQL.SQLCODE | $(SQLPLUS) -s $(USERID) @$(srcdir)/epctest.sql $(COUNT) NATIVE 2>&1 | tee $@.client.log
 	@$(STOP_SERVER)
 	$(DIFF) epctest.lis $(srcdir)/epctest.ref
 	@echo : > $@ && chmod +x $@
