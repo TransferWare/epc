@@ -1000,16 +1000,10 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
 
 #if SEND_SQLCODE != 0
           (void) fprintf( pout, "\
-    epc_srvr.send_response( epc_srvr.get_epc_key, msg_info );\n\
   EXCEPTION\n\
     WHEN  OTHERS\n\
     THEN\n\
       sqlcode := SQLCODE;\n" );
-#else
-          (void) fprintf( pout, "\
-    BEGIN\n\
-      epc_srvr.send_response( epc_srvr.get_epc_key, msg_info );\n\
-    END;\n" );
 #endif
           break;
 

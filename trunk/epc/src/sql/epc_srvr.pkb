@@ -106,6 +106,9 @@ begin
 
   if p_epc_key = g_epc_key
   then
+/*DBUG
+    dbug.print('info', 'receiving from %s', g_pipe_name);
+/*DBUG*/
     l_retval := dbms_pipe.receive_message(g_pipe_name); /* wait forever */
     case l_retval
       when 0 /* OK */
@@ -214,6 +217,9 @@ begin
 
   if p_epc_key = g_epc_key
   then
+/*DBUG
+    dbug.print('info', 'sending to %s', l_result_pipe);
+/*DBUG*/
     l_retval := dbms_pipe.send_message(l_result_pipe, g_response_send_timeout);
     case l_retval
       when 0 -- OK
@@ -276,8 +282,17 @@ begin
 
   if p_epc_key = g_epc_key
   then
+/*DBUG
+    dbug.print('info', 'resetting buffer');
+/*DBUG*/
+
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( 'INTERRUPT' );
+
+/*DBUG
+    dbug.print('info', 'sending to %s', g_pipe_name);
+/*DBUG*/
+
     l_retval := dbms_pipe.send_message(g_pipe_name);
     case l_retval
       when 0 -- OK

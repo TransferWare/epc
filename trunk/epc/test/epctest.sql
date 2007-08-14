@@ -107,9 +107,9 @@ BEGIN
 END;
 /
 
-define function = nothing1
+define function = nothing2
 
-prompt Performance test doing &&N number of calls doing nothing with results returned.
+prompt Performance test doing &&N number of calls doing nothing without results returned.
 DECLARE
   l_count pls_integer := 0;
   l_line varchar2(255);
@@ -134,9 +134,9 @@ BEGIN
 END;
 /
 
-define function = nothing2
+define function = nothing1
 
-prompt Performance test doing &&N number of calls doing nothing without results returned.
+prompt Performance test doing &&N number of calls doing nothing with results returned.
 
 /
 
