@@ -1081,7 +1081,7 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
       assert (epc__call->interface != NULL);
       assert (epc__call->function != NULL);
 
-      (*epc__call->function->function) (epc__call->function);
+      (*epc__call->function->function) (epc__call);
 
       /* construct the response for non oneway functions */
       if (epc__call->function->oneway == 0)
