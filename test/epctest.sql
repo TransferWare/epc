@@ -11,10 +11,23 @@ whenever oserror exit failure
 
 alter session set nls_numeric_characters = '.,';
 
-REM Just start nothing1 to register the interface and next change the protocol
+REM Just start nothing1 to register the interface, change the protocol and set the pipe size
+declare
+  l_pipe_name epc.pipe_name_subtype;
 begin
   epctest.nothing1;
   epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."&&PROTOCOL");
+  epc_clnt.get_connection_info(epc_clnt.get_epc_key('epctest'), l_pipe_name);
+  -- enlarge the pipe
+  if 0 = 
+     dbms_pipe.create_pipe
+     ( pipename => l_pipe_name
+     , maxpipesize => 1000000
+     , private => false
+     )
+  then
+    null;
+  end if;
 end;
 /
 
@@ -81,9 +94,9 @@ begin
   dbms_output.put_line( 'io_par2: ' || v_par2 );
 
   v_result := epctest.proc04( v_par1, v_par2, v_par3 );
-  dbms_output.put_line( 'result: ' || v_result );
-  dbms_output.put_line( 'io_par2: ' || v_par2 );
-  dbms_output.put_line( 'o_par3: ' || v_par3 );
+  dbms_output.put_line( 'result: ' || to_char(v_result, '99.99') );
+  dbms_output.put_line( 'io_par2: ' || to_char(v_par2, '99.99') );
+  dbms_output.put_line( 'o_par3: ' || to_char(v_par3, '99.99') );
 end;
 /
 
