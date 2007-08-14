@@ -38,6 +38,9 @@ extern epc__error_t
 epc__list_main (int argc, char **argv, /*@notnull@ */ epc__interface_t *,
                 ...);
 
+extern /*@observer@*/ char *
+epc__get_error_str (epc__error_t err);
+
 extern /*@notnull@ *//*@only@ */ epc__info_t *
 epc__init (void);
 

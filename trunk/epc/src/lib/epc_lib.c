@@ -528,10 +528,9 @@ epc__cmp_interface (const void *par1, const void *par2)
   return strcmp (ifc1->name, ifc2->name);
 }
 
-static
 /*@observer@*/
 char *
-get_error_str (epc__error_t err)
+epc__get_error_str (epc__error_t err)
 {
   switch (err)
     {
@@ -1057,7 +1056,7 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
 
   switch (EPC__CALL_PROTOCOL(epc__call))
     {
-    case PROTOCOL_DBMS_PIPE:
+    case PROTOCOL_NATIVE:
       break;
 
     case PROTOCOL_SOAP:
@@ -1089,7 +1088,7 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
         {
           switch (EPC__CALL_PROTOCOL(epc__call))
             {
-            case PROTOCOL_DBMS_PIPE:
+            case PROTOCOL_NATIVE:
               break;
 
             case PROTOCOL_SOAP:
@@ -1206,7 +1205,7 @@ epc__handle_request (epc__info_t * epc__info,
   DBUG_PRINT ("output",
               ("retval: %ld; error code: %ld; epc status: %s",
                retval, (long) epc__call->errcode,
-               get_error_str (epc__call->epc__error)));
+               epc__get_error_str (epc__call->epc__error)));
   DBUG_LEAVE ();
 
   return retval;
@@ -1248,7 +1247,7 @@ epc__handle_requests (epc__info_t * epc__info,
   DBUG_PRINT ("output",
               ("error code: %ld; epc status: %s",
                (long) epc__call.errcode,
-               get_error_str (epc__call.epc__error)));
+               epc__get_error_str (epc__call.epc__error)));
 
   DBUG_LEAVE ();
 

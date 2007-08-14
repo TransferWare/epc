@@ -34,12 +34,12 @@ typedef struct epc__parameter
   void *data;
 } epc__parameter_t;
 
-struct epc__function;
+struct epc__call;
 
 typedef struct epc__function
 {
   /*@observer@ */ char *name;
-  void (*function) (struct epc__function *);
+  void (*function) (struct epc__call *);
   dword_t oneway;
   dword_t num_parameters;
   /*@dependent@ */ epc__parameter_t *parameters;
@@ -95,8 +95,8 @@ typedef struct epc__call
 #define PROTOCOL_XMLRPC '6'
 #define PROTOCOL_XML_MAX PROTOCOL_XMLRPC
 
-#define PROTOCOL_DBMS_PIPE '7'
-#define PROTOCOL_MAX PROTOCOL_DBMS_PIPE
+#define PROTOCOL_NATIVE '7'
+#define PROTOCOL_MAX PROTOCOL_NATIVE
 
 
 #define EPC__CALL_PROTOCOL(epc__call) (epc__call->msg_info[0])
