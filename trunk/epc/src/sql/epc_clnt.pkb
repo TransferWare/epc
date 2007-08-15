@@ -165,9 +165,9 @@ procedure new_request
 )
 is
 begin
-/*DBUG
+--/*DBUG
   dbug.enter('epc_clnt.new_request');
-/*DBUG*/
+--/*DBUG*/
 
   p_epc_info_rec.msg := null;
   p_epc_info_rec.method_name := p_method_name;
@@ -175,16 +175,16 @@ begin
 
   if p_epc_info_rec.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
-/*DBUG
+--/*DBUG
     dbug.print('info', 'resetting buffer');
-/*DBUG*/
+--/*DBUG*/
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( p_epc_info_rec.protocol );
     g_msg_seq := g_msg_seq + 1;
     if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
-/*DBUG
+--/*DBUG
     dbug.print('info', 'g_msg_seq: %s', g_msg_seq);
-/*DBUG*/
+--/*DBUG*/
     dbms_pipe.pack_message( g_msg_seq );
 
     if p_epc_info_rec.protocol = "NATIVE"
@@ -200,9 +200,9 @@ begin
     end if;
   end if;
 
-/*DBUG
+--/*DBUG
   dbug.leave;
-/*DBUG*/
+--/*DBUG*/
 end new_request;
 
 procedure set_request_parameter
@@ -618,9 +618,9 @@ begin
       p_epc_info_rec.doc := 
         xmltype.createxml( p_epc_info_rec.msg );
 */
-/*DBUG
+--/*DBUG
       epc.print(p_epc_info_rec.msg);
-/*DBUG*/
+--/*DBUG*/
   end case;
 
   case p_epc_info_rec.connection_method
@@ -668,13 +668,13 @@ is
   l_retval pls_integer := -1;
   l_msg_seq_result pls_integer;
 begin
-/*DBUG
+--/*DBUG
   dbug.enter('epc_clnt.recv_response_dbms_pipe');
-/*DBUG*/
+--/*DBUG*/
 
-/*DBUG
+--/*DBUG
   dbug.print('info', 'receiving from %s', g_result_pipe);
-/*DBUG*/
+--/*DBUG*/
 
   l_retval :=
     dbms_pipe.receive_message
@@ -750,9 +750,9 @@ begin
     );
   end if;
 
-/*DBUG
+--/*DBUG
   dbug.leave;
-/*DBUG*/
+--/*DBUG*/
 end recv_response_dbms_pipe;
 
 procedure recv_response_utl_http
@@ -769,9 +769,9 @@ begin
   exception
     when others
     then
-/*DBUG
+--/*DBUG
       epc.print(p_epc_info_rec.msg);
-/*DBUG*/
+--/*DBUG*/
       utl_http.end_response(http_resp);
       raise;
   end;
@@ -874,29 +874,29 @@ begin
 
     when "SOAP"
     then
-/*DBUG
+--/*DBUG
       epc.print(p_epc_info_rec.msg);
-/*DBUG*/
+--/*DBUG*/
       p_epc_info_rec.doc :=
         xmltype.createxml(p_epc_info_rec.msg).extract
         ( '/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()'
         , epc."xmlns:SOAP-ENV"
         );
-/*DBUG
+--/*DBUG
       epc.print(p_epc_info_rec.doc.getstringval());
-/*DBUG*/
+--/*DBUG*/
       check_soap_fault(p_epc_info_rec.doc);
     
     when "XMLRPC"
     then 
-/*DBUG
+--/*DBUG
       epc.print(p_epc_info_rec.msg);
-/*DBUG*/
+--/*DBUG*/
       p_epc_info_rec.doc := xmltype.createxml(p_epc_info_rec.msg);
 
-/*DBUG
+--/*DBUG
       epc.print(p_epc_info_rec.doc.getstringval());
-/*DBUG*/
+--/*DBUG*/
       check_xmlrpc_fault(p_epc_info_rec.doc);
 
       p_epc_info_rec.next_out_parameter := 1;

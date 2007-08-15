@@ -405,8 +405,8 @@ epc__connect( epc__info_t *epc__info )
         l_pipe_name epc.pipe_name_subtype;
         l_epc_key epc_srvr.epc_key_subtype;
       begin
-        --/*DBUG*/ dbug.activate('LOG4PLSQL');
-        --/*DBUG*/ dbug.enter('epc__connect');
+        /*DBUG*/ dbug.activate('LOG4PLSQL');
+        /*DBUG*/ dbug.enter('epc__connect');
         dbms_output.enable(1000000);
         l_epc_key := epc_srvr.register;
         if ( :request_pipe:request_pipe_nl is not null )
@@ -418,7 +418,7 @@ epc__connect( epc__info_t *epc__info )
         then
           dbms_pipe.purge( l_pipe_name );
         end if;
-        --/*DBUG*/ dbug.leave;
+        /*DBUG*/ dbug.leave;
       end;
       END-EXEC;
     }
@@ -441,9 +441,9 @@ epc__interrupt( epc__info_t *epc__info )
 
   EXEC SQL EXECUTE
   begin
-    --/*DBUG*/ dbug.enter('epc__interrupt');
+    /*DBUG*/ dbug.enter('epc__interrupt');
     epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
-    --/*DBUG*/ dbug.leave;
+    /*DBUG*/ dbug.leave;
   end;
   END-EXEC;
 
@@ -465,38 +465,59 @@ epc__disconnect( epc__info_t *epc__info )
 
   if ( epc__info->connected != 0 ) {
     EXEC SQL BEGIN DECLARE SECTION;
-    char line[255+1];
+#define NUMLINES 100
+    char line[NUMLINES][255+1];
+    short line_nl[NUMLINES];
+    short numlines_nl;
+    int numlines;
     EXEC SQL VAR line IS STRING(255+1);
-    short line_nl;
-    int status;
     EXEC SQL END DECLARE SECTION;
+    int nr;
 
     (void) printf( "Disconnecting from database....\n" );
     (void) printf( "Showing dbms_output....\n" );
 
     while (1) {
+      numlines = NUMLINES;
+
       EXEC SQL EXECUTE
+      declare
+	l_line dbms_output.chararr;
       begin
-        --/*DBUG*/ dbug.enter('epc__disconnect');
-        dbms_output.get_line(:line INDICATOR :line_nl, :status);
-        --/*DBUG*/ dbug.leave;
-      exception
-        when others
-        then :status := 1;
+        dbms_output.get_lines(l_line, :numlines INDICATOR :numlines_nl);
+	if l_line.count > 0
+	then
+  	  for i_nr in l_line.first .. l_line.last
+	  loop
+            :line INDICATOR :line_nl(1 + (i_nr - l_line.first)) := l_line(i_nr);
+          end loop;
+	else
+          :line(1) := 'N/A';
+	end if;
       end;
       END-EXEC;
-
-      DBUG_PRINT( "input", ("dbms_output.get_line; line: %s; status: %d", line, status) );
-
-      if (status == 1) {
-        break;
+      
+      if (numlines_nl == -1) {
+	numlines = 0;
       }
 
-      if (line_nl == -1)
-        {
-          line[0] = '\0';
-        }
-      (void) printf( "%s\n", line );
+      for (nr = 0; nr < numlines; nr++)
+	{
+	  size_t length;
+
+	  if (line_nl[nr] == -1) {
+	    line[nr][0] = '\0';
+	  }
+
+	  /* line[nr] may contain \n and/or \r: skip them */
+	  length = strcspn(line[nr], "\n\r");
+
+	  (void) printf( "%.*s\n", (int) length, line[nr] );
+	}
+
+      if (numlines < NUMLINES) {
+        break;
+      }
     }
 
     /* All exceptions should be handled within the PL/SQL block hence 
@@ -588,7 +609,7 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   EXEC SQL EXECUTE
   declare
   begin
-    --/*DBUG*/ dbug.enter('epc__recv_request_pipe');
+    /*DBUG*/ dbug.enter('epc__recv_request_pipe');
     epc_srvr.recv_request
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info:msg_info_nl
@@ -596,7 +617,7 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
     , p_interface_name => :interface_name:interface_name_nl
     , p_function_name => :function_name:function_name_nl
     );
-    --/*DBUG*/ dbug.leave;
+    /*DBUG*/ dbug.leave;
   exception
     when epc.e_msg_timed_out
     then
@@ -690,6 +711,7 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
   EXEC SQL BEGIN DECLARE SECTION;
   char *msg_info = epc__call->msg_info;
   EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
+  long error_code = epc__call->epc__error;
   EXEC SQL END DECLARE SECTION;
 
   DBUG_ENTER( "epc__send_response_pipe" );
@@ -711,16 +733,20 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
       switch (EPC__CALL_PROTOCOL(epc__call))
         {
         case PROTOCOL_NATIVE:
-          EXEC SQL EXECUTE
-          begin
-            --/*DBUG*/ dbug.enter('epc__send_response_pipe (1)');
-            epc_srvr.send_response
-            ( p_epc_key => epc_srvr.get_epc_key
-            , p_msg_info => :msg_info
-            );
-            --/*DBUG*/ dbug.leave;
-          end;
-          END-EXEC;
+	  /* Only call when error code is set */
+	  if (error_code != OK) {
+	    EXEC SQL EXECUTE
+	    begin
+              /*DBUG*/ dbug.enter('epc__send_response_pipe (1)');
+              epc_srvr.send_response
+              ( p_epc_key => epc_srvr.get_epc_key
+              , p_msg_info => :msg_info
+  	      , p_error_code => :error_code
+              );
+              /*DBUG*/ dbug.leave;
+            end;
+            END-EXEC;
+	  }
           break;
 
         case PROTOCOL_SOAP:
@@ -735,13 +761,13 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 
             EXEC SQL EXECUTE
             begin
-              --/*DBUG*/ dbug.enter('epc__send_response_pipe (2)');
+              /*DBUG*/ dbug.enter('epc__send_response_pipe (2)');
               epc_srvr.send_response
               ( p_epc_key => epc_srvr.get_epc_key
               , p_msg_response => :msg_response
               , p_msg_info => :msg_info
               );
-              --/*DBUG*/ dbug.leave;
+              /*DBUG*/ dbug.leave;
             end;
             END-EXEC;
           }
@@ -806,9 +832,7 @@ epc__request_native(epc__call_t * epc__call)
                 l_string[0] = '\0';
                 EXEC SQL EXECUTE
                 begin
-                  --/*DBUG*/ dbug.enter('epc__request_native (1)');
                   dbms_pipe.unpack_message(:l_string);
-                  --/*DBUG*/ dbug.leave;
                 end;
                 END-EXEC;
                 assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
@@ -824,9 +848,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_int = 0;
                 EXEC SQL EXECUTE
                 begin
-                  --/*DBUG*/ dbug.enter('epc__request_native (2)');
                   dbms_pipe.unpack_message(:l_int);
-                  --/*DBUG*/ dbug.leave;
                 end;
                 END-EXEC;
               }
@@ -841,9 +863,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_long = 0L;
                 EXEC SQL EXECUTE
                 begin
-                  --/*DBUG*/ dbug.enter('epc__request_native (3)');
                   dbms_pipe.unpack_message(:l_long);
-                  --/*DBUG*/ dbug.leave;
                 end;
                 END-EXEC;
               }
@@ -858,9 +878,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_float = 0.0F;
                 EXEC SQL EXECUTE
                 begin
-                  --/*DBUG*/ dbug.enter('epc__request_native (4)');
                   dbms_pipe.unpack_message(:l_float);
-                  --/*DBUG*/ dbug.leave;
                 end;
                 END-EXEC;
               }
@@ -875,9 +893,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_double = 0.0F;
                 EXEC SQL EXECUTE
                 begin
-                  --/*DBUG*/ dbug.enter('epc__request_native (5)');
                   dbms_pipe.unpack_message(:l_double);
-                  --/*DBUG*/ dbug.leave;
                 end;
                 END-EXEC;
               }
@@ -923,13 +939,11 @@ epc__response_native(epc__call_t * epc__call)
 
   EXEC SQL EXECUTE
   begin
-    --/*DBUG*/ dbug.enter('epc__response_native');
+    /*DBUG*/ dbug.enter('epc__response_native');
     epc_srvr.new_response
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info
-    , p_error_code => :error_code
     );
-    --/*DBUG*/ dbug.leave;
   end;
   END-EXEC;
 
@@ -959,9 +973,7 @@ epc__response_native(epc__call_t * epc__call)
               assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
               EXEC SQL EXECUTE
               begin
-                --/*DBUG*/ dbug.enter('epc__response_native (1)');
                 dbms_pipe.pack_message(:l_string);
-                --/*DBUG*/ dbug.leave;
               end;
               END-EXEC;
               break;
@@ -969,9 +981,7 @@ epc__response_native(epc__call_t * epc__call)
             case C_INT:
               EXEC SQL EXECUTE
               begin
-                --/*DBUG*/ dbug.enter('epc__response_native (2)');
                 dbms_pipe.pack_message(:l_int);
-                --/*DBUG*/ dbug.leave;
               end;
               END-EXEC;
               break;
@@ -979,9 +989,7 @@ epc__response_native(epc__call_t * epc__call)
             case C_LONG:
               EXEC SQL EXECUTE
               begin
-                --/*DBUG*/ dbug.enter('epc__response_native (3)');
                 dbms_pipe.pack_message(:l_long);
-                --/*DBUG*/ dbug.leave;
               end;
               END-EXEC;
               break;
@@ -989,9 +997,7 @@ epc__response_native(epc__call_t * epc__call)
             case C_FLOAT:
               EXEC SQL EXECUTE
               begin
-                --/*DBUG*/ dbug.enter('epc__response_native (4)');
                 dbms_pipe.pack_message(:l_float);
-                --/*DBUG*/ dbug.leave;
               end;
               END-EXEC;
               break;
@@ -999,9 +1005,7 @@ epc__response_native(epc__call_t * epc__call)
             case C_DOUBLE:
               EXEC SQL EXECUTE
               begin
-                --/*DBUG*/ dbug.enter('epc__response_native (5)');
                 dbms_pipe.pack_message(:l_double);
-                --/*DBUG*/ dbug.leave;
               end;
               END-EXEC;
               break;
@@ -1017,6 +1021,16 @@ epc__response_native(epc__call_t * epc__call)
             }
         }
     }
+
+  EXEC SQL EXECUTE
+  begin
+    epc_srvr.send_response
+    ( p_epc_key => epc_srvr.get_epc_key
+    , p_msg_info => :msg_info
+    );
+    /*DBUG*/ dbug.leave;
+  end;
+  END-EXEC;
 
   DBUG_LEAVE ();
 }
