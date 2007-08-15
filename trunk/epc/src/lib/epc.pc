@@ -255,6 +255,39 @@ EXEC SQL END DECLARE SECTION;
  *
  *======================================================================*/
 
+static
+void
+epc__connect_logon_db( epc__info_t *epc__info );
+
+static
+void
+epc__connect_register_db( epc__info_t *epc__info );
+
+static
+void
+epc__show_dbms_output_db( void );
+
+static
+void
+epc__disconnect_logoff_db( const int commit, epc__info_t *epc__info );
+
+static
+void
+epc__recv_request_pipe_db( char *msg_info,
+			   char *msg_request,
+			   char *interface_name,
+			   char *function_name,
+			   long *retval,
+			   epc__info_t *epc__info );
+
+static
+void
+epc__send_response_pipe_error_db( const char *msg_info, const long epc__error, epc__info_t *epc__info );
+
+static
+void
+epc__send_response_pipe_db( const char *msg_info, const char *msg_response, epc__info_t *epc__info );
+
 /*
   [ 901781 ] CTRL-C kills EPC listener but not the session
 
@@ -336,6 +369,8 @@ epc__abort( char *msg )
   char err_msg[512];
   size_t buf_len, msg_len;
 
+  epc__show_dbms_output_db();
+
   (void) printf("\n%s\n", msg);
   buf_len = sizeof (err_msg);
   sqlglm(err_msg, &buf_len, &msg_len);
@@ -354,19 +389,13 @@ epc__abort( char *msg )
 epc__error_t
 epc__connect( epc__info_t *epc__info )
 {
-  EXEC SQL BEGIN DECLARE SECTION;
-  char *logon = epc__info->logon;
-  char *request_pipe = epc__info->pipe;
-  short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
-  int purge_pipe = epc__info->purge_pipe;
-  EXEC SQL END DECLARE SECTION;
   epc__error_t status = OK;
 
   DBUG_ENTER( "epc__connect" );
 
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
-  if ( logon == NULL ) 
+  if ( epc__info->logon == NULL ) 
     {
       printf( "ERROR: No connect string specified.\n" );
       status = CONNECT_ERROR;
@@ -383,12 +412,7 @@ epc__connect( epc__info_t *epc__info )
           *(epc__info->sqlca) = sqlca;
         }
 
-#define sqlca (*(epc__info->sqlca))
-
-      /* log on to database */
-      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
-
-      EXEC SQL CONNECT :logon;
+      epc__connect_logon_db( epc__info );
 
       printf( "Connected to database....\n" );
       epc__info->connected = 1;
@@ -400,32 +424,68 @@ epc__connect( epc__info_t *epc__info )
 
       fflush( stdout ); /* flush because of DBUG package */
 
-      EXEC SQL EXECUTE
-      declare
-        l_pipe_name epc.pipe_name_subtype;
-        l_epc_key epc_srvr.epc_key_subtype;
-      begin
-        /*DBUG*/ dbug.activate('LOG4PLSQL');
-        /*DBUG*/ dbug.enter('epc__connect');
-        dbms_output.enable(1000000);
-        l_epc_key := epc_srvr.register;
-        if ( :request_pipe:request_pipe_nl is not null )
-        then
-          epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
-        end if;
-        epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
-        if :purge_pipe != 0
-        then
-          dbms_pipe.purge( l_pipe_name );
-        end if;
-        /*DBUG*/ dbug.leave;
-      end;
-      END-EXEC;
+      epc__connect_register_db( epc__info );
     }
 
   DBUG_LEAVE();
 
   return status;
+}
+
+#define sqlca (*(epc__info->sqlca))
+
+static
+void
+epc__connect_logon_db( epc__info_t *epc__info )
+{
+  EXEC SQL BEGIN DECLARE SECTION;
+  const char *logon = epc__info->logon;
+  EXEC SQL END DECLARE SECTION;
+
+  DBUG_ENTER( "epc__connect_logon_db" );
+
+  /* log on to database */
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL CONNECT :logon;
+
+  DBUG_LEAVE();
+}
+
+static
+void
+epc__connect_register_db( epc__info_t *epc__info )
+{
+  EXEC SQL BEGIN DECLARE SECTION;
+  char *request_pipe = epc__info->pipe;
+  short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
+  int purge_pipe = epc__info->purge_pipe;
+  EXEC SQL END DECLARE SECTION;
+
+  DBUG_ENTER( "epc__connect_register_db" );
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL EXECUTE
+  declare
+    l_pipe_name epc.pipe_name_subtype;
+    l_epc_key epc_srvr.epc_key_subtype;
+  begin
+    dbms_output.enable(1000000);
+    l_epc_key := epc_srvr.register;
+    if ( :request_pipe:request_pipe_nl is not null )
+    then
+      epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
+    end if;
+    epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
+    if :purge_pipe != 0
+    then
+      dbms_pipe.purge( l_pipe_name );
+    end if;
+  end;
+  END-EXEC;
+
+  DBUG_LEAVE();
 }
 
 epc__error_t
@@ -435,15 +495,11 @@ epc__interrupt( epc__info_t *epc__info )
 
   DBUG_ENTER( "epc__interrupt" );
 
-  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
-
   EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
   EXEC SQL EXECUTE
   begin
-    /*DBUG*/ dbug.enter('epc__interrupt');
     epc_srvr.send_request_interrupt( epc_srvr.get_epc_key );
-    /*DBUG*/ dbug.leave;
   end;
   END-EXEC;
 
@@ -459,81 +515,14 @@ epc__disconnect( epc__info_t *epc__info )
 
   DBUG_ENTER( "epc__disconnect" );
 
-  DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
-
   epc__reset_signal_handlers( 0 );
 
   if ( epc__info->connected != 0 ) {
-    EXEC SQL BEGIN DECLARE SECTION;
-#define NUMLINES 100
-    char line[NUMLINES][255+1];
-    short line_nl[NUMLINES];
-    short numlines_nl;
-    int numlines;
-    EXEC SQL VAR line IS STRING(255+1);
-    EXEC SQL END DECLARE SECTION;
-    int nr;
-
     (void) printf( "Disconnecting from database....\n" );
-    (void) printf( "Showing dbms_output....\n" );
 
-    while (1) {
-      numlines = NUMLINES;
+    epc__show_dbms_output_db();
 
-      EXEC SQL EXECUTE
-      declare
-	l_line dbms_output.chararr;
-      begin
-        dbms_output.get_lines(l_line, :numlines INDICATOR :numlines_nl);
-	if l_line.count > 0
-	then
-  	  for i_nr in l_line.first .. l_line.last
-	  loop
-            :line INDICATOR :line_nl(1 + (i_nr - l_line.first)) := l_line(i_nr);
-          end loop;
-	else
-          :line(1) := 'N/A';
-	end if;
-      end;
-      END-EXEC;
-      
-      if (numlines_nl == -1) {
-	numlines = 0;
-      }
-
-      for (nr = 0; nr < numlines; nr++)
-	{
-	  size_t length;
-
-	  if (line_nl[nr] == -1) {
-	    line[nr][0] = '\0';
-	  }
-
-	  /* line[nr] may contain \n and/or \r: skip them */
-	  length = strcspn(line[nr], "\n\r");
-
-	  (void) printf( "%.*s\n", (int) length, line[nr] );
-	}
-
-      if (numlines < NUMLINES) {
-        break;
-      }
-    }
-
-    /* All exceptions should be handled within the PL/SQL block hence 
-       this default. */
-    EXEC SQL WHENEVER SQLERROR CONTINUE;
-
-    switch ( epc__get_signo() )
-      {
-      case 0: /* no signal: OK */
-        EXEC SQL COMMIT WORK RELEASE;
-        break;
-
-      default:
-        EXEC SQL ROLLBACK RELEASE;
-        break;
-      }
+    epc__disconnect_logoff_db(epc__get_signo() == 0,  epc__info);
 
     if ( sqlca.sqlcode != 0 ) {
       status = DISCONNECT_ERROR;
@@ -548,6 +537,29 @@ epc__disconnect( epc__info_t *epc__info )
   return status;
 }
 
+static
+void
+epc__disconnect_logoff_db( const int commit, epc__info_t *epc__info )
+{
+  DBUG_ENTER( "epc__disconnect_logoff_db" );
+
+  /* All exceptions should be handled within the PL/SQL block hence 
+     this default. */
+  EXEC SQL WHENEVER SQLERROR CONTINUE;
+
+  switch ( commit )
+    {
+    case 1:
+      EXEC SQL COMMIT WORK RELEASE;
+      break;
+
+    default:
+      EXEC SQL ROLLBACK RELEASE;
+      break;
+    }
+
+  DBUG_LEAVE();
+}
 
 epc__error_t
 epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
@@ -567,26 +579,9 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
       * ----------------------------------------------------------------------*/
 {
   dword_t handle;
-  EXEC SQL BEGIN DECLARE SECTION;
   long retval = OK;
-  char *msg_info = epc__call->msg_info;
-  /* STRING(n) is s C-like character of size n (including terminating zero) */
-  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1); /* client-specific pipe for results  */
-  short msg_info_nl; /* null indicator */
-  char *msg_request = epc__call->msg_request;
-  EXEC SQL VAR msg_request IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
-  short msg_request_nl; /* null indicator */
   char interface_name[MAX_INTERFACE_NAME_LEN+1] = "";
-  EXEC SQL VAR interface_name IS STRING(MAX_INTERFACE_NAME_LEN+1);
-  short interface_name_nl; /* null indicator */
   char function_name[MAX_FUNC_NAME_LEN+1] = "";
-  EXEC SQL VAR function_name IS STRING(MAX_FUNC_NAME_LEN+1);
-  short function_name_nl; /* null indicator */
-  const int msg_timed_out = MSG_TIMED_OUT;
-  const int msg_too_big = MSG_TOO_BIG;
-  const int msg_interrupted = MSG_INTERRUPTED;
-  const int receive_error = RECEIVE_ERROR;
-  EXEC SQL END DECLARE SECTION;
 
   DBUG_ENTER( "epc__recv_request_pipe" );
 
@@ -594,45 +589,22 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
   sqlca.sqlcode = 0;
   epc__call->errcode = 0;
-  msg_info[0] = '\0';
-  msg_request[0] = '\0';
+  epc__call->msg_info[0] = '\0';
+  epc__call->msg_request[0] = '\0';
   epc__call->interface = NULL;
   epc__call->function = NULL;
-
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
 #ifdef SERVER_INTERRUPT
   /* set up my user interrupt handler */
   (void) osnsui(&handle, handle_interrupt, epc__info);
 #endif
 
-  EXEC SQL EXECUTE
-  declare
-  begin
-    /*DBUG*/ dbug.enter('epc__recv_request_pipe');
-    epc_srvr.recv_request
-    ( p_epc_key => epc_srvr.get_epc_key
-    , p_msg_info => :msg_info:msg_info_nl
-    , p_msg_request => :msg_request:msg_request_nl
-    , p_interface_name => :interface_name:interface_name_nl
-    , p_function_name => :function_name:function_name_nl
-    );
-    /*DBUG*/ dbug.leave;
-  exception
-    when epc.e_msg_timed_out
-    then
-      :retval := :msg_timed_out;
-    when epc.e_msg_too_big
-    then
-      :retval := :msg_too_big;
-    when epc.e_msg_interrupted
-    then
-      :retval := :msg_interrupted;
-    when others
-    then
-      :retval := :receive_error;
-  end;
-  END-EXEC;
+  epc__recv_request_pipe_db( epc__call->msg_info,
+			     epc__call->msg_request,
+			     interface_name,
+			     function_name,
+			     &retval,
+			     epc__info );
 
 #ifdef SERVER_INTERRUPT
   (void) osncui(handle);
@@ -642,33 +614,7 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
   if ( retval == OK )
     {
-      /* either msg_request OR interface and function must be set */
-      assert( (msg_request_nl == -1 && interface_name_nl != -1 && function_name_nl != -1) ||
-              (msg_request_nl != -1 && interface_name_nl == -1 && function_name_nl == -1) );
-
-      if ( msg_request_nl == -1 )
-        msg_request[0] = '\0';
-
-      assert(strlen(msg_request) <= MAX_MSG_REQUEST_LEN);
-
-      if ( msg_info_nl == -1 )
-        msg_info[0] = '\0';
-
-      assert(strlen(msg_info) <= MAX_MSG_INFO_LEN);
-
-      DBUG_PRINT( "info", ( "msg_info: %s", msg_info ) );
-
-      if ( interface_name_nl == -1 )
-        interface_name[0] = '\0';
-
-      assert(strlen(interface_name) <= MAX_INTERFACE_NAME_LEN);
-              
-      if ( function_name_nl == -1 )
-        function_name[0] = '\0';
-      
-      assert(strlen(function_name) <= MAX_FUNC_NAME_LEN);
-
-      if (msg_request[0] == '\0')
+      if (epc__call->msg_request[0] == '\0')
         {
           epc__lookup_interface (interface_name, epc__info, epc__call);
           epc__lookup_function (function_name, epc__info, epc__call);
@@ -701,19 +647,105 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
               ( "retval: %ld; error code: %ld; epc error: %ld", 
                 retval, (long)epc__call->errcode, (long)epc__call->epc__error));
 
-  DBUG_LEAVE(); 
+  DBUG_LEAVE();
+
   return retval;
+}
+
+static
+void
+epc__recv_request_pipe_db( msg_info, msg_request, interface_name, function_name, retval, epc__info )
+EXEC SQL BEGIN DECLARE SECTION;
+char *msg_info, *msg_request, *interface_name, *function_name;
+EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1); /* client-specific pipe for results  */
+EXEC SQL VAR msg_request IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
+EXEC SQL VAR interface_name IS STRING(MAX_INTERFACE_NAME_LEN+1);
+EXEC SQL VAR function_name IS STRING(MAX_FUNC_NAME_LEN+1);
+long *retval;
+EXEC SQL END DECLARE SECTION;
+epc__info_t *epc__info;
+{
+  EXEC SQL BEGIN DECLARE SECTION;
+  short msg_info_nl; /* null indicator */
+  short msg_request_nl; /* null indicator */
+  short interface_name_nl; /* null indicator */
+  short function_name_nl; /* null indicator */
+  const int msg_timed_out = MSG_TIMED_OUT;
+  const int msg_too_big = MSG_TOO_BIG;
+  const int msg_interrupted = MSG_INTERRUPTED;
+  const int receive_error = RECEIVE_ERROR;
+  EXEC SQL END DECLARE SECTION;
+
+  DBUG_ENTER("epc__recv_request_pipe_db");
+
+  *retval = OK;
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL EXECUTE
+  declare
+  begin
+    epc_srvr.recv_request
+    ( p_epc_key => epc_srvr.get_epc_key
+    , p_msg_info => :msg_info:msg_info_nl
+    , p_msg_request => :msg_request:msg_request_nl
+    , p_interface_name => :interface_name:interface_name_nl
+    , p_function_name => :function_name:function_name_nl
+    );
+    empty_pipes('REQUEST_PIPE', 0);
+  exception
+    when epc.e_msg_timed_out
+    then
+      :retval := :msg_timed_out;
+    when epc.e_msg_too_big
+    then
+      :retval := :msg_too_big;
+    when epc.e_msg_interrupted
+    then
+      :retval := :msg_interrupted;
+    when others
+    then
+      :retval := :receive_error;
+  end;
+  END-EXEC;
+
+  epc__show_dbms_output_db();
+
+  if ( retval == OK )
+    {
+      /* either msg_request OR interface and function must be set */
+      assert( (msg_request_nl == -1 && interface_name_nl != -1 && function_name_nl != -1) ||
+              (msg_request_nl != -1 && interface_name_nl == -1 && function_name_nl == -1) );
+
+      if ( msg_request_nl == -1 )
+        msg_request[0] = '\0';
+
+      assert(strlen(msg_request) <= MAX_MSG_REQUEST_LEN);
+
+      if ( msg_info_nl == -1 )
+        msg_info[0] = '\0';
+
+      assert(strlen(msg_info) <= MAX_MSG_INFO_LEN);
+
+      DBUG_PRINT( "info", ( "msg_info: %s", msg_info ) );
+
+      if ( interface_name_nl == -1 )
+        interface_name[0] = '\0';
+
+      assert(strlen(interface_name) <= MAX_INTERFACE_NAME_LEN);
+              
+      if ( function_name_nl == -1 )
+        function_name[0] = '\0';
+      
+      assert(strlen(function_name) <= MAX_FUNC_NAME_LEN);
+    }
+
+  DBUG_LEAVE();
 }
 
 epc__error_t
 epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 {
-  EXEC SQL BEGIN DECLARE SECTION;
-  char *msg_info = epc__call->msg_info;
-  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-  long error_code = epc__call->epc__error;
-  EXEC SQL END DECLARE SECTION;
-
   DBUG_ENTER( "epc__send_response_pipe" );
 
   epc__call->epc__error = OK;
@@ -724,9 +756,7 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
   sqlca.sqlcode = 0;
   epc__call->errcode = 0;
 
-  DBUG_PRINT ("info", ("msg_info: %s", msg_info));
-
-  if (msg_info[0] != '\0' && (epc__call->function == NULL || epc__call->function->oneway == 0))
+  if (epc__call->msg_info[0] != '\0' && (epc__call->function == NULL || epc__call->function->oneway == 0))
     {
       EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
@@ -734,43 +764,14 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
         {
         case PROTOCOL_NATIVE:
 	  /* Only call when error code is set */
-	  if (error_code != OK) {
-	    EXEC SQL EXECUTE
-	    begin
-              /*DBUG*/ dbug.enter('epc__send_response_pipe (1)');
-              epc_srvr.send_response
-              ( p_epc_key => epc_srvr.get_epc_key
-              , p_msg_info => :msg_info
-  	      , p_error_code => :error_code
-              );
-              /*DBUG*/ dbug.leave;
-            end;
-            END-EXEC;
+	  if (epc__call->epc__error != OK) {
+	    epc__send_response_pipe_error_db( epc__call->msg_info, epc__call->epc__error, epc__info );
 	  }
           break;
 
         case PROTOCOL_SOAP:
         case PROTOCOL_XMLRPC:
-          {
-            EXEC SQL BEGIN DECLARE SECTION;
-            char *msg_response = epc__call->msg_response;
-            EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
-            EXEC SQL END DECLARE SECTION;
-
-            DBUG_PRINT ("info", ("msg_response: %s", msg_response));
-
-            EXEC SQL EXECUTE
-            begin
-              /*DBUG*/ dbug.enter('epc__send_response_pipe (2)');
-              epc_srvr.send_response
-              ( p_epc_key => epc_srvr.get_epc_key
-              , p_msg_response => :msg_response
-              , p_msg_info => :msg_info
-              );
-              /*DBUG*/ dbug.leave;
-            end;
-            END-EXEC;
-          }
+	  epc__send_response_pipe_db( epc__call->msg_info, epc__call->msg_response, epc__info );
           break;
 
         default:
@@ -789,9 +790,128 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
   return epc__call->epc__error;
 }
 
+static
+void
+epc__send_response_pipe_error_db( msg_info, error_code, epc__info )
+EXEC SQL BEGIN DECLARE SECTION;
+const char *msg_info;
+EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
+const long error_code;
+EXEC SQL END DECLARE SECTION;
+epc__info_t *epc__info;
+{
+  DBUG_ENTER("epc__send_response_pipe_error_db");
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL EXECUTE
+  begin
+    epc_srvr.send_response
+    ( p_epc_key => epc_srvr.get_epc_key
+    , p_msg_info => :msg_info
+    , p_error_code => :error_code
+    );
+  end;
+  END-EXEC;
+
+  DBUG_LEAVE();
+}
+
+static
+void
+epc__send_response_pipe_db( msg_info, msg_response, epc__info )
+EXEC SQL BEGIN DECLARE SECTION;
+const char *msg_info;
+EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
+const char *msg_response;
+EXEC SQL VAR msg_response IS STRING(MAX_MSG_RESPONSE_LEN+1);
+EXEC SQL END DECLARE SECTION;
+epc__info_t *epc__info;
+{
+  DBUG_ENTER("epc__send_response_pipe_db");
+
+  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+  EXEC SQL EXECUTE
+  begin
+    epc_srvr.send_response
+    ( p_epc_key => epc_srvr.get_epc_key
+    , p_msg_response => :msg_response
+    , p_msg_info => :msg_info
+    );
+  end;
+  END-EXEC;
+
+  DBUG_LEAVE();
+}
+
 #ifdef sqlca
 #undef sqlca
 #endif
+
+static
+void
+epc__show_dbms_output_db(void)
+{
+  EXEC SQL BEGIN DECLARE SECTION;
+#define NUMLINES 100
+  char line[NUMLINES][255+1];
+  short line_nl[NUMLINES];
+  short numlines_nl;
+  int numlines;
+  EXEC SQL VAR line IS STRING(255+1);
+  EXEC SQL END DECLARE SECTION;
+  int nr;
+
+  DBUG_ENTER( "epc__show_dbms_output_db" );
+
+  (void) printf( "Showing dbms_output....\n" );
+
+  while (1) {
+    numlines = NUMLINES;
+
+    EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+
+    EXEC SQL EXECUTE
+    declare
+      l_line dbms_output.chararr;
+    begin
+      dbms_output.get_lines(l_line, :numlines INDICATOR :numlines_nl);
+      if l_line.count > 0
+      then
+	for i_nr in l_line.first .. l_line.last
+	loop
+          :line INDICATOR :line_nl(1 + (i_nr - l_line.first)) := l_line(i_nr);
+        end loop;
+      end if;
+    end;
+    END-EXEC;
+    
+    if (numlines_nl == -1) {
+	numlines = 0;
+    }
+
+    for (nr = 0; nr < numlines; nr++)
+    {
+      size_t length;
+
+      if (line_nl[nr] == -1) {
+	line[nr][0] = '\0';
+      }
+
+      /* line[nr] may contain \n and/or \r: skip them */
+      length = strcspn(line[nr], "\n\r");
+
+      (void) printf( "%.*s\n", (int) length, line[nr] );
+    }
+
+    if (numlines < NUMLINES) {
+      break;
+    }
+  }
+
+  DBUG_LEAVE();
+}
 
 void
 epc__request_native(epc__call_t * epc__call)
@@ -914,7 +1034,6 @@ epc__request_native(epc__call_t * epc__call)
   DBUG_LEAVE ();
 }
 
-
 void
 epc__response_native(epc__call_t * epc__call)
 {
@@ -939,7 +1058,6 @@ epc__response_native(epc__call_t * epc__call)
 
   EXEC SQL EXECUTE
   begin
-    /*DBUG*/ dbug.enter('epc__response_native');
     epc_srvr.new_response
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info
@@ -1028,7 +1146,6 @@ epc__response_native(epc__call_t * epc__call)
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info
     );
-    /*DBUG*/ dbug.leave;
   end;
   END-EXEC;
 
