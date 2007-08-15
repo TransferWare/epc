@@ -128,19 +128,27 @@ procedure recv_request
 
 /**
 -- Create a new response, i.e. clear the database pipe and put the metadata into it.
+--
+-- <p>
+-- To be used when sending a response to a request using the native protocol.
+-- </p>
 -- 
 -- @param p_epc_key     Needed for the connection info
 -- @param p_msg_info    The message information as received by recv_request
--- @param p_error_code  The error code (0 means no error)
 */
 procedure new_response
 ( p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
-, p_error_code in pls_integer
 );
 
 /**
--- Send a response after all metadata and date has been put into the database pipe.
+-- Send a response to a request using the NATIVE protocol.
+--
+-- <p>
+-- To be used when sending a response to a request using the native
+-- protocol.  Before this call, epc_srvr.new_response has to be called
+-- followed by dbms_pipe.pack_message for all out (or in out) parameters.
+-- </p>
 -- 
 -- @param p_epc_key   Needed for the connection info
 -- @param p_msg_info  The message information as received by recv_request
@@ -151,17 +159,45 @@ procedure send_response
 );
 
 /**
--- Send a response.
+-- Send an error response to a request using the NATIVE protocol.
+--
+-- <p>
+-- To be used when sending an error response to a request using the
+-- native protocol. It will reset the dbms_pipe message buffer
+-- (dbms_pipe.reset_buffer) so it may be called after
+-- epc_srvr.new_response has been called followed by
+-- dbms_pipe.pack_message for all out (or in out) parameters.
+-- </p>
 -- 
 -- @param p_epc_key       Needed for the connection info
--- @param p_msg_response  The XML describing the response
 -- @param p_msg_info      The message information as received by recv_request
+-- @param p_error_code    The error code
 */
 procedure send_response
 ( 
   p_epc_key in epc_key_subtype
-, p_msg_response in varchar2
 , p_msg_info in epc_srvr.msg_info_subtype
+, p_error_code in pls_integer
+);
+
+/**
+-- Send a response to a request using the XMLRPC or SOAP protocol.
+-- 
+-- <p>
+-- The new_request should not be called before calling this. This is
+-- the only call needed to send any response (with or without errors)
+-- to a XMLRPC or SOAP request.
+-- </p>
+--
+-- @param p_epc_key       Needed for the connection info
+-- @param p_msg_info      The message information as received by recv_request
+-- @param p_msg_response  The XML describing the response
+*/
+procedure send_response
+( 
+  p_epc_key in epc_key_subtype
+, p_msg_info in epc_srvr.msg_info_subtype
+, p_msg_response in varchar2
 );
 
 /**
