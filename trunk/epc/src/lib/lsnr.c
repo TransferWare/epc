@@ -122,6 +122,55 @@ const char vcid[] = "$Id$";
 
 static void help (char *procname);
 
+static /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
+
+static int state_nr = 0;
+
+static
+epc__error_t
+cleanup(epc__error_t ret)
+{
+  /*@-branchstate@ */
+  switch (state_nr)                   /* last step */
+    {
+    case 7:
+    case 6:
+      ret = epc__disconnect (epc__info);
+      /*@fallthrough@ */
+
+    case 5:
+    case 4:
+    case 3:
+    case 2:
+      epc__done (epc__info);
+      /*@fallthrough@ */
+
+    case 1:
+#ifndef DBUG_OFF
+      (void) dbug_done ();
+#endif
+      /*@fallthrough@ */
+
+    case 0:
+      break;
+
+    default:
+      assert (state_nr >= 0 && state_nr <= 7);
+      break;
+    }
+  /*@=branchstate@ */
+
+  return ret;
+}
+
+static
+void
+CLEANUP(void)
+{
+  cleanup(OK);
+
+  _exit(EXIT_SUCCESS);
+}
 
 static
 /*@observer@*/
@@ -181,7 +230,6 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
   dword_t purge_pipe = 0;
   dword_t interrupt = 0;
   int nr;
-  /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
   epc__error_t ret;
 #ifndef DBUG_OFF
   /*@only@ *//*@null@ */ char *dbug_options = NULL;
@@ -266,13 +314,15 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
 
   do
     {
-      nr = 0;
+      state_nr = 0;
+      atexit(CLEANUP);
+
 #ifndef DBUG_OFF
       if ((ret = dbug_init (dbug_options, argv[0])) != OK)
         break;
 #endif
 
-      nr++;                     /* 1 */
+      state_nr++;                     /* 1 */
       epc__info = epc__init ();
       if (epc__info == NULL)
         {
@@ -280,18 +330,18 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
           break;
         }
 
-      nr++;                     /* 2 */
+      state_nr++;                     /* 2 */
       epc__info->interrupt = interrupt;
       epc__info->purge_pipe = purge_pipe;
       epc__info->program = argv[0];
       if ((ret = epc__set_logon (epc__info, logon)) != OK)
         break;
 
-      nr++;                     /* 3 */
+      state_nr++;                     /* 3 */
       if ((ret = epc__set_pipe (epc__info, request_pipe)) != OK)
         break;
 
-      nr++;                     /* 4 */
+      state_nr++;                     /* 4 */
       {
         va_list ap;
 
@@ -306,11 +356,11 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
       if (ret != OK)
         break;
 
-      nr++;                     /* 5 */
+      state_nr++;                     /* 5 */
       if ((ret = epc__connect (epc__info)) != OK)
         break;
 
-      nr++;                     /* 6 */
+      state_nr++;                     /* 6 */
       if ((ret =
            ( epc__info->interrupt == 0
              ? epc__handle_requests (epc__info, epc__recv_request_pipe,
@@ -318,39 +368,11 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
              : epc__interrupt (epc__info) )) != OK)
         break;
 
-      nr++;
+      state_nr++;
     }
   while (0);
 
-  /*@-branchstate@ */
-  switch (nr)                   /* last step */
-    {
-    case 7:
-    case 6:
-      ret = epc__disconnect (epc__info);
-      /*@fallthrough@ */
-
-    case 5:
-    case 4:
-    case 3:
-    case 2:
-      epc__done (epc__info);
-      /*@fallthrough@ */
-
-    case 1:
-#ifndef DBUG_OFF
-      (void) dbug_done ();
-#endif
-      /*@fallthrough@ */
-
-    case 0:
-      break;
-
-    default:
-      assert (nr >= 0 && nr <= 7);
-      break;
-    }
-  /*@=branchstate@ */
+  cleanup(ret);
 
 #ifndef DBUG_OFF
   free (dbug_options);

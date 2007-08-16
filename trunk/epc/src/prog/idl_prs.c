@@ -979,7 +979,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
 #if SEND_EPC__ERROR != 0
                 (void) fputs( "  ", pout ); 
 #endif
-                (void) fprintf( pout, "    dbms_pipe.pack_message( %s );\n", parm->name ); 
+                (void) fprintf( pout, "    epc_srvr.set_response_parameter( epc_srvr.get_epc_key, '%s', %s );\n", parm->name, parm->name ); 
               }
           }
           if ( fun->return_value.datatype != C_VOID )
@@ -987,7 +987,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
 #if SEND_EPC__ERROR != 0
               (void) fputs( "  ", pout ); 
 #endif
-              (void) fprintf( pout, "    dbms_pipe.pack_message( %s );\n", fun->return_value.name ); 
+              (void) fprintf( pout, "    epc_srvr.set_response_parameter( epc_srvr.get_epc_key, '%s', %s );\n", fun->return_value.name, fun->return_value.name ); 
             }
 
 #if SEND_EPC__ERROR != 0
@@ -1020,7 +1020,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
 
               if ( parm->mode == C_IN || parm->mode == C_INOUT )
                 {
-                  (void) fprintf( pout, "    dbms_pipe.unpack_message( %s );\n", parm->name );
+                  (void) fprintf( pout, "    epc_srvr.get_request_parameter( epc_srvr.get_epc_key, '%s', %s );\n", parm->name, parm->name );
                 }
             }
           break;

@@ -215,5 +215,47 @@ procedure send_request_interrupt
   p_epc_key in epc_key_subtype
 );
 
+/**
+-- Get a request parameter (IN or IN OUT).
+-- 
+-- @param p_epc_key    The key
+-- @param p_name       The name of the parameter
+-- @param p_value      The value of the parameter
+*/
+procedure get_request_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value out varchar2
+);
+
+procedure get_request_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value out number
+);
+
+/**
+-- Set a response parameter (OUT or IN OUT).
+-- 
+-- @param p_epc_key    The key
+-- @param p_name       The name of the parameter
+-- @param p_value      The value of the parameter
+*/
+procedure set_response_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value in varchar2
+);
+
+procedure set_response_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value in number
+);
+
 end epc_srvr;
 /
