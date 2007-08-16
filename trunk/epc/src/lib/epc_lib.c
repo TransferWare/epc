@@ -1525,13 +1525,10 @@ handle_signal (int signo)
   (void) fprintf (stderr, "Received signal %d\n", signo);
 
 #ifdef SERVER_INTERRUPT
-#if 1
-
   if (G_epc__handle_interrupt != NULL)
     {
       (*G_epc__handle_interrupt) (G_epc__info_interrupt);
     }
-#endif
 #endif
 
   G_signo = signo;

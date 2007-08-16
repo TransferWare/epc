@@ -331,10 +331,11 @@ handle_interrupt(epc__info_t *epc__info)
 
   DBUG_ENTER( "handle_interrupt" );
 
-  exit(EXIT_SUCCESS);
+  /*exit(EXIT_SUCCESS);*/
 
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
+#if 0
   (void) snprintf(command, sizeof(command),
                   "epcdaemon --verbose %s -I %s %s -u %s",
                   epc__info->program,
@@ -353,6 +354,7 @@ handle_interrupt(epc__info_t *epc__info)
       /* fork failed */
       exit(EXIT_FAILURE);
     }
+#endif
 
   DBUG_LEAVE();
 }
