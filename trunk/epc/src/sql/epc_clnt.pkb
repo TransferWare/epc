@@ -158,6 +158,22 @@ g_decimal_char varchar2(1); -- needed to convert numbers to/from strings
 
 -- LOCAL
 
+procedure set_request_parameter
+( p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value in varchar2
+, p_max_bytes in integer
+, p_epc_info_rec in out nocopy epc_info_rectype
+);
+
+procedure get_response_parameter
+( p_name in epc.parameter_name_subtype
+, p_data_type in epc.data_type_subtype
+, p_value out varchar2
+, p_max_bytes in integer
+, p_epc_info_rec in out nocopy epc_info_rectype
+);
+
 procedure new_request
 ( p_method_name in epc.method_name_subtype
 , p_oneway in pls_integer
@@ -189,14 +205,20 @@ begin
 
     if p_epc_info_rec.protocol = "NATIVE"
     then
-      dbms_pipe.pack_message( p_epc_info_rec.interface_name );
-      dbms_pipe.pack_message( p_epc_info_rec.method_name );
-      if p_epc_info_rec.oneway = 0
-      then
-        dbms_pipe.pack_message( g_result_pipe );
-      else
-        dbms_pipe.pack_message( epc_clnt."N/A" );
-      end if;
+      set_request_parameter
+      ( p_name => 'interface'
+      , p_data_type => epc.data_type_string
+      , p_value => p_epc_info_rec.interface_name
+      , p_max_bytes => null
+      , p_epc_info_rec => p_epc_info_rec
+      );
+      set_request_parameter
+      ( p_name => 'function'
+      , p_data_type => epc.data_type_string
+      , p_value => p_epc_info_rec.method_name
+      , p_max_bytes => null
+      , p_epc_info_rec => p_epc_info_rec
+      );
     end if;
   end if;
 
@@ -224,7 +246,22 @@ begin
     case p_epc_info_rec.protocol
       when "NATIVE"
       then
-        dbms_pipe.pack_message(p_value);
+        case 
+          when p_data_type in (epc.data_type_string, epc.data_type_xml)
+          then
+            p_epc_info_rec.msg :=
+              p_epc_info_rec.msg
+              ||to_char(p_data_type)
+              ||to_char(nvl(lengthb(p_value), 0), 'FM000X')
+              ||p_value;
+
+          else
+            p_epc_info_rec.msg :=
+              p_epc_info_rec.msg
+              ||to_char(p_data_type)
+              ||to_char(nvl(lengthb(p_value), 0), 'FM0X')
+              ||p_value;
+        end case;
 
       when "SOAP"
       then
@@ -289,7 +326,12 @@ begin
     case p_epc_info_rec.protocol
       when "NATIVE"
       then
-        dbms_pipe.pack_message(p_value);
+        set_request_parameter
+        ( p_name => p_name
+        , p_data_type => p_data_type
+        , p_value => replace(to_char(p_value), g_decimal_char, '.')
+        , p_epc_info_rec => p_epc_info_rec
+        );
 
       when "SOAP"
       then
@@ -367,7 +409,13 @@ begin
     case p_epc_info_rec.protocol
       when "NATIVE"
       then
-        dbms_pipe.pack_message(l_value);
+        set_request_parameter
+        ( p_name => p_name
+        , p_data_type => p_data_type
+        , p_value => l_value
+        , p_max_bytes => null
+        , p_epc_info_rec => p_epc_info_rec
+        );
 
       when "XMLRPC"
       then
@@ -433,13 +481,10 @@ procedure send_request_dbms_pipe
 is
   l_retval pls_integer := -1;
 begin
-  if p_epc_info_rec.protocol in ("SOAP", "XMLRPC")
+  dbms_pipe.pack_message( p_epc_info_rec.msg );
+  if p_epc_info_rec.oneway = 0
   then
-    dbms_pipe.pack_message( p_epc_info_rec.msg );
-    if p_epc_info_rec.oneway = 0
-    then
-      dbms_pipe.pack_message( g_result_pipe );
-    end if;
+    dbms_pipe.pack_message( g_result_pipe );
   end if;
 
   l_retval := 
@@ -721,13 +766,22 @@ begin
 
   if l_msg_seq_result = g_msg_seq
   then
+    dbms_pipe.unpack_message( p_epc_info_rec.msg );
+
     if p_epc_info_rec.protocol = "NATIVE"
     then
       declare
-        l_error_code pls_integer;
+        l_error_code varchar2(100);
       begin
-        dbms_pipe.unpack_message( l_error_code );
-        if l_error_code != 0
+        get_response_parameter
+        ( p_name => 'error_code'
+        , p_data_type => epc.data_type_int
+        , p_value => l_error_code
+        , p_max_bytes => null
+        , p_epc_info_rec => p_epc_info_rec
+        );
+
+        if l_error_code != '0'
         then
           raise_application_error
           ( epc.c_comm_error
@@ -737,8 +791,6 @@ begin
           );
         end if;
       end;
-    else
-      dbms_pipe.unpack_message( p_epc_info_rec.msg );
     end if;
   else
     raise_application_error
@@ -920,7 +972,31 @@ is
 begin
   if p_epc_info_rec.protocol = "NATIVE"
   then
-    dbms_pipe.unpack_message(p_value);
+    declare
+      l_length pls_integer;
+      e_wrong_data_type_requested exception;
+      pragma exception_init (e_wrong_data_type_requested, -6559);
+    begin
+      if substr(p_epc_info_rec.msg, 1, 1) = to_char(p_data_type)
+      then
+        null;
+      else
+        raise e_wrong_data_type_requested;
+      end if;
+
+      case
+        when p_data_type in (epc.data_type_xml, epc.data_type_string)
+        then
+          l_length := to_number(substr(p_epc_info_rec.msg, 2, 4), 'FM000X');
+          p_value := substr(p_epc_info_rec.msg, 6, l_length);
+          p_epc_info_rec.msg := substr(p_epc_info_rec.msg, 1 + 4 + l_length);
+
+        else
+          l_length := to_number(substr(p_epc_info_rec.msg, 2, 2), 'FM0X');
+          p_value := substr(p_epc_info_rec.msg, 4, l_length);
+          p_epc_info_rec.msg := substr(p_epc_info_rec.msg, 1 + 2 + l_length);
+      end case;
+    end;
   else
     if p_data_type = epc.data_type_xml
     then
@@ -1025,19 +1101,14 @@ procedure get_response_parameter
 is
   l_value epc.string_subtype;
 begin
-  if p_epc_info_rec.protocol = "NATIVE"
-  then
-    dbms_pipe.unpack_message(p_value);
-  else
-    epc_clnt.get_response_parameter
-    ( p_name => p_name
-    , p_data_type => p_data_type
-    , p_value => l_value
-    , p_max_bytes => null
-    , p_epc_info_rec => p_epc_info_rec
-    );
-    p_value := to_number(replace(l_value, '.', g_decimal_char));
-  end if;
+  epc_clnt.get_response_parameter
+  ( p_name => p_name
+  , p_data_type => p_data_type
+  , p_value => l_value
+  , p_max_bytes => null
+  , p_epc_info_rec => p_epc_info_rec
+  );
+  p_value := to_number(replace(l_value, '.', g_decimal_char));
 end get_response_parameter;
 
 procedure get_response_parameter
@@ -1049,19 +1120,14 @@ procedure get_response_parameter
 is
   l_value epc.string_subtype;
 begin
-  if p_epc_info_rec.protocol = "NATIVE"
-  then
-    dbms_pipe.unpack_message(p_value);
-  else
-    epc_clnt.get_response_parameter
-    ( p_name => p_name
-    , p_data_type => p_data_type
-    , p_value => l_value
-    , p_max_bytes => null
-    , p_epc_info_rec => p_epc_info_rec
-    );
-    p_value := to_date(replace(l_value, 'T'), 'yyyymmddhh24:mi:ss');
-  end if;
+  epc_clnt.get_response_parameter
+  ( p_name => p_name
+  , p_data_type => p_data_type
+  , p_value => l_value
+  , p_max_bytes => null
+  , p_epc_info_rec => p_epc_info_rec
+  );
+  p_value := to_date(replace(l_value, 'T'), 'yyyymmddhh24:mi:ss');
 end get_response_parameter;
 
 -- GLOBAL

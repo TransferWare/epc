@@ -84,12 +84,6 @@ epc__disconnect ( /*@notnull@ */ epc__info_t * epc__info);
 extern epc__error_t
 epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call );
 
-extern void
-epc__request_native(epc__call_t * epc__call);
-
-extern void
-epc__response_native(epc__call_t * epc__call);
-
 extern epc__error_t
 epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call );
 

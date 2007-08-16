@@ -40,8 +40,9 @@ typedef struct {
 #include <oraxml.h>
 
 #define string_defined
-#include <epc_xml.h>
-#include <epc.h>
+#include "epc_xml.h"
+#include "epc_lib.h"
+#include "epc.h"
 
 /* include dmalloc as last one */
 #ifdef WITH_DMALLOC
@@ -52,9 +53,6 @@ typedef struct {
 #define LEVEL_SOAP_BODY 2
 #define LEVEL_SOAP_METHOD 3
 #define LEVEL_SOAP_ARGUMENT 4
-
-/* strtof is not a standard function */
-extern float strtof(const char* s, /*@null@ */ char** endptr);
 
 /*
 
@@ -560,65 +558,15 @@ set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
 {
   sword ecode = XMLERR_OK;
 
-  switch (parameter->type)
+  switch (epc__set_parameter(ch, len, parameter))
     {
-    case C_XML:
-      /* append data */
-      if ((dword_t) (len + strlen((char *) parameter->data)) < parameter->size)
-        {
-          (void) snprintf( ((char *) parameter->data) + 
-                           strlen((char *) parameter->data),
-                           (size_t)(parameter->size -
-                                    strlen((char *) parameter->data)),
-                           "%.*s", (int)len, (char *)ch);
-        }
-      else
-        {
-          ecode = XMLERR_BUFFER_OVERFLOW;
-        }
-      break;
-
-    case C_STRING:
-    case C_DATE:
-      if ((dword_t) len < parameter->size)
-        {
-          (void) strncpy ((char *) parameter->data,
-                          (char *) ch, len);
-          ((char *) parameter->data)[len] = '\0';
-        }
-      else
-        {
-          ecode = XMLERR_BUFFER_OVERFLOW;
-        }
-      break;
-
-    case C_INT:
-      *((idl_int_t *) parameter->data) =
-        (int) strtol ((char *) ch, NULL, 10);
-      break;
-
-    case C_LONG:
-      *((idl_long_t *) parameter->data) =
-        strtol ((char *) ch, NULL, 10);
-      break;
-
-    case C_FLOAT:
-      *((idl_float_t *) parameter->data) =
-        strtof ((char *) ch, NULL);
-      break;
-
-    case C_DOUBLE:
-      *((idl_double_t *) parameter->data) =
-        strtod ((char *) ch, NULL);
-      break;
-
-    case C_VOID:                /* impossible */
-      assert (parameter->type != C_VOID);
+    case BUFFER_OVERFLOW:
+      ecode = XMLERR_BUFFER_OVERFLOW;
       break;
 
     default:
-      assert (parameter->type >= C_DATATYPE_MIN &&
-              parameter->type <= C_DATATYPE_MAX);
+      ecode = XMLERR_OK;
+      break;
     }
 
   return ecode;

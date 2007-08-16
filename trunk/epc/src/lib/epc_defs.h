@@ -134,7 +134,10 @@ typedef enum
 
   /* connect/disconnect problems */
   CONNECT_ERROR = -14,
-  DISCONNECT_ERROR = -15
+  DISCONNECT_ERROR = -15,
+
+  /* value to large to be held */
+  BUFFER_OVERFLOW = -16
 } epc__error_t;
 
 #endif
