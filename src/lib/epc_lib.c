@@ -21,9 +21,13 @@
 #include <assert.h>
 #endif
 
-#include <epc.h>
-#include <epc_xml.h>
 #include <dbug.h>
+#include "epc.h"
+#include "epc_xml.h"
+#include "epc_lib.h"
+
+/* strtof is not a standard function */
+extern float strtof(const char* s, /*@null@ */ char** endptr);
 
 /* include dmalloc as last one */
 #ifdef WITH_DMALLOC
@@ -813,10 +817,136 @@ epc__set_logon (epc__info_t * epc__info, char *logon)
   return (status);
 }
 
+
+static
+void
+epc__response_native(epc__call_t * epc__call)
+{
+  dword_t nr;
+  char num[100] = "";
+
+  DBUG_ENTER ("epc__response_native");
+
+  epc__call->msg_response[0] = '\0';
+
+  /* error code */
+  (void) snprintf (num,
+                   sizeof(num),
+                   "%d",
+                   (int) epc__call->epc__error);
+  /* append */
+  (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                   MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                   "%1d%02X%s",
+                   (int) C_INT,
+                   (unsigned int) strlen(num),
+                   num);
+
+  for (nr = 0; epc__call->function != NULL && nr < epc__call->function->num_parameters; nr++)
+    {
+      if (epc__call->function->parameters[nr].mode != C_IN)
+        {
+          switch (epc__call->function->parameters[nr].type)
+            {
+            case C_DATE:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%1d%02X%s",
+                               (int) epc__call->function->parameters[nr].type,
+                               (unsigned int) strlen((char *) epc__call->function->parameters[nr].data),
+                               (char *) epc__call->function->parameters[nr].data);
+              break;
+
+            case C_STRING:
+            case C_XML:
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%1d%04X%s",
+                               (int) epc__call->function->parameters[nr].type,
+                               (unsigned int) strlen((char *) epc__call->function->parameters[nr].data),
+                               (char *) epc__call->function->parameters[nr].data);
+              break;
+
+            case C_INT:
+              (void) snprintf (num,
+                               sizeof(num),
+                               "%d",
+                               *((idl_int_t *) epc__call->function->parameters[nr].data));
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%1d%02X%s",
+                               (int) epc__call->function->parameters[nr].type,
+                               (unsigned int) strlen(num),
+                               num);
+              break;
+
+            case C_LONG:
+              (void) snprintf (num,
+                               sizeof(num),
+                               "%ld",
+                               *((idl_long_t *) epc__call->function->parameters[nr].data));
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%1d%02X%s",
+                               (int) epc__call->function->parameters[nr].type,
+                               (unsigned int) strlen(num),
+                               num);
+              break;
+
+            case C_FLOAT:
+              (void) snprintf (num,
+                               sizeof(num),
+                               "%f",
+                               (double) *((idl_float_t *) epc__call->function->parameters[nr].data));
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%1d%02X%s",
+                               (int) epc__call->function->parameters[nr].type,
+                               (unsigned int) strlen(num),
+                               num);
+              break;
+
+            case C_DOUBLE:
+              (void) snprintf (num,
+                               sizeof(num),
+                               "%f",
+                               *((idl_double_t *) epc__call->function->parameters[nr].data));
+              /* append */
+              (void) snprintf (epc__call->msg_response + strlen(epc__call->msg_response),
+                               MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response) + 1,
+                               "%1d%02X%s",
+                               (int) epc__call->function->parameters[nr].type,
+                               (unsigned int) strlen(num),
+                               num);
+              break;
+
+            case C_VOID:        /* procedure */
+              assert (epc__call->function->parameters[nr].mode == C_OUT);
+              break;
+
+            default:
+              assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
+                      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
+
+            }
+        }
+    }
+
+  DBUG_LEAVE();
+}
+
+
 static void
 epc__response_soap(epc__call_t * epc__call)
 {
   dword_t nr;
+
+  DBUG_ENTER ("epc__response_soap");
 
   assert(epc__call->function != NULL);
   assert(epc__call->interface != NULL);
@@ -950,12 +1080,15 @@ epc__response_soap(epc__call_t * epc__call)
                        "</%sResponse>" SOAP_HEADER_END "\n",
                        epc__call->function->name);
     }
+  DBUG_LEAVE();
 }
 
 static void
 epc__response_xmlrpc(epc__call_t * epc__call)
 {
   dword_t nr;
+
+  DBUG_ENTER ("epc__response_xmlrpc");
 
   /* copy (strncy does not always add a terminating zero but snprintf does) */
   (void) snprintf (epc__call->msg_response,
@@ -1043,9 +1176,159 @@ epc__response_xmlrpc(epc__call_t * epc__call)
   (void) strncat (epc__call->msg_response,
                   "</params></methodResponse>\n",
                   MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response));
+
+  DBUG_LEAVE();
 }
 
-static epc__error_t
+static
+int
+epc__native_parse_argument (idl_type_t type, char **msg_request, /*@out@ */int *len)
+{
+  int retval;
+
+  DBUG_ENTER ("epc__native_parse_argument");
+  DBUG_PRINT ("input", ("type: %d; msg_request: %s", (int)type, *msg_request));
+
+  /* read an argument:
+     a) verify data type
+     b) read length in hexadecimal format (4 bytes for string/xml and 2 for others)
+     c) read data
+  */
+
+  /* verify that the actual data type matches the expected data type */
+  assert((idl_type_t)(**msg_request - '0') == type);
+
+  /* read length */
+
+  (*msg_request)++;
+
+  switch (type)
+    {
+    case C_XML:
+    case C_STRING:
+      retval = sscanf(*msg_request, "%04X", len);
+      (*msg_request) += 4;
+      break;
+
+    default:
+      retval = sscanf(*msg_request, "%02X", len);
+      (*msg_request) += 2;
+      break;
+    }
+
+  DBUG_PRINT("input", ("msg_request: %*.*s", len, len, *msg_request));
+  DBUG_LEAVE();
+
+  return retval;
+}
+
+static
+epc__error_t
+epc__native_parse (epc__info_t *epc__info, epc__call_t *epc__call, const char *msg_request)
+{
+  dword_t nr;
+  int len;
+  char *ptr = (char *)msg_request;
+  char interface_name[MAX_INTERFACE_NAME_LEN+1] = "";
+  char function_name[MAX_FUNC_NAME_LEN+1] = "";
+
+  DBUG_ENTER("epc__native_parse");
+  DBUG_PRINT("input", ("msg_request: %s", msg_request));
+
+  do {
+    if (epc__call->epc__error != OK)
+      {
+        break;
+      }
+
+    if (1 !=
+        epc__native_parse_argument (C_STRING, &ptr, &len))
+      {
+        epc__call->epc__error = PARSE_ERROR;
+        break;
+      }
+    
+    if ((size_t) len >= sizeof(interface_name))
+      {
+        epc__call->epc__error = BUFFER_OVERFLOW;
+        break;
+      }
+
+    (void) strncpy (interface_name, ptr, (size_t)len);
+    interface_name[len] = '\0';
+    ptr += len;
+
+    if (1 !=
+        epc__native_parse_argument (C_STRING, &ptr, &len))
+      {
+        epc__call->epc__error = PARSE_ERROR;
+        break;
+      }
+    
+    if ((size_t) len >= sizeof(function_name))
+      {
+        epc__call->epc__error = BUFFER_OVERFLOW;
+        break;
+      }
+
+    (void) strncpy (function_name, ptr, (size_t)len);
+    function_name[len] = '\0';
+    ptr += len;
+
+    epc__lookup_interface (interface_name, epc__info, epc__call);
+    epc__lookup_function (function_name, epc__info, epc__call);
+
+    switch (epc__call->epc__error)
+      {
+      case INTERFACE_UNKNOWN:
+        break;
+          
+      case FUNCTION_UNKNOWN:
+        break;
+
+      case OK:
+        assert(epc__call->function != NULL);
+
+        for (nr = 0; nr < epc__call->function->num_parameters; nr++)
+          {
+            if (epc__call->function->parameters[nr].mode != C_OUT)
+              {
+                DBUG_PRINT("info", ("name: %s", epc__call->function->parameters[nr].name));
+                
+                if (1 !=
+                    epc__native_parse_argument (epc__call->function->parameters[nr].type, &ptr, &len))
+                  {
+                    epc__call->epc__error = PARSE_ERROR;
+                    break;
+                  }
+
+                if (OK !=
+                    epc__set_parameter (ptr, (size_t) len, &epc__call->function->parameters[nr]))
+                  {
+                    epc__call->epc__error = PARSE_ERROR;
+                    break;
+                  }
+
+                ptr += len;
+              }
+          }
+        break;
+
+      default:
+        assert (epc__call->epc__error == INTERFACE_UNKNOWN
+                || epc__call->epc__error == FUNCTION_UNKNOWN
+                || epc__call->epc__error == OK);
+      }
+  } while (0);
+
+  DBUG_LEAVE();
+
+  return epc__call->epc__error;
+}
+
+
+static
+epc__error_t
 epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
 {
   unsigned int result = 0;
@@ -1057,6 +1340,7 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
   switch (EPC__CALL_PROTOCOL(epc__call))
     {
     case PROTOCOL_NATIVE:
+      result = (unsigned int) epc__native_parse (epc__info, epc__call, epc__call->msg_request);
       break;
 
     case PROTOCOL_SOAP:
@@ -1082,24 +1366,6 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
       assert (epc__call->function != NULL);
 
       (*epc__call->function->function) (epc__call);
-
-      /* construct the response for non oneway functions */
-      if (epc__call->function->oneway == 0)
-        {
-          switch (EPC__CALL_PROTOCOL(epc__call))
-            {
-            case PROTOCOL_NATIVE:
-              break;
-
-            case PROTOCOL_SOAP:
-              epc__response_soap(epc__call);
-              break;
-
-            case PROTOCOL_XMLRPC:
-              epc__response_xmlrpc(epc__call);
-              break;
-            }
-        }
     }
 
   DBUG_LEAVE ();
@@ -1141,27 +1407,29 @@ epc__handle_request (epc__info_t * epc__info,
       DBUG_PRINT ("info", ("msg_request: %s", epc__call->msg_request));
 
       /* do the call */
-      if (epc__call->epc__error != OK)
-        break;
-
-      (void) epc__exec_call (epc__info, epc__call);
-
-      if (!(epc__call->epc__error == OK ||
-            epc__call->epc__error == PARSE_ERROR ||
-            epc__call->epc__error == INTERFACE_UNKNOWN ||
-            epc__call->epc__error == FUNCTION_UNKNOWN ||
-            epc__call->epc__error == PARAMETER_UNKNOWN))
+      if (epc__call->epc__error == OK)
         {
-          break;
+          (void) epc__exec_call (epc__info, epc__call);
         }
 
-      assert (epc__call->epc__error != OK ||
-              (epc__call->function != NULL && epc__call->interface != NULL));
-
-      /* send the response in case of errors or for non oneway functions  */
-      if (epc__call->epc__error != OK ||
-          (epc__call->function != NULL && epc__call->function->oneway == 0))
+      /* construct the response for non oneway functions */
+      if (epc__call->function == NULL || epc__call->function->oneway == 0)
         {
+          switch (EPC__CALL_PROTOCOL(epc__call))
+            {
+            case PROTOCOL_NATIVE:
+              epc__response_native(epc__call);
+              break;
+
+            case PROTOCOL_SOAP:
+              epc__response_soap(epc__call);
+              break;
+
+            case PROTOCOL_XMLRPC:
+              epc__response_xmlrpc(epc__call);
+              break;
+            }
+
           DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
 
           (void) (*send_response) (epc__info, epc__call);
@@ -1382,4 +1650,73 @@ epc__lookup_function (const char *function_name,
       fprintf (stderr, "ERROR: function '%s' not found\n", function_name);
       epc__call->epc__error = FUNCTION_UNKNOWN;
     }
+}
+
+epc__error_t
+epc__set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
+{
+  epc__error_t result = OK;
+
+  switch (parameter->type)
+    {
+    case C_XML:
+      /* append data */
+      if ((dword_t) (len + strlen((char *) parameter->data)) < parameter->size)
+        {
+          (void) snprintf( ((char *) parameter->data) + 
+                           strlen((char *) parameter->data),
+                           (size_t)(parameter->size -
+                                    strlen((char *) parameter->data)),
+                           "%.*s", (int)len, (char *)ch);
+        }
+      else
+        {
+          result = BUFFER_OVERFLOW;
+        }
+      break;
+
+    case C_STRING:
+    case C_DATE:
+      if ((dword_t) len < parameter->size)
+        {
+          (void) strncpy ((char *) parameter->data,
+                          (char *) ch, len);
+          ((char *) parameter->data)[len] = '\0';
+        }
+      else
+        {
+          result = BUFFER_OVERFLOW;
+        }
+      break;
+
+    case C_INT:
+      *((idl_int_t *) parameter->data) =
+        (int) strtol ((char *) ch, NULL, 10);
+      break;
+
+    case C_LONG:
+      *((idl_long_t *) parameter->data) =
+        strtol ((char *) ch, NULL, 10);
+      break;
+
+    case C_FLOAT:
+      *((idl_float_t *) parameter->data) =
+        strtof ((char *) ch, NULL);
+      break;
+
+    case C_DOUBLE:
+      *((idl_double_t *) parameter->data) =
+        strtod ((char *) ch, NULL);
+      break;
+
+    case C_VOID:                /* impossible */
+      assert (parameter->type != C_VOID);
+      break;
+
+    default:
+      assert (parameter->type >= C_DATATYPE_MIN &&
+              parameter->type <= C_DATATYPE_MAX);
+    }
+
+  return result;
 }

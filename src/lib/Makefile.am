@@ -38,7 +38,7 @@ include_HEADERS      = epc.h epc_defs.h idl_defs.h
 
 lib_LTLIBRARIES      = libepc.la
 
-libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c
+libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c epc_lib.h
 
 ##
 ## History of interface versions:

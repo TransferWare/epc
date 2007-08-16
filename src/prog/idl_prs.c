@@ -199,10 +199,19 @@ static idl_interface_t _interface;
 
 /* package types */
 #define STUB 0
+#define GENERATE_PROC 0
+
+#if GENERATE_PROC
 #define SKEL_RECV 1
 #define SKEL_SEND 2
-  
-static char *package_type_str[] = { "", "_recv", "_send" };
+#endif
+
+static char *package_type_str[] = 
+  { ""
+#if GENERATE_PROC
+    , "_recv", "_send"
+#endif /* #if GENERATE_PROC */
+ };
 
 #define NR_PACKAGE_TYPE ((int)(sizeof(package_type_str)/sizeof(package_type_str[0])))
 
@@ -614,10 +623,12 @@ print_variable_definition (FILE * pout, idl_parameter_t * parm,
 /* do we need a PL/SQL function for receiving and returning parameters? */
 static
 int
-exists_plsql_function( idl_function_t * fun, const int package_type )
+exists_plsql_function( /*@unused@ */ idl_function_t * fun, const int package_type )
 {
   int val = 0;
+#if GENERATE_PROC
   dword_t nr;
+#endif /* #if GENERATE_PROC */
 
   switch( package_type )
     {
@@ -625,6 +636,7 @@ exists_plsql_function( idl_function_t * fun, const int package_type )
       val = 1;
       break;
 
+#if GENERATE_PROC
     case SKEL_SEND:
       /* oneway functions do not return any result */
       if ( fun->oneway == 0 )
@@ -642,7 +654,13 @@ exists_plsql_function( idl_function_t * fun, const int package_type )
               break;
             }
         }
+      break;
+#endif /* #if GENERATE_PROC */
+
+    default:
+      break;
     }
+
   return val;
 }
 
@@ -650,7 +668,8 @@ exists_plsql_function( idl_function_t * fun, const int package_type )
 static void
 generate_plsql_function (FILE * pout, idl_function_t * fun, const int package_type)
 {
-  dword_t nr, nr_actual_parameters /* for a SEND and RECV less parameters */ ;
+  dword_t nr;
+  dword_t nr_actual_parameters = 0;
 
   DBUG_ENTER ("generate_plsql_function");
 
@@ -666,10 +685,12 @@ generate_plsql_function (FILE * pout, idl_function_t * fun, const int package_ty
     }
 
   /* PARAMETERS */
-  for (nr = nr_actual_parameters = 0; nr < fun->num_parameters; nr++)
+  for (nr = 0; nr < fun->num_parameters; nr++)
     {
       switch(package_type)
         {
+#if GENERATE_PROC
+
         case SKEL_SEND: /* in/out parameters, out parameters back to client */
         case SKEL_RECV: /* in and in/out parameters from client */
 
@@ -679,20 +700,24 @@ generate_plsql_function (FILE * pout, idl_function_t * fun, const int package_ty
             break; 
 
           /*@fallthrough@*/
+#endif /* #if GENERATE_PROC */
         case STUB:
           (void) fprintf (pout, "%s    ", ( nr_actual_parameters++ == 0 ? "(\n" : ",\n" ));
           print_formal_parameter (pout,
                                   fun->parameters[nr]->name,
                                   ( package_type == STUB ?
                                     fun->parameters[nr]->mode :
-                                    ( package_type == SKEL_RECV ? 
-                                      C_OUT :
-                                      C_IN ) ),
+                                    ( 
+#if GENERATE_PROC
+                                     package_type == SKEL_RECV ? C_OUT :
+#endif /* #if GENERATE_PROC */
+                                     C_IN ) ),
                                   fun->parameters[nr]->datatype,
                                   PLSQL);
         }
     }
 
+#if GENERATE_PROC
   /* Add result, msg_info (IN), epc__error (IN) and sqlcode (IN/OUT) */
   if ( package_type == SKEL_SEND )
     {
@@ -753,7 +778,7 @@ generate_plsql_function (FILE * pout, idl_function_t * fun, const int package_ty
             }
         }
     }
-  
+#endif /* #if GENERATE_PROC */
 
   if (nr_actual_parameters > 0)
     {
@@ -956,6 +981,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
 
           break;
 
+#if GENERATE_PROC
         case SKEL_SEND:
           /* ----------------
            * Send the results
@@ -1024,6 +1050,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                 }
             }
           break;
+#endif /* #if GENERATE_PROC */
         }
 
       (void) fprintf( pout, "  END;\n\n" );
@@ -1359,7 +1386,10 @@ generate_c_debug_info (FILE * pout, idl_function_t * fun, idl_mode_t mode, const
 static void
 generate_c_function (FILE * pout, idl_function_t * fun, const int pc_source)
 {
-  dword_t nr, nr_actual_parameters;
+  dword_t nr;
+#if GENERATE_PROC
+  dword_t nr_actual_parameters;
+#endif
   int indent = 0;
 
   DBUG_ENTER ("generate_c_function");
@@ -1387,11 +1417,11 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*slong sqlcode = 0;\n\
 %*sconst char *msg_info = call->msg_info;\n\
 %*sEXEC SQL VAR msg_info IS STRING;\n",
-		      indent, "", EXEC_SQL_BEGIN_DECLARE_SECTION,
-		      indent, "",
-		      indent, "",
-		      indent, "",
-		      indent, "" );
+                      indent, "", EXEC_SQL_BEGIN_DECLARE_SECTION,
+                      indent, "",
+                      indent, "",
+                      indent, "",
+                      indent, "" );
     }
 
   /* PARAMETERS */
@@ -1416,12 +1446,14 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     }
 
   (void) fprintf (pout,
-		  "\n%*sDBUG_ENTER( \"%s\" );\n%*sdo\n%*s{\n",
-		  indent, "", fun->name,
-		  indent, "",
-		  indent, "");
+                  "\n%*sDBUG_ENTER( \"%s\" );\n%*sdo\n%*s{\n",
+                  indent, "", fun->name,
+                  indent, "",
+                  indent, "");
 
   indent += 2;
+
+#if GENERATE_PROC
 
   /*
    * Get the in and in/out parameters
@@ -1433,10 +1465,10 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*s{\n\
 %*s  epc__request_native(call);\n\
 %*s}\n", 
-		      indent, "", 
-		      indent, "", 
-		      indent, "", 
-		      indent, "" );
+                      indent, "", 
+                      indent, "", 
+                      indent, "", 
+                      indent, "" );
     }
   else
     {
@@ -1445,10 +1477,10 @@ EXEC SQL INCLUDE sqlca;\n\n" );
           (void) fprintf( pout, "\
 %*sif (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE)\n\
 %*s{\n", 
-			  indent, "",
-			  indent, "" );
+                          indent, "",
+                          indent, "" );
 
-	  indent += 2;
+          indent += 2;
 
           /* call the recv function */
           (void) fprintf( pout, "\
@@ -1456,10 +1488,10 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*sEXEC SQL EXECUTE\n\
 %*sBEGIN\n\
 %*s  %s%s.%s", 
-			  indent, "", 
-			  indent, "", 
-			  indent, "", 
-			  indent, "", _interface.name, package_type_str[SKEL_RECV], fun->name );
+                          indent, "", 
+                          indent, "", 
+                          indent, "", 
+                          indent, "", _interface.name, package_type_str[SKEL_RECV], fun->name );
 
           for ( nr = nr_actual_parameters = 0; nr < fun->num_parameters; nr++ )
             {
@@ -1481,15 +1513,17 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*sEND-EXEC;\n\
 %*s}\n",
                           ( nr_actual_parameters == 0 ? "" : " )" ),
-			  indent, "",
-			  indent, "",
-			  indent, "",
-			  indent, "",
-			  indent, "",
-			  indent - 2, "" );
-	  indent -= 2;
+                          indent, "",
+                          indent, "",
+                          indent, "",
+                          indent, "",
+                          indent, "",
+                          indent - 2, "" );
+          indent -= 2;
         }
     }
+
+#endif /* #if GENERATE_PROC */
 
   /* ---------------------------------------------------------------
    * Print the in and in/out parameters, including Oracle error code
@@ -1509,11 +1543,11 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*s  break;\n\
 %*s}\n\
 \n", 
-		      indent, "",
-		      indent, "",
-		      indent, "",
-		      indent, "",
-		      indent, "" );
+                      indent, "",
+                      indent, "",
+                      indent, "",
+                      indent, "",
+                      indent, "" );
     }
   else
     {
@@ -1523,10 +1557,10 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*s  break;\n\
 %*s}\n\
 \n", 
-		      indent, "",
-		      indent, "",
-		      indent, "",
-		      indent, "" );
+                      indent, "",
+                      indent, "",
+                      indent, "",
+                      indent, "" );
     }
   /* ---------------
    * The actual call 
@@ -1543,14 +1577,14 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     case C_DATE:
       (void) fprintf (pout,
                       "%*s(void) strncpy( l_%s, ",
-		      indent, "",
+                      indent, "",
                       fun->return_value.proc_name);
       break;
 
     default:
       (void) fprintf (pout,
                       "%*s*l_%s = ",
-		      indent, "",
+                      indent, "",
                       fun->return_value.proc_name);
       break;
     }
@@ -1578,7 +1612,7 @@ EXEC SQL INCLUDE sqlca;\n\n" );
       /* zero terminate to be sure */
       (void) fprintf (pout, ", %ld );\n%*sl_%s[%ld] = '\\0'",
                       fun->return_value.size,
-		      indent, "",
+                      indent, "",
                       fun->return_value.proc_name,
                       fun->return_value.size);
       break;
@@ -1588,6 +1622,8 @@ EXEC SQL INCLUDE sqlca;\n\n" );
     }
 
   (void) fprintf (pout, ";\n\n");
+
+#if GENERATE_PROC
 
   /* ----------------
    * Send the results
@@ -1604,17 +1640,17 @@ EXEC SQL INCLUDE sqlca;\n\n" );
         (void) fprintf( pout, "\
 %*sif (EPC__CALL_PROTOCOL(call) == PROTOCOL_NATIVE && call->function->oneway == 0)\n\
 %*s{\n", indent, "", indent, "" );
-	indent += 2;
+        indent += 2;
         /* call the send function */
         (void) fprintf( pout, "\
 %*sEXEC SQL WHENEVER SQLERROR DO epc__abort(\"-- Oracle error --\");\n\
 %*sEXEC SQL EXECUTE\n\
 %*sBEGIN\n\
 %*s  %s%s.%s", 
-			indent, "",
-			indent, "",
-			indent, "",
-			indent, "",
+                        indent, "",
+                        indent, "",
+                        indent, "",
+                        indent, "",
                         _interface.name,
                         package_type_str[SKEL_SEND],
                         fun->name );
@@ -1660,15 +1696,17 @@ EXEC SQL INCLUDE sqlca;\n\n" );
 %*sEND;\n\
 %*sEND-EXEC;\n\
 %*s}\n", 
-			indent, "",
-			indent, "",
-			indent, "",
-			indent, "",
-			indent, "",
-			indent - 2, "");
-	indent -= 2;
+                        indent, "",
+                        indent, "",
+                        indent, "",
+                        indent, "",
+                        indent, "",
+                        indent - 2, "");
+        indent -= 2;
       }
   }
+
+#endif /* #if GENERATE_PROC */
 
   /*
    * Print the in/out and out parameters, including Oracle error code
@@ -1897,7 +1935,7 @@ generate_c (const char *include_text)
   else
     {
       (void) fprintf (stdout, "Creating %s\n", filename);
-      generate_c_source (pout, include_text, 1);
+      generate_c_source (pout, include_text, GENERATE_PROC);
       (void) fclose (pout);
     }
 

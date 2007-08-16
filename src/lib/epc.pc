@@ -274,15 +274,9 @@ epc__disconnect_logoff_db( const int commit, epc__info_t *epc__info );
 static
 void
 epc__recv_request_pipe_db( char *msg_info,
-			   char *msg_request,
-			   char *interface_name,
-			   char *function_name,
-			   long *retval,
-			   epc__info_t *epc__info );
-
-static
-void
-epc__send_response_pipe_error_db( const char *msg_info, const long epc__error, epc__info_t *epc__info );
+                           char *msg_request,
+                           long *retval,
+                           epc__info_t *epc__info );
 
 static
 void
@@ -589,8 +583,6 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 {
   dword_t handle;
   long retval = OK;
-  char interface_name[MAX_INTERFACE_NAME_LEN+1] = "";
-  char function_name[MAX_FUNC_NAME_LEN+1] = "";
 
   DBUG_ENTER( "epc__recv_request_pipe" );
 
@@ -609,11 +601,9 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 #endif
 
   epc__recv_request_pipe_db( epc__call->msg_info,
-			     epc__call->msg_request,
-			     interface_name,
-			     function_name,
-			     &retval,
-			     epc__info );
+                             epc__call->msg_request,
+                             &retval,
+                             epc__info );
 
 #ifdef SERVER_INTERRUPT
   (void) osncui(handle);
@@ -623,32 +613,9 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
   if ( retval == OK )
     {
-      if (epc__call->msg_request[0] == '\0')
-        {
-          epc__lookup_interface (interface_name, epc__info, epc__call);
-          epc__lookup_function (function_name, epc__info, epc__call);
-
-          switch (epc__call->epc__error)
-            {
-            case INTERFACE_UNKNOWN:
-              break;
-              
-            case FUNCTION_UNKNOWN:
-              break;
-
-            case OK:
-              break;
-
-            default:
-              assert (epc__call->epc__error == INTERFACE_UNKNOWN
-                      || epc__call->epc__error == FUNCTION_UNKNOWN
-                      || epc__call->epc__error == OK);
-            }
-        }
 #ifndef DBUG_OFF
       epc__call_print( epc__call );
 #endif
-
     }
 
   epc__call->epc__error = retval;
@@ -663,13 +630,11 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
 
 static
 void
-epc__recv_request_pipe_db( msg_info, msg_request, interface_name, function_name, retval, epc__info )
+epc__recv_request_pipe_db( msg_info, msg_request, retval, epc__info )
 EXEC SQL BEGIN DECLARE SECTION;
-char *msg_info, *msg_request, *interface_name, *function_name;
+char *msg_info, *msg_request;
 EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1); /* client-specific pipe for results  */
 EXEC SQL VAR msg_request IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
-EXEC SQL VAR interface_name IS STRING(MAX_INTERFACE_NAME_LEN+1);
-EXEC SQL VAR function_name IS STRING(MAX_FUNC_NAME_LEN+1);
 long *retval;
 EXEC SQL END DECLARE SECTION;
 epc__info_t *epc__info;
@@ -677,8 +642,6 @@ epc__info_t *epc__info;
   EXEC SQL BEGIN DECLARE SECTION;
   short msg_info_nl; /* null indicator */
   short msg_request_nl; /* null indicator */
-  short interface_name_nl; /* null indicator */
-  short function_name_nl; /* null indicator */
   const int msg_timed_out = MSG_TIMED_OUT;
   const int msg_too_big = MSG_TOO_BIG;
   const int msg_interrupted = MSG_INTERRUPTED;
@@ -694,16 +657,11 @@ epc__info_t *epc__info;
   EXEC SQL EXECUTE
   declare
   begin
-    empty_pipes('%', 10);
-  /*
     epc_srvr.recv_request
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info:msg_info_nl
     , p_msg_request => :msg_request:msg_request_nl
-    , p_interface_name => :interface_name:interface_name_nl
-    , p_function_name => :function_name:function_name_nl
     );
-  */
   exception
     when epc.e_msg_timed_out
     then
@@ -720,14 +678,8 @@ epc__info_t *epc__info;
   end;
   END-EXEC;
 
-  epc__show_dbms_output_db();
-
   if ( retval == OK )
     {
-      /* either msg_request OR interface and function must be set */
-      assert( (msg_request_nl == -1 && interface_name_nl != -1 && function_name_nl != -1) ||
-              (msg_request_nl != -1 && interface_name_nl == -1 && function_name_nl == -1) );
-
       if ( msg_request_nl == -1 )
         msg_request[0] = '\0';
 
@@ -739,16 +691,6 @@ epc__info_t *epc__info;
       assert(strlen(msg_info) <= MAX_MSG_INFO_LEN);
 
       DBUG_PRINT( "info", ( "msg_info: %s", msg_info ) );
-
-      if ( interface_name_nl == -1 )
-        interface_name[0] = '\0';
-
-      assert(strlen(interface_name) <= MAX_INTERFACE_NAME_LEN);
-              
-      if ( function_name_nl == -1 )
-        function_name[0] = '\0';
-      
-      assert(strlen(function_name) <= MAX_FUNC_NAME_LEN);
     }
 
   DBUG_LEAVE();
@@ -771,25 +713,8 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
     {
       EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
-      switch (EPC__CALL_PROTOCOL(epc__call))
-        {
-        case PROTOCOL_NATIVE:
-	  /* Only call when error code is set */
-	  if (epc__call->epc__error != OK) {
-	    epc__send_response_pipe_error_db( epc__call->msg_info, epc__call->epc__error, epc__info );
-	  }
-          break;
+      epc__send_response_pipe_db( epc__call->msg_info, epc__call->msg_response, epc__info );
 
-        case PROTOCOL_SOAP:
-        case PROTOCOL_XMLRPC:
-	  epc__send_response_pipe_db( epc__call->msg_info, epc__call->msg_response, epc__info );
-          break;
-
-        default:
-          assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_XML_MIN ||
-                 EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_XML_MAX);
-          break;
-        }
       DBUG_PRINT( "output", 
                   ( "error code: %ld; epc error: %ld", 
                     (long)epc__call->errcode, (long)epc__call->epc__error ) );
@@ -799,33 +724,6 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
   DBUG_LEAVE();
 
   return epc__call->epc__error;
-}
-
-static
-void
-epc__send_response_pipe_error_db( msg_info, error_code, epc__info )
-EXEC SQL BEGIN DECLARE SECTION;
-const char *msg_info;
-EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-const long error_code;
-EXEC SQL END DECLARE SECTION;
-epc__info_t *epc__info;
-{
-  DBUG_ENTER("epc__send_response_pipe_error_db");
-
-  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
-
-  EXEC SQL EXECUTE
-  begin
-    epc_srvr.send_response
-    ( p_epc_key => epc_srvr.get_epc_key
-    , p_msg_info => :msg_info
-    , p_error_code => :error_code
-    );
-  end;
-  END-EXEC;
-
-  DBUG_LEAVE();
 }
 
 static
@@ -890,8 +788,8 @@ epc__show_dbms_output_db(void)
       dbms_output.get_lines(l_line, :numlines INDICATOR :numlines_nl);
       if l_line.count > 0
       then
-	for i_nr in l_line.first .. l_line.last
-	loop
+        for i_nr in l_line.first .. l_line.last
+        loop
           :line INDICATOR :line_nl(1 + (i_nr - l_line.first)) := l_line(i_nr);
         end loop;
       end if;
@@ -899,7 +797,7 @@ epc__show_dbms_output_db(void)
     END-EXEC;
     
     if (numlines_nl == -1) {
-	numlines = 0;
+        numlines = 0;
     }
 
     for (nr = 0; nr < numlines; nr++)
@@ -907,7 +805,7 @@ epc__show_dbms_output_db(void)
       size_t length;
 
       if (line_nl[nr] == -1) {
-	line[nr][0] = '\0';
+        line[nr][0] = '\0';
       }
 
       /* line[nr] may contain \n and/or \r: skip them */
@@ -922,277 +820,6 @@ epc__show_dbms_output_db(void)
   }
 
   DBUG_LEAVE();
-}
-
-void
-epc__request_native(epc__call_t * epc__call)
-{
-  dword_t nr;
-
-  DBUG_ENTER ("epc__request_native");
-
-  assert(epc__call != NULL);
-  assert(epc__call->interface != NULL);
-  assert(epc__call->function != NULL);
-  assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
-
-  DBUG_PRINT ("info", ("method: %s.%s", epc__call->interface->name, epc__call->function->name));
-
-  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
-
-  for (nr = 0; nr < epc__call->function->num_parameters; nr++)
-    {
-      if (epc__call->function->parameters[nr].mode != C_OUT)
-        {
-	  EXEC SQL BEGIN DECLARE SECTION;
-	  char *l_name = (char *) epc__call->function->parameters[nr].name;
-	  EXEC SQL VAR l_name IS STRING(MAX_PARM_NAME_LEN+1);
-	  EXEC SQL END DECLARE SECTION;
-
-          DBUG_PRINT ("info", ("parameter: %s; address: %p; type: %d",
-                               epc__call->function->parameters[nr].name,
-                               epc__call->function->parameters[nr].data,
-                               (int)epc__call->function->parameters[nr].type));
-
-          switch (epc__call->function->parameters[nr].type)
-            {
-            case C_DATE:
-            case C_STRING:
-            case C_XML:
-              {
-                EXEC SQL BEGIN DECLARE SECTION;
-                char *l_string = (char *) epc__call->function->parameters[nr].data;
-                EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1);
-                EXEC SQL END DECLARE SECTION;
-
-                l_string[0] = '\0';
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_string);
-                end;
-                END-EXEC;
-                assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
-              }
-              break;
-
-            case C_INT:
-              {
-                EXEC SQL BEGIN DECLARE SECTION;
-                int *l_int = (idl_int_t *) epc__call->function->parameters[nr].data;
-                EXEC SQL END DECLARE SECTION;
-
-                *l_int = 0;
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_int);
-                end;
-                END-EXEC;
-              }
-              break;
-
-            case C_LONG:
-              {
-                EXEC SQL BEGIN DECLARE SECTION;
-                long *l_long = (idl_long_t *) epc__call->function->parameters[nr].data;
-                EXEC SQL END DECLARE SECTION;
-
-                *l_long = 0L;
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_long);
-                end;
-                END-EXEC;
-              }
-              break;
-
-            case C_FLOAT:
-              {
-                EXEC SQL BEGIN DECLARE SECTION;
-                float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
-                EXEC SQL END DECLARE SECTION;
-
-                *l_float = 0.0F;
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_float);
-                end;
-                END-EXEC;
-              }
-              break;
-
-            case C_DOUBLE:
-              {
-                EXEC SQL BEGIN DECLARE SECTION;
-                double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
-                EXEC SQL END DECLARE SECTION;
-
-                *l_double = 0.0F;
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_double);
-                end;
-                END-EXEC;
-              }
-              break;
-
-            case C_VOID:        /* procedure */
-              assert (epc__call->function->parameters[nr].mode == C_OUT);
-              break;
-
-            default:
-              assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
-                      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
-
-            }
-        }
-    }
-
-  DBUG_LEAVE ();
-}
-
-void
-epc__response_native(epc__call_t * epc__call)
-{
-  EXEC SQL BEGIN DECLARE SECTION;
-  char *msg_info = epc__call->msg_info;
-  EXEC SQL VAR msg_info IS STRING(MAX_MSG_INFO_LEN+1);
-  long error_code = epc__call->epc__error;
-  EXEC SQL END DECLARE SECTION;
-  dword_t nr;
-
-  DBUG_ENTER ("epc__response_native");
-
-  assert(epc__call != NULL);
-  assert(epc__call->interface != NULL);
-  assert(epc__call->function != NULL);
-  assert(epc__call->function->oneway == 0);
-  assert(EPC__CALL_PROTOCOL(epc__call) == PROTOCOL_NATIVE);
-
-  DBUG_PRINT ("info", ("method: %s.%s", epc__call->interface->name, epc__call->function->name));
-
-  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
-
-  EXEC SQL EXECUTE
-  begin
-    epc_srvr.new_response
-    ( p_epc_key => epc_srvr.get_epc_key
-    , p_msg_info => :msg_info
-    );
-  end;
-  END-EXEC;
-
-  for (nr = 0; nr < epc__call->function->num_parameters; nr++)
-    {
-      if (epc__call->function->parameters[nr].mode != C_IN)
-        {
-          /* All input should be not null, hence we do not need indicator variables */
-          EXEC SQL BEGIN DECLARE SECTION;
-	  char *l_name = (char *) epc__call->function->parameters[nr].name;
-	  EXEC SQL VAR l_name IS STRING(MAX_PARM_NAME_LEN+1);
-          EXEC SQL END DECLARE SECTION;
-
-          DBUG_PRINT ("info", ("parameter: %s (%p)",
-                               epc__call->function->parameters[nr].name,
-                               epc__call->function->parameters[nr].data));
-
-          switch (epc__call->function->parameters[nr].type)
-            {
-            case C_DATE:
-            case C_STRING:
-            case C_XML:
-	      {
-		EXEC SQL BEGIN DECLARE SECTION;
-		char *l_string = (char *) epc__call->function->parameters[nr].data;
-		EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
-		EXEC SQL END DECLARE SECTION;
-
-		assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
-		EXEC SQL EXECUTE
-                begin
-                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_string);
-                end;
-                END-EXEC;
-	      }
-              break;
-
-            case C_INT:
-	      {
-		EXEC SQL BEGIN DECLARE SECTION;
-		int *l_int = (idl_int_t *) epc__call->function->parameters[nr].data;
-		EXEC SQL END DECLARE SECTION;
-
-		EXEC SQL EXECUTE
-                begin
-                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_int);
-                end;
-                END-EXEC;
-	      }
-              break;
-
-            case C_LONG:
-	      {
-		EXEC SQL BEGIN DECLARE SECTION;
-		long *l_long = (idl_long_t *) epc__call->function->parameters[nr].data;
-		EXEC SQL END DECLARE SECTION;
-
-		EXEC SQL EXECUTE
-		begin
-                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_long);
-                end;
-                END-EXEC;
-	      }
-              break;
-
-            case C_FLOAT:
-	      {
-		EXEC SQL BEGIN DECLARE SECTION;
-		float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
-		EXEC SQL END DECLARE SECTION;
-
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_float);
-                end;
-                END-EXEC;
-	      }
-              break;
-
-            case C_DOUBLE:
-	      {
-		EXEC SQL BEGIN DECLARE SECTION;
-		double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
-		EXEC SQL END DECLARE SECTION;
-
-                EXEC SQL EXECUTE
-                begin
-                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_double);
-                end;
-                END-EXEC;
-	      }
-              break;
-
-            case C_VOID:        /* procedure */
-              assert (epc__call->function->parameters[nr].mode == C_OUT);
-              break;
-
-            default:
-              assert (epc__call->function->parameters[nr].type >= C_DATATYPE_MIN
-                      && epc__call->function->parameters[nr].type <= C_DATATYPE_MAX);
-
-            }
-        }
-    }
-
-  EXEC SQL EXECUTE
-  begin
-    epc_srvr.send_response
-    ( p_epc_key => epc_srvr.get_epc_key
-    , p_msg_info => :msg_info
-    );
-  end;
-  END-EXEC;
-
-  DBUG_LEAVE ();
 }
 
 /* sqlca is undefined here */

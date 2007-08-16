@@ -111,87 +111,20 @@ procedure set_response_send_timeout
 -- 
 -- @param p_epc_key         Needed for the connection info
 -- @param p_msg_info        The message information
--- @param p_msg_request     The XML describing the request
---                          (when protocol stored in p_msg_info is SOAP/XMLRPC)
--- @param p_interface_name  The interface name of the request
---                          (when protocol stored in p_msg_info is NATIVE)
--- @param p_function_name   The function name of the request
---                          (when protocol stored in p_msg_info is NATIVE)
+-- @param p_msg_request     The message request
 */
 procedure recv_request
 ( p_epc_key in epc_key_subtype
 , p_msg_info out epc_srvr.msg_info_subtype
 , p_msg_request out varchar2
-, p_interface_name out varchar2
-, p_function_name out varchar2
 );
 
 /**
--- Create a new response, i.e. clear the database pipe and put the metadata into it.
---
--- <p>
--- To be used when sending a response to a request using the native protocol.
--- </p>
--- 
--- @param p_epc_key     Needed for the connection info
--- @param p_msg_info    The message information as received by recv_request
-*/
-procedure new_response
-( p_epc_key in epc_key_subtype
-, p_msg_info in epc_srvr.msg_info_subtype
-);
-
-/**
--- Send a response to a request using the NATIVE protocol.
---
--- <p>
--- To be used when sending a response to a request using the native
--- protocol.  Before this call, epc_srvr.new_response has to be called
--- followed by dbms_pipe.pack_message for all out (or in out) parameters.
--- </p>
--- 
--- @param p_epc_key   Needed for the connection info
--- @param p_msg_info  The message information as received by recv_request
-*/
-procedure send_response
-( p_epc_key in epc_key_subtype
-, p_msg_info in epc_srvr.msg_info_subtype
-);
-
-/**
--- Send an error response to a request using the NATIVE protocol.
---
--- <p>
--- To be used when sending an error response to a request using the
--- native protocol. It will reset the dbms_pipe message buffer
--- (dbms_pipe.reset_buffer) so it may be called after
--- epc_srvr.new_response has been called followed by
--- dbms_pipe.pack_message for all out (or in out) parameters.
--- </p>
+-- Send a response to a request.
 -- 
 -- @param p_epc_key       Needed for the connection info
 -- @param p_msg_info      The message information as received by recv_request
--- @param p_error_code    The error code
-*/
-procedure send_response
-( 
-  p_epc_key in epc_key_subtype
-, p_msg_info in epc_srvr.msg_info_subtype
-, p_error_code in pls_integer
-);
-
-/**
--- Send a response to a request using the XMLRPC or SOAP protocol.
--- 
--- <p>
--- The new_request should not be called before calling this. This is
--- the only call needed to send any response (with or without errors)
--- to a XMLRPC or SOAP request.
--- </p>
---
--- @param p_epc_key       Needed for the connection info
--- @param p_msg_info      The message information as received by recv_request
--- @param p_msg_response  The XML describing the response
+-- @param p_msg_response  The message response
 */
 procedure send_response
 ( 
@@ -213,48 +146,6 @@ procedure send_response
 procedure send_request_interrupt
 (
   p_epc_key in epc_key_subtype
-);
-
-/**
--- Get a request parameter (IN or IN OUT).
--- 
--- @param p_epc_key    The key
--- @param p_name       The name of the parameter
--- @param p_value      The value of the parameter
-*/
-procedure get_request_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
-, p_value out varchar2
-);
-
-procedure get_request_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
-, p_value out number
-);
-
-/**
--- Set a response parameter (OUT or IN OUT).
--- 
--- @param p_epc_key    The key
--- @param p_name       The name of the parameter
--- @param p_value      The value of the parameter
-*/
-procedure set_response_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
-, p_value in varchar2
-);
-
-procedure set_response_parameter
-(
-  p_epc_key in epc_key_subtype
-, p_name in epc.parameter_name_subtype
-, p_value in number
 );
 
 end epc_srvr;

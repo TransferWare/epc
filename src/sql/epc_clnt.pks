@@ -105,17 +105,20 @@ create or replace package epc_clnt is
 
        GJP 24-07-2007
 
-   7 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
-       From server: MSG SEQ, ERROR CODE STRING, PARAMETERS OUT
+   7 - To server: PROTOCOL, MSG SEQ, NATIVE REQUEST MESSAGE [, RESULT PIPE ]
+       From server: MSG SEQ, NATIVE RESPONSE MESSAGE
 
-       GJP 13-08-2004
-       RESULT PIPE is 'N/A' for oneway functions.
+       The request message consists of INTERFACE, FUNCTION and PARAMETERS IN.
 
+       The response message consists of ERROR CODE and PARAMETERS OUT.
+
+       Each message argument is encoded as follows:
+       a) data type (epc.data_type_subtype as a 1 byte character)
+       b) data length (for string and xml a 4 byte hexadecimal string and for others a 2 byte hexadecimal string)
+       c) the data as a string
 */
 
 subtype protocol_subtype is pls_integer;
-
-"N/A" constant epc.pipe_name_subtype := 'N/A';
 
 "SOAP" constant protocol_subtype := 5; -- default protocol for HTTP
 "XMLRPC" constant protocol_subtype := 6; -- default protocol for the TCP
