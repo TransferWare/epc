@@ -502,14 +502,20 @@ begin
     then raise_application_error
          ( epc.c_comm_error
          , '(epc_clnt.send_request_dbms_pipe) ' ||
-           'Timed out while sending message number ' || to_char(g_msg_seq) || '.'
+           'Timed out while sending message number ' ||
+           to_char(g_msg_seq) ||
+           ' for pipe ' || p_epc_info_rec.request_pipe ||
+           '.'
          );
 
     when 3 -- message-interrupted
     then raise_application_error
          ( epc.c_comm_error
          , '(epc_clnt.send_request_dbms_pipe) ' ||
-           'Interrupted while sending message number ' || to_char(g_msg_seq) || '.'
+           'Interrupted while sending message number ' ||
+           to_char(g_msg_seq) ||
+           ' for pipe ' || p_epc_info_rec.request_pipe ||
+           '.'
          );
 
     else
@@ -738,7 +744,11 @@ begin
       raise_application_error
       ( epc.c_comm_error
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Timed out while receiving message number ' || to_char(g_msg_seq) || '.'
+        'Timed out while receiving message number ' ||
+        to_char(g_msg_seq) ||
+        ' for pipe ' ||
+        g_result_pipe ||
+        '.'
       );
 
     when 2 -- Record in the pipe is too large for the buffer. (This should not happen.)
@@ -746,7 +756,10 @@ begin
       raise_application_error
       ( epc.c_comm_error
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Message too big while receiving message number ' || to_char(g_msg_seq) || '.'
+        'Message too big while receiving message number ' ||
+        to_char(g_msg_seq) ||
+        ' for pipe ' ||
+        g_result_pipe || '.'
       );
 
     when 3 -- An interrupt occurred.
@@ -754,7 +767,11 @@ begin
       raise_application_error
       ( epc.c_comm_error
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Interrupted while receiving message number ' || to_char(g_msg_seq) || '.'
+        'Interrupted while receiving message number ' ||
+        to_char(g_msg_seq) ||
+        ' for pipe ' ||
+        g_result_pipe ||
+        '.'
       );
 
     else -- no more return codes according to the documentation
@@ -764,9 +781,17 @@ begin
   /* Get the message sequence */
   dbms_pipe.unpack_message( l_msg_seq_result );
 
+--/*DBUG
+  dbug.print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
+--/*DBUG*/
+
   if l_msg_seq_result = g_msg_seq
   then
     dbms_pipe.unpack_message( p_epc_info_rec.msg );
+
+--/*DBUG
+    dbug.print('info', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+--/*DBUG*/
 
     if p_epc_info_rec.protocol = "NATIVE"
     then
@@ -970,6 +995,13 @@ is
   l_xml XMLType;
   l_extract_type varchar2(100);
 begin
+--/*DBUG
+  dbug.enter('epc_clnt.get_response_parameter');
+  dbug.print('input', 'p_name: %s', p_name);
+  dbug.print('input', 'p_data_type: %s', p_data_type);
+  dbug.print('input', 'p_max_bytes: %s', p_max_bytes);
+--/*DBUG*/
+
   if p_epc_info_rec.protocol = "NATIVE"
   then
     declare
@@ -977,6 +1009,10 @@ begin
       e_wrong_data_type_requested exception;
       pragma exception_init (e_wrong_data_type_requested, -6559);
     begin
+--/*DBUG
+      dbug.print('debug', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+--/*DBUG*/
+
       if substr(p_epc_info_rec.msg, 1, 1) = to_char(p_data_type)
       then
         null;
@@ -989,12 +1025,12 @@ begin
         then
           l_length := to_number(substr(p_epc_info_rec.msg, 2, 4), 'FM000X');
           p_value := substr(p_epc_info_rec.msg, 6, l_length);
-          p_epc_info_rec.msg := substr(p_epc_info_rec.msg, 1 + 4 + l_length);
+          p_epc_info_rec.msg := substr(p_epc_info_rec.msg, 1 + 1 + 4 + l_length);
 
         else
           l_length := to_number(substr(p_epc_info_rec.msg, 2, 2), 'FM0X');
           p_value := substr(p_epc_info_rec.msg, 4, l_length);
-          p_epc_info_rec.msg := substr(p_epc_info_rec.msg, 1 + 2 + l_length);
+          p_epc_info_rec.msg := substr(p_epc_info_rec.msg, 1 + 1 + 2 + l_length);
       end case;
     end;
   else
@@ -1090,6 +1126,11 @@ begin
   then
     raise value_error;
   end if;
+
+--/*DBUG
+  dbug.print('output', 'p_value: %s', p_value);
+  dbug.leave;
+--/*DBUG*/
 end get_response_parameter;
 
 procedure get_response_parameter
