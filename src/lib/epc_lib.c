@@ -1216,7 +1216,7 @@ epc__native_parse_argument (idl_type_t type, char **msg_request, /*@out@ */int *
       break;
     }
 
-  DBUG_PRINT("input", ("msg_request: %*.*s", len, len, *msg_request));
+  DBUG_PRINT("output", ("msg_request: %.*s", *len, *msg_request));
   DBUG_LEAVE();
 
   return retval;
@@ -1507,11 +1507,6 @@ epc__handle_requests (epc__info_t * epc__info,
         break;
     }
 
-  if (G_signo != 0)
-    {
-      (void) printf ("Signal %d received\n", G_signo);
-    }
-
   DBUG_PRINT ("output",
               ("error code: %ld; epc status: %s",
                (long) epc__call.errcode,
@@ -1530,12 +1525,13 @@ handle_signal (int signo)
   (void) fprintf (stderr, "Received signal %d\n", signo);
 
 #ifdef SERVER_INTERRUPT
+#if 1
 
   if (G_epc__handle_interrupt != NULL)
     {
       (*G_epc__handle_interrupt) (G_epc__info_interrupt);
     }
-
+#endif
 #endif
 
   G_signo = signo;
