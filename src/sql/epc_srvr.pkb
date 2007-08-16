@@ -42,7 +42,7 @@ end;
 procedure print(p_break_point in varchar2, p_format in varchar2, p_data in varchar2 default null)
 is
 begin
-  dbms_output.put_line(lpad(' ', g_indent, ' ')||replace(p_format, '%s', p_data));
+  dbms_output.put_line(lpad(' ', g_indent, ' ')||p_break_point||': '||replace(p_format, '%s', p_data));
 end;
 
 procedure leave
@@ -420,6 +420,90 @@ begin
   leave;
 --/*DBUG*/
 end send_request_interrupt;
+
+procedure get_request_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value out varchar2
+)
+is
+begin
+--/*DBUG
+  enter('epc_srvr.get_request_parameter');
+  print('input', 'p_name: %s', p_name);
+--/*DBUG*/
+
+  dbms_pipe.unpack_message(p_value);
+
+--/*DBUG
+  print('output', 'p_value: %s', p_value);
+  leave;
+--/*DBUG*/
+end;
+
+procedure get_request_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value out number
+)
+is
+begin
+--/*DBUG
+  enter('epc_srvr.get_request_parameter');
+  print('input', 'p_name: %s', p_name);
+--/*DBUG*/
+
+  dbms_pipe.unpack_message(p_value);
+
+--/*DBUG
+  print('output', 'p_value: %s', p_value);
+  leave;
+--/*DBUG*/
+end;
+
+procedure set_response_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value in varchar2
+)
+is
+begin
+--/*DBUG
+  enter('epc_srvr.set_response_parameter');
+  print('input', 'p_name: %s', p_name);
+  print('input', 'p_value: %s', p_value);
+--/*DBUG*/
+
+  dbms_pipe.pack_message(p_value);
+
+--/*DBUG
+  leave;
+--/*DBUG*/
+end;
+
+procedure set_response_parameter
+(
+  p_epc_key in epc_key_subtype
+, p_name in epc.parameter_name_subtype
+, p_value in number
+)
+is
+begin
+--/*DBUG
+  enter('epc_srvr.set_response_parameter');
+  print('input', 'p_name: %s', p_name);
+  print('input', 'p_value: %s', p_value);
+--/*DBUG*/
+
+  dbms_pipe.pack_message(p_value);
+
+--/*DBUG
+  leave;
+--/*DBUG*/
+end;
 
 end epc_srvr;
 /

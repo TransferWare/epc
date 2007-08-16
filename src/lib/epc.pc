@@ -337,10 +337,12 @@ handle_interrupt(epc__info_t *epc__info)
 
   DBUG_ENTER( "handle_interrupt" );
 
+  exit(EXIT_SUCCESS);
+
   DBUG_PRINT( "input", ( "epc__info: %p", (void*)epc__info ) );
 
   (void) snprintf(command, sizeof(command),
-                  "epcdaemon %s -I %s %s -u %s",
+                  "epcdaemon --verbose %s -I %s %s -u %s",
                   epc__info->program,
                   (epc__info->pipe != NULL ? "-p" : ""),
                   (epc__info->pipe != NULL ? epc__info->pipe : ""),
@@ -379,6 +381,13 @@ epc__abort( char *msg )
   exit(EXIT_FAILURE);
 }
 
+static
+void
+EPC__ABORT( const char *file, const int line, char *msg )
+{
+  printf("%s#%d\n", file, line);
+  epc__abort(msg);
+}
 
 /*
   GJP 23-02-2004
@@ -445,7 +454,7 @@ epc__connect_logon_db( epc__info_t *epc__info )
   DBUG_ENTER( "epc__connect_logon_db" );
 
   /* log on to database */
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL CONNECT :logon;
 
@@ -464,7 +473,7 @@ epc__connect_register_db( epc__info_t *epc__info )
 
   DBUG_ENTER( "epc__connect_register_db" );
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL EXECUTE
   declare
@@ -495,7 +504,7 @@ epc__interrupt( epc__info_t *epc__info )
 
   DBUG_ENTER( "epc__interrupt" );
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL EXECUTE
   begin
@@ -680,11 +689,13 @@ epc__info_t *epc__info;
 
   *retval = OK;
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL EXECUTE
   declare
   begin
+    empty_pipes('%', 10);
+  /*
     epc_srvr.recv_request
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info:msg_info_nl
@@ -692,7 +703,7 @@ epc__info_t *epc__info;
     , p_interface_name => :interface_name:interface_name_nl
     , p_function_name => :function_name:function_name_nl
     );
-    empty_pipes('REQUEST_PIPE', 0);
+  */
   exception
     when epc.e_msg_timed_out
     then
@@ -758,7 +769,7 @@ epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 
   if (epc__call->msg_info[0] != '\0' && (epc__call->function == NULL || epc__call->function->oneway == 0))
     {
-      EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+      EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
       switch (EPC__CALL_PROTOCOL(epc__call))
         {
@@ -802,7 +813,7 @@ epc__info_t *epc__info;
 {
   DBUG_ENTER("epc__send_response_pipe_error_db");
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL EXECUTE
   begin
@@ -830,7 +841,7 @@ epc__info_t *epc__info;
 {
   DBUG_ENTER("epc__send_response_pipe_db");
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL EXECUTE
   begin
@@ -870,7 +881,7 @@ epc__show_dbms_output_db(void)
   while (1) {
     numlines = NUMLINES;
 
-    EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+    EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
     EXEC SQL EXECUTE
     declare
@@ -927,12 +938,17 @@ epc__request_native(epc__call_t * epc__call)
 
   DBUG_PRINT ("info", ("method: %s.%s", epc__call->interface->name, epc__call->function->name));
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   for (nr = 0; nr < epc__call->function->num_parameters; nr++)
     {
       if (epc__call->function->parameters[nr].mode != C_OUT)
         {
+	  EXEC SQL BEGIN DECLARE SECTION;
+	  char *l_name = (char *) epc__call->function->parameters[nr].name;
+	  EXEC SQL VAR l_name IS STRING(MAX_PARM_NAME_LEN+1);
+	  EXEC SQL END DECLARE SECTION;
+
           DBUG_PRINT ("info", ("parameter: %s; address: %p; type: %d",
                                epc__call->function->parameters[nr].name,
                                epc__call->function->parameters[nr].data,
@@ -946,13 +962,13 @@ epc__request_native(epc__call_t * epc__call)
               {
                 EXEC SQL BEGIN DECLARE SECTION;
                 char *l_string = (char *) epc__call->function->parameters[nr].data;
-                EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
+                EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1);
                 EXEC SQL END DECLARE SECTION;
 
                 l_string[0] = '\0';
                 EXEC SQL EXECUTE
                 begin
-                  dbms_pipe.unpack_message(:l_string);
+                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_string);
                 end;
                 END-EXEC;
                 assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
@@ -968,7 +984,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_int = 0;
                 EXEC SQL EXECUTE
                 begin
-                  dbms_pipe.unpack_message(:l_int);
+                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_int);
                 end;
                 END-EXEC;
               }
@@ -983,7 +999,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_long = 0L;
                 EXEC SQL EXECUTE
                 begin
-                  dbms_pipe.unpack_message(:l_long);
+                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_long);
                 end;
                 END-EXEC;
               }
@@ -998,7 +1014,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_float = 0.0F;
                 EXEC SQL EXECUTE
                 begin
-                  dbms_pipe.unpack_message(:l_float);
+                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_float);
                 end;
                 END-EXEC;
               }
@@ -1013,7 +1029,7 @@ epc__request_native(epc__call_t * epc__call)
                 *l_double = 0.0F;
                 EXEC SQL EXECUTE
                 begin
-                  dbms_pipe.unpack_message(:l_double);
+                  epc_srvr.get_request_parameter(epc_srvr.get_epc_key, :l_name, :l_double);
                 end;
                 END-EXEC;
               }
@@ -1054,7 +1070,7 @@ epc__response_native(epc__call_t * epc__call)
 
   DBUG_PRINT ("info", ("method: %s.%s", epc__call->interface->name, epc__call->function->name));
 
-  EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
+  EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 
   EXEC SQL EXECUTE
   begin
@@ -1071,12 +1087,8 @@ epc__response_native(epc__call_t * epc__call)
         {
           /* All input should be not null, hence we do not need indicator variables */
           EXEC SQL BEGIN DECLARE SECTION;
-          char *l_string = (char *) epc__call->function->parameters[nr].data;
-          EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
-          int *l_int = (idl_int_t *) epc__call->function->parameters[nr].data;
-          long *l_long = (idl_long_t *) epc__call->function->parameters[nr].data;
-          float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
-          double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
+	  char *l_name = (char *) epc__call->function->parameters[nr].name;
+	  EXEC SQL VAR l_name IS STRING(MAX_PARM_NAME_LEN+1);
           EXEC SQL END DECLARE SECTION;
 
           DBUG_PRINT ("info", ("parameter: %s (%p)",
@@ -1088,44 +1100,75 @@ epc__response_native(epc__call_t * epc__call)
             case C_DATE:
             case C_STRING:
             case C_XML:
-              assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
-              EXEC SQL EXECUTE
-              begin
-                dbms_pipe.pack_message(:l_string);
-              end;
-              END-EXEC;
+	      {
+		EXEC SQL BEGIN DECLARE SECTION;
+		char *l_string = (char *) epc__call->function->parameters[nr].data;
+		EXEC SQL VAR l_string IS STRING(MAX_MSG_REQUEST_LEN+1); /* client-specific pipe for results  */
+		EXEC SQL END DECLARE SECTION;
+
+		assert(strlen(l_string) <= epc__call->function->parameters[nr].size);
+		EXEC SQL EXECUTE
+                begin
+                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_string);
+                end;
+                END-EXEC;
+	      }
               break;
 
             case C_INT:
-              EXEC SQL EXECUTE
-              begin
-                dbms_pipe.pack_message(:l_int);
-              end;
-              END-EXEC;
+	      {
+		EXEC SQL BEGIN DECLARE SECTION;
+		int *l_int = (idl_int_t *) epc__call->function->parameters[nr].data;
+		EXEC SQL END DECLARE SECTION;
+
+		EXEC SQL EXECUTE
+                begin
+                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_int);
+                end;
+                END-EXEC;
+	      }
               break;
 
             case C_LONG:
-              EXEC SQL EXECUTE
-              begin
-                dbms_pipe.pack_message(:l_long);
-              end;
-              END-EXEC;
+	      {
+		EXEC SQL BEGIN DECLARE SECTION;
+		long *l_long = (idl_long_t *) epc__call->function->parameters[nr].data;
+		EXEC SQL END DECLARE SECTION;
+
+		EXEC SQL EXECUTE
+		begin
+                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_long);
+                end;
+                END-EXEC;
+	      }
               break;
 
             case C_FLOAT:
-              EXEC SQL EXECUTE
-              begin
-                dbms_pipe.pack_message(:l_float);
-              end;
-              END-EXEC;
+	      {
+		EXEC SQL BEGIN DECLARE SECTION;
+		float *l_float = (idl_float_t *) epc__call->function->parameters[nr].data;
+		EXEC SQL END DECLARE SECTION;
+
+                EXEC SQL EXECUTE
+                begin
+                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_float);
+                end;
+                END-EXEC;
+	      }
               break;
 
             case C_DOUBLE:
-              EXEC SQL EXECUTE
-              begin
-                dbms_pipe.pack_message(:l_double);
-              end;
-              END-EXEC;
+	      {
+		EXEC SQL BEGIN DECLARE SECTION;
+		double *l_double = (idl_double_t *) epc__call->function->parameters[nr].data;
+		EXEC SQL END DECLARE SECTION;
+
+                EXEC SQL EXECUTE
+                begin
+                  epc_srvr.set_response_parameter(epc_srvr.get_epc_key, :l_name, :l_double);
+                end;
+                END-EXEC;
+	      }
               break;
 
             case C_VOID:        /* procedure */

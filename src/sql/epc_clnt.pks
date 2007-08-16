@@ -412,7 +412,7 @@ procedure recv_response
 -- @param p_value      The value of the parameter
 -- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
 --
--- @exception value_error                or maximum length reached
+-- @exception value_error  invalid datatype or or maximum length reached
 */
 procedure get_response_parameter
 (
