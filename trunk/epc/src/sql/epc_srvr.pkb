@@ -29,27 +29,40 @@ g_epc_key epc_key_subtype := null;
 g_pipe_name epc.pipe_name_subtype := 'EPC_REQUEST_PIPE';
 g_response_send_timeout pls_integer := 10;
 
+/*DBUG
 g_indent pls_integer := 1;
+/*DBUG*/
+
 -- LOCAL
 
+/*DBUG
 procedure enter(p_procname in varchar2)
 is
 begin
-  dbms_output.put_line(lpad('>', g_indent, ' ')||p_procname);
+  dbms_output.put_line(substr(lpad('>', g_indent, ' ')||p_procname, 1, 255));
   g_indent := g_indent + 2;
+exception
+  when others
+  then null;
 end;
 
 procedure print(p_break_point in varchar2, p_format in varchar2, p_data in varchar2 default null)
 is
 begin
-  dbms_output.put_line(lpad(' ', g_indent, ' ')||p_break_point||': '||replace(p_format, '%s', p_data));
+  dbms_output.put_line(substr(lpad(' ', g_indent-1, ' ')||p_break_point||': '||replace(p_format, '%s', p_data), 1, 255));
+exception
+  when others
+  then null;
 end;
 
 procedure leave
 is
 begin
   g_indent := g_indent - 2;
-  dbms_output.put_line(lpad('<', g_indent, ' '));
+  dbms_output.put_line(substr(lpad('<', g_indent, ' '), 1, 255));
+exception
+  when others
+  then null;
 end;
 
 procedure leave_on_error
@@ -60,7 +73,11 @@ begin
   dbms_output.put_line(substr(l_error_stack, 1+0*255, 255));
   dbms_output.put_line(substr(l_error_stack, 1+1*255, 255));
   dbms_output.put_line(substr(l_error_stack, 1+2*255, 255));
+exception
+  when others
+  then null;
 end;
+/*DBUG*/
 
 -- GLOBAL
 
@@ -132,21 +149,21 @@ is
   l_msg_seq pls_integer;
   l_result_pipe epc.pipe_name_subtype := null;
 begin
---/*DBUG
+/*DBUG
   enter('epc_srvr.recv_request');
   print('input', 'p_epc_key: %s', p_epc_key);
---/*DBUG*/
+/*DBUG*/
 
   if p_epc_key = g_epc_key
   then
---/*DBUG
+/*DBUG
     print('info', 'receiving from %s', g_pipe_name);
---/*DBUG*/
+/*DBUG*/
     l_retval := dbms_pipe.receive_message(g_pipe_name); /* wait forever */
 
---/*DBUG
+/*DBUG
     print('info', 'l_retval: %s', l_retval);
---/*DBUG*/
+/*DBUG*/
 
     case l_retval
       when 0 /* OK */
@@ -154,10 +171,10 @@ begin
         dbms_pipe.unpack_message(l_msg_protocol);
         dbms_pipe.unpack_message(l_msg_seq);
 
---/*DBUG
+/*DBUG
         print('info', 'protocol: %s', l_msg_protocol);
         print('info', 'msg_seq: %s', l_msg_seq);
---/*DBUG*/
+/*DBUG*/
 
         dbms_pipe.unpack_message(p_msg_request);
 
@@ -191,7 +208,7 @@ begin
     end case;
   end if;
 
---/*DBUG
+/*DBUG
   print('output', 'p_msg_info: %s', p_msg_info);
   print('output', 'p_msg_request: %s', p_msg_request);
   leave;
@@ -200,7 +217,7 @@ exception
   then
     leave_on_error;
     raise;
---/*DBUG*/
+/*DBUG*/
 end recv_request;
 
 procedure send_response
@@ -215,26 +232,26 @@ is
   l_msg_seq constant pls_integer := to_number(substr(p_msg_info, 2, 4), 'FM000X');
   l_result_pipe constant epc.pipe_name_subtype := substr(p_msg_info, 6);
 begin
---/*DBUG
+/*DBUG
   enter('epc_srvr.send_response');
   print('input', 'p_epc_key: %s', p_epc_key);
   print('input', 'p_msg_info: %s', p_msg_info);
   print('input', 'p_msg_response: %s', p_msg_response);
---/*DBUG*/
+/*DBUG*/
 
   if p_epc_key = g_epc_key
   then
---/*DBUG
+/*DBUG
     print('info', 'resetting buffer');
---/*DBUG*/
+/*DBUG*/
 
     dbms_pipe.reset_buffer; -- just to be sure
     dbms_pipe.pack_message(l_msg_seq);
     dbms_pipe.pack_message(p_msg_response);
 
---/*DBUG
+/*DBUG
     print('info', 'sending to %s', l_result_pipe);
---/*DBUG*/
+/*DBUG*/
 
     l_retval := dbms_pipe.send_message(l_result_pipe, g_response_send_timeout);
 
@@ -256,9 +273,9 @@ begin
     end case;
   end if;
 
---/*DBUG
+/*DBUG
   leave;
---/*DBUG*/
+/*DBUG*/
 end send_response;
 
 procedure send_request_interrupt
@@ -268,23 +285,23 @@ procedure send_request_interrupt
 is
   l_retval pls_integer;
 begin
---/*DBUG
+/*DBUG
   enter('epc_srvr.send_request_interrupt');
   print('input', 'p_epc_key: %s', p_epc_key);
---/*DBUG*/
+/*DBUG*/
 
   if p_epc_key = g_epc_key
   then
---/*DBUG
+/*DBUG
     print('info', 'resetting buffer');
---/*DBUG*/
+/*DBUG*/
 
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( 'INTERRUPT' );
 
---/*DBUG
+/*DBUG
     print('info', 'sending to %s', g_pipe_name);
---/*DBUG*/
+/*DBUG*/
 
     l_retval := dbms_pipe.send_message(g_pipe_name);
     case l_retval
@@ -305,10 +322,62 @@ begin
     end case;
   end if;
 
---/*DBUG
+/*DBUG
   leave;
---/*DBUG*/
+/*DBUG*/
 end send_request_interrupt;
+
+procedure ping
+(
+  p_epc_key in epc_key_subtype
+, p_response_pipe in varchar2
+)
+is
+  l_retval pls_integer;
+begin
+/*DBUG
+  enter('epc_srvr.ping');
+  print('input', 'p_epc_key: %s', p_epc_key);
+  print('input', 'p_response_pipe: %s', p_response_pipe);
+/*DBUG*/
+
+  if p_epc_key = g_epc_key
+  then
+/*DBUG
+    print('info', 'resetting buffer');
+/*DBUG*/
+
+    dbms_pipe.reset_buffer;
+    dbms_pipe.pack_message( 'PING' );
+    dbms_pipe.pack_message( p_response_pipe );
+
+/*DBUG
+    print('info', 'sending to %s', g_pipe_name);
+/*DBUG*/
+
+    l_retval := dbms_pipe.send_message(g_pipe_name);
+    case l_retval
+      when 0 -- OK
+      then
+        null;
+
+      when 1
+      then
+        raise epc.msg_timed_out;
+
+      when 3
+      then
+        raise epc.msg_interrupted;
+
+      else
+        raise value_error;
+    end case;
+  end if;
+
+/*DBUG
+  leave;
+/*DBUG*/
+end ping;
 
 end epc_srvr;
 /

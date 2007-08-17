@@ -30,15 +30,17 @@ SET TERMOUT ON
 
 =pod
 
-    CREATE OR REPLACE
-    PROCEDURE
-    empty_pipes( i_pipe_name_wildcard IN VARCHAR2 := '%', i_timeout IN INTEGER := 0 )
+CREATE OR REPLACE
+PROCEDURE
+empty_pipes( i_pipe_name_wildcard IN VARCHAR2 := '%', i_timeout IN INTEGER := 0 )
+
 /*POD
 
 =cut
 
 POD*/
-    IS
+
+IS
 procedure empty_pipe
 (
   i_pipe_name in varchar2
@@ -94,8 +96,8 @@ begin
           exit unpack_message_loop;
         end if;
       exception
-        when    others
-        then    null;
+        when others
+        then null;
       end;
       end loop unpack_message_loop;
     else
@@ -104,24 +106,28 @@ begin
   end loop receive_message_loop;
 end empty_pipe;
 
-BEGIN
-        FOR r_pipe IN
-        (
-                SELECT  name
-                FROM    v$db_pipes
-                WHERE   name LIKE upper(i_pipe_name_wildcard)
-                AND     name NOT LIKE 'ORA$%' /* no Oracle pipes */
-        )
-        LOOP
-        BEGIN
-                empty_pipe( r_pipe.name, i_timeout );
-        EXCEPTION
-                WHEN OTHERS
-                THEN
-                        dbms_output.put_line( substr(SQLERRM, 1, 255) );
-        END;                 
-        END LOOP;
-END;
+begin
+  for r_pipe in
+  (
+    select  name
+    from    v$db_pipes
+    where   name like upper(i_pipe_name_wildcard)
+    and     name not like 'ORA$%' /* no Oracle pipes */
+  )
+  loop
+  begin
+    empty_pipe( r_pipe.name, i_timeout );
+    if dbms_pipe.remove_pipe( r_pipe.name ) = 0
+    then
+      null;
+    end if;
+  exception
+    when others
+    then
+      dbms_output.put_line( substr(sqlerrm, 1, 255) );
+  end;                 
+  end loop;
+end;
 /
 
 SET TERMOUT OFF

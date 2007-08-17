@@ -43,12 +43,7 @@ create or replace package epc_srvr is
 --    a) epc_srvr.recv_request<br />
 -- 3) Process the message<br />
 -- 4) Send the response<br />
---    a) epc_srvr.send_response(epc_srvr.get_epc_key, p_msg_response, p_msg_info)<br /> OR
---    b) epc_srvr.new_response(epc_srvr.get_epc_key, p_msg_info)<br />
---       dbms_pipe.pack_message(output argument 1)
---       .
---       dbms_pipe.pack_message(output argument N)
---       epc_srvr.send_response(epc_srvr.get_epc_key, p_msg_info)<br />
+--    a) epc_srvr.send_response()
 --
 -- @headcom
 */
@@ -146,6 +141,22 @@ procedure send_response
 procedure send_request_interrupt
 (
   p_epc_key in epc_key_subtype
+);
+
+/**
+-- Ping a server.
+--
+-- The string 'PING' and the response pipe will be sent into the request pipe
+-- (use set_connection_info/get_connection_info to set/get that).  The answer
+-- in the response pipe should be 'PONG'.
+--
+-- @param p_epc_key        Needed for connection info
+-- @param p_response_pipe  The response pipe
+*/
+procedure ping
+(
+  p_epc_key in epc_key_subtype
+, p_response_pipe in varchar2
 );
 
 end epc_srvr;

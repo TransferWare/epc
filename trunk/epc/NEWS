@@ -8,7 +8,9 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 
 Release 5.0.0
 
-* The DIL compiler now generates both C and PRO*C files with the 
+* The epc_clnt package has a new procedure shutdown for cleaning up 
+  resources (response database pipes).
+* The IDL compiler now generates both C and PRO*C files with the 
   same functionality. Only one of them is need to compile your 
   application.
 * The installation directories of the DBUG package are used.

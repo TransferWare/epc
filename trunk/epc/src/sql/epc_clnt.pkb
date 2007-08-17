@@ -156,7 +156,55 @@ g_cdata_tag_end   constant varchar2(3) := ']]>';
 
 g_decimal_char varchar2(1); -- needed to convert numbers to/from strings
 
+/*DBUG
+g_indent pls_integer := 1;
+/*DBUG*/
+
 -- LOCAL
+
+/*DBUG
+procedure enter(p_procname in varchar2)
+is
+begin
+  dbms_output.put_line(substr(lpad('>', g_indent, ' ')||p_procname, 1, 255));
+  g_indent := g_indent + 2;
+exception
+  when others
+  then null;
+end;
+
+procedure print(p_break_point in varchar2, p_format in varchar2, p_data in varchar2 default null)
+is
+begin
+  dbms_output.put_line(substr(lpad(' ', g_indent-1, ' ')||p_break_point||': '||replace(p_format, '%s', p_data), 1, 255));
+exception
+  when others
+  then null;
+end;
+
+procedure leave
+is
+begin
+  g_indent := g_indent - 2;
+  dbms_output.put_line(substr(lpad('<', g_indent, ' '), 1, 255));
+exception
+  when others
+  then null;
+end;
+
+procedure leave_on_error
+is
+  l_error_stack constant varchar2(32767) := dbms_utility.format_error_backtrace;
+begin
+  leave;
+  dbms_output.put_line(substr(l_error_stack, 1+0*255, 255));
+  dbms_output.put_line(substr(l_error_stack, 1+1*255, 255));
+  dbms_output.put_line(substr(l_error_stack, 1+2*255, 255));
+exception
+  when others
+  then null;
+end;
+/*DBUG*/
 
 procedure set_request_parameter
 ( p_name in epc.parameter_name_subtype
@@ -181,9 +229,11 @@ procedure new_request
 )
 is
 begin
---/*DBUG
-  dbug.enter('epc_clnt.new_request');
---/*DBUG*/
+/*DBUG
+  enter('epc_clnt.new_request');
+  print('input', 'p_method_name: %s', p_method_name);
+  print('input', 'p_oneway: %s', p_oneway);
+/*DBUG*/
 
   p_epc_info_rec.msg := null;
   p_epc_info_rec.method_name := p_method_name;
@@ -191,16 +241,16 @@ begin
 
   if p_epc_info_rec.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
---/*DBUG
-    dbug.print('info', 'resetting buffer');
---/*DBUG*/
+/*DBUG
+    print('info', 'resetting buffer');
+/*DBUG*/
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( p_epc_info_rec.protocol );
     g_msg_seq := g_msg_seq + 1;
     if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
---/*DBUG
-    dbug.print('info', 'g_msg_seq: %s', g_msg_seq);
---/*DBUG*/
+/*DBUG
+    print('info', 'g_msg_seq: %s', g_msg_seq);
+/*DBUG*/
     dbms_pipe.pack_message( g_msg_seq );
 
     if p_epc_info_rec.protocol = "NATIVE"
@@ -222,9 +272,9 @@ begin
     end if;
   end if;
 
---/*DBUG
-  dbug.leave;
---/*DBUG*/
+/*DBUG
+  leave;
+/*DBUG*/
 end new_request;
 
 procedure set_request_parameter
@@ -236,6 +286,14 @@ procedure set_request_parameter
 )
 is
 begin
+/*DBUG
+  enter('epc_clnt.set_request_parameter (1)');
+  print('input', 'p_name: %s', p_name);
+  print('input', 'p_data_type: %s', p_data_type);
+  print('input', 'p_value: %s', p_value);
+  print('input', 'p_max_bytes: %s', p_max_bytes);
+/*DBUG*/
+
   if p_value is null
   then
     raise epc.e_illegal_null_value;
@@ -308,6 +366,11 @@ begin
         raise program_error;
     end case;            
   end if;
+
+/*DBUG
+  print('output', 'msg: %s', p_epc_info_rec.msg);
+  leave;
+/*DBUG*/
 end set_request_parameter;
 
 procedure set_request_parameter
@@ -319,6 +382,13 @@ procedure set_request_parameter
 is
   l_data_type varchar2(10);
 begin
+/*DBUG
+  enter('epc_clnt.set_request_parameter (2)');
+  print('input', 'p_name: %s', p_name);
+  print('input', 'p_data_type: %s', p_data_type);
+  print('input', 'p_value: %s', p_value);
+/*DBUG*/
+
   if p_value is null
   then
     raise epc.e_illegal_null_value;
@@ -330,6 +400,7 @@ begin
         ( p_name => p_name
         , p_data_type => p_data_type
         , p_value => replace(to_char(p_value), g_decimal_char, '.')
+        , p_max_bytes => null
         , p_epc_info_rec => p_epc_info_rec
         );
 
@@ -388,6 +459,11 @@ begin
         raise program_error;
     end case;
   end if;
+
+/*DBUG
+  print('output', 'msg: %s', p_epc_info_rec.msg);
+  leave;
+/*DBUG*/
 end set_request_parameter;
 
 procedure set_request_parameter
@@ -402,6 +478,13 @@ is
     ||'T'
     ||to_char(p_value, 'hh24:mi:ss');
 begin
+/*DBUG
+  enter('epc_clnt.set_request_parameter (3)');
+  print('input', 'p_name: %s', p_name);
+  print('input', 'p_data_type: %s', p_data_type);
+  print('input', 'p_value: %s', l_value);
+/*DBUG*/
+
   if p_value is null
   then
     raise epc.e_illegal_null_value;
@@ -443,6 +526,11 @@ begin
         raise program_error;
     end case;
   end if;
+
+/*DBUG
+  print('output', 'msg: %s', p_epc_info_rec.msg);
+  leave;
+/*DBUG*/
 end set_request_parameter;
 
 function get_method_name
@@ -481,6 +569,10 @@ procedure send_request_dbms_pipe
 is
   l_retval pls_integer := -1;
 begin
+/*DBUG
+  enter('epc_clnt.send_request_dbms_pipe');
+/*DBUG*/
+
   dbms_pipe.pack_message( p_epc_info_rec.msg );
   if p_epc_info_rec.oneway = 0
   then
@@ -521,6 +613,10 @@ begin
     else
       raise program_error; -- there are no more return codes
   end case;
+
+/*DBUG
+  leave;
+/*DBUG*/
 end send_request_dbms_pipe;
 
 procedure send_request_utl_http
@@ -669,9 +765,9 @@ begin
       p_epc_info_rec.doc := 
         xmltype.createxml( p_epc_info_rec.msg );
 */
---/*DBUG
+/*DBUG
       epc.print(p_epc_info_rec.msg);
---/*DBUG*/
+/*DBUG*/
   end case;
 
   case p_epc_info_rec.connection_method
@@ -719,13 +815,13 @@ is
   l_retval pls_integer := -1;
   l_msg_seq_result pls_integer;
 begin
---/*DBUG
-  dbug.enter('epc_clnt.recv_response_dbms_pipe');
---/*DBUG*/
+/*DBUG
+  enter('epc_clnt.recv_response_dbms_pipe');
+/*DBUG*/
 
---/*DBUG
-  dbug.print('info', 'receiving from %s', g_result_pipe);
---/*DBUG*/
+/*DBUG
+  print('info', 'receiving from %s', g_result_pipe);
+/*DBUG*/
 
   l_retval :=
     dbms_pipe.receive_message
@@ -781,17 +877,17 @@ begin
   /* Get the message sequence */
   dbms_pipe.unpack_message( l_msg_seq_result );
 
---/*DBUG
-  dbug.print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
---/*DBUG*/
+/*DBUG
+  print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
+/*DBUG*/
 
   if l_msg_seq_result = g_msg_seq
   then
     dbms_pipe.unpack_message( p_epc_info_rec.msg );
 
---/*DBUG
-    dbug.print('info', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
---/*DBUG*/
+/*DBUG
+    print('info', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+/*DBUG*/
 
     if p_epc_info_rec.protocol = "NATIVE"
     then
@@ -827,9 +923,9 @@ begin
     );
   end if;
 
---/*DBUG
-  dbug.leave;
---/*DBUG*/
+/*DBUG
+  leave;
+/*DBUG*/
 end recv_response_dbms_pipe;
 
 procedure recv_response_utl_http
@@ -846,9 +942,9 @@ begin
   exception
     when others
     then
---/*DBUG
+/*DBUG
       epc.print(p_epc_info_rec.msg);
---/*DBUG*/
+/*DBUG*/
       utl_http.end_response(http_resp);
       raise;
   end;
@@ -930,6 +1026,10 @@ procedure recv_response
 )
 is
 begin
+/*DBUG
+  enter('epc_clnt.recv_response');
+/*DBUG*/
+
   case p_epc_info_rec.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
     then
@@ -951,29 +1051,29 @@ begin
 
     when "SOAP"
     then
---/*DBUG
+/*DBUG
       epc.print(p_epc_info_rec.msg);
---/*DBUG*/
+/*DBUG*/
       p_epc_info_rec.doc :=
         xmltype.createxml(p_epc_info_rec.msg).extract
         ( '/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()'
         , epc."xmlns:SOAP-ENV"
         );
---/*DBUG
+/*DBUG
       epc.print(p_epc_info_rec.doc.getstringval());
---/*DBUG*/
+/*DBUG*/
       check_soap_fault(p_epc_info_rec.doc);
     
     when "XMLRPC"
     then 
---/*DBUG
+/*DBUG
       epc.print(p_epc_info_rec.msg);
---/*DBUG*/
+/*DBUG*/
       p_epc_info_rec.doc := xmltype.createxml(p_epc_info_rec.msg);
 
---/*DBUG
+/*DBUG
       epc.print(p_epc_info_rec.doc.getstringval());
---/*DBUG*/
+/*DBUG*/
       check_xmlrpc_fault(p_epc_info_rec.doc);
 
       p_epc_info_rec.next_out_parameter := 1;
@@ -981,6 +1081,11 @@ begin
     else
       raise program_error;
   end case;
+
+/*DBUG
+  print('output', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+  leave;
+/*DBUG*/
 end recv_response;
 
 procedure get_response_parameter
@@ -995,12 +1100,12 @@ is
   l_xml XMLType;
   l_extract_type varchar2(100);
 begin
---/*DBUG
-  dbug.enter('epc_clnt.get_response_parameter');
-  dbug.print('input', 'p_name: %s', p_name);
-  dbug.print('input', 'p_data_type: %s', p_data_type);
-  dbug.print('input', 'p_max_bytes: %s', p_max_bytes);
---/*DBUG*/
+/*DBUG
+  enter('epc_clnt.get_response_parameter');
+  print('input', 'p_name: %s', p_name);
+  print('input', 'p_data_type: %s', p_data_type);
+  print('input', 'p_max_bytes: %s', p_max_bytes);
+/*DBUG*/
 
   if p_epc_info_rec.protocol = "NATIVE"
   then
@@ -1009,9 +1114,9 @@ begin
       e_wrong_data_type_requested exception;
       pragma exception_init (e_wrong_data_type_requested, -6559);
     begin
---/*DBUG
-      dbug.print('debug', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
---/*DBUG*/
+/*DBUG
+      print('debug', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+/*DBUG*/
 
       if substr(p_epc_info_rec.msg, 1, 1) = to_char(p_data_type)
       then
@@ -1127,10 +1232,11 @@ begin
     raise value_error;
   end if;
 
---/*DBUG
-  dbug.print('output', 'p_value: %s', p_value);
-  dbug.leave;
---/*DBUG*/
+/*DBUG
+  print('output', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+  print('output', 'p_value: %s', p_value);
+  leave;
+/*DBUG*/
 end get_response_parameter;
 
 procedure get_response_parameter
@@ -1474,6 +1580,26 @@ begin
   , epc_info_tab(p_epc_key)
   );
 end get_response_parameter;
+
+function get_response_pipe
+(
+  p_epc_key in epc_key_subtype
+)
+return epc.pipe_name_subtype
+is
+begin
+  return g_result_pipe;
+end get_response_pipe;
+
+procedure shutdown
+is
+begin
+  -- either 0 is returned or an exception (ORA-23322)
+  if dbms_pipe.remove_pipe(g_result_pipe) = 0
+  then
+    null;
+  end if;
+end shutdown;
 
 begin
   select  substr(value, 1, 1) as decimal_char
