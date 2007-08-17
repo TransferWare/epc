@@ -1,5 +1,4 @@
 ## ----------------------------------- ##
-## Check if --with-dbug was given.     ##
 ## From Gert-Jan Paulissen             ##
 ## ----------------------------------- ##
 
@@ -22,6 +21,6 @@
 
 AC_DEFUN([ACX_EPC],
 [AC_REQUIRE([ACX_DBUG])
-LIBS="$LIBS -lepc"
+LIBS="-lepc $LIBS"
 AC_CHECK_FUNC([epc__init],[],[AC_MSG_ERROR(epc__init not found)])
 ])

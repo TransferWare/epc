@@ -41,3 +41,6 @@ doc: $(FORCE)
 
 dist-hook:
 	chmod +x $(top_srcdir)/config/install-sh
+
+distuninstallcheck:
+         @:
