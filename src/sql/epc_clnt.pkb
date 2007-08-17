@@ -753,23 +753,6 @@ begin
       raise program_error;
   end case;
 
-  case 
-    when p_epc_info_rec.protocol = "NATIVE"
-    then
-      null;
-
-    when p_epc_info_rec.protocol in ("SOAP", "XMLRPC")
-    then
-      null;
-/*
-      p_epc_info_rec.doc := 
-        xmltype.createxml( p_epc_info_rec.msg );
-*/
-/*DBUG
-      epc.print(p_epc_info_rec.msg);
-/*DBUG*/
-  end case;
-
   case p_epc_info_rec.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
     then

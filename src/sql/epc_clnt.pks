@@ -51,12 +51,12 @@ create or replace package epc_clnt is
 -- This package is used to implement the client side of RPC like functionality
 -- on an Oracle database.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (NATIVE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
+-- supported are database pipes (DBMS_PIPE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
 --
 -- The flow of procedure calls will typically look like this:<br />
 -- 1) Set connection information.<br />
 --    a) epc_clnt.register<br />
---    b) epc_clnt.set_protocol (optional, the default is SOAP)<br />
+--    b) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
 --    c) epc_clnt.set_connection_info (optional for database pipes)<br />
 --    d) epc_clnt.set_request_send_timeout (optional)<br />
 --    e) epc_clnt.set_response_recv_timeout (optional)<br />
@@ -121,7 +121,7 @@ create or replace package epc_clnt is
 subtype protocol_subtype is pls_integer;
 
 "SOAP" constant protocol_subtype := 5; -- default protocol for HTTP
-"XMLRPC" constant protocol_subtype := 6; -- default protocol for the TCP
+"XMLRPC" constant protocol_subtype := 6; -- default protocol for TCP/IP
 "NATIVE" constant protocol_subtype := 7; -- default protocol for DBMS_PIPE
 
 subtype epc_key_subtype is binary_integer;
@@ -148,9 +148,9 @@ return epc_key_subtype;
 /**
 -- Get the key
 --
--- @param p_interface_name  The name of the interface to register.
+-- @param p_interface_name  The name of the interface.
 --
--- @exception no_data_found
+-- @throws no_data_found
 --
 -- @return The unique key for the interface
 */
@@ -166,6 +166,8 @@ return epc_key_subtype;
 -- 
 -- @param p_epc_key   The key
 -- @param p_protocol  The protocol
+--
+-- @throws value_error  When the protocol is not NATIVE, SOAP nor XMLRPC.
 */
 procedure set_protocol
 (
@@ -179,7 +181,7 @@ procedure set_protocol
 -- @param p_epc_key   The key
 -- @param p_protocol  The protocol
 --
--- @exception no_data_found  Wrong key
+-- @throws no_data_found  Wrong key
 */
 procedure get_protocol
 (
@@ -192,8 +194,10 @@ procedure get_protocol
 */
 
 /**
--- Set the connection type to HTTP and store the HTTP
--- connection info for later use. 
+-- Set the connection info for HTTP.
+--
+-- Set the connection method to HTTP and store the HTTP connection info for
+-- later use. The protocol will be set to SOAP.
 -- 
 -- @param p_epc_key     The key
 -- @param p_connection  The HTTP connection info.
@@ -210,7 +214,7 @@ procedure set_connection_info
 -- @param p_epc_key     The key
 -- @param p_connection  The HTTP connection info
 --
--- @exception no_data_found  connection method is not utl_http
+-- @throws no_data_found  connection method is not utl_http
 */
 procedure get_connection_info
 (
@@ -219,10 +223,12 @@ procedure get_connection_info
 );
 
 /**
--- Set the connection type to TCP/IP and store the open TCP/IP
--- connection for later use. The EPC will not open or close
--- the TCP/IP connection. It is the responsability of the client
--- program to open and close the connection.
+-- Set the connection info for TCP/IP.
+--
+-- Set the connection method to TCP/IP and store the open TCP/IP connection for
+-- later use. The EPC will not open or close the TCP/IP connection. It is the
+-- responsability of the client program to open and close the connection. The
+-- protocol will be set to XMLRPC.
 -- 
 -- @param p_epc_key     The key
 -- @param p_connection  An open TCP/IP connection (see utl_tcp.open_connection)
@@ -234,13 +240,13 @@ procedure set_connection_info
 );
 
 /**
--- Get the TCP/IP connection. 
+-- Get the TCP/IP connection info. 
 -- 
 -- @param p_epc_key     The key
 -- @param p_connection  An open TCP/IP connection
 --                      (see utl_tcp.open_connection)
 --
--- @exception no_data_found  connection method is not utl_tcp
+-- @throws no_data_found  connection method is not utl_tcp
 */
 procedure get_connection_info
 (
@@ -249,8 +255,11 @@ procedure get_connection_info
 );
 
 /**
+-- Set the connection info for database pipes.
+--
 -- Set the connection type to database pipes and store the pipe name for
--- later use. Each interface may have a different connection.
+-- later use. Each interface may have a different connection. The
+-- protocol will be set to NATIVE.
 -- 
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
@@ -267,7 +276,7 @@ procedure set_connection_info
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
 --
--- @exception no_data_found  connection method is not dbms_pipe
+-- @throws no_data_found  connection method is not dbms_pipe
 */
 procedure get_connection_info
 (
@@ -320,9 +329,9 @@ procedure set_namespace
 -- Set the inline namespace.
 --
 -- The inline namespace for an interface is the prefix for the method name.
--- The default inline namespace is ns1. For Web services this may need to be overridden.
--- The namespace is added as an attribute to the method element, e.g.
--- &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
+-- The default inline namespace is ns1. For Web services this may need to be
+-- overridden.  The namespace is added as an attribute to the method element,
+-- e.g. &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
 -- 
 -- @param p_epc_key           The key
 -- @param p_inline_namespace  The new inline namespace
@@ -334,13 +343,13 @@ procedure set_inline_namespace
 );
 
 /**
--- Start a new request
+-- Start a new request.
 -- 
 -- @param p_epc_key      The key
 -- @param p_method_name  The method name
 -- @param p_oneway       Is the procedure call a oneway call,
-                         i.e. do we NOT wait on a response? 
-                         0 means we wait on a response.
+                         i.e. do we NOT wait for a response? 
+                         0 means we will wait for a response.
 */
 procedure new_request
 (
@@ -358,8 +367,8 @@ procedure new_request
 -- @param p_value      The value of the parameter
 -- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
 --
--- @exception epc.e_illegal_null_value  p_value is NULL
--- @exception value_error               data type is incorrect or maximum length reached
+-- @throws epc.e_illegal_null_value  p_value is NULL
+-- @throws value_error               data type is incorrect or maximum length reached
 */
 procedure set_request_parameter
 (
@@ -390,6 +399,9 @@ procedure set_request_parameter
 -- Send a request.
 -- 
 -- @param p_epc_key      Connection info can be retrieved by the key
+--
+-- @throws epc.e_comm_error  Error while sending the message
+-- @throws program_error     Protocol and connection method do not match
 */
 procedure send_request
 ( 
@@ -400,6 +412,10 @@ procedure send_request
 -- Receive a response.
 -- 
 -- @param p_epc_key  Connection info can be retrieved by the key
+--
+-- @throws epc.e_comm_error      Error while sending the message
+-- @throws epc.e_wrong_protocol  Message number sent and received do not match
+-- @throws program_error         Protocol and connection method do not match
 */
 procedure recv_response
 ( 
@@ -415,7 +431,9 @@ procedure recv_response
 -- @param p_value      The value of the parameter
 -- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
 --
--- @exception value_error  invalid datatype or or maximum length reached
+-- @throws value_error    invalid datatype or or maximum length reached
+-- @throws ORA-6559       wrong data type requested
+-- @throws program_error  Protocol and connection method do not match
 */
 procedure get_response_parameter
 (

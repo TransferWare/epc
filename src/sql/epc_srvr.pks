@@ -43,7 +43,7 @@ create or replace package epc_srvr is
 --    a) epc_srvr.recv_request<br />
 -- 3) Process the message<br />
 -- 4) Send the response<br />
---    a) epc_srvr.send_response()
+--    a) epc_srvr.send_response<br />
 --
 -- @headcom
 */
@@ -107,6 +107,10 @@ procedure set_response_send_timeout
 -- @param p_epc_key         Needed for the connection info
 -- @param p_msg_info        The message information
 -- @param p_msg_request     The message request
+--
+-- @throws epc.e_msg_timed_out    Message timed out
+-- @throws epc.e_msg_too_big      Message too big
+-- @throws epc.e_msg_interrupted  Message interrupted
 */
 procedure recv_request
 ( p_epc_key in epc_key_subtype
@@ -120,6 +124,9 @@ procedure recv_request
 -- @param p_epc_key       Needed for the connection info
 -- @param p_msg_info      The message information as received by recv_request
 -- @param p_msg_response  The message response
+--
+-- @throws epc.e_msg_timed_out    Message timed out
+-- @throws epc.e_msg_interrupted  Message interrupted
 */
 procedure send_response
 ( 
@@ -132,11 +139,13 @@ procedure send_response
 -- Interrupt the receipt of a request. When database
 -- pipes are used to receive the request, the session can not 
 -- easily be interrupted by a user defined interrupt (for example a CTRL-C).
--- The way to do this, is to start a second session in the server which waits
--- for a user defined interrupt (osnsui call). Then send_request_interrupt 
--- will send database pipe message to the main server session.
+-- The way to do this, is to call this procedure from another session.
+-- This will interrupt the server.
 --
 -- @param p_epc_key   Needed for connection info
+--
+-- @throws epc.e_msg_timed_out    Message timed out
+-- @throws epc.e_msg_interrupted  Message interrupted
 */
 procedure send_request_interrupt
 (
@@ -152,6 +161,9 @@ procedure send_request_interrupt
 --
 -- @param p_epc_key        Needed for connection info
 -- @param p_response_pipe  The response pipe
+--
+-- @throws epc.e_msg_timed_out    Message timed out
+-- @throws epc.e_msg_interrupted  Message interrupted
 */
 procedure ping
 (
