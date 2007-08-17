@@ -8,12 +8,16 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 
 Release 5.0.0
 
+* Added XMLRPC protocol.
+* Added native dbms_pipe protocol without the overhead of XMLRPC and SOAP.
+* The procedure empty_pipes (util/empty_pipes.prc) now removes pipes
+  after emptying them.
 * The epc_clnt package has a new procedure shutdown for cleaning up 
   resources (response database pipes).
 * The IDL compiler now generates both C and PRO*C files with the 
-  same functionality. Only one of them is need to compile your 
+  same functionality. Only one of them is needed to compile your 
   application.
-* The installation directories of the DBUG package are used.
+* The installation directories from the DBUG package are used.
 * On Solaris the math library (-lm) is added to $LIBS (if unset).
 * Package dbug can be used or not (--without-dbug).
 * Backwards compatibility for subtypes and exceptions which are part of
