@@ -19,7 +19,10 @@ generated_html_dirs  = sql c
 
 EXTRA_DIST           = epcman.doc EPC-optimize.doc epcdistr.rtf epcpf.xls problems&changes.xls $(generated_html_dirs)
 
-CLEANFILES           = sql/* c/*
+CLEANFILES           = sql/* c/* *.tmp
+
+clean-local:
+	-rm -fr sql c
 
 FORCE = force
 

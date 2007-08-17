@@ -1418,21 +1418,30 @@ epc__handle_request (epc__info_t * epc__info,
           switch (EPC__CALL_PROTOCOL(epc__call))
             {
             case PROTOCOL_NATIVE:
-              epc__response_native(epc__call);
-              break;
-
             case PROTOCOL_SOAP:
-              epc__response_soap(epc__call);
+            case PROTOCOL_XMLRPC:
+              switch (EPC__CALL_PROTOCOL(epc__call))
+                {
+                case PROTOCOL_NATIVE:
+                  epc__response_native(epc__call);
+                  break;
+                  
+                case PROTOCOL_SOAP:
+                  epc__response_soap(epc__call);
+                  break;
+
+                case PROTOCOL_XMLRPC:
+                  epc__response_xmlrpc(epc__call);
+                  break;
+                }
+              DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
+
+              (void) (*send_response) (epc__info, epc__call);
               break;
 
-            case PROTOCOL_XMLRPC:
-              epc__response_xmlrpc(epc__call);
+            default:
               break;
             }
-
-          DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
-
-          (void) (*send_response) (epc__info, epc__call);
         }
 
       if (epc__call->epc__error != OK)
