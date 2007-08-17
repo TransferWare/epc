@@ -142,3 +142,5 @@ prompt Performance test doing &&N number of calls doing nothing with results ret
 
 prompt Finished.
 spool off
+
+execute epc_clnt.shutdown

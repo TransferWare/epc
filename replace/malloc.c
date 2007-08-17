@@ -1,16 +1,15 @@
 #if HAVE_CONFIG_H
 # include <config.h>
 #endif
-#undef malloc
 
-#include <sys/types.h>
+#ifdef malloc
+#undef malloc
+#endif
 
 #ifdef WITH_DMALLOC
 # include "dmalloc.h"
 #else
-
-void *malloc ();
-
+# include <stdlib.h>
 #endif
 
 /* Allocate an N-byte block of memory from the heap.

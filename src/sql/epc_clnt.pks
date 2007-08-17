@@ -442,6 +442,26 @@ procedure get_response_parameter
 , p_value out date
 );
 
+/**
+-- Get the response pipe.
+-- 
+-- @param p_epc_key  Connection info can be retrieved by the key
+--
+-- @return The response pipe
+*/
+function get_response_pipe
+(
+  p_epc_key in epc_key_subtype
+)
+return epc.pipe_name_subtype;
+
+/**
+-- Shutdown the client.
+-- 
+-- Cleanup all resources, for instance the response pipe.
+*/
+procedure shutdown;
+
 end epc_clnt;
 /
 
