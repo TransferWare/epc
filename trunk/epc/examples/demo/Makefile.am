@@ -32,20 +32,21 @@ EXTRA_DIST           =
 
 noinst_DATA          = 
 noinst_PROGRAMS      = demo
-BUILT_SOURCES        = demo.h
+BUILT_SOURCES        = $(GENERATED_FILES)
 demo_SOURCES         = demo.idl demo.c main.c
 demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(GENERATED_SOURCES): $(IDL)
+$(GENERATED_FILES): $(IDL) generate
+
+generate: demo.idl
+	$(IDL) $?
+# Before running the compiler first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @demo.pls
 
 $(IDL):
-	cd $(top_builddir)/src/prog && make all
+	cd $(top_builddir)/src/prog && $(MAKE) all
 
-@SUFFIXES@: .h .idl
-
-.idl.h:
-	$(IDL) $<
-# Before running the compiler first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.h=.pls)
+$(top_builddir)/src/lib/libepc.la:
+	cd $(top_builddir)/src/lib && $(MAKE) all

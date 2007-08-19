@@ -41,3 +41,6 @@ AM_YFLAGS            = -d
 EXTRA_DIST           = epcdaemon epcdaemon.cmd epcdaemon.pl.in
 
 idl_l.c: idl_y.h
+
+$(top_builddir)/replace/libreplace.la:
+	cd $(top_builddir)/replace && $(MAKE) all

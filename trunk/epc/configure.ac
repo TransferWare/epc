@@ -44,7 +44,7 @@ case ${host} in
 *-cygwin)
 	test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
 	;;
-*solaris*)
+*solaris*|*sun*)
 	test "$LIBS" = "" && LIBS="-lm" && export LIBS
 	;;
 ?*)	;;

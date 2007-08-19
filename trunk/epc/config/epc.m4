@@ -22,7 +22,7 @@
 
 AC_DEFUN([ACX_EPC],
 [AC_REQUIRE([ACX_DBUG])
-[AC_PREFIX_PROGRAM([epcdaemon])
+AC_PREFIX_PROGRAM([epcdaemon])
 AC_PATH_PROG([EPCDAEMON],[epcdaemon])
 acx_epcdaemon_dir=`dirname $EPCDAEMON`
 acx_epcdaemon_dir=`dirname $acx_epcdaemon_dir`

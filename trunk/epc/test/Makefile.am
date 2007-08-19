@@ -52,17 +52,20 @@ START_SERVER = @PERL@ $(top_builddir)/src/prog/epcdaemon.pl \
 
 STOP_SERVER = echo "Killing server at `date`" && $(EPCTEST) -I -u$(USERID)
 
-$(GENERATED_FILES): $(IDL)
+$(GENERATED_FILES): $(IDL) generate.epctest generate.str
 
 $(IDL):
 	cd $(top_builddir)/src/prog && make all
 
-@SUFFIXES@: .h .idl
-
-.idl.h:
-	$(IDL) $<
+generate.epctest: epctest.idl
+	$(IDL) $?
 # first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.h=.pls)
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @epctest.pls
+
+generate.str: str.idl
+	$(IDL) $?
+# first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @str.pls
 
 # Ensure the created dummy test scripts are executable (chmod +x)
 

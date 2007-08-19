@@ -1658,6 +1658,10 @@ epc__error_t
 epc__set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
 {
   epc__error_t result = OK;
+  char num[100] = ""; /* ch is not null terminated, hence copy it to num for numbers and use strtoX */
+
+  DBUG_ENTER("epc__set_parameter");
+  DBUG_PRINT("input", ("parameter: %s", parameter->name));
 
   switch (parameter->type)
     {
@@ -1670,6 +1674,7 @@ epc__set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
                            (size_t)(parameter->size -
                                     strlen((char *) parameter->data)),
                            "%.*s", (int)len, (char *)ch);
+	  DBUG_PRINT("info", ("value: %s", (char *) parameter->data));
         }
       else
         {
@@ -1684,6 +1689,7 @@ epc__set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
           (void) strncpy ((char *) parameter->data,
                           (char *) ch, len);
           ((char *) parameter->data)[len] = '\0';
+	  DBUG_PRINT("info", ("value: %s", (char *) parameter->data));
         }
       else
         {
@@ -1692,23 +1698,41 @@ epc__set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
       break;
 
     case C_INT:
-      *((idl_int_t *) parameter->data) =
-        (int) strtol ((char *) ch, NULL, 10);
-      break;
-
     case C_LONG:
-      *((idl_long_t *) parameter->data) =
-        strtol ((char *) ch, NULL, 10);
-      break;
-
-    case C_FLOAT:
-      *((idl_float_t *) parameter->data) =
-        strtof ((char *) ch, NULL);
-      break;
-
     case C_DOUBLE:
-      *((idl_double_t *) parameter->data) =
-        strtod ((char *) ch, NULL);
+    case C_FLOAT:
+      assert(len < sizeof(num));
+      (void) strncpy (num, ch, len);
+      num[len] = '\0';
+      switch (parameter->type)
+	{
+	case C_INT:
+	  *((idl_int_t *) parameter->data) =
+	    (int) strtol (num, NULL, 10);
+	  DBUG_PRINT("info", ("value: %d", *((idl_int_t *) parameter->data)));
+	  break;
+
+	case C_LONG:
+	  *((idl_long_t *) parameter->data) =
+	    strtol (num, NULL, 10);
+	  DBUG_PRINT("info", ("value: %ld", *((idl_long_t *) parameter->data)));
+	  break;
+
+	case C_FLOAT:
+	  *((idl_float_t *) parameter->data) =
+	    strtof (num, NULL);
+	  DBUG_PRINT("info", ("value: %f", (double) *((idl_float_t *) parameter->data)));
+	  break;
+
+	case C_DOUBLE:
+	  *((idl_double_t *) parameter->data) =
+	    strtod (num, NULL);
+	  DBUG_PRINT("info", ("value: %f", *((idl_double_t *) parameter->data)));
+	  break;
+
+	default:
+	  break;
+	}
       break;
 
     case C_VOID:                /* impossible */
@@ -1719,6 +1743,8 @@ epc__set_parameter (const char *ch, size_t len, epc__parameter_t *parameter)
       assert (parameter->type >= C_DATATYPE_MIN &&
               parameter->type <= C_DATATYPE_MAX);
     }
+
+  DBUG_LEAVE();
 
   return result;
 }
