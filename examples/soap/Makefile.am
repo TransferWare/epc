@@ -22,7 +22,7 @@ GENERATED_FILES      = qotd.c qotd.h qotd.c qotd.pkb \
 GENERATED_FILES     += aws.c aws.h aws.c aws.pkb \
                        aws.pke aws.pks aws.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES)
+MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc
 
 CLEANFILES           = qotd.pls_run aws.pls_run
 

@@ -66,6 +66,15 @@ subtype string_subtype is varchar2(32767);
 subtype xml_subtype is varchar2(32767);
 subtype date_subtype is date; /* ISO date format, e.g. 19980717T14:08:55 */
 
+/* numbers for each data_type function: see idl_defs.h */
+data_type_string constant data_type_subtype := 1;
+data_type_int    constant data_type_subtype := 2;
+data_type_long   constant data_type_subtype := 3;
+data_type_float  constant data_type_subtype := 4;
+data_type_double constant data_type_subtype := 5;
+data_type_xml    constant data_type_subtype := 7;
+data_type_date   constant data_type_subtype := 8;
+
 "xmlns:SOAP-ENV" constant varchar2(1000) := 
   'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
 
@@ -167,48 +176,6 @@ pragma exception_init(msg_interrupted, -20105);
 /* End of backwards compatibility for exceptions. */
 
 /*ORA-06558 is raised if the message buffer overflows (currently 4096 bytes)*/
-
-/**
--- Get the xml data type constant.
-*/
-function data_type_xml
-return data_type_subtype;
-
-/**
--- Get the string data type constant.
-*/
-function data_type_string
-return data_type_subtype;
-
-/**
--- Get the int data type constant.
-*/
-function data_type_int
-return data_type_subtype;
-
-/**
--- Get the long data type constant.
-*/
-function data_type_long
-return data_type_subtype;
-
-/**
--- Get the float data type constant.
-*/
-function data_type_float
-return data_type_subtype;
-
-/**
--- Get the double data type constant.
-*/
-function data_type_double
-return data_type_subtype;
-
-/**
--- Get the date data type constant.
-*/
-function data_type_date
-return data_type_subtype;
 
 /**
 -- Print XML data.

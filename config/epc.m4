@@ -1,4 +1,5 @@
 ## ----------------------------------- ##
+## DBUG M4 macros for use in other projects. ##
 ## From Gert-Jan Paulissen             ##
 ## ----------------------------------- ##
 
@@ -21,6 +22,11 @@
 
 AC_DEFUN([ACX_EPC],
 [AC_REQUIRE([ACX_DBUG])
-LIBS="-lepc $LIBS"
-AC_CHECK_FUNC([epc__init],[],[AC_MSG_ERROR(epc__init not found)])
+[AC_PREFIX_PROGRAM([epcdaemon])
+AC_PATH_PROG([EPCDAEMON],[epcdaemon])
+acx_epcdaemon_dir=`dirname $EPCDAEMON`
+acx_epcdaemon_dir=`dirname $acx_epcdaemon_dir`
+AC_SUBST([EPC_LIBADD],[${acx_epcdaemon_dir}/lib/libepc.la])
+AC_SUBST([EPC_LDADD],[${acx_epcdaemon_dir}/lib/libepc.la])
+AC_SUBST([EPC_CPPFLAGS],[-I${acx_epcdaemon_dir}/include])
 ])

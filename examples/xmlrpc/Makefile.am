@@ -22,7 +22,7 @@ GENERATED_FILES      = currentTime.c currentTime.h currentTime.c currentTime.pkb
 GENERATED_FILES     += mirror.c mirror.h mirror.c mirror.pkb \
                        mirror.pke mirror.pks mirror.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES)
+MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc
 
 CLEANFILES           = currentTime.pls_run
 CLEANFILES          += mirror.pls_run

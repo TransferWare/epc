@@ -17,41 +17,35 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = demo.pc demo.h demo.c demo.pkb \
+GENERATED_FILES      = demo.h demo.c demo.pkb \
                        demo.pke demo.pks demo.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES)
+MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc *.lis
 
-CLEANFILES           = demo.pls_run
+CLEANFILES           = 
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib -I$(includedir)
+AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
 
 EXTRA_DIST           = 
 
-noinst_DATA          = demo.pls_run
+noinst_DATA          = 
 noinst_PROGRAMS      = demo
-demo_SOURCES         = demo.idl main.c
-demo_LDADD           = $(top_builddir)/src/lib/libepc.la
+BUILT_SOURCES        = demo.h
+demo_SOURCES         = demo.idl demo.c main.c
+demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(GENERATED_FILES): $(IDL)
+$(GENERATED_SOURCES): $(IDL)
 
 $(IDL):
 	cd $(top_builddir)/src/prog && make all
 
-@SUFFIXES@: .c .idl .pls_run .pls
+@SUFFIXES@: .h .idl
 
-.idl.c:
+.idl.h:
 	$(IDL) $<
 # Before running the compiler first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.c=.pls)
-	@touch $(@:.c=.pls_run)
-	test -z "$(PROC)" || $(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$(@:.c=.pc) ONAME=$@
-
-.pls.pls_run:
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
-	@touch $@
-
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.h=.pls)

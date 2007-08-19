@@ -1182,7 +1182,7 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 
 static
 int
-epc__native_parse_argument (idl_type_t type, char **msg_request, /*@out@ */int *len)
+epc__native_parse_argument (idl_type_t type, char **msg_request, /*@out@ */unsigned int *len)
 {
   int retval;
 
@@ -1227,7 +1227,7 @@ epc__error_t
 epc__native_parse (epc__info_t *epc__info, epc__call_t *epc__call, const char *msg_request)
 {
   dword_t nr;
-  int len;
+  unsigned int len;
   char *ptr = (char *)msg_request;
   char interface_name[MAX_INTERFACE_NAME_LEN+1] = "";
   char function_name[MAX_FUNC_NAME_LEN+1] = "";
