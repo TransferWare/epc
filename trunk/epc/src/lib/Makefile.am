@@ -32,7 +32,7 @@ AUTOMAKE_OPTIONS     = ansi2knr
 
 MOSTLYCLEANFILES     = epc.c
 
-AM_CPPFLAGS          = -I$(top_srcdir)/src/lib -I$(includedir)
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
 
 include_HEADERS      = epc.h epc_defs.h idl_defs.h
 
@@ -51,7 +51,7 @@ libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c epc_lib.h
 ## - 5:0:0 2007-08-07 readding dbms_pipe support (no XML data just the Oracle interface)
 
 libepc_la_LDFLAGS     = -no-undefined -version-info 5:0:0
-libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la
+libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la @DBUG_LIBADD@
 
 .pc.c:
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$< ONAME=$@

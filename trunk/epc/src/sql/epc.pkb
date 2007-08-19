@@ -1,56 +1,5 @@
 create or replace package body epc as
 
-/* numbers for each data_type function: see idl_defs.h */
-
-function data_type_string
-return data_type_subtype
-is
-begin
-  return 1;
-end data_type_string;
-
-function data_type_int
-return data_type_subtype
-is
-begin
-  return 2;
-end data_type_int;
-
-function data_type_long
-return data_type_subtype
-is
-begin
-  return 3;
-end data_type_long;
-
-function data_type_float
-return data_type_subtype
-is
-begin
-  return 4;
-end data_type_float;
-
-function data_type_double
-return data_type_subtype
-is
-begin
-  return 5;
-end data_type_double;
-
-function data_type_xml
-return data_type_subtype
-is
-begin
-  return 7;
-end data_type_xml;
-
-function data_type_date
-return data_type_subtype
-is
-begin
-  return 8;
-end data_type_date;
-
 procedure print(p_msg in varchar2)
 is
   l_idx pls_integer;

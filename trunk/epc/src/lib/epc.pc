@@ -367,12 +367,10 @@ epc__abort( char *msg )
   char err_msg[512];
   size_t buf_len, msg_len;
 
-  epc__show_dbms_output_db();
-
-  (void) printf("\n%s\n", msg);
+  (void) fprintf(stderr, "%s\n", msg);
   buf_len = sizeof (err_msg);
   sqlglm(err_msg, &buf_len, &msg_len);
-  (void) printf("%.*s\n", msg_len, err_msg);
+  (void) fprintf(stderr, "%.*s\n", msg_len, err_msg);
 
   exit(EXIT_FAILURE);
 }
@@ -381,8 +379,9 @@ static
 void
 EPC__ABORT( const char *file, const int line, char *msg )
 {
-  printf("%s#%d\n", file, line);
+  fprintf(stderr, "(%s#%d) ", file, line);
   epc__abort(msg);
+  epc__show_dbms_output_db();
 }
 
 /*
@@ -766,7 +765,7 @@ epc__show_dbms_output_db(void)
 {
   EXEC SQL BEGIN DECLARE SECTION;
 #define NUMLINES 100
-  char line[NUMLINES][255+1];
+  char line[NUMLINES][255+1] = { "" };
   short line_nl[NUMLINES];
   short numlines_nl;
   int numlines;
@@ -781,7 +780,8 @@ epc__show_dbms_output_db(void)
   while (1) {
     numlines = NUMLINES;
 
-    EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
+    /* Do not use EPC__ABORT since it calls epc__show_dbms_output() again */
+    EXEC SQL WHENEVER SQLERROR DO epc__abort("-- Oracle error --");
 
     EXEC SQL EXECUTE
     declare
