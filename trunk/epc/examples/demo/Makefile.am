@@ -17,39 +17,46 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = demo.h demo.c demo.pkb \
+BUILT_SOURCES        = demo.h demo.c demo.pkb \
                        demo.pke demo.pks demo.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc *.lis
+MOSTLYCLEANFILES     = $(BUILT_SOURCES) *.pc *.lis
 
-CLEANFILES           = *.pls_run
+CLEANFILES           = *.pls_run *.idl_run
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
 
-EXTRA_DIST           = $(GENERATED_FILES)
+# Just the SQL*Plus scripts
+EXTRA_DIST           = demo.pkb demo.pks demo.pls
 
+# Install the SQL*Plus package before building
 noinst_DATA          = demo.pls_run
+
 noinst_PROGRAMS      = demo
-BUILT_SOURCES        = $(GENERATED_FILES)
 demo_SOURCES         = demo.idl demo.c main.c
 demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@
 
-IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
+IDL                  = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(GENERATED_FILES): $(IDL)
+@SUFFIXES@           = .pls_run .pls .idl_run .idl
+
+.idl.idl_run:
+	$(IDL) $<
+	@touch $@
+
+.pls.pls_run:
+# Before running the compiler first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
+	@touch $@
+
+$(BUILT_SOURCES): demo.idl_run
+
+demo.idl_run: $(IDL)
 
 $(IDL):
 	cd $(top_builddir)/src/prog && $(MAKE) all
 
-@SUFFIXES@           = .h .idl .pls_run .pls
-
-.idl.h:
-	$(IDL) $<
-
-.pls.pls_run:
-# Before running the compiler first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.pls_run=.pls)
-	@touch $@
-
+$(top_builddir)/src/lib/libepc.la:
+	cd $(top_builddir)/src/lib && $(MAKE) all

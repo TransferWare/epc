@@ -17,35 +17,41 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = currentTime.c currentTime.h currentTime.c currentTime.pkb \
-                       currentTime.pke currentTime.pks currentTime.pls
-GENERATED_FILES     += mirror.c mirror.h mirror.c mirror.pkb \
-                       mirror.pke mirror.pks mirror.pls
+currentTime_sources  = currentTime.pkb currentTime.pks currentTime.pls
+mirror_sources       = mirror.pkb mirror.pks mirror.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc
+BUILT_SOURCES        = $(currentTime_sources) $(mirror_sources)
 
-CLEANFILES           = currentTime.pls_run
-CLEANFILES          += mirror.pls_run
+MOSTLYCLEANFILES     = $(BUILT_SOURCES)
 
-EXTRA_DIST           = currentTime.idl currentTime.sql mirror.idl mirror.sql
+CLEANFILES           = *.pls_run *.idl_run *.c *.h *.pc *.pke
 
-noinst_DATA          = currentTime.pls_run
-noinst_DATA         += mirror.pls_run
+# Just the IDL files and the SQL*Plus scripts
+EXTRA_DIST           = currentTime.idl mirror.idl $(BUILT_SOURCES)
 
-IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
+noinst_DATA          = currentTime.pls_run mirror.pls_run
 
-$(GENERATED_FILES): $(IDL)
+IDL                  = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(IDL):
-	cd $(top_builddir)/src/prog && make all
+@SUFFIXES@           = .pls_run .pls .idl_run .idl
 
-@SUFFIXES@: .idl .pls_run .pls
-
-.idl.pls:
+.idl.idl_run:
 	$(IDL) $<
+	@touch $@
 
 .pls.pls_run:
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
+# Before running the compiler first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
 	@touch $@
+
+$(currentTime_sources): currentTime.idl_run
+
+$(mirror_sources): mirror.idl_run
+
+currentTime.idl_run mirror.idl_run: $(IDL)
+
+$(IDL):
+	cd $(top_builddir)/src/prog && $(MAKE) all
+
 
 
