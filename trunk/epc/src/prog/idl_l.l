@@ -355,7 +355,7 @@ main( int argc, char **argv )
 	      break;
 
 	    case 'v':
-	      fprintf( stdout, "EPC idl version: %s", version() );
+	      fprintf( stdout, "EPC idl version: %s\n", version() );
 	      exit( EXIT_SUCCESS );
 	      break;
 	    }

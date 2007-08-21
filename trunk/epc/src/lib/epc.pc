@@ -658,6 +658,12 @@ epc__info_t *epc__info;
   EXEC SQL EXECUTE
   declare
   begin
+    if epc_srvr.get_epc_key = 1
+    then
+      null;
+    else
+      raise value_error;
+    end if;
     epc_srvr.recv_request
     ( p_epc_key => epc_srvr.get_epc_key
     , p_msg_info => :msg_info:msg_info_nl
@@ -678,8 +684,10 @@ epc__info_t *epc__info;
       :retval := :receive_error;
   end;
   END-EXEC;
+  
+  assert( OK == 0 );
 
-  if ( retval == OK )
+  if ( *retval == OK )
     {
       if ( msg_request_nl == -1 )
         msg_request[0] = '\0';
@@ -691,8 +699,11 @@ epc__info_t *epc__info;
 
       assert(strlen(msg_info) <= MAX_MSG_INFO_LEN);
 
-      DBUG_PRINT( "info", ( "msg_info: %s", msg_info ) );
+      DBUG_PRINT( "output", ( "msg_info: %s", msg_info ) );
+      DBUG_PRINT( "output", ( "msg_request: %s", msg_request ) );
     }
+
+  DBUG_PRINT( "output", ( "retval: %ld", *retval ) );
 
   DBUG_LEAVE();
 }
