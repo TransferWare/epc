@@ -17,33 +17,38 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = qotd.c qotd.h qotd.c qotd.pkb \
-                       qotd.pke qotd.pks qotd.pls
-GENERATED_FILES     += aws.c aws.h aws.c aws.pkb \
-                       aws.pke aws.pks aws.pls
+qotd_sources         = qotd.pkb qotd.pks qotd.pls
+aws_sources          = aws.pkb aws.pks aws.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc
+BUILT_SOURCES        = $(qotd_sources) $(aws_sources)
 
-CLEANFILES           = qotd.pls_run aws.pls_run
+MOSTLYCLEANFILES     = $(BUILT_SOURCES)
 
-EXTRA_DIST           = qotd.idl aws.idl
+CLEANFILES           = *.pls_run *.idl_run *.c *.h *.pc *.pke
+
+# Just the IDL files and the SQL*Plus scripts
+EXTRA_DIST           = qotd.idl aws.idl $(BUILT_SOURCES)
 
 noinst_DATA          = qotd.pls_run aws.pls_run
 
-IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
+IDL                  = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(GENERATED_FILES): $(IDL)
+@SUFFIXES@           = .pls_run .pls .idl_run .idl
 
-$(IDL):
-	cd $(top_builddir)/src/prog && make all
-
-@SUFFIXES@: .idl .pls_run .pls
-
-.idl.pls:
+.idl.idl_run:
 	$(IDL) $<
-
-.pls.pls_run:
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$?
 	@touch $@
 
+.pls.pls_run:
+# Before running the compiler first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
+	@touch $@
 
+$(qotd_sources): qotd.idl_run
+
+$(aws_sources): aws.idl_run
+
+qotd.idl_run aws.idl_run: $(IDL)
+
+$(IDL):
+	cd $(top_builddir)/src/prog && $(MAKE) all

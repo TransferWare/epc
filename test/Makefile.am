@@ -17,41 +17,46 @@
 
 MAINTAINERCLEANFILES = Makefile.in
 
-GENERATED_FILES      = epctest.c epctest.h epctest.c epctest.pkb epctest.pke epctest.pks epctest.pls
-GENERATED_FILES     += str.c str.h str.c str.pkb str.pke str.pks str.pls
+BUILT_SOURCES        = epctest.h epctest.c epctest.pkb epctest.pke epctest.pks epctest.pls
+BUILT_SOURCES       += str.h str.c str.pkb str.pke str.pks str.pls
 
-MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc *.lis
+MOSTLYCLEANFILES     = $(BUILT_SOURCES) *.pc *.lis
 
-CLEANFILES           = $(TESTS) *.log epctest.lis *.pls_run
+CLEANFILES           = $(TESTS) *.log epctest.lis *.pls_run *.idl_run
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
 
-EXTRA_DIST           = epctest.ref epctest.sql str.sql $(GENERATED_FILES)
+EXTRA_DIST           = epctest.ref epctest.sql str.sql
 
 check_DATA           = epctest.pls_run
 check_PROGRAMS       = epctest
-BUILT_SOURCES        = $(GENERATED_FILES)
 epctest_SOURCES      = epctest.idl epctest.c str.idl str.c proc.c main.c
 epctest_LDADD        = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@
 
-IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
+IDL                  = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(GENERATED_FILES): $(IDL)
+@SUFFIXES@           = .pls_run .pls .idl_run .idl
+
+.idl.idl_run:
+	$(IDL) $<
+	@touch $@
+
+.pls.pls_run:
+# Before running the compiler first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
+	@touch $@
+
+$(BUILT_SOURCES): epctest.idl_run str.idl_run
+
+epctest.idl_run str.idl_run: $(IDL)
 
 $(IDL):
 	cd $(top_builddir)/src/prog && $(MAKE) all
 
-@SUFFIXES@           = .h .idl .pls_run .pls
-
-.idl.h:
-	$(IDL) $<
-
-.pls.pls_run:
-# Before running the compiler first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.pls_run=.pls)
-	@touch $@
+$(top_builddir)/src/lib/libepc.la:
+	cd $(top_builddir)/src/lib && $(MAKE) all
 
 ##
 ## Test software

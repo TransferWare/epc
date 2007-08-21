@@ -1557,17 +1557,15 @@ handle_signal (int signo)
 
 #endif /* #ifdef SERVER_INTERRUPT */
 
-#ifdef SERVER_INTERRUPT
-
 void
-epc__set_handle_interrupt (epc__handle_interrupt_t handle_interrupt,
-                           epc__info_t * epc__info)
+epc__set_handle_interrupt (/*@unused@ */ epc__handle_interrupt_t handle_interrupt,
+                           /*@unused@ */ epc__info_t * epc__info)
 {
+#ifdef SERVER_INTERRUPT
   G_epc__handle_interrupt = handle_interrupt;
   G_epc__info_interrupt = epc__info;
-}
-
 #endif
+}
 
 int
 epc__get_signo (void)
