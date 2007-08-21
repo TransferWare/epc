@@ -797,114 +797,149 @@ procedure recv_response_dbms_pipe
 is
   l_retval pls_integer := -1;
   l_msg_seq_result pls_integer;
+  l_timeout pls_integer := p_epc_info_rec.recv_timeout;
+  l_start date;
 begin
 /*DBUG
   enter('epc_clnt.recv_response_dbms_pipe');
 /*DBUG*/
 
+  /* When the client is ahead of the server, a time-out may occur
+     while waiting for a message sequence nr (X). The client retries
+     with message sequence nr X+1 and in the meanwhile the server responds with number X.
+     Now the client expects X+1 but receives X, so the sequence numbers must be synchronized.
+  */
+
+  <<msg_seq_loop>>
+  loop
 /*DBUG
-  print('info', 'receiving from %s', g_result_pipe);
+    print('info', 'receiving from %s', g_result_pipe);
+    print('info', 'timeout: %s', to_char(l_timeout));
 /*DBUG*/
+    l_start := sysdate;
+    l_retval :=
+      case 
+        when p_epc_info_rec.recv_timeout > 0 and l_timeout <= 0 
+        then 1 -- timeout
+        else
+          dbms_pipe.receive_message
+          ( 
+            g_result_pipe
+          , l_timeout
+          )
+      end;
 
-  l_retval :=
-    dbms_pipe.receive_message
-    ( 
-      g_result_pipe
-    , p_epc_info_rec.recv_timeout
-    );
+    case l_retval
+      when 0 -- Success
+      then
+        l_timeout := 
+          case 
+            when p_epc_info_rec.recv_timeout = 0
+            then 0
+            else
+              l_timeout - 
+              /* elapsed time in seconds */ (sysdate - l_start) * ( 24 * 60 * 60 )
+          end;
 
-  case l_retval
-    when 0 -- Success
-    then 
-      null;
-
-    when 1 -- Timed out. If the pipe was implicitly-created and is empty, then it is removed.
-    then
-      raise_application_error
-      ( epc.c_comm_error
-      , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Timed out while receiving message number ' ||
-        to_char(g_msg_seq) ||
-        ' for pipe ' ||
-        g_result_pipe ||
-        '.'
-      );
-
-    when 2 -- Record in the pipe is too large for the buffer. (This should not happen.)
-    then
-      raise_application_error
-      ( epc.c_comm_error
-      , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Message too big while receiving message number ' ||
-        to_char(g_msg_seq) ||
-        ' for pipe ' ||
-        g_result_pipe || '.'
-      );
-
-    when 3 -- An interrupt occurred.
-    then
-      raise_application_error
-      ( epc.c_comm_error
-      , '(epc_clnt.recv_response_dbms_pipe) ' ||
-        'Interrupted while receiving message number ' ||
-        to_char(g_msg_seq) ||
-        ' for pipe ' ||
-        g_result_pipe ||
-        '.'
-      );
-
-    else -- no more return codes according to the documentation
-      raise program_error;
-  end case;
-
-  /* Get the message sequence */
-  dbms_pipe.unpack_message( l_msg_seq_result );
-
-/*DBUG
-  print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
-/*DBUG*/
-
-  if l_msg_seq_result = g_msg_seq
-  then
-    dbms_pipe.unpack_message( p_epc_info_rec.msg );
-
-/*DBUG
-    print('info', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
-/*DBUG*/
-
-    if p_epc_info_rec.protocol = "NATIVE"
-    then
-      declare
-        l_error_code varchar2(100);
-      begin
-        get_response_parameter
-        ( p_name => 'error_code'
-        , p_data_type => epc.data_type_int
-        , p_value => l_error_code
-        , p_max_bytes => null
-        , p_epc_info_rec => p_epc_info_rec
+      when 1 -- Timed out. If the pipe was implicitly-created and is empty, then it is removed.
+      then
+        raise_application_error
+        ( epc.c_comm_error
+        , '(epc_clnt.recv_response_dbms_pipe) ' ||
+          'Timed out while receiving message number ' ||
+          to_char(g_msg_seq) ||
+          ' for pipe ' ||
+          g_result_pipe ||
+          '.'
         );
 
-        if l_error_code != '0'
-        then
-          raise_application_error
-          ( epc.c_comm_error
-          , '(epc_clnt.recv_response_dbms_pipe) ' ||
-            'Server error code "' || l_error_code ||
-            '" while receiving message number ' || to_char(g_msg_seq) || '.'
+      when 2 -- Record in the pipe is too large for the buffer. (This should not happen.)
+      then
+        raise_application_error
+        ( epc.c_comm_error
+        , '(epc_clnt.recv_response_dbms_pipe) ' ||
+          'Message too big while receiving message number ' ||
+          to_char(g_msg_seq) ||
+          ' for pipe ' ||
+          g_result_pipe || '.'
+        );
+
+      when 3 -- An interrupt occurred.
+      then
+        raise_application_error
+        ( epc.c_comm_error
+        , '(epc_clnt.recv_response_dbms_pipe) ' ||
+          'Interrupted while receiving message number ' ||
+          to_char(g_msg_seq) ||
+          ' for pipe ' ||
+          g_result_pipe ||
+          '.'
+        );
+  
+      else -- no more return codes according to the documentation
+        raise program_error;
+    end case;
+  
+    /* Get the message sequence */
+    dbms_pipe.unpack_message( l_msg_seq_result );
+  
+/*DBUG
+    print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
+/*DBUG*/
+
+    if l_msg_seq_result = g_msg_seq
+    then
+      dbms_pipe.unpack_message( p_epc_info_rec.msg );
+  
+/*DBUG
+      print('info', 'p_epc_info_rec.msg: %s', p_epc_info_rec.msg);
+/*DBUG*/
+
+      if p_epc_info_rec.protocol = "NATIVE"
+      then
+        declare
+          l_error_code varchar2(100);
+        begin
+          get_response_parameter
+          ( p_name => 'error_code'
+          , p_data_type => epc.data_type_int
+          , p_value => l_error_code
+          , p_max_bytes => null
+          , p_epc_info_rec => p_epc_info_rec
           );
-        end if;
-      end;
+  
+          if l_error_code != '0'
+          then
+            raise_application_error
+            ( epc.c_comm_error
+            , '(epc_clnt.recv_response_dbms_pipe) ' ||
+              'Server error code "' || l_error_code ||
+              '" while receiving message number ' || to_char(g_msg_seq) || '.'
+            );
+          end if;
+        end;
+      end if;
+
+      exit msg_seq_loop; -- OK
+    else
+      /* Example: 
+      
+         The client expects 1006 after it timed out, so
+         1005 is still in the queue. 
+         Just read that, ignore it and continue to wait for 1006.
+      */                  
+      null;
+/*    
+      raise_application_error
+      ( epc.c_wrong_protocol
+      , '(epc_clnt.recv_response_dbms_pipe) ' ||
+        'Wrong message number received. ' ||
+        'Expected "' || to_char(g_msg_seq) || '"' ||
+        ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
+      );
+*/      
     end if;
-  else
-    raise_application_error
-    ( epc.c_wrong_protocol
-    , '(epc_clnt.recv_response_dbms_pipe) ' ||
-      'Wrong message number received. ' ||
-      'Expected "' || to_char(g_msg_seq) || '"' ||
-      ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
-    );
-  end if;
+  end loop msg_seq_loop;
 
 /*DBUG
   leave;

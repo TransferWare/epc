@@ -50,6 +50,8 @@ epc__info_t *G_epc__info_interrupt = NULL;
 
 static int G_signo = 0;
 
+#ifdef SERVER_INTERRUPT
+
 static void handle_signal (int signo);
 
 #define MAX_SIGNO 32
@@ -330,13 +332,18 @@ signal_str (int signo)
     }
 }
 
+#endif /* #ifdef SERVER_INTERRUPT */
+
 void
 epc__set_signal_handlers (const int idx)
 {
+#ifdef SERVER_INTERRUPT
   int nr;
+#endif
 
   DBUG_ENTER ("epc__set_signal_handlers");
 
+#ifdef SERVER_INTERRUPT
   for (nr = 0; nr < MAX_SIGNO; nr++)
     {
       switch (nr)
@@ -478,6 +485,7 @@ epc__set_signal_handlers (const int idx)
       signal_handler_info[idx][nr].func =
         signal (nr, signal_handler_info[idx][nr].func);
     }
+#endif /* #ifdef SERVER_INTERRUPT */
 
   DBUG_LEAVE ();
 }
@@ -1526,6 +1534,8 @@ epc__handle_requests (epc__info_t * epc__info,
   return epc__call.epc__error;
 }
 
+#ifdef SERVER_INTERRUPT
+
 static void
 handle_signal (int signo)
 {
@@ -1544,6 +1554,8 @@ handle_signal (int signo)
 
   epc__reset_signal_handlers (1);
 }
+
+#endif /* #ifdef SERVER_INTERRUPT */
 
 #ifdef SERVER_INTERRUPT
 

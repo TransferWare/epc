@@ -22,15 +22,15 @@ GENERATED_FILES      = demo.h demo.c demo.pkb \
 
 MOSTLYCLEANFILES     = $(GENERATED_FILES) *.pc *.lis
 
-CLEANFILES           = 
+CLEANFILES           = *.pls_run
 
 AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
 
-EXTRA_DIST           = 
+EXTRA_DIST           = $(GENERATED_FILES)
 
-noinst_DATA          = 
+noinst_DATA          = demo.pls_run
 noinst_PROGRAMS      = demo
 BUILT_SOURCES        = $(GENERATED_FILES)
 demo_SOURCES         = demo.idl demo.c main.c
@@ -38,15 +38,18 @@ demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@
 
 IDL = $(top_builddir)/src/prog/idl$(EXEEXT)
 
-$(GENERATED_FILES): $(IDL) generate
-
-generate: demo.idl
-	$(IDL) $?
-# Before running the compiler first compile the package
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @demo.pls
+$(GENERATED_FILES): $(IDL)
 
 $(IDL):
 	cd $(top_builddir)/src/prog && $(MAKE) all
 
-$(top_builddir)/src/lib/libepc.la:
-	cd $(top_builddir)/src/lib && $(MAKE) all
+@SUFFIXES@           = .h .idl .pls_run .pls
+
+.idl.h:
+	$(IDL) $<
+
+.pls.pls_run:
+# Before running the compiler first compile the package
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$(@:.pls_run=.pls)
+	@touch $@
+
