@@ -131,6 +131,11 @@ BEGIN
   END;
   END LOOP;
   dbms_output.put_line('&&function count: ' || l_count);
+EXCEPTION
+  WHEN OTHERS
+  THEN
+    dbms_output.put_line('Current date/time: ' || to_char(sysdate, 'yyyy-mm-dd hh24:mi:ss'));   
+    RAISE;
 END;
 /
 
