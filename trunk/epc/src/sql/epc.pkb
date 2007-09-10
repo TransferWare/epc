@@ -1,3 +1,4 @@
+--$NO_KEYWORD_EXPANSION$
 create or replace package body epc as
 
 procedure print(p_msg in varchar2)
