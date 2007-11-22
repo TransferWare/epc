@@ -187,9 +187,7 @@ sub daemonize () {
         setsid                    or croak("Can't start a new session: $!");
     };
     if ($@) {
-        if ($@ =~ m/POSIX::setsid not implemented on this architecture/) {
-            warn $@;
-        } else {
+        if ($@ !~ m/POSIX::setsid not implemented on this architecture/) {
             die $@;
         }
     }
