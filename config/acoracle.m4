@@ -221,4 +221,53 @@ done
 AC_CHECK_HEADERS([$acx_xmlhdrs], [continue], [AC_MSG_ERROR(XML header(s) $acx_xmlhdrs not found)])
 ])
 
+# ACX_PROG_OCI
+# -------------
+# Look for the Oracle OCI header.
+# Sets/updates the following variables:
+# - CPPFLAGS      extended with the OCI header
+
+AC_DEFUN([ACX_PROG_OCI],
+[
+acx_oracle_home="$ORACLE_HOME"
+if test -z "$acx_oracle_home"
+then
+  acx_oracle_home=`dirname $PROC`
+  acx_oracle_home=`dirname $acx_oracle_home`
+fi
+
+acx_ocihdrs="oci.h"
+acx_ocihdr=
+for dir in $acx_oracle_home/rdbms/public `find $acx_oracle_home -name include -type d 2>/dev/null` $acx_oracle_home
+do
+  # Must be a directory and we must be able to change to the directory
+  test -d $dir -a -x $dir || continue
+  for file in $acx_ocihdrs
+  do
+    # Windows: ignore case
+    # Bug 849475: just return one header by using head -1
+    acx_ocihdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
+
+    test -n "$acx_ocihdr" || continue
+
+    AC_MSG_CHECKING([$acx_ocihdr])
+
+    # oraoci.h.bak is not right, but ORAOCI.H is (at least on Windows)
+    if test `basename "$acx_ocihdr" | tr 'A-Z' 'a-z'` = "$file"
+    then
+      CPPFLAGS="-I`dirname $acx_ocihdr` $CPPFLAGS"
+      AC_MSG_RESULT([yes])
+      break
+    else
+      acx_ocihdr=
+      AC_MSG_RESULT([no])
+      continue
+    fi
+  done
+  test -z "$acx_ocihdr" || break
+done
+
+AC_CHECK_HEADERS([$acx_ocihdrs], [continue], [AC_MSG_ERROR(OCI header(s) $acx_ocihdrs not found)])
+])
+
 dnl $Id$
