@@ -1,5 +1,0 @@
-create table epc_tab of epc_objtype (
-  constraint epc_tab_pk primary key (object_id, object_type) 
-)
-/
-

@@ -23,7 +23,7 @@ noinst_DATA     += epc_clnt_info_objtype.typ epc_clnt_info_objtype.typ_run \
 noinst_DATA     += epc_clnt_info_tabtype.typ epc_clnt_info_tabtype.typ_run
 noinst_DATA     += epc_clnt_objtype.typ epc_clnt_objtype.typ_run \
                    epc_clnt_objtype.tyb epc_clnt_objtype.tyb_run
-noinst_DATA     += epc_tab.tab epc_tab.tab_run
+noinst_DATA     += epc_objects.tab epc_objects.tab_run
 noinst_DATA     += epc_objtype_mgr.pks epc_objtype_mgr.pkb epc_objtype_mgr.pks_run epc_objtype_mgr.pkb_run
 noinst_DATA     += epc_clnt.pks epc_clnt.pkb epc_clnt.pks_run epc_clnt.pkb_run
 
@@ -35,7 +35,7 @@ EXTRA_DIST      += epc_objtype.typ
 EXTRA_DIST      += epc_clnt_info_objtype.typ epc_clnt_info_objtype.tyb
 EXTRA_DIST      += epc_clnt_info_tabtype.typ
 EXTRA_DIST      += epc_clnt_objtype.typ epc_clnt_objtype.tyb
-noinst_DATA     += epc_tab.tab
+noinst_DATA     += epc_objects.tab
 noinst_DATA     += epc_objtype_mgr.pks epc_objtype_mgr.pkb
 EXTRA_DIST      += epc_clnt.pks epc_clnt.pkb
 EXTRA_DIST      += login.sql
