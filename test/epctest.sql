@@ -14,10 +14,13 @@ alter session set nls_numeric_characters = '.,';
 REM Just start nothing1 to register the interface, change the protocol and set the pipe size
 declare
   l_pipe_name epc.pipe_name_subtype;
+  l_epc_clnt_info epc_clnt_info_objtype;
 begin
   epctest.nothing1;
-  epc_clnt.set_protocol(epc_clnt.get_epc_key('epctest'), epc_clnt."&&PROTOCOL");
-  epc_clnt.get_connection_info(epc_clnt.get_epc_key('epctest'), l_pipe_name);
+  epc_clnt.get_epc_clnt_info(l_epc_clnt_info, 'epctest');
+  epc_clnt.set_protocol(l_epc_clnt_info, epc_clnt."&&PROTOCOL");
+  epc_clnt.get_connection_info(l_epc_clnt_info, l_pipe_name);
+  epc_clnt.set_epc_clnt_info(l_epc_clnt_info, 'epctest');
   -- enlarge the pipe
   if 0 = 
      dbms_pipe.create_pipe
@@ -102,9 +105,13 @@ end;
 
 prompt Performance test doing a null block
 
-BEGIN
-  epc_clnt.set_response_recv_timeout(epc_clnt.get_epc_key('epctest'), 10);
-END;
+declare
+  l_epc_clnt_info epc_clnt_info_objtype;
+begin
+  epc_clnt.get_epc_clnt_info(l_epc_clnt_info, 'epctest');
+  epc_clnt.set_response_recv_timeout(l_epc_clnt_info, 10);
+  epc_clnt.set_epc_clnt_info(l_epc_clnt_info, 'epctest');
+end;
 /
 
 define function = nothing2
