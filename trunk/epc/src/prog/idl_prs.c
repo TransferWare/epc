@@ -877,6 +877,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                                          (int) fun->num_parameters, 0);
               (void) fprintf (pout, ";\n");
             }
+          (void) fprintf (pout, "    l_epc_clnt_info epc_clnt_info_objtype;\n");
         }
 
       (void) fprintf (pout, "  BEGIN\n");
@@ -886,7 +887,12 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
         case STUB:
           /* SETUP OF CLIENT SIDE FUNCTION CALL */
           (void) fprintf (pout,
-                          "    epc_clnt.new_request(g_epc_key, '%s', %ld);\n",
+                          "    epc_clnt.get_epc_clnt_info(l_epc_clnt_info, '%s');\n",
+                          _interface.name);
+          (void) fprintf (pout, 
+                          "    BEGIN\n");
+          (void) fprintf (pout,
+                          "      epc_clnt.new_request(l_epc_clnt_info, '%s', %ld);\n",
                           fun->name, fun->oneway);
 
           for (nr = 0; nr < fun->num_parameters; nr++)
@@ -903,7 +909,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                     case C_DOUBLE:
                     case C_DATE:
                       (void) fprintf (pout,
-                                      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s);\n",
+                                      "      epc_clnt.set_request_parameter(l_epc_clnt_info, '%s', %s, %s);\n",
                                       parm->name,
                                       get_constant_name (parm->datatype, PLSQL),
                                       parm->name);
@@ -912,7 +918,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                     case C_STRING:
                     case C_XML:
                       (void) fprintf (pout,
-                                      "    epc_clnt.set_request_parameter(g_epc_key, '%s', %s, %s, %ld);\n",
+                                      "      epc_clnt.set_request_parameter(l_epc_clnt_info, '%s', %s, %s, %ld);\n",
                                       parm->name,
                                       get_constant_name (parm->datatype, PLSQL),
                                       parm->name,
@@ -926,11 +932,11 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
             }
 
           (void) fprintf (pout,
-                          "    epc_clnt.send_request(g_epc_key);\n");
+                          "      epc_clnt.send_request(l_epc_clnt_info);\n");
 
           if (fun->oneway == 0)
             {
-              (void) fprintf (pout, "    epc_clnt.recv_response(g_epc_key);\n");
+              (void) fprintf (pout, "      epc_clnt.recv_response(l_epc_clnt_info);\n");
             }
 
           /* GET THE RESULTS */
@@ -947,7 +953,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                     case C_DOUBLE:
                     case C_DATE:
                       (void) fprintf (pout,
-                                      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s);\n",
+                                      "      epc_clnt.get_response_parameter(l_epc_clnt_info, '%s', %s, %s);\n",
                                       parm->name,
                                       get_constant_name (parm->datatype, PLSQL),
                                       parm->name);
@@ -956,7 +962,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                     case C_STRING:
                     case C_XML:
                       (void) fprintf (pout,
-                                      "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, %s, %ld);\n",
+                                      "      epc_clnt.get_response_parameter(l_epc_clnt_info, '%s', %s, %s, %ld);\n",
                                       parm->name,
                                       get_constant_name (parm->datatype, PLSQL),
                                       parm->name,
@@ -972,13 +978,34 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
           if (fun->return_value.datatype != C_VOID)
             {
               (void) fprintf (pout,
-                              "    epc_clnt.get_response_parameter(g_epc_key, '%s', %s, l_%s);\n",
+                              "      epc_clnt.get_response_parameter(l_epc_clnt_info, '%s', %s, l_%s);\n",
                               fun->return_value.name,
                               get_constant_name (fun->return_value.datatype, PLSQL),
                               fun->return_value.name);
-              (void) fprintf (pout, "    RETURN l_%s;\n", fun->return_value.name);
             }
 
+          (void) fprintf (pout,
+                          "    EXCEPTION\n");
+          (void) fprintf (pout,
+                          "      WHEN OTHERS\n");
+          (void) fprintf (pout,
+                          "      THEN\n");
+          (void) fprintf (pout,
+                          "        epc_clnt.set_epc_clnt_info(l_epc_clnt_info, '%s');\n",
+                          _interface.name);
+          (void) fprintf (pout,
+                          "        RAISE;\n");
+          (void) fprintf (pout,
+                          "    END;\n");
+
+          (void) fprintf (pout,
+                          "    epc_clnt.set_epc_clnt_info(l_epc_clnt_info, '%s');\n",
+                          _interface.name);
+
+          if (fun->return_value.datatype != C_VOID)
+            {
+              (void) fprintf (pout, "    RETURN l_%s;\n", fun->return_value.name);
+            }
           break;
 
 #if GENERATE_PROC
@@ -1139,9 +1166,6 @@ generate_plsql_body (FILE * pout)
         {
           (void) fprintf (pout, "CREATE OR REPLACE PACKAGE BODY %s%s IS\n\n",
                           _interface.name, package_type_str[package_type]);
-          if (package_type == STUB) {
-            (void) fprintf (pout, "  g_epc_key epc_clnt.epc_key_subtype;\n\n");
-          }
           (void) fprintf (pout, "\n");
 
           for (nr = 0; nr < _interface.num_functions; nr++)
@@ -1153,7 +1177,7 @@ generate_plsql_body (FILE * pout)
             {
             case STUB:
               (void) fprintf (pout, "BEGIN\n\
-  g_epc_key := epc_clnt.register('%s');\n\
+  epc_clnt.register('%s');\n\
 END;\n", _interface.name);
               break;
 

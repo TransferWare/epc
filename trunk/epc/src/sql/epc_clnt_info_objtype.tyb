@@ -1,0 +1,26 @@
+create or replace type body epc_clnt_info_objtype
+is
+
+constructor function epc_clnt_info_objtype
+return self as result
+is
+begin
+  self.protocol := epc_clnt."NATIVE";
+
+  self.connection_method := epc_clnt.CONNECTION_METHOD_DBMS_PIPE;
+  self.request_pipe := 'epc_request_pipe';
+  self.send_timeout := 10;
+  self.recv_timeout := 10;
+
+  self.http_method := 'POST';
+  self.http_version := utl_http.http_version_1_1;
+
+  -- essential
+  return;
+end;
+
+end;
+/
+
+show errors
+

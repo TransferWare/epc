@@ -18,20 +18,35 @@
 noinst_DATA      = epc.pks epc.pkb epc.pks_run epc.pkb_run
 noinst_DATA     += epc_clnt.pks epc_clnt.pkb epc_clnt.pks_run epc_clnt.pkb_run
 noinst_DATA     += epc_srvr.pks epc_srvr.pkb epc_srvr.pks_run epc_srvr.pkb_run
+noinst_DATA     += epc_objtype.typ epc_objtype.typ_run
+noinst_DATA     += epc_clnt_info_objtype.typ epc_clnt_info_objtype.typ_run \
+                   epc_clnt_info_objtype.tyb epc_clnt_info_objtype.tyb_run
+noinst_DATA     += epc_clnt_info_tabtype.typ epc_clnt_info_tabtype.typ_run
 
 CLEANFILES       = *.pk?_run pod*.tmp
 
 EXTRA_DIST       = epc.pks epc.pkb
 EXTRA_DIST      += epc_clnt.pks epc_clnt.pkb
 EXTRA_DIST      += epc_srvr.pks epc_srvr.pkb
+EXTRA_DIST      += epc_objtype.typ
+EXTRA_DIST      += epc_clnt_info_objtype.typ epc_clnt_info_objtype.tyb
+EXTRA_DIST      += epc_clnt_info_tabtype.typ
 EXTRA_DIST      += login.sql
 
-@SUFFIXES@: .pks .pkb .pks_run .pkb_run
+@SUFFIXES@: .typ .tyb .pks .pkb .typ_run .tyb_run .pks_run .pkb_run
 
 # &lt and &gt are used in epc_clnt.pks
 # To prevent asking for the defines, the login.sql sets define off,
 # but since login.sql may not be the build directory SQLPATH must be set 
 # to the source directory.
+
+.typ.typ_run:
+	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )
+	@touch $@
+
+.tyb.tyb_run:
+	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )
+	@touch $@
 
 .pks.pks_run:
 	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )

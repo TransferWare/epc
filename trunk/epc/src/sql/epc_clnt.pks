@@ -57,19 +57,24 @@ create or replace package epc_clnt is
 -- The flow of procedure calls will typically look like this:<br />
 -- 1) Set connection information.<br />
 --    a) epc_clnt.register<br />
---    b) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
---    c) epc_clnt.set_connection_info (optional for database pipes)<br />
---    d) epc_clnt.set_request_send_timeout (optional)<br />
---    e) epc_clnt.set_response_recv_timeout (optional)<br />
+--    b) epc_clnt.get_epc_clnt_info<br />
+--    c) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
+--    d) epc_clnt.set_connection_info (optional for database pipes)<br />
+--    e) epc_clnt.set_request_send_timeout (optional)<br />
+--    f) epc_clnt.set_response_recv_timeout (optional)<br />
+--    g) epc_clnt.set_epc_clnt_info<br />
 -- 2) Marshall a function call into a message<br />
---    a) epc_clnt.new_request<br />
---    b) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)<br />
+--    a) epc_clnt.get_epc_clnt_info<br />
+--    b) epc_clnt.new_request<br />
+--    c) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)<br />
 -- 3) Send the message<br />
 --    a) epc_clnt.send_request<br />
 -- 4) Receive the response<br />
 --    a) epc_clnt.recv_response<br />
 -- 5) Unmarshall the message<br />
 --    a) epc_clnt.get_response_parameter (for all OUT and IN OUT parameters)<br />
+-- 6) Save the client info<br/ >
+--    a) epc_clnt.set_epc_clnt_info<br />
 --
 -- @headcom
 */
@@ -125,38 +130,55 @@ subtype protocol_subtype is pls_integer;
 "XMLRPC" constant protocol_subtype := 6; -- default protocol for TCP/IP
 "NATIVE" constant protocol_subtype := 7; -- default protocol for DBMS_PIPE
 
-subtype epc_key_subtype is binary_integer;
-
 type http_connection_rectype is record (
   url varchar2(4000) /* http://... */
 , method varchar2(10) default 'POST'
 , version varchar2(10) default utl_http.http_version_1_1
-, http_req utl_http.req
 );
 
 subtype http_connection_subtype is http_connection_rectype;
+
+subtype connection_method_subtype is pls_integer;
+
+CONNECTION_METHOD_DBMS_PIPE constant connection_method_subtype := 1;
+CONNECTION_METHOD_UTL_TCP constant connection_method_subtype := 2;
+CONNECTION_METHOD_UTL_HTTP constant connection_method_subtype := 3;
 
 /**
 -- Register an interface
 --
 -- @param p_interface_name  The name of the interface to register.
 --
--- @return A unique key which has to be used in all other epc_clnt calls.
 */
-function register( p_interface_name in epc.interface_name_subtype )
-return epc_key_subtype;
+procedure register
+( p_interface_name in epc.interface_name_subtype
+);
 
 /**
--- Get the key
+-- Get the connection information of an already registered interface.
 --
 -- @param p_interface_name  The name of the interface.
+-- @param p_epc_clnt_info   Epc client info
 --
--- @throws no_data_found
---
--- @return The unique key for the interface
+-- @throws no_data_found  Not registered yet.
 */
-function get_epc_key( p_interface_name in epc.interface_name_subtype )
-return epc_key_subtype;
+procedure get_epc_clnt_info
+( p_epc_clnt_info out nocopy epc_clnt_info_objtype
+, p_interface_name in epc.interface_name_subtype
+);
+
+/**
+-- Set the connection information of an already registered interface.
+--
+-- @param p_epc_clnt_info   Epc client info
+-- @param p_interface_name  The name of the interface.
+--
+-- @throws no_data_found  Not registered yet.
+*/
+procedure set_epc_clnt_info
+( p_epc_clnt_info in epc_clnt_info_objtype
+, p_interface_name in epc.interface_name_subtype
+);
 
 /* 
 || Protocol related functions/procedures.
@@ -165,28 +187,24 @@ return epc_key_subtype;
 /**
 -- Set the protocol for later use.
 -- 
--- @param p_epc_key   The key
--- @param p_protocol  The protocol
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_protocol       The protocol
 --
 -- @throws value_error  When the protocol is not NATIVE, SOAP nor XMLRPC.
 */
 procedure set_protocol
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_protocol in protocol_subtype
 );
 
 /**
 -- Get the protocol. 
 -- 
--- @param p_epc_key   The key
--- @param p_protocol  The protocol
---
--- @throws no_data_found  Wrong key
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_protocol       The protocol
 */
 procedure get_protocol
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_protocol out protocol_subtype
 );
 
@@ -200,27 +218,25 @@ procedure get_protocol
 -- Set the connection method to HTTP and store the HTTP connection info for
 -- later use. The protocol will be set to SOAP.
 -- 
--- @param p_epc_key     The key
--- @param p_connection  The HTTP connection info.
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_connection     The HTTP connection info.
 */
 procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_connection in http_connection_subtype
 );
 
 /**
 -- Get the HTTP connection info. 
 -- 
--- @param p_epc_key     The key
--- @param p_connection  The HTTP connection info
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_connection     The HTTP connection info
 --
 -- @throws no_data_found  connection method is not utl_http
 */
 procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_connection out http_connection_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
+, p_connection out nocopy http_connection_subtype
 );
 
 /**
@@ -231,28 +247,26 @@ procedure get_connection_info
 -- responsability of the client program to open and close the connection. The
 -- protocol will be set to XMLRPC.
 -- 
--- @param p_epc_key     The key
--- @param p_connection  An open TCP/IP connection (see utl_tcp.open_connection)
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_connection     An open TCP/IP connection (see utl_tcp.open_connection)
 */
 procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_connection in utl_tcp.connection
 );
 
 /**
 -- Get the TCP/IP connection info. 
 -- 
--- @param p_epc_key     The key
--- @param p_connection  An open TCP/IP connection
---                      (see utl_tcp.open_connection)
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_connection     An open TCP/IP connection
+--                         (see utl_tcp.open_connection)
 --
 -- @throws no_data_found  connection method is not utl_tcp
 */
 procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
-, p_connection out utl_tcp.connection
+( p_epc_clnt_info in epc_clnt_info_objtype
+, p_connection out nocopy utl_tcp.connection
 );
 
 /**
@@ -262,50 +276,46 @@ procedure get_connection_info
 -- later use. Each interface may have a different connection. The
 -- protocol will be set to NATIVE.
 -- 
--- @param p_epc_key    The key
--- @param p_pipe_name  The request pipe name
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_pipe_name      The request pipe name
 */
 procedure set_connection_info
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_pipe_name in epc.pipe_name_subtype
 );
 
 /**
 -- Get the database request pipe.
 -- 
--- @param p_epc_key    The key
--- @param p_pipe_name  The request pipe name
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_pipe_name      The request pipe name
 --
 -- @throws no_data_found  connection method is not dbms_pipe
 */
 procedure get_connection_info
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_pipe_name out epc.pipe_name_subtype
 );
 
 /**
 -- Set the request send timeout.
 -- 
--- @param p_epc_key               The key
+-- @param p_epc_clnt_info         Epc client info
 -- @param p_request_send_timeout  The request send timeout
 */
 procedure set_request_send_timeout
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_request_send_timeout in pls_integer
 );
 
 /**
 -- Set the response receive timeout.
 -- 
--- @param p_epc_key                The key
+-- @param p_epc_clnt_info          Epc client info
 -- @param p_response_recv_timeout  The response receive timeout
 */
 procedure set_response_recv_timeout
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_response_recv_timeout in pls_integer
 );
 
@@ -317,12 +327,11 @@ procedure set_response_recv_timeout
 -- The namespace is added as an attribute to the method element, e.g.
 -- &lt;METHOD xmlns="NAMESPACE"&gt;
 -- 
--- @param p_epc_key    The key
--- @param p_namespace  The new namespace
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_namespace      The new namespace
 */
 procedure set_namespace
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_namespace in varchar2
 );
 
@@ -334,27 +343,25 @@ procedure set_namespace
 -- overridden.  The namespace is added as an attribute to the method element,
 -- e.g. &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
 -- 
--- @param p_epc_key           The key
+-- @param p_epc_clnt_info     Epc client info
 -- @param p_inline_namespace  The new inline namespace
 */
 procedure set_inline_namespace
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 , p_inline_namespace in varchar2
 );
 
 /**
 -- Start a new request.
 -- 
--- @param p_epc_key      The key
--- @param p_method_name  The method name
--- @param p_oneway       Is the procedure call a oneway call,
-                         i.e. do we NOT wait for a response? 
-                         0 means we will wait for a response.
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_method_name    The method name
+-- @param p_oneway         Is the procedure call a oneway call,
+                           i.e. do we NOT wait for a response? 
+                           0 means we will wait for a response.
 */
 procedure new_request
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_method_name in epc.method_name_subtype
 , p_oneway in pls_integer
 );
@@ -362,18 +369,17 @@ procedure new_request
 /**
 -- Set a request parameter (IN or IN OUT).
 -- 
--- @param p_epc_key    The key
--- @param p_name       The name of the parameter
--- @param p_data_type  The data type (should be epc.data_type_string)
--- @param p_value      The value of the parameter
--- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
+-- @param p_epc_clnt_info  Epc client info
+-- @param p_name           The name of the parameter
+-- @param p_data_type      The data type (should be epc.data_type_string)
+-- @param p_value          The value of the parameter
+-- @param p_max_bytes      The maximum length of p_value in bytes (if non-null)
 --
 -- @throws epc.e_illegal_null_value  p_value is NULL
 -- @throws value_error               data type is incorrect or maximum length reached
 */
 procedure set_request_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in varchar2
@@ -381,16 +387,14 @@ procedure set_request_parameter
 );
 
 procedure set_request_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in number
 );
 
 procedure set_request_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in date
@@ -399,46 +403,43 @@ procedure set_request_parameter
 /**
 -- Send a request.
 -- 
--- @param p_epc_key      Connection info can be retrieved by the key
+-- @param p_epc_clnt_info  Epc client info
 --
 -- @throws epc.e_comm_error  Error while sending the message
 -- @throws program_error     Protocol and connection method do not match
 */
 procedure send_request
-( 
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 );
 
 /**
 -- Receive a response.
 -- 
--- @param p_epc_key  Connection info can be retrieved by the key
+-- @param p_epc_clnt_info  Epc client info
 --
 -- @throws epc.e_comm_error      Error while sending the message
 -- @throws epc.e_wrong_protocol  Message number sent and received do not match
 -- @throws program_error         Protocol and connection method do not match
 */
 procedure recv_response
-( 
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
 );
 
 /**
 -- Get a response parameter (OUT or IN OUT).
 -- 
--- @param p_epc_key    The key
--- @param p_name       The name of the parameter
--- @param p_data_type  The data type (should be epc.data_type_string)
--- @param p_value      The value of the parameter
--- @param p_max_bytes  The maximum length of p_value in bytes (if non-null)
+-- @param p_epc_clnt_info   Epc client info
+-- @param p_name            The name of the parameter
+-- @param p_data_type       The data type (should be epc.data_type_string)
+-- @param p_value           The value of the parameter
+-- @param p_max_bytes       The maximum length of p_value in bytes (if non-null)
 --
 -- @throws value_error    invalid datatype or or maximum length reached
 -- @throws ORA-6559       wrong data type requested
 -- @throws program_error  Protocol and connection method do not match
 */
 procedure get_response_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out varchar2
@@ -446,33 +447,18 @@ procedure get_response_parameter
 );
 
 procedure get_response_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out number
 );
 
 procedure get_response_parameter
-(
-  p_epc_key in epc_key_subtype
+( p_epc_clnt_info in epc_clnt_info_objtype
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out date
 );
-
-/**
--- Get the response pipe.
--- 
--- @param p_epc_key  Connection info can be retrieved by the key
---
--- @return The response pipe
-*/
-function get_response_pipe
-(
-  p_epc_key in epc_key_subtype
-)
-return epc.pipe_name_subtype;
 
 /**
 -- Shutdown the client.
