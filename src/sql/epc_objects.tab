@@ -1,0 +1,5 @@
+create table epc_objects of epc_objtype (
+  constraint epc_objects_pk primary key (object_id, object_type) 
+)
+/
+

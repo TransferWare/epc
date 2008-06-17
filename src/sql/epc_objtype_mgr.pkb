@@ -25,7 +25,7 @@ begin
   then
     select  value(tab)
     into    p_epc_obj
-    from    epc_tab tab
+    from    epc_objects tab
     where   tab.object_id = g_object_id
     and     tab.object_type = p_object_type;
 
@@ -44,7 +44,7 @@ is
 begin
   if g_object_id is not null
   then
-    update  epc_tab tab
+    update  epc_objects tab
     set     value(tab) = p_epc_obj
     where   tab.object_id = g_object_id
     and     tab.object_type = p_object_type;
@@ -52,7 +52,7 @@ begin
     if sql%rowcount = 0
     then
       insert
-      into    epc_tab
+      into    epc_objects
       values  p_epc_obj;
     end if;
 
