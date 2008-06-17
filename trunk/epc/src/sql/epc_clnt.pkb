@@ -111,13 +111,10 @@ g_msg epc.xml_subtype; /* input/output */
 g_doc xmltype; /* output */
 g_next_out_parameter pls_integer; /* number of next out (or in/out) parameter to read for XMLRPC */
 
-type epc_clnt_info_tabtype is table of epc_clnt_info_objtype;
-
 -- constants
 c_max_msg_seq   constant pls_integer := 65535; /* msg seq wraps from 0 up till 65535 */
 
 -- global variables
-g_epc_clnt_info_tab epc_clnt_info_tabtype := epc_clnt_info_tabtype();
 g_result_pipe epc.pipe_name_subtype := null;
 /* The current message sequence number.
    The message sequence number is incremented before a message
@@ -181,25 +178,41 @@ exception
 end;
 /*DBUG*/
 
-function get_epc_key
+procedure get_epc_clnt
 ( p_interface_name in epc.interface_name_subtype
+, p_epc_clnt out nocopy epc_clnt_objtype
+, p_idx out epc_key_subtype
 )
-return epc_key_subtype
 is
-  l_idx epc_key_subtype;
 begin
-  if g_epc_clnt_info_tab.count > 0 
+  begin
+    epc_objtype_mgr.get_object('EPC_CLNT', p_epc_clnt);
+  exception
+    when no_data_found
+    then
+      p_epc_clnt := new epc_clnt_objtype();
+      epc_objtype_mgr.set_object('EPC_CLNT', p_epc_clnt);
+  end;
+
+  p_idx := null;
+
+  if p_epc_clnt.info_tab.count > 0 
   then
-    for l_idx in g_epc_clnt_info_tab.first .. g_epc_clnt_info_tab.last
+    for i_idx in p_epc_clnt.info_tab.first .. p_epc_clnt.info_tab.last
     loop
-      if g_epc_clnt_info_tab(l_idx).interface_name = p_interface_name
+      if p_epc_clnt.info_tab(i_idx).interface_name = p_interface_name
       then
-        return l_idx;
+        p_idx := i_idx;
+        exit;
       end if;
     end loop;
   end if;
-  raise no_data_found;
-end get_epc_key;
+
+  if p_idx is null
+  then
+    raise no_data_found;
+  end if;
+end get_epc_clnt;
 
 procedure connection2epc_clnt_info_obj
 ( p_connection in http_connection_rectype
@@ -704,18 +717,22 @@ procedure register
 )
 is
   l_idx epc_key_subtype;
+  l_epc_clnt epc_clnt_objtype;
 begin
   begin
-    l_idx := get_epc_key( p_interface_name );
+    get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
   exception
     when no_data_found
     then
-      g_epc_clnt_info_tab.extend(1);
-      l_idx := g_epc_clnt_info_tab.last;
-      g_epc_clnt_info_tab(l_idx) := new epc_clnt_info_objtype();
-      g_epc_clnt_info_tab(l_idx).interface_name := p_interface_name;
-      g_epc_clnt_info_tab(l_idx).namespace := p_interface_name;
-      g_epc_clnt_info_tab(l_idx).inline_namespace := 'ns1';
+      l_epc_clnt.info_tab.extend(1);
+      l_idx := l_epc_clnt.info_tab.last;
+      l_epc_clnt.info_tab(l_idx) := new epc_clnt_info_objtype();
+      l_epc_clnt.info_tab(l_idx).interface_name := p_interface_name;
+      l_epc_clnt.info_tab(l_idx).namespace := p_interface_name;
+      l_epc_clnt.info_tab(l_idx).inline_namespace := 'ns1';
+
+      -- save the changes
+      epc_objtype_mgr.set_object('EPC_CLNT', l_epc_clnt);
   end;
 end register;
 
@@ -724,8 +741,11 @@ procedure get_epc_clnt_info
 , p_interface_name in epc.interface_name_subtype
 )
 is
+  l_idx epc_key_subtype;
+  l_epc_clnt epc_clnt_objtype;
 begin
-  p_epc_clnt_info := g_epc_clnt_info_tab(get_epc_key(p_interface_name));
+  get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
+  p_epc_clnt_info := l_epc_clnt.info_tab(l_idx);
 end get_epc_clnt_info;
 
 procedure set_epc_clnt_info
@@ -733,8 +753,14 @@ procedure set_epc_clnt_info
 , p_interface_name in epc.interface_name_subtype
 )
 is
+  l_idx epc_key_subtype;
+  l_epc_clnt epc_clnt_objtype;
 begin
-  g_epc_clnt_info_tab(get_epc_key(p_interface_name)) := p_epc_clnt_info;
+  get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
+  l_epc_clnt.info_tab(l_idx) := p_epc_clnt_info;
+
+  -- save the changes
+  epc_objtype_mgr.set_object('EPC_CLNT', l_epc_clnt);
 end set_epc_clnt_info;
 
 procedure set_protocol

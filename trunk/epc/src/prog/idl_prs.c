@@ -1164,7 +1164,7 @@ generate_plsql_body (FILE * pout)
       /* do not print an empty package body */
       if (_interface.num_functions > 0)
         {
-          (void) fprintf (pout, "CREATE OR REPLACE PACKAGE BODY %s%s IS\n\n",
+          (void) fprintf (pout, "CREATE OR REPLACE PACKAGE BODY %s%s IS\n",
                           _interface.name, package_type_str[package_type]);
           (void) fprintf (pout, "\n");
 
