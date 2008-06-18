@@ -1,17 +1,99 @@
-create or replace package std_object_mgr is
+--$NO_KEYWORD_EXPANSION$
+/*
+REMARK
+REMARK  $Header$
+REMARK
+REMARK  Description:    Oracle package specification for managing standard objects.
+REMARK
+REMARK
+*/
 
+create or replace package std_object_mgr is
+/**
+--
+-- This package is used to manage standard objects. Standard objects can be
+-- used for package state. Since package state by definition is attached to an
+-- Oracle session, some applications which are stateless (i.e. Apex) can not
+-- use normal package state. But the standard objects can be used to implement
+-- normal or stateless package state. First create an object type under
+-- std_object. As an example see object type epc_clnt_object. Instead of
+-- package variables an object must be created which contains the information
+-- needed. This object is set and get by std_object_mgr.set_std_object()
+-- respectively std_object_mgr.get_std_object(). Again see package epc_clnt
+-- for examples.
+-- 
+-- Normal package state is implemented by leaving the group name null, i.e.
+-- never call std_object_mgr.set_group_name() or call
+-- std_object_mgr.set_group_name(null).  Now the objects will be retrieved
+-- from a PL/SQL table indexed by the object name.
+-- 
+-- Stateless package state is implemented by setting the group name, a group
+-- of associated objects.  Now the objects will be retrieved from the database
+-- table std_objects using group name and object name.  
+--
+-- An Apex session acts as a group. So the Apex session id can be used as the
+-- group name. It is required to call std_object_mgr.set_group_name every time
+-- another Oracle session may be used, which is while entering an Apex HTML
+-- page.
+--
+-- @headcom
+*/
+
+/**
+-- Set the group name.
+--
+-- Setting the group name to a non-NULL value will force the objects to use
+-- table std_objects.
+-- 
+-- @param p_group_name  The group name
+*/
 procedure set_group_name
 ( p_group_name in std_objects.group_name%type
 );
 
+/**
+-- Get a standard object.
+--
+-- Retrieve an object from persistent storage (table std_objects) or from an
+-- internal PL/SQL table.
+-- 
+-- @param p_object_name  The object name
+-- @param p_std_object   The object
+--
+-- @throws no_data_found  No object found
+*/
 procedure get_std_object
-( p_object_name in varchar2
-, p_epc_obj out nocopy std_object
+( p_object_name in std_objects.obj.object_name%type
+, p_std_object out nocopy std_object
 );
 
+/**
+-- Set a standard object.
+--
+-- Store an object in persistent storage (table std_objects) or into an
+-- internal PL/SQL table.
+-- 
+-- @param p_std_object   The object
+*/
 procedure set_std_object
-( p_object_name in varchar2
-, p_epc_obj in std_object
+( p_std_object in std_object
+);
+
+/**
+-- Delete objects.
+--
+-- Delete objects from persistent storage (table std_objects) or from an
+-- internal PL/SQL table.
+-- 
+-- @param p_group_name   The group name.
+--                       If null the PL/SQL table will be used to delete from.
+-- @param p_object_name  The object name.
+--
+-- @throws value_error  p_object_name is NULL
+*/
+procedure delete_std_objects
+( p_group_name in std_objects.group_name%type default '%'
+, p_object_name in std_objects.obj.object_name%type default '%'
 );
 
 end;

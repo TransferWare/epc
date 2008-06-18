@@ -1,4 +1,11 @@
-create table std_objects as (
+--$NO_KEYWORD_EXPANSION$
+REMARK
+REMARK  $Header$
+REMARK
+
+whenever sqlerror continue
+
+create table std_objects (
   group_name varchar2(100)
 , created_by varchar2(30)
 , creation_date date
@@ -11,6 +18,14 @@ create table std_objects as (
 , constraint std_objects_chk3 check (last_updated_by is not null)
 , constraint std_objects_chk4 check (last_update_date is not null)
 )
+cache
 /
 
-show errors
+whenever sqlerror exit failure
+
+-- set sql.sqlcode to 0
+set termout off
+
+select count(*) from dual
+/
+

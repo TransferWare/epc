@@ -178,42 +178,6 @@ exception
 end;
 /*DBUG*/
 
-procedure get_epc_clnt
-( p_interface_name in epc.interface_name_subtype
-, p_epc_clnt out nocopy epc_clnt_objtype
-, p_idx out epc_key_subtype
-)
-is
-begin
-  begin
-    std_object_mgr.get_std_object('EPC_CLNT', p_epc_clnt);
-  exception
-    when no_data_found
-    then
-      p_epc_clnt := new epc_clnt_objtype();
-      std_object_mgr.set_std_object('EPC_CLNT', p_epc_clnt);
-  end;
-
-  p_idx := null;
-
-  if p_epc_clnt.info_tab.count > 0 
-  then
-    for i_idx in p_epc_clnt.info_tab.first .. p_epc_clnt.info_tab.last
-    loop
-      if p_epc_clnt.info_tab(i_idx).interface_name = p_interface_name
-      then
-        p_idx := i_idx;
-        exit;
-      end if;
-    end loop;
-  end if;
-
-  if p_idx is null
-  then
-    raise no_data_found;
-  end if;
-end get_epc_clnt;
-
 procedure connection2epc_clnt_info_obj
 ( p_connection in http_connection_rectype
 , p_epc_clnt_object in out nocopy epc_clnt_object
@@ -712,40 +676,22 @@ begin
 end check_xmlrpc_fault;
 
 -- GLOBAL
-procedure register
-( p_interface_name in epc.interface_name_subtype
-)
-is
-  l_idx epc_key_subtype;
-  l_epc_clnt epc_clnt_objtype;
-begin
-  begin
-    get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
-  exception
-    when no_data_found
-    then
-      l_epc_clnt.info_tab.extend(1);
-      l_idx := l_epc_clnt.info_tab.last;
-      l_epc_clnt.info_tab(l_idx) := new epc_clnt_object();
-      l_epc_clnt.info_tab(l_idx).interface_name := p_interface_name;
-      l_epc_clnt.info_tab(l_idx).namespace := p_interface_name;
-      l_epc_clnt.info_tab(l_idx).inline_namespace := 'ns1';
-
-      -- save the changes
-      std_object_mgr.set_std_object('EPC_CLNT', l_epc_clnt);
-  end;
-end register;
-
 procedure get_epc_clnt_object
 ( p_epc_clnt_object out nocopy epc_clnt_object
 , p_interface_name in epc.interface_name_subtype
 )
 is
-  l_idx epc_key_subtype;
-  l_epc_clnt epc_clnt_objtype;
+  l_object_name constant std_objects.obj.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
+  l_std_object std_object;
 begin
-  get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
-  p_epc_clnt_object := l_epc_clnt.info_tab(l_idx);
+  begin
+    std_object_mgr.get_std_object(l_object_name, l_std_object);
+    p_epc_clnt_object := treat(l_std_object as epc_clnt_object);
+  exception
+    when no_data_found
+    then
+      p_epc_clnt_object := new epc_clnt_object(l_object_name, p_interface_name);
+  end;
 end get_epc_clnt_object;
 
 procedure set_epc_clnt_object
@@ -753,14 +699,8 @@ procedure set_epc_clnt_object
 , p_interface_name in epc.interface_name_subtype
 )
 is
-  l_idx epc_key_subtype;
-  l_epc_clnt epc_clnt_objtype;
 begin
-  get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
-  l_epc_clnt.info_tab(l_idx) := p_epc_clnt_object;
-
-  -- save the changes
-  std_object_mgr.set_std_object('EPC_CLNT', l_epc_clnt);
+  std_object_mgr.set_std_object(p_epc_clnt_object);
 end set_epc_clnt_object;
 
 procedure set_protocol
