@@ -1,4 +1,4 @@
-create or replace type epc_clnt_info_objtype as object (
+create or replace type epc_clnt_object under std_object (
   interface_name varchar2(32) /*epc.interface_name_subtype*/  /* the key */
   /* Protocol information */
 , protocol integer
@@ -7,6 +7,7 @@ create or replace type epc_clnt_info_objtype as object (
 , inline_namespace varchar2(128) /*epc.namespace_subtype*/
   /* Connection information: TCP/IP, HTTP, database pipe */
 , connection_method integer
+
   /* Fields of type utl_tcp.connection */
 , tcp_remote_host varchar2(255)
 , tcp_remote_port integer
@@ -27,7 +28,7 @@ create or replace type epc_clnt_info_objtype as object (
 , send_timeout integer
 , recv_timeout integer
 
-, constructor function epc_clnt_info_objtype
+, constructor function epc_clnt_object
   return self as result
 ) final
 /
