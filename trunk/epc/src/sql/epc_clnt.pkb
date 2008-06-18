@@ -186,12 +186,12 @@ procedure get_epc_clnt
 is
 begin
   begin
-    epc_objtype_mgr.get_object('EPC_CLNT', p_epc_clnt);
+    std_object_mgr.get_std_object('EPC_CLNT', p_epc_clnt);
   exception
     when no_data_found
     then
       p_epc_clnt := new epc_clnt_objtype();
-      epc_objtype_mgr.set_object('EPC_CLNT', p_epc_clnt);
+      std_object_mgr.set_std_object('EPC_CLNT', p_epc_clnt);
   end;
 
   p_idx := null;
@@ -216,90 +216,90 @@ end get_epc_clnt;
 
 procedure connection2epc_clnt_info_obj
 ( p_connection in http_connection_rectype
-, p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+, p_epc_clnt_object in out nocopy epc_clnt_object
 )
 is
 begin
-  p_epc_clnt_info.http_url     := p_connection.url;
-  p_epc_clnt_info.http_method  := p_connection.method;
-  p_epc_clnt_info.http_version := p_connection.version;
+  p_epc_clnt_object.http_url     := p_connection.url;
+  p_epc_clnt_object.http_method  := p_connection.method;
+  p_epc_clnt_object.http_version := p_connection.version;
 end connection2epc_clnt_info_obj;
 
 procedure epc_clnt_info_obj2connection
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_connection in out nocopy http_connection_rectype
 )
 is
 begin
-  p_connection.url     := p_epc_clnt_info.http_url;
-  p_connection.method  := p_epc_clnt_info.http_method;
-  p_connection.version := p_epc_clnt_info.http_version;
+  p_connection.url     := p_epc_clnt_object.http_url;
+  p_connection.method  := p_epc_clnt_object.http_method;
+  p_connection.version := p_epc_clnt_object.http_version;
 end epc_clnt_info_obj2connection;
 
 procedure connection2epc_clnt_info_obj
 ( p_connection in utl_tcp.connection
-, p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+, p_epc_clnt_object in out nocopy epc_clnt_object
 )
 is
 begin
-  p_epc_clnt_info.tcp_remote_host := p_connection.remote_host;
-  p_epc_clnt_info.tcp_remote_port := p_connection.remote_port;
-  p_epc_clnt_info.tcp_local_host  := p_connection.local_host;
-  p_epc_clnt_info.tcp_local_port  := p_connection.local_port;
-  p_epc_clnt_info.tcp_charset     := p_connection.charset;
-  p_epc_clnt_info.tcp_newline     := p_connection.newline;
-  p_epc_clnt_info.tcp_tx_timeout  := p_connection.tx_timeout;
-  p_epc_clnt_info.tcp_private_sd  := p_connection.private_sd;
+  p_epc_clnt_object.tcp_remote_host := p_connection.remote_host;
+  p_epc_clnt_object.tcp_remote_port := p_connection.remote_port;
+  p_epc_clnt_object.tcp_local_host  := p_connection.local_host;
+  p_epc_clnt_object.tcp_local_port  := p_connection.local_port;
+  p_epc_clnt_object.tcp_charset     := p_connection.charset;
+  p_epc_clnt_object.tcp_newline     := p_connection.newline;
+  p_epc_clnt_object.tcp_tx_timeout  := p_connection.tx_timeout;
+  p_epc_clnt_object.tcp_private_sd  := p_connection.private_sd;
 end connection2epc_clnt_info_obj;
 
 procedure epc_clnt_info_obj2connection
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_connection in out nocopy utl_tcp.connection
 )
 is
 begin
-  p_connection.remote_host := p_epc_clnt_info.tcp_remote_host;
-  p_connection.remote_port := p_epc_clnt_info.tcp_remote_port;
-  p_connection.local_host  := p_epc_clnt_info.tcp_local_host;
-  p_connection.local_port  := p_epc_clnt_info.tcp_local_port;
-  p_connection.charset     := p_epc_clnt_info.tcp_charset;
-  p_connection.newline     := p_epc_clnt_info.tcp_newline;
-  p_connection.tx_timeout  := p_epc_clnt_info.tcp_tx_timeout;
-  p_connection.private_sd  := p_epc_clnt_info.tcp_private_sd;
+  p_connection.remote_host := p_epc_clnt_object.tcp_remote_host;
+  p_connection.remote_port := p_epc_clnt_object.tcp_remote_port;
+  p_connection.local_host  := p_epc_clnt_object.tcp_local_host;
+  p_connection.local_port  := p_epc_clnt_object.tcp_local_port;
+  p_connection.charset     := p_epc_clnt_object.tcp_charset;
+  p_connection.newline     := p_epc_clnt_object.tcp_newline;
+  p_connection.tx_timeout  := p_epc_clnt_object.tcp_tx_timeout;
+  p_connection.private_sd  := p_epc_clnt_object.tcp_private_sd;
 end epc_clnt_info_obj2connection;
 
 function get_method_name
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 )
 return varchar2
 is
 begin
-  if p_epc_clnt_info.inline_namespace is null
+  if p_epc_clnt_object.inline_namespace is null
   then
     return g_method_name;
   else
-    return p_epc_clnt_info.inline_namespace
+    return p_epc_clnt_object.inline_namespace
     ||':'
     ||g_method_name;
   end if;
 end get_method_name;
 
 function get_xmlns
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 )
 return varchar2
 is
 begin
-  if p_epc_clnt_info.inline_namespace is null
+  if p_epc_clnt_object.inline_namespace is null
   then
     return 'xmlns';
   else
-    return 'xmlns:' || p_epc_clnt_info.inline_namespace;
+    return 'xmlns:' || p_epc_clnt_object.inline_namespace;
   end if;
 end get_xmlns;
 
 procedure send_request_dbms_pipe
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 )
 is
   l_retval pls_integer := -1;
@@ -317,8 +317,8 @@ begin
   l_retval := 
     dbms_pipe.send_message
     ( 
-      p_epc_clnt_info.request_pipe
-    , p_epc_clnt_info.send_timeout 
+      p_epc_clnt_object.request_pipe
+    , p_epc_clnt_object.send_timeout 
     );
 
   case l_retval
@@ -331,7 +331,7 @@ begin
          , '(epc_clnt.send_request_dbms_pipe) ' ||
            'Timed out while sending message number ' ||
            to_char(g_msg_seq) ||
-           ' for pipe ' || p_epc_clnt_info.request_pipe ||
+           ' for pipe ' || p_epc_clnt_object.request_pipe ||
            '.'
          );
 
@@ -341,7 +341,7 @@ begin
          , '(epc_clnt.send_request_dbms_pipe) ' ||
            'Interrupted while sending message number ' ||
            to_char(g_msg_seq) ||
-           ' for pipe ' || p_epc_clnt_info.request_pipe ||
+           ' for pipe ' || p_epc_clnt_object.request_pipe ||
            '.'
          );
 
@@ -355,13 +355,13 @@ begin
 end send_request_dbms_pipe;
 
 procedure send_request_utl_http
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_soap_action in varchar2 default null
 )
 is
   l_http_connection_rec http_connection_rectype;
 begin
-  epc_clnt_info_obj2connection(p_epc_clnt_info, l_http_connection_rec);
+  epc_clnt_info_obj2connection(p_epc_clnt_object, l_http_connection_rec);
 
   g_http_req := 
     utl_http.begin_request
@@ -370,7 +370,7 @@ begin
     , l_http_connection_rec.version
     );
 
-  case p_epc_clnt_info.protocol
+  case p_epc_clnt_object.protocol
     when "SOAP"
     then
       utl_http.set_header
@@ -419,7 +419,7 @@ begin
 end send_request_utl_http;
 
 procedure send_request_utl_tcp
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 )
 is
   l_length pls_integer := length(g_msg);
@@ -427,7 +427,7 @@ is
   l_bytes_written pls_integer;
   l_tcp_connection utl_tcp.connection;
 begin
-  epc_clnt_info_obj2connection(p_epc_clnt_info, l_tcp_connection);
+  epc_clnt_info_obj2connection(p_epc_clnt_object, l_tcp_connection);
 
   while l_length > 0
   loop
@@ -442,7 +442,7 @@ begin
       when others
       then
         -- something went wrong: save the TCP/IP details and reraise
-        connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_info);
+        connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_object);
         raise;
     end;
 
@@ -453,16 +453,16 @@ begin
   end loop;
 
   -- everything went fine: save the TCP/IP details
-  connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_info);
+  connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_object);
 end send_request_utl_tcp;
 
 procedure recv_response_dbms_pipe
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 )
 is
   l_retval pls_integer := -1;
   l_msg_seq_result pls_integer;
-  l_timeout pls_integer := p_epc_clnt_info.recv_timeout;
+  l_timeout pls_integer := p_epc_clnt_object.recv_timeout;
   l_start date;
 begin
 /*DBUG
@@ -484,7 +484,7 @@ begin
     l_start := sysdate;
     l_retval :=
       case 
-        when p_epc_clnt_info.recv_timeout > 0 and l_timeout <= 0 
+        when p_epc_clnt_object.recv_timeout > 0 and l_timeout <= 0 
         then 1 -- timeout
         else
           dbms_pipe.receive_message
@@ -499,7 +499,7 @@ begin
       then
         l_timeout := 
           case 
-            when p_epc_clnt_info.recv_timeout = 0
+            when p_epc_clnt_object.recv_timeout = 0
             then 0
             else
               l_timeout - 
@@ -560,13 +560,13 @@ begin
       print('info', 'g_msg: %s', g_msg);
 /*DBUG*/
 
-      if p_epc_clnt_info.protocol = "NATIVE"
+      if p_epc_clnt_object.protocol = "NATIVE"
       then
         declare
           l_error_code varchar2(100);
         begin
           get_response_parameter
-          ( p_epc_clnt_info => p_epc_clnt_info
+          ( p_epc_clnt_object => p_epc_clnt_object
           , p_name => 'error_code'
           , p_data_type => epc.data_type_int
           , p_value => l_error_code
@@ -612,7 +612,7 @@ begin
 end recv_response_dbms_pipe;
 
 procedure recv_response_utl_http
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 )
 is
   http_resp utl_http.resp;
@@ -634,13 +634,13 @@ begin
 end recv_response_utl_http;
 
 procedure recv_response_utl_tcp
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 )
 is
   l_bytes_read pls_integer;
   l_tcp_connection utl_tcp.connection;
 begin
-  epc_clnt_info_obj2connection(p_epc_clnt_info, l_tcp_connection);
+  epc_clnt_info_obj2connection(p_epc_clnt_object, l_tcp_connection);
 
   begin
     l_bytes_read := 
@@ -653,12 +653,12 @@ begin
     when others
     then
       -- something went wrong: save TCP/IP details and reraise
-      connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_info);
+      connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_object);
       raise;
   end;
 
   -- everything went fine: save TCP/IP details
-  connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_info);
+  connection2epc_clnt_info_obj(l_tcp_connection, p_epc_clnt_object);
 end recv_response_utl_tcp;
 
 procedure check_soap_fault
@@ -726,18 +726,18 @@ begin
     then
       l_epc_clnt.info_tab.extend(1);
       l_idx := l_epc_clnt.info_tab.last;
-      l_epc_clnt.info_tab(l_idx) := new epc_clnt_info_objtype();
+      l_epc_clnt.info_tab(l_idx) := new epc_clnt_object();
       l_epc_clnt.info_tab(l_idx).interface_name := p_interface_name;
       l_epc_clnt.info_tab(l_idx).namespace := p_interface_name;
       l_epc_clnt.info_tab(l_idx).inline_namespace := 'ns1';
 
       -- save the changes
-      epc_objtype_mgr.set_object('EPC_CLNT', l_epc_clnt);
+      std_object_mgr.set_std_object('EPC_CLNT', l_epc_clnt);
   end;
 end register;
 
-procedure get_epc_clnt_info
-( p_epc_clnt_info out nocopy epc_clnt_info_objtype
+procedure get_epc_clnt_object
+( p_epc_clnt_object out nocopy epc_clnt_object
 , p_interface_name in epc.interface_name_subtype
 )
 is
@@ -745,11 +745,11 @@ is
   l_epc_clnt epc_clnt_objtype;
 begin
   get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
-  p_epc_clnt_info := l_epc_clnt.info_tab(l_idx);
-end get_epc_clnt_info;
+  p_epc_clnt_object := l_epc_clnt.info_tab(l_idx);
+end get_epc_clnt_object;
 
-procedure set_epc_clnt_info
-( p_epc_clnt_info in epc_clnt_info_objtype
+procedure set_epc_clnt_object
+( p_epc_clnt_object in epc_clnt_object
 , p_interface_name in epc.interface_name_subtype
 )
 is
@@ -757,150 +757,150 @@ is
   l_epc_clnt epc_clnt_objtype;
 begin
   get_epc_clnt( p_interface_name, l_epc_clnt, l_idx );
-  l_epc_clnt.info_tab(l_idx) := p_epc_clnt_info;
+  l_epc_clnt.info_tab(l_idx) := p_epc_clnt_object;
 
   -- save the changes
-  epc_objtype_mgr.set_object('EPC_CLNT', l_epc_clnt);
-end set_epc_clnt_info;
+  std_object_mgr.set_std_object('EPC_CLNT', l_epc_clnt);
+end set_epc_clnt_object;
 
 procedure set_protocol
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_protocol in protocol_subtype
 )
 is
 begin
   if p_protocol in ( "NATIVE", "SOAP", "XMLRPC" )
   then
-    p_epc_clnt_info.protocol := p_protocol;
+    p_epc_clnt_object.protocol := p_protocol;
   else
     raise value_error;
   end if;
 end set_protocol;
 
 procedure get_protocol
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_protocol out protocol_subtype
 )
 is
 begin
-  p_protocol := p_epc_clnt_info.protocol;
+  p_protocol := p_epc_clnt_object.protocol;
 end get_protocol;
 
 procedure set_connection_info
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_connection in http_connection_subtype
 )
 is
 begin
-  p_epc_clnt_info.connection_method := CONNECTION_METHOD_UTL_HTTP;
-  connection2epc_clnt_info_obj(p_connection, p_epc_clnt_info);
-  p_epc_clnt_info.protocol := epc_clnt."SOAP";
+  p_epc_clnt_object.connection_method := CONNECTION_METHOD_UTL_HTTP;
+  connection2epc_clnt_info_obj(p_connection, p_epc_clnt_object);
+  p_epc_clnt_object.protocol := epc_clnt."SOAP";
 end set_connection_info;
 
 procedure get_connection_info
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_connection out http_connection_subtype
 )
 is
 begin
-  if p_epc_clnt_info.connection_method = CONNECTION_METHOD_UTL_HTTP
+  if p_epc_clnt_object.connection_method = CONNECTION_METHOD_UTL_HTTP
   then
-    epc_clnt_info_obj2connection(p_epc_clnt_info, p_connection);
+    epc_clnt_info_obj2connection(p_epc_clnt_object, p_connection);
   else
     raise no_data_found;
   end if;
 end get_connection_info;
 
 procedure set_connection_info
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_connection in utl_tcp.connection
 )
 is
 begin
-  p_epc_clnt_info.connection_method := CONNECTION_METHOD_UTL_TCP;
+  p_epc_clnt_object.connection_method := CONNECTION_METHOD_UTL_TCP;
 
-  connection2epc_clnt_info_obj(p_connection, p_epc_clnt_info);
+  connection2epc_clnt_info_obj(p_connection, p_epc_clnt_object);
 
-  p_epc_clnt_info.protocol := epc_clnt."XMLRPC";
+  p_epc_clnt_object.protocol := epc_clnt."XMLRPC";
 end set_connection_info;
 
 procedure get_connection_info
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_connection out nocopy utl_tcp.connection
 )
 is
 begin
-  if p_epc_clnt_info.connection_method = CONNECTION_METHOD_UTL_TCP
+  if p_epc_clnt_object.connection_method = CONNECTION_METHOD_UTL_TCP
   then
-    epc_clnt_info_obj2connection(p_epc_clnt_info, p_connection);
+    epc_clnt_info_obj2connection(p_epc_clnt_object, p_connection);
   else
     raise no_data_found;
   end if;
 end get_connection_info;
 
 procedure set_connection_info
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_pipe_name in epc.pipe_name_subtype
 )
 is
 begin
-  p_epc_clnt_info.connection_method := CONNECTION_METHOD_DBMS_PIPE;
-  p_epc_clnt_info.request_pipe := p_pipe_name;
-  p_epc_clnt_info.protocol := epc_clnt."NATIVE";
+  p_epc_clnt_object.connection_method := CONNECTION_METHOD_DBMS_PIPE;
+  p_epc_clnt_object.request_pipe := p_pipe_name;
+  p_epc_clnt_object.protocol := epc_clnt."NATIVE";
 end set_connection_info;
 
 procedure get_connection_info
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_pipe_name out epc.pipe_name_subtype
 )
 is
 begin
-  if p_epc_clnt_info.connection_method = CONNECTION_METHOD_DBMS_PIPE
+  if p_epc_clnt_object.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
-    p_pipe_name := p_epc_clnt_info.request_pipe;
+    p_pipe_name := p_epc_clnt_object.request_pipe;
   else
     raise no_data_found;
   end if;
 end get_connection_info;
 
 procedure set_request_send_timeout
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_request_send_timeout in pls_integer
 )
 is
 begin
-  p_epc_clnt_info.send_timeout := p_request_send_timeout;
+  p_epc_clnt_object.send_timeout := p_request_send_timeout;
 end set_request_send_timeout;
 
 procedure set_response_recv_timeout
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_response_recv_timeout in pls_integer
 )
 is
 begin
-  p_epc_clnt_info.recv_timeout := p_response_recv_timeout;
+  p_epc_clnt_object.recv_timeout := p_response_recv_timeout;
 end set_response_recv_timeout;
 
 procedure set_namespace
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_namespace in varchar2
 )
 is
 begin
-  p_epc_clnt_info.namespace := p_namespace;
+  p_epc_clnt_object.namespace := p_namespace;
 end set_namespace;
 
 procedure set_inline_namespace
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_inline_namespace in varchar2
 )
 is
 begin
-  p_epc_clnt_info.inline_namespace := p_inline_namespace;
+  p_epc_clnt_object.inline_namespace := p_inline_namespace;
 end set_inline_namespace;
 
 procedure new_request
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_method_name in epc.method_name_subtype
 , p_oneway in pls_integer
 )
@@ -916,13 +916,13 @@ begin
   g_method_name := p_method_name;
   g_oneway := p_oneway;
 
-  if p_epc_clnt_info.connection_method = CONNECTION_METHOD_DBMS_PIPE
+  if p_epc_clnt_object.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
 /*DBUG
     print('info', 'resetting buffer');
 /*DBUG*/
     dbms_pipe.reset_buffer;
-    dbms_pipe.pack_message( p_epc_clnt_info.protocol );
+    dbms_pipe.pack_message( p_epc_clnt_object.protocol );
     g_msg_seq := g_msg_seq + 1;
     if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
 /*DBUG
@@ -930,17 +930,17 @@ begin
 /*DBUG*/
     dbms_pipe.pack_message( g_msg_seq );
 
-    if p_epc_clnt_info.protocol = "NATIVE"
+    if p_epc_clnt_object.protocol = "NATIVE"
     then
       set_request_parameter
-      ( p_epc_clnt_info => p_epc_clnt_info
+      ( p_epc_clnt_object => p_epc_clnt_object
       , p_name => 'interface'
       , p_data_type => epc.data_type_string
-      , p_value => p_epc_clnt_info.interface_name
+      , p_value => p_epc_clnt_object.interface_name
       , p_max_bytes => null
       );
       set_request_parameter
-      ( p_epc_clnt_info => p_epc_clnt_info
+      ( p_epc_clnt_object => p_epc_clnt_object
       , p_name => 'function'
       , p_data_type => epc.data_type_string
       , p_value => g_method_name
@@ -955,7 +955,7 @@ begin
 end new_request;
 
 procedure set_request_parameter
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in varchar2
@@ -978,7 +978,7 @@ begin
   then
     raise value_error;
   else
-    case p_epc_clnt_info.protocol
+    case p_epc_clnt_object.protocol
       when "NATIVE"
       then
         case 
@@ -1051,7 +1051,7 @@ begin
 end set_request_parameter;
 
 procedure set_request_parameter
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in number
@@ -1070,11 +1070,11 @@ begin
   then
     raise epc.e_illegal_null_value;
   else
-    case p_epc_clnt_info.protocol
+    case p_epc_clnt_object.protocol
       when "NATIVE"
       then
         set_request_parameter
-        ( p_epc_clnt_info => p_epc_clnt_info
+        ( p_epc_clnt_object => p_epc_clnt_object
         , p_name => p_name
         , p_data_type => p_data_type
         , p_value => replace(to_char(p_value), g_decimal_char, '.')
@@ -1144,7 +1144,7 @@ begin
 end set_request_parameter;
 
 procedure set_request_parameter
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value in date
@@ -1166,11 +1166,11 @@ begin
   then
     raise epc.e_illegal_null_value;
   else
-    case p_epc_clnt_info.protocol
+    case p_epc_clnt_object.protocol
       when "NATIVE"
       then
         set_request_parameter
-        ( p_epc_clnt_info => p_epc_clnt_info
+        ( p_epc_clnt_object => p_epc_clnt_object
         , p_name => p_name
         , p_data_type => p_data_type
         , p_value => l_value
@@ -1211,11 +1211,11 @@ begin
 end set_request_parameter;
 
 procedure send_request
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 )
 is
 begin
-  case p_epc_clnt_info.protocol
+  case p_epc_clnt_object.protocol
     when "NATIVE"
     then
       null;
@@ -1225,15 +1225,15 @@ begin
       g_msg :=
         epc.SOAP_HEADER_START
         ||'<'
-        ||get_method_name(p_epc_clnt_info)
+        ||get_method_name(p_epc_clnt_object)
         ||' '
-        ||get_xmlns(p_epc_clnt_info)
+        ||get_xmlns(p_epc_clnt_object)
         ||'="'
-        ||p_epc_clnt_info.namespace
+        ||p_epc_clnt_object.namespace
         ||'">'
         ||g_msg
         ||'</'
-        ||get_method_name(p_epc_clnt_info)
+        ||get_method_name(p_epc_clnt_object)
         ||'>'
         ||epc.SOAP_HEADER_END;
     
@@ -1243,7 +1243,7 @@ begin
         '<methodCall>'
         ||chr(10)
         ||'<methodName>'
-        ||p_epc_clnt_info.interface_name||'.'||g_method_name
+        ||p_epc_clnt_object.interface_name||'.'||g_method_name
         ||'</methodName>'
         ||chr(10)
         ||'<params>'
@@ -1258,17 +1258,17 @@ begin
       raise program_error;
   end case;
 
-  case p_epc_clnt_info.connection_method
+  case p_epc_clnt_object.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
     then
-      send_request_dbms_pipe(p_epc_clnt_info);
+      send_request_dbms_pipe(p_epc_clnt_object);
 
     when CONNECTION_METHOD_UTL_TCP
     then
-      case p_epc_clnt_info.protocol
+      case p_epc_clnt_object.protocol
         when "XMLRPC"
         then
-          send_request_utl_tcp(p_epc_clnt_info);
+          send_request_utl_tcp(p_epc_clnt_object);
 
         else
           raise program_error;
@@ -1276,18 +1276,18 @@ begin
 
     when CONNECTION_METHOD_UTL_HTTP
     then
-      case p_epc_clnt_info.protocol
+      case p_epc_clnt_object.protocol
         when "SOAP"
         then
           send_request_utl_http
-          ( p_epc_clnt_info => p_epc_clnt_info
-          , p_soap_action => p_epc_clnt_info.namespace || '#' || g_method_name
+          ( p_epc_clnt_object => p_epc_clnt_object
+          , p_soap_action => p_epc_clnt_object.namespace || '#' || g_method_name
           );
 
         when "XMLRPC"
         then
           send_request_utl_http
-          ( p_epc_clnt_info => p_epc_clnt_info
+          ( p_epc_clnt_object => p_epc_clnt_object
           );
 
         else
@@ -1297,7 +1297,7 @@ begin
 end send_request;
 
 procedure recv_response
-( p_epc_clnt_info in out nocopy epc_clnt_info_objtype
+( p_epc_clnt_object in out nocopy epc_clnt_object
 )
 is
 begin
@@ -1305,21 +1305,21 @@ begin
   enter('epc_clnt.recv_response');
 /*DBUG*/
 
-  case p_epc_clnt_info.connection_method
+  case p_epc_clnt_object.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
     then
-      recv_response_dbms_pipe(p_epc_clnt_info);
+      recv_response_dbms_pipe(p_epc_clnt_object);
 
     when CONNECTION_METHOD_UTL_TCP
     then
-      recv_response_utl_tcp(p_epc_clnt_info);
+      recv_response_utl_tcp(p_epc_clnt_object);
 
     when CONNECTION_METHOD_UTL_HTTP
     then
-      recv_response_utl_http(p_epc_clnt_info);
+      recv_response_utl_http(p_epc_clnt_object);
   end case;
 
-  case p_epc_clnt_info.protocol
+  case p_epc_clnt_object.protocol
     when "NATIVE"
     then
       null;
@@ -1364,7 +1364,7 @@ begin
 end recv_response;
 
 procedure get_response_parameter
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out varchar2
@@ -1382,7 +1382,7 @@ begin
   print('input', 'p_max_bytes: %s', p_max_bytes);
 /*DBUG*/
 
-  if p_epc_clnt_info.protocol = "NATIVE"
+  if p_epc_clnt_object.protocol = "NATIVE"
   then
     declare
       l_length pls_integer;
@@ -1421,14 +1421,14 @@ begin
       l_extract_type := '/child::text()';
     end if;
 
-    case p_epc_clnt_info.protocol
+    case p_epc_clnt_object.protocol
       when "SOAP"
       then
         l_xml := 
           g_doc.extract
           (
             '//'||p_name||l_extract_type
-          , get_xmlns(p_epc_clnt_info)||'="'||p_epc_clnt_info.namespace||'"'
+          , get_xmlns(p_epc_clnt_object)||'="'||p_epc_clnt_object.namespace||'"'
           );
       
       when "XMLRPC"
@@ -1515,7 +1515,7 @@ begin
 end get_response_parameter;
 
 procedure get_response_parameter
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out number
@@ -1524,7 +1524,7 @@ is
   l_value epc.string_subtype;
 begin
   epc_clnt.get_response_parameter
-  ( p_epc_clnt_info => p_epc_clnt_info
+  ( p_epc_clnt_object => p_epc_clnt_object
   , p_name => p_name
   , p_data_type => p_data_type
   , p_value => l_value
@@ -1534,7 +1534,7 @@ begin
 end get_response_parameter;
 
 procedure get_response_parameter
-( p_epc_clnt_info in epc_clnt_info_objtype
+( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
 , p_value out date
@@ -1543,7 +1543,7 @@ is
   l_value epc.string_subtype;
 begin
   epc_clnt.get_response_parameter
-  ( p_epc_clnt_info => p_epc_clnt_info
+  ( p_epc_clnt_object => p_epc_clnt_object
   , p_name => p_name
   , p_data_type => p_data_type
   , p_value => l_value
