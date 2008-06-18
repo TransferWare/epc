@@ -34,8 +34,7 @@ create or replace type epc_clnt_object under std_object (
 , recv_timeout integer
 
 , constructor function epc_clnt_object
-  ( p_object_name in varchar2
-  , p_interface_name in varchar2
+  ( p_interface_name in varchar2
   )
   return self as result
 ) final

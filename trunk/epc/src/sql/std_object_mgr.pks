@@ -52,6 +52,36 @@ procedure set_group_name
 );
 
 /**
+-- Get an anydata object.
+--
+-- Retrieve an anydata object from persistent storage (table
+-- std_objects) or from an internal PL/SQL table.
+-- 
+-- @param p_object_name  The object name
+-- @param p_anydata      The anydata object
+--
+-- @throws no_data_found  No object found
+*/
+procedure get_anydata
+( p_object_name in std_objects.object_name%type
+, p_anydata out nocopy sys.anydata
+);
+
+/**
+-- Set an anydata object.
+--
+-- Store an anydata object in persistent storage (table std_objects)
+-- or into an internal PL/SQL table.
+-- 
+-- @param p_object_name  The object name
+-- @param p_anydata      The anydata object
+*/
+procedure set_anydata
+( p_object_name in std_objects.object_name%type
+, p_anydata in sys.anydata
+);
+
+/**
 -- Get a standard object.
 --
 -- Retrieve an object from persistent storage (table std_objects) or from an
@@ -63,7 +93,7 @@ procedure set_group_name
 -- @throws no_data_found  No object found
 */
 procedure get_std_object
-( p_object_name in std_objects.obj.object_name%type
+( p_object_name in std_objects.object_name%type
 , p_std_object out nocopy std_object
 );
 
@@ -73,10 +103,12 @@ procedure get_std_object
 -- Store an object in persistent storage (table std_objects) or into an
 -- internal PL/SQL table.
 -- 
+-- @param p_object_name  The object name
 -- @param p_std_object   The object
 */
 procedure set_std_object
-( p_std_object in std_object
+( p_object_name in std_objects.object_name%type
+, p_std_object in std_object
 );
 
 /**
@@ -93,7 +125,7 @@ procedure set_std_object
 */
 procedure delete_std_objects
 ( p_group_name in std_objects.group_name%type default '%'
-, p_object_name in std_objects.obj.object_name%type default '%'
+, p_object_name in std_objects.object_name%type default '%'
 );
 
 end;
