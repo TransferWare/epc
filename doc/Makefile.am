@@ -40,6 +40,7 @@ sql: $(FORCE)
 c: $(FORCE)
 	@cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
 	@-rm -f *.tmp
+	@chmod +w $(builddir)
 	@cat $(builddir)/Doxyfile | (cd $(srcdir) && $(DOXYGEN) -)
 	@-rm -f *.tmp
 
