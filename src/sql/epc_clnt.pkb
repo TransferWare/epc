@@ -187,6 +187,7 @@ begin
   p_epc_clnt_object.http_url     := p_connection.url;
   p_epc_clnt_object.http_method  := p_connection.method;
   p_epc_clnt_object.http_version := p_connection.version;
+  p_epc_clnt_object.dirty := 1;
 end connection2epc_clnt_info_obj;
 
 procedure epc_clnt_info_obj2connection
@@ -214,6 +215,7 @@ begin
   p_epc_clnt_object.tcp_newline     := p_connection.newline;
   p_epc_clnt_object.tcp_tx_timeout  := p_connection.tx_timeout;
   p_epc_clnt_object.tcp_private_sd  := p_connection.private_sd;
+  p_epc_clnt_object.dirty := 1;
 end connection2epc_clnt_info_obj;
 
 procedure epc_clnt_info_obj2connection
@@ -681,16 +683,17 @@ procedure get_epc_clnt_object
 , p_interface_name in epc.interface_name_subtype
 )
 is
-  l_object_name constant std_objects.obj.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
+  l_object_name constant std_objects.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
   l_std_object std_object;
 begin
   begin
     std_object_mgr.get_std_object(l_object_name, l_std_object);
     p_epc_clnt_object := treat(l_std_object as epc_clnt_object);
+    p_epc_clnt_object.dirty := 0;
   exception
     when no_data_found
     then
-      p_epc_clnt_object := new epc_clnt_object(l_object_name, p_interface_name);
+      p_epc_clnt_object := new epc_clnt_object(p_interface_name);
   end;
 end get_epc_clnt_object;
 
@@ -699,8 +702,9 @@ procedure set_epc_clnt_object
 , p_interface_name in epc.interface_name_subtype
 )
 is
+  l_object_name constant std_objects.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
 begin
-  std_object_mgr.set_std_object(p_epc_clnt_object);
+  std_object_mgr.set_std_object(l_object_name, p_epc_clnt_object);
 end set_epc_clnt_object;
 
 procedure set_protocol
@@ -712,6 +716,7 @@ begin
   if p_protocol in ( "NATIVE", "SOAP", "XMLRPC" )
   then
     p_epc_clnt_object.protocol := p_protocol;
+    p_epc_clnt_object.dirty := 1;
   else
     raise value_error;
   end if;
@@ -787,6 +792,7 @@ begin
   p_epc_clnt_object.connection_method := CONNECTION_METHOD_DBMS_PIPE;
   p_epc_clnt_object.request_pipe := p_pipe_name;
   p_epc_clnt_object.protocol := epc_clnt."NATIVE";
+  p_epc_clnt_object.dirty := 1;
 end set_connection_info;
 
 procedure get_connection_info
@@ -810,6 +816,7 @@ procedure set_request_send_timeout
 is
 begin
   p_epc_clnt_object.send_timeout := p_request_send_timeout;
+  p_epc_clnt_object.dirty := 1;
 end set_request_send_timeout;
 
 procedure set_response_recv_timeout
@@ -819,6 +826,7 @@ procedure set_response_recv_timeout
 is
 begin
   p_epc_clnt_object.recv_timeout := p_response_recv_timeout;
+  p_epc_clnt_object.dirty := 1;
 end set_response_recv_timeout;
 
 procedure set_namespace
@@ -828,6 +836,7 @@ procedure set_namespace
 is
 begin
   p_epc_clnt_object.namespace := p_namespace;
+  p_epc_clnt_object.dirty := 1;
 end set_namespace;
 
 procedure set_inline_namespace
@@ -837,6 +846,7 @@ procedure set_inline_namespace
 is
 begin
   p_epc_clnt_object.inline_namespace := p_inline_namespace;
+  p_epc_clnt_object.dirty := 1;
 end set_inline_namespace;
 
 procedure new_request

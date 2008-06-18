@@ -111,24 +111,35 @@ execute :l_group_name := 'epctest.sql';
 
 declare
   l_epc_clnt_object epc_clnt_object;
-  l_recv_timeout integer := 20;
+  l_recv_timeout constant integer := 10;
 begin
+  -- Store object into PL/SQL table
+  std_object_mgr.set_group_name(null);
   epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
   epc_clnt.set_response_recv_timeout(l_epc_clnt_object, l_recv_timeout);
-
-  -- Move object into table std_objects
-  std_object_mgr.set_group_name(:l_group_name);
-
   epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
-  l_recv_timeout := null;
 
-  select  treat(tab.obj as epc_clnt_object).recv_timeout
-  into    l_recv_timeout
-  from    std_objects tab
-  where   tab.group_name = :l_group_name
-  and     tab.obj is of (epc_clnt_object);
+  -- Store object into table std_objects
+  std_object_mgr.set_group_name(:l_group_name);
+  l_epc_clnt_object.recv_timeout := l_epc_clnt_object.recv_timeout * 2;
+  epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
 
-  if l_recv_timeout = 20
+  -- Retrieve from PL/SQL table
+  std_object_mgr.set_group_name(null);
+  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
+
+  if l_epc_clnt_object.recv_timeout = l_recv_timeout
+  then
+    null;
+  else
+    raise value_error;
+  end if;
+
+  -- Retrieve from table std_objects
+  std_object_mgr.set_group_name(:l_group_name);
+  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
+
+  if l_epc_clnt_object.recv_timeout = l_recv_timeout * 2
   then
     null;
   else
