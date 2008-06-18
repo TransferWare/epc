@@ -56,13 +56,12 @@ create or replace package epc_clnt is
 --
 -- The flow of procedure calls will typically look like this:<br />
 -- 1) Set connection information.<br />
---    a) epc_clnt.register<br />
---    b) epc_clnt.get_epc_clnt_object<br />
---    c) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
---    d) epc_clnt.set_connection_info (optional for database pipes)<br />
---    e) epc_clnt.set_request_send_timeout (optional)<br />
---    f) epc_clnt.set_response_recv_timeout (optional)<br />
---    g) epc_clnt.set_epc_clnt_object<br />
+--    a) epc_clnt.get_epc_clnt_object<br />
+--    b) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
+--    c) epc_clnt.set_connection_info (optional for database pipes)<br />
+--    d) epc_clnt.set_request_send_timeout (optional)<br />
+--    e) epc_clnt.set_response_recv_timeout (optional)<br />
+--    f) epc_clnt.set_epc_clnt_object<br />
 -- 2) Marshall a function call into a message<br />
 --    a) epc_clnt.get_epc_clnt_object<br />
 --    b) epc_clnt.new_request<br />
@@ -145,22 +144,10 @@ CONNECTION_METHOD_UTL_TCP constant connection_method_subtype := 2;
 CONNECTION_METHOD_UTL_HTTP constant connection_method_subtype := 3;
 
 /**
--- Register an interface
---
--- @param p_interface_name  The name of the interface to register.
---
-*/
-procedure register
-( p_interface_name in epc.interface_name_subtype
-);
-
-/**
--- Get the connection information of an already registered interface.
+-- Get the connection information of an interface.
 --
 -- @param p_interface_name  The name of the interface.
 -- @param p_epc_clnt_object   Epc client info
---
--- @throws no_data_found  Not registered yet.
 */
 procedure get_epc_clnt_object
 ( p_epc_clnt_object out nocopy epc_clnt_object
@@ -168,12 +155,10 @@ procedure get_epc_clnt_object
 );
 
 /**
--- Set the connection information of an already registered interface.
+-- Set the connection information of an interface.
 --
 -- @param p_epc_clnt_object   Epc client info
 -- @param p_interface_name  The name of the interface.
---
--- @throws no_data_found  Not registered yet.
 */
 procedure set_epc_clnt_object
 ( p_epc_clnt_object in epc_clnt_object

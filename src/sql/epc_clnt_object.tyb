@@ -1,19 +1,29 @@
+--$NO_KEYWORD_EXPANSION$
+REMARK
+REMARK  $Header$
+REMARK
+
 create or replace type body epc_clnt_object
 is
 
 constructor function epc_clnt_object
+( p_object_name in varchar2
+, p_interface_name in varchar2
+)
 return self as result
 is
 begin
+  self.object_name := p_object_name;
+  self.interface_name := p_interface_name;
   self.protocol := epc_clnt."NATIVE";
-
+  self.namespace := p_interface_name;
+  self.inline_namespace := 'ns1';
   self.connection_method := epc_clnt.CONNECTION_METHOD_DBMS_PIPE;
   self.request_pipe := 'epc_request_pipe';
-  self.send_timeout := 10;
-  self.recv_timeout := 10;
-
   self.http_method := 'POST';
   self.http_version := utl_http.http_version_1_1;
+  self.send_timeout := 10;
+  self.recv_timeout := 10;
 
   -- essential
   return;
@@ -21,6 +31,3 @@ end;
 
 end;
 /
-
-show errors
-

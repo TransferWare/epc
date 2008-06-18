@@ -15,26 +15,31 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-noinst_DATA      = epc.pks epc.pkb epc.pks_run epc.pkb_run
-noinst_DATA     += epc_srvr.pks epc_srvr.pkb epc_srvr.pks_run epc_srvr.pkb_run
-noinst_DATA     += std_object.typ std_object.typ_run
-noinst_DATA     += std_objects.tab std_objects.tab_run
-noinst_DATA     += std_object_mgr.pks std_object_mgr.pkb \
-                   std_object_mgr.pks_run std_object_mgr.pkb_run
-noinst_DATA     += epc_clnt_object.typ epc_clnt_object.tyb \
-                   epc_clnt_object.typ_run epc_clnt_object.tyb_run
-noinst_DATA     += epc_clnt.pks epc_clnt.pkb epc_clnt.pks_run epc_clnt.pkb_run
-
 CLEANFILES       = *.???_run pod*.tmp
 
-EXTRA_DIST       = epc.pks epc.pkb
-EXTRA_DIST      += epc_srvr.pks epc_srvr.pkb
-EXTRA_DIST      += std_object.typ
-EXTRA_DIST      += std_objects.tab
-EXTRA_DIST      += std_object_mgr.pks std_object_mgr.pkb
-EXTRA_DIST      += epc_clnt_object.typ epc_clnt_object.tyb
-EXTRA_DIST      += epc_clnt.pks epc_clnt.pkb
+sql_scripts      = epc.pks epc.pkb
+sql_scripts     += epc_srvr.pks epc_srvr.pkb
+sql_scripts     += std_object.typ
+sql_scripts     += std_objects.tab
+sql_scripts     += std_object_mgr.pks std_object_mgr.pkb
+sql_scripts     += epc_clnt_object.typ epc_clnt_object.tyb
+sql_scripts     += epc_clnt.pks epc_clnt.pkb
 
+noinst_DATA      = $(sql_scripts)
+
+# Use order of installation: 
+# 1) object specifications
+# 2) tables
+# 3) package specifications
+# 4) bodies
+
+noinst_DATA     += std_object.typ_run epc_clnt_object.typ_run \
+                   std_objects.tab_run \
+                   std_object_mgr.pks_run epc.pks_run epc_srvr.pks_run epc_clnt.pks_run \
+                   epc_clnt_object.tyb_run \
+                   std_object_mgr.pkb_run epc.pkb_run epc_srvr.pkb_run epc_clnt.pkb_run
+
+EXTRA_DIST       = $(sql_scripts)
 EXTRA_DIST      += login.sql
 
 @SUFFIXES@: .typ .tyb .tab .pks .pkb .typ_run .tyb_run .tab_run .pks_run .pkb_run
@@ -43,6 +48,11 @@ EXTRA_DIST      += login.sql
 # To prevent asking for the defines, the login.sql sets define off,
 # but since login.sql may not be the build directory SQLPATH must be set 
 # to the source directory.
+
+uninstall: uninstall.sql_run clean
+
+uninstall.sql_run: uninstall.sql
+	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )
 
 .typ.typ_run:
 	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )

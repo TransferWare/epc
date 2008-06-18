@@ -6,6 +6,12 @@ See the end for copying conditions.
 Please send EPC bug reports to g.paulissen@chello.nl.
 
 
+Release 5.1.0
+
+* Added support for stateless applications like Apex (Oracle Application
+  Express). See src/sql/std_object_mgr.pks.
+
+
 Release 5.0.0
 
 * Added XMLRPC protocol.

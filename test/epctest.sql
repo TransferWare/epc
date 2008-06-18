@@ -11,16 +11,16 @@ whenever oserror exit failure
 
 alter session set nls_numeric_characters = '.,';
 
-REM Just start nothing1 to register the interface, change the protocol and set the pipe size
+REM Just start nothing1 to set interface defaults, change the protocol and set the pipe size
 declare
   l_pipe_name epc.pipe_name_subtype;
-  l_epc_clnt_info epc_clnt_info_objtype;
+  l_epc_clnt_object epc_clnt_object;
 begin
   epctest.nothing1;
-  epc_clnt.get_epc_clnt_info(l_epc_clnt_info, 'epctest');
-  epc_clnt.set_protocol(l_epc_clnt_info, epc_clnt."&&PROTOCOL");
-  epc_clnt.get_connection_info(l_epc_clnt_info, l_pipe_name);
-  epc_clnt.set_epc_clnt_info(l_epc_clnt_info, 'epctest');
+  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  epc_clnt.set_protocol(l_epc_clnt_object, epc_clnt."&&PROTOCOL");
+  epc_clnt.get_connection_info(l_epc_clnt_object, l_pipe_name);
+  epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
   -- enlarge the pipe
   if 0 = 
      dbms_pipe.create_pipe
@@ -105,12 +105,35 @@ end;
 
 prompt Performance test doing a null block
 
+variable l_group_name varchar2(100)
+
+execute :l_group_name := 'epctest.sql';
+
 declare
-  l_epc_clnt_info epc_clnt_info_objtype;
+  l_epc_clnt_object epc_clnt_object;
+  l_recv_timeout integer := 20;
 begin
-  epc_clnt.get_epc_clnt_info(l_epc_clnt_info, 'epctest');
-  epc_clnt.set_response_recv_timeout(l_epc_clnt_info, 10);
-  epc_clnt.set_epc_clnt_info(l_epc_clnt_info, 'epctest');
+  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  epc_clnt.set_response_recv_timeout(l_epc_clnt_object, l_recv_timeout);
+
+  -- Move object into table std_objects
+  std_object_mgr.set_group_name(:l_group_name);
+
+  epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  l_recv_timeout := null;
+
+  select  treat(tab.obj as epc_clnt_object).recv_timeout
+  into    l_recv_timeout
+  from    std_objects tab
+  where   tab.group_name = :l_group_name
+  and     tab.obj is of (epc_clnt_object);
+
+  if l_recv_timeout = 20
+  then
+    null;
+  else
+    raise value_error;
+  end if;
 end;
 /
 
@@ -121,7 +144,7 @@ DECLARE
   l_count pls_integer := 0;
   l_line varchar2(255);
   l_status integer;
-BEGIN
+BEGIN 
   FOR v_nr IN 1..&&N
   LOOP
   BEGIN
@@ -151,6 +174,8 @@ define function = nothing1
 prompt Performance test doing &&N number of calls doing nothing with results returned.
 
 /
+
+execute std_object_mgr.delete_std_objects(p_group_name => :l_group_name)
 
 prompt Finished.
 spool off
