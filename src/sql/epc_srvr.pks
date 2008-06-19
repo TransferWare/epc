@@ -174,3 +174,7 @@ procedure ping
 
 end epc_srvr;
 /
+
+show errors
+
+@verify "epc_srvr" "package"

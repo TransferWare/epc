@@ -31,3 +31,5 @@ end print;
 
 end epc;
 /
+
+@verify "epc" "package body"

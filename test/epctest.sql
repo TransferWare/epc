@@ -11,16 +11,17 @@ whenever oserror exit failure
 
 alter session set nls_numeric_characters = '.,';
 
+variable l_interface_name varchar2(30)
+
+execute :l_interface_name := 'epctest';
+
 REM Just start nothing1 to set interface defaults, change the protocol and set the pipe size
 declare
   l_pipe_name epc.pipe_name_subtype;
-  l_epc_clnt_object epc_clnt_object;
 begin
   epctest.nothing1;
-  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
-  epc_clnt.set_protocol(l_epc_clnt_object, epc_clnt."&&PROTOCOL");
-  epc_clnt.get_connection_info(l_epc_clnt_object, l_pipe_name);
-  epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  epc_clnt.set_protocol(:l_interface_name, epc_clnt."&&PROTOCOL");
+  epc_clnt.get_connection_info(:l_interface_name, l_pipe_name);
   -- enlarge the pipe
   if 0 = 
      dbms_pipe.create_pipe
@@ -32,6 +33,10 @@ begin
     null;
   end if;
 end;
+.
+
+rem list
+
 /
 
 spool epctest.lis
@@ -50,6 +55,10 @@ begin
   dbms_output.put_line( 'io_par2: ' || v_par2 );
   dbms_output.put_line( 'o_par3: ' || v_par3 );
 end;
+.
+
+rem list
+
 /
 
 declare
@@ -67,6 +76,10 @@ begin
   dbms_output.put_line( 'io_par1: ' || v_par1 );
   dbms_output.put_line( 'o_par2: ' || v_par2 );
 end;
+.
+
+rem list
+
 /
 
 declare
@@ -84,6 +97,10 @@ begin
   dbms_output.put_line( 'o_par1: ' || v_par1 );
   dbms_output.put_line( 'io_par3: ' || v_par3 );
 end;
+.
+
+rem list
+
 /
 
 declare
@@ -101,6 +118,10 @@ begin
   dbms_output.put_line( 'io_par2: ' || to_char(v_par2, '99.99') );
   dbms_output.put_line( 'o_par3: ' || to_char(v_par3, '99.99') );
 end;
+.
+
+rem list
+
 /
 
 prompt Performance test doing a null block
@@ -115,18 +136,15 @@ declare
 begin
   -- Store object into PL/SQL table
   std_object_mgr.set_group_name(null);
-  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
-  epc_clnt.set_response_recv_timeout(l_epc_clnt_object, l_recv_timeout);
-  epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  epc_clnt.set_response_recv_timeout(:l_interface_name, l_recv_timeout);
 
   -- Store object into table std_objects
   std_object_mgr.set_group_name(:l_group_name);
-  l_epc_clnt_object.recv_timeout := l_epc_clnt_object.recv_timeout * 2;
-  epc_clnt.set_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  epc_clnt.set_response_recv_timeout(:l_interface_name, l_recv_timeout * 2);
 
   -- Retrieve from PL/SQL table
   std_object_mgr.set_group_name(null);
-  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  l_epc_clnt_object := new epc_clnt_object(:l_interface_name);
 
   if l_epc_clnt_object.recv_timeout = l_recv_timeout
   then
@@ -137,7 +155,7 @@ begin
 
   -- Retrieve from table std_objects
   std_object_mgr.set_group_name(:l_group_name);
-  epc_clnt.get_epc_clnt_object(l_epc_clnt_object, 'epctest');
+  l_epc_clnt_object := new epc_clnt_object(:l_interface_name);
 
   if l_epc_clnt_object.recv_timeout = l_recv_timeout * 2
   then
@@ -146,38 +164,46 @@ begin
     raise value_error;
   end if;
 end;
+.
+
+rem list
+
 /
 
 define function = nothing2
 
 prompt Performance test doing &&N number of calls doing nothing without results returned.
-DECLARE
+declare
   l_count pls_integer := 0;
   l_line varchar2(255);
   l_status integer;
-BEGIN 
-  FOR v_nr IN 1..&&N
-  LOOP
-  BEGIN
+begin 
+  for v_nr in 1..&&n
+  loop
+  begin
     epctest.&&function;
     l_count := l_count + 1;
-  EXCEPTION
-    WHEN epc.e_comm_error
-    THEN
+  exception
+    when epc.e_comm_error
+    then
       epctest.&&function;
       l_count := l_count + 1;
-    WHEN OTHERS
-    THEN
+    when others
+    then
       dbms_output.put_line(substr(sqlerrm, 1, 255));
-  END;
-  END LOOP;
+  end;
+  end loop;
   dbms_output.put_line('&&function count: ' || l_count);
-EXCEPTION
-  WHEN OTHERS
-  THEN
+exception
+  when others
+  then
     dbms_output.put_line('Current date/time: ' || to_char(sysdate, 'yyyy-mm-dd hh24:mi:ss'));   
-    RAISE;
-END;
+    raise;
+end;
+.
+
+rem list
+
 /
 
 define function = nothing1

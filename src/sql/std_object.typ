@@ -14,7 +14,20 @@ create or replace type std_object as object (
   -- the object gets changed somewhere else.
   */
   dirty integer
+
+, not instantiable
+  member function name(self in std_object)
+  return varchar2
+
+, final
+  member procedure store(self in std_object)
+
+, final
+  member procedure remove(self in std_object)
+
 ) not instantiable not final
 /
 
 show errors
+
+@verify "std_object" "type"

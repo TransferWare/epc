@@ -8,6 +8,8 @@ create or replace package body std_object_mgr is
 -- index by std_objects.object_name
 type std_object_tabtype is table of std_objects%rowtype index by std_objects.object_name%type;
 
+g_escape constant varchar2(1) := chr(92); -- escape character
+
 g_std_object_tab std_object_tabtype;
 
 g_group_name std_objects.group_name%type := null;
@@ -19,69 +21,6 @@ is
 begin
   g_group_name := p_group_name;
 end set_group_name;
-
-procedure get_anydata
-( p_object_name in std_objects.object_name%type
-, p_anydata out nocopy sys.anydata
-)
-is
-begin
-  if g_group_name is not null
-  then
-    select  tab.dat
-    into    p_anydata
-    from    std_objects tab
-    where   tab.group_name = g_group_name
-    and     tab.object_name = p_object_name;
-  else
-    p_anydata := g_std_object_tab(p_object_name).dat;
-  end if;
-end get_anydata;
-
-procedure set_anydata
-( p_object_name in std_objects.object_name%type
-, p_anydata in sys.anydata
-)
-is
-  pragma autonomous_transaction;
-begin
-  if g_group_name is not null
-  then
-    update  std_objects tab
-    set     tab.dat = p_anydata
-    ,       tab.last_updated_by = user
-    ,       tab.last_update_date = sysdate
-    where   tab.group_name = g_group_name
-    and     tab.object_name = p_object_name;
-
-    if sql%rowcount = 0
-    then
-      insert
-      into    std_objects
-      ( group_name
-      , object_name
-      , created_by
-      , creation_date
-      , last_updated_by
-      , last_update_date
-      , dat
-      )
-      values
-      ( g_group_name
-      , p_object_name
-      , user
-      , sysdate
-      , user
-      , sysdate
-      , p_anydata
-      );
-    end if;
-
-    commit;
-  else
-    g_std_object_tab(p_object_name).dat := p_anydata;
-  end if;
-end set_anydata;
 
 procedure get_std_object
 ( p_object_name in std_objects.object_name%type
@@ -151,6 +90,42 @@ begin
   end if;
 end set_std_object;
 
+procedure del_std_object
+( p_object_name in std_objects.object_name%type
+)
+is
+begin
+  delete_std_objects
+  ( p_group_name => replace(g_group_name, '_', g_escape || '_')
+  , p_object_name => replace(p_object_name, '_', g_escape || '_')
+  );
+end del_std_object;
+
+procedure get_object_names
+( p_object_name_tab out nocopy sys.odcivarchar2list
+)
+is
+  l_object_name std_objects.object_name%type;
+begin
+  if g_group_name is not null
+  then
+    select  tab.object_name
+    bulk collect
+    into    p_object_name_tab
+    from    std_objects tab
+    where   tab.group_name = g_group_name;
+  else
+    p_object_name_tab := sys.odcivarchar2list();
+    l_object_name := g_std_object_tab.first;
+    while l_object_name is not null
+    loop
+      p_object_name_tab.extend(1);
+      p_object_name_tab(p_object_name_tab.last) := l_object_name;
+      l_object_name := g_std_object_tab.next(l_object_name);
+    end loop;
+  end if;
+end get_object_names;
+
 procedure delete_std_objects
 ( p_group_name in std_objects.group_name%type default '%'
 , p_object_name in std_objects.object_name%type default '%'
@@ -168,15 +143,14 @@ begin
   then
     delete
     from    std_objects tab
-    where   tab.group_name like p_group_name
-    and     tab.object_name like p_object_name;
+    where   tab.group_name like p_group_name escape g_escape
+    and     tab.object_name like p_object_name escape g_escape;
 
     commit;
   else
     l_object_name := g_std_object_tab.first;
+    while l_object_name is not null
     loop
-      exit when l_object_name is null;
-
       /* a delete now may influence the next operation, 
          so first do next and then maybe delete (the previous) */
       l_object_name_prev := l_object_name;
@@ -193,3 +167,5 @@ end std_object_mgr;
 /
 
 show errors
+
+@verify "std_object_mgr" "package body"

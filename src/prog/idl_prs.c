@@ -877,7 +877,9 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                                          (int) fun->num_parameters, 0);
               (void) fprintf (pout, ";\n");
             }
-          (void) fprintf (pout, "    l_epc_clnt_object epc_clnt_object;\n");
+          (void) fprintf (pout, 
+                          "    l_epc_clnt_object epc_clnt_object := new epc_clnt_object('%s');\n",
+                          _interface.name);
         }
 
       (void) fprintf (pout, "  BEGIN\n");
@@ -886,9 +888,6 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
         {
         case STUB:
           /* SETUP OF CLIENT SIDE FUNCTION CALL */
-          (void) fprintf (pout,
-                          "    epc_clnt.get_epc_clnt_object(l_epc_clnt_object, '%s');\n",
-                          _interface.name);
           (void) fprintf (pout, 
                           "    BEGIN\n");
           (void) fprintf (pout,
@@ -991,15 +990,14 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
           (void) fprintf (pout,
                           "      THEN\n");
           (void) fprintf (pout,
-                          "        epc_clnt.set_epc_clnt_object(l_epc_clnt_object, '%s');\n",
-                          _interface.name);
+                          "        l_epc_clnt_object.store();\n");
           (void) fprintf (pout,
                           "        RAISE;\n");
           (void) fprintf (pout,
                           "    END;\n");
 
           (void) fprintf (pout,
-                          "    epc_clnt.set_epc_clnt_object(l_epc_clnt_object, '%s');\n",
+                          "    l_epc_clnt_object.store();\n",
                           _interface.name);
 
           if (fun->return_value.datatype != C_VOID)
