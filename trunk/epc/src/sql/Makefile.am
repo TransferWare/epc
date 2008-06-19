@@ -24,7 +24,7 @@ sql_scripts     += std_objects.tab
 sql_scripts     += std_object_mgr.pks std_object_mgr.pkb
 sql_scripts     += epc_clnt_object.typ epc_clnt_object.tyb
 sql_scripts     += epc_clnt.pks epc_clnt.pkb
-sql_scripts     += uninstall.sql
+sql_scripts     += uninstall.sql verify.sql
 
 noinst_DATA      = $(sql_scripts)
 
