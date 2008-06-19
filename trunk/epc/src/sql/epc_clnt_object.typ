@@ -37,7 +37,12 @@ create or replace type epc_clnt_object under std_object (
   ( p_interface_name in varchar2
   )
   return self as result
+
+, overriding member function name(self in epc_clnt_object) return varchar2
+
 ) final
 /
 
 show errors
+
+@verify "epc_clnt_object" "type"

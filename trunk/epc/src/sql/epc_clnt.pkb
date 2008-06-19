@@ -184,10 +184,17 @@ procedure connection2epc_clnt_info_obj
 )
 is
 begin
-  p_epc_clnt_object.http_url     := p_connection.url;
-  p_epc_clnt_object.http_method  := p_connection.method;
-  p_epc_clnt_object.http_version := p_connection.version;
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.http_url = p_connection.url and
+     p_epc_clnt_object.http_method = p_connection.method and
+     p_epc_clnt_object.http_version = p_connection.version
+  then
+    null;
+  else
+    p_epc_clnt_object.http_url     := p_connection.url;
+    p_epc_clnt_object.http_method  := p_connection.method;
+    p_epc_clnt_object.http_version := p_connection.version;
+    p_epc_clnt_object.dirty := 1;
+  end if;
 end connection2epc_clnt_info_obj;
 
 procedure epc_clnt_info_obj2connection
@@ -207,15 +214,27 @@ procedure connection2epc_clnt_info_obj
 )
 is
 begin
-  p_epc_clnt_object.tcp_remote_host := p_connection.remote_host;
-  p_epc_clnt_object.tcp_remote_port := p_connection.remote_port;
-  p_epc_clnt_object.tcp_local_host  := p_connection.local_host;
-  p_epc_clnt_object.tcp_local_port  := p_connection.local_port;
-  p_epc_clnt_object.tcp_charset     := p_connection.charset;
-  p_epc_clnt_object.tcp_newline     := p_connection.newline;
-  p_epc_clnt_object.tcp_tx_timeout  := p_connection.tx_timeout;
-  p_epc_clnt_object.tcp_private_sd  := p_connection.private_sd;
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.tcp_remote_host = p_connection.remote_host and
+     p_epc_clnt_object.tcp_remote_port = p_connection.remote_port and
+     p_epc_clnt_object.tcp_local_host  = p_connection.local_host and
+     p_epc_clnt_object.tcp_local_port  = p_connection.local_port and
+     p_epc_clnt_object.tcp_charset     = p_connection.charset and
+     p_epc_clnt_object.tcp_newline     = p_connection.newline and
+     p_epc_clnt_object.tcp_tx_timeout  = p_connection.tx_timeout and
+     p_epc_clnt_object.tcp_private_sd  = p_connection.private_sd
+  then
+    null;
+  else
+    p_epc_clnt_object.tcp_remote_host := p_connection.remote_host;
+    p_epc_clnt_object.tcp_remote_port := p_connection.remote_port;
+    p_epc_clnt_object.tcp_local_host  := p_connection.local_host;
+    p_epc_clnt_object.tcp_local_port  := p_connection.local_port;
+    p_epc_clnt_object.tcp_charset     := p_connection.charset;
+    p_epc_clnt_object.tcp_newline     := p_connection.newline;
+    p_epc_clnt_object.tcp_tx_timeout  := p_connection.tx_timeout;
+    p_epc_clnt_object.tcp_private_sd  := p_connection.private_sd;
+    p_epc_clnt_object.dirty := 1;
+  end if;
 end connection2epc_clnt_info_obj;
 
 procedure epc_clnt_info_obj2connection
@@ -677,36 +696,6 @@ begin
   end if;
 end check_xmlrpc_fault;
 
--- GLOBAL
-procedure get_epc_clnt_object
-( p_epc_clnt_object out nocopy epc_clnt_object
-, p_interface_name in epc.interface_name_subtype
-)
-is
-  l_object_name constant std_objects.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
-  l_std_object std_object;
-begin
-  begin
-    std_object_mgr.get_std_object(l_object_name, l_std_object);
-    p_epc_clnt_object := treat(l_std_object as epc_clnt_object);
-    p_epc_clnt_object.dirty := 0;
-  exception
-    when no_data_found
-    then
-      p_epc_clnt_object := new epc_clnt_object(p_interface_name);
-  end;
-end get_epc_clnt_object;
-
-procedure set_epc_clnt_object
-( p_epc_clnt_object in epc_clnt_object
-, p_interface_name in epc.interface_name_subtype
-)
-is
-  l_object_name constant std_objects.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
-begin
-  std_object_mgr.set_std_object(l_object_name, p_epc_clnt_object);
-end set_epc_clnt_object;
-
 procedure set_protocol
 ( p_epc_clnt_object in out nocopy epc_clnt_object
 , p_protocol in protocol_subtype
@@ -715,8 +704,13 @@ is
 begin
   if p_protocol in ( "NATIVE", "SOAP", "XMLRPC" )
   then
-    p_epc_clnt_object.protocol := p_protocol;
-    p_epc_clnt_object.dirty := 1;
+    if p_epc_clnt_object.protocol = p_protocol
+    then
+      null;
+    else
+      p_epc_clnt_object.protocol := p_protocol;
+      p_epc_clnt_object.dirty := 1;
+    end if;
   else
     raise value_error;
   end if;
@@ -789,10 +783,17 @@ procedure set_connection_info
 )
 is
 begin
-  p_epc_clnt_object.connection_method := CONNECTION_METHOD_DBMS_PIPE;
-  p_epc_clnt_object.request_pipe := p_pipe_name;
-  p_epc_clnt_object.protocol := epc_clnt."NATIVE";
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.connection_method = CONNECTION_METHOD_DBMS_PIPE and
+     p_epc_clnt_object.request_pipe = p_pipe_name and
+     p_epc_clnt_object.protocol = epc_clnt."NATIVE"
+  then
+    null;
+  else
+    p_epc_clnt_object.connection_method := CONNECTION_METHOD_DBMS_PIPE;
+    p_epc_clnt_object.request_pipe := p_pipe_name;
+    p_epc_clnt_object.protocol := epc_clnt."NATIVE";
+    p_epc_clnt_object.dirty := 1;
+  end if;
 end set_connection_info;
 
 procedure get_connection_info
@@ -815,8 +816,13 @@ procedure set_request_send_timeout
 )
 is
 begin
-  p_epc_clnt_object.send_timeout := p_request_send_timeout;
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.send_timeout = p_request_send_timeout
+  then
+    null;
+  else
+    p_epc_clnt_object.send_timeout := p_request_send_timeout;
+    p_epc_clnt_object.dirty := 1;
+  end if;
 end set_request_send_timeout;
 
 procedure set_response_recv_timeout
@@ -825,8 +831,13 @@ procedure set_response_recv_timeout
 )
 is
 begin
-  p_epc_clnt_object.recv_timeout := p_response_recv_timeout;
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.recv_timeout = p_response_recv_timeout
+  then
+    null;
+  else
+    p_epc_clnt_object.recv_timeout := p_response_recv_timeout;
+    p_epc_clnt_object.dirty := 1;
+  end if;
 end set_response_recv_timeout;
 
 procedure set_namespace
@@ -835,8 +846,13 @@ procedure set_namespace
 )
 is
 begin
-  p_epc_clnt_object.namespace := p_namespace;
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.namespace = p_namespace
+  then
+    null;
+  else
+    p_epc_clnt_object.namespace := p_namespace;
+    p_epc_clnt_object.dirty := 1;
+  end if;
 end set_namespace;
 
 procedure set_inline_namespace
@@ -845,8 +861,142 @@ procedure set_inline_namespace
 )
 is
 begin
-  p_epc_clnt_object.inline_namespace := p_inline_namespace;
-  p_epc_clnt_object.dirty := 1;
+  if p_epc_clnt_object.inline_namespace = p_inline_namespace
+  then
+    null;
+  else
+    p_epc_clnt_object.inline_namespace := p_inline_namespace;
+    p_epc_clnt_object.dirty := 1;
+  end if;
+end set_inline_namespace;
+
+-- GLOBAL
+procedure set_protocol
+( p_interface_name in epc.interface_name_subtype
+, p_protocol in protocol_subtype
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_protocol(l_epc_clnt_object, p_protocol);
+  l_epc_clnt_object.store();
+end set_protocol;
+
+procedure get_protocol
+( p_interface_name in epc.interface_name_subtype
+, p_protocol out protocol_subtype
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  get_protocol(l_epc_clnt_object, p_protocol);
+end get_protocol;
+
+procedure set_connection_info
+( p_interface_name in epc.interface_name_subtype
+, p_connection in http_connection_subtype
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_connection_info(l_epc_clnt_object, p_connection);
+  l_epc_clnt_object.store();
+end set_connection_info;
+
+procedure get_connection_info
+( p_interface_name in epc.interface_name_subtype
+, p_connection out nocopy http_connection_subtype
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  get_connection_info(l_epc_clnt_object, p_connection);
+end get_connection_info;
+
+procedure set_connection_info
+( p_interface_name in epc.interface_name_subtype
+, p_connection in utl_tcp.connection
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_connection_info(l_epc_clnt_object, p_connection);
+  l_epc_clnt_object.store();
+end set_connection_info;
+
+procedure get_connection_info
+( p_interface_name in epc.interface_name_subtype
+, p_connection out nocopy utl_tcp.connection
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  get_connection_info(l_epc_clnt_object, p_connection);
+end get_connection_info;
+
+procedure set_connection_info
+( p_interface_name in epc.interface_name_subtype
+, p_pipe_name in epc.pipe_name_subtype
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_connection_info(l_epc_clnt_object, p_pipe_name);
+  l_epc_clnt_object.store();
+end set_connection_info;
+
+procedure get_connection_info
+( p_interface_name in epc.interface_name_subtype
+, p_pipe_name out epc.pipe_name_subtype
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  get_connection_info(l_epc_clnt_object, p_pipe_name);
+end get_connection_info;
+
+procedure set_request_send_timeout
+( p_interface_name in epc.interface_name_subtype
+, p_request_send_timeout in pls_integer
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_request_send_timeout(l_epc_clnt_object, p_request_send_timeout);
+  l_epc_clnt_object.store();
+end set_request_send_timeout;
+
+procedure set_response_recv_timeout
+( p_interface_name in epc.interface_name_subtype
+, p_response_recv_timeout in pls_integer
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_response_recv_timeout(l_epc_clnt_object, p_response_recv_timeout);
+  l_epc_clnt_object.store();
+end set_response_recv_timeout;
+
+procedure set_namespace
+( p_interface_name in epc.interface_name_subtype
+, p_namespace in varchar2
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_namespace(l_epc_clnt_object, p_namespace);
+  l_epc_clnt_object.store();
+end set_namespace;
+
+procedure set_inline_namespace
+( p_interface_name in epc.interface_name_subtype
+, p_inline_namespace in varchar2
+)
+is
+  l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
+begin
+  set_inline_namespace(l_epc_clnt_object, p_inline_namespace);
+  l_epc_clnt_object.store();
 end set_inline_namespace;
 
 procedure new_request
@@ -1530,3 +1680,5 @@ end epc_clnt;
 /
 
 show errors
+
+@verify "epc_clnt" "package body"

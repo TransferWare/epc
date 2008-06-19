@@ -194,3 +194,5 @@ end epc;
 /
 
 show errors
+
+@verify "epc" "package"
