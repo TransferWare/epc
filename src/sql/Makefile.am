@@ -90,6 +90,6 @@ uninstall.sql_run: uninstall.sql
 	@touch $@
 
 .pkb.pkb_run:
-	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$? )
+	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$< )
 	@touch $@
 
