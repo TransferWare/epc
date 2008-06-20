@@ -1,6 +1,6 @@
 --$NO_KEYWORD_EXPANSION$
 REMARK
-REMARK  $Header$
+REMARK  $HeadURL$
 REMARK
 
 create or replace package body std_object_mgr is
