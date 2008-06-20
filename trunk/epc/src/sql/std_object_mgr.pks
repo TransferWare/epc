@@ -1,7 +1,7 @@
 --$NO_KEYWORD_EXPANSION$
 /*
 REMARK
-REMARK  $Header$
+REMARK  $HeadURL$
 REMARK
 REMARK  Description:    Oracle package specification for managing standard objects.
 REMARK
