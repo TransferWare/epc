@@ -22,6 +22,13 @@ begin
   g_group_name := p_group_name;
 end set_group_name;
 
+function get_group_name
+return std_objects.group_name%type
+is
+begin
+  return g_group_name;
+end get_group_name;
+
 procedure get_std_object
 ( p_object_name in std_objects.object_name%type
 , p_std_object out nocopy std_object
