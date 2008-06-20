@@ -32,7 +32,7 @@ doc: $(generated_html_dirs)
 
 # Create HTML documentation in the source tree
 sql: $(FORCE)
-	cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
+	@cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
 #	@cd $(srcdir) && pwd && $(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
 	@$(PLDOC) -d $@ -doctitle EPC $(srcdir)/../src/sql/*.pks
 
@@ -40,6 +40,7 @@ sql: $(FORCE)
 c: $(FORCE)
 	@cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
 	@-rm -f *.tmp
-	@cat Doxyfile | (test -f Doxyfile && cd $(srcdir) && $(DOXYGEN) -)
+# The doc srcdir must be writeable because DOXYGEN creates temporary files there.
+	@cat Doxyfile | (test -f Doxyfile && cd $(srcdir) && chmod +w . && $(DOXYGEN) -)
 	@-rm -f *.tmp
 
