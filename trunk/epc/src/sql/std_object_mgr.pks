@@ -52,6 +52,14 @@ procedure set_group_name
 );
 
 /**
+-- Get the group name.
+--
+-- @return The group name set by set_group_name()
+*/
+function get_group_name
+return std_objects.group_name%type;
+
+/**
 -- Get a standard object.
 --
 -- Retrieve an object from persistent storage (table std_objects) or from an
