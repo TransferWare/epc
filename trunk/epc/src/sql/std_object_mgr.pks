@@ -138,5 +138,3 @@ end;
 /
 
 show errors
-
-@verify "std_object_mgr" "package"

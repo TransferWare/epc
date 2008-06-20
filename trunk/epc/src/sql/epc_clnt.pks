@@ -434,5 +434,3 @@ end epc_clnt;
 /
 
 show errors
-
-@verify "epc_clnt" "package"
