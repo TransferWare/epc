@@ -997,8 +997,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                           "    END;\n");
 
           (void) fprintf (pout,
-                          "    l_epc_clnt_object.store();\n",
-                          _interface.name);
+                          "    l_epc_clnt_object.store();\n");
 
           if (fun->return_value.datatype != C_VOID)
             {

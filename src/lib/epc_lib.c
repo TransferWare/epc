@@ -1193,7 +1193,6 @@ int
 epc__native_parse_argument (idl_type_t type, char **msg_request, /*@out@ */unsigned int *len)
 {
   int retval;
-  int length;
 
   DBUG_ENTER ("epc__native_parse_argument");
   DBUG_PRINT ("input", ("type: %d; msg_request: %s", (int)type, *msg_request));
@@ -1215,14 +1214,16 @@ epc__native_parse_argument (idl_type_t type, char **msg_request, /*@out@ */unsig
     {
     case C_XML:
     case C_STRING:
-      retval = sscanf(*msg_request, "%04X", &length);
-      *len = (unsigned int) length;
+      /*@+ignoresigns@*/
+      retval = sscanf(*msg_request, "%04X", len);
+      /*@=ignoresigns@*/
       (*msg_request) += 4;
       break;
 
     default:
-      retval = sscanf(*msg_request, "%02X", &length);
-      *len = (unsigned int) length;
+      /*@+ignoresigns@*/
+      retval = sscanf(*msg_request, "%02X", len);
+      /*@=ignoresigns@*/
       (*msg_request) += 2;
       break;
     }

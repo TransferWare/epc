@@ -14,6 +14,10 @@
 #include <assert.h>
 #endif
 
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+
 #include <dbug.h>
 
 #ifndef HAVE__INT64
