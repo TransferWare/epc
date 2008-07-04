@@ -670,7 +670,7 @@ epc__add_interface (epc__info_t * epc__info, epc__interface_t * interface)
   epc__error_t status = OK;
 
   DBUG_ENTER ("epc__add_interface");
-  DBUG_PRINT ("input", ("epc__info: %p", (void *) epc__info));
+  DBUG_PRINT ("input", ("epc__info: %p; interface: %s", (void *) epc__info, interface->name));
 
   if (epc__info == NULL)
     {
@@ -758,7 +758,7 @@ epc__set_pipe (epc__info_t * epc__info, char *pipe)
 
   DBUG_ENTER ("epc__set_pipe");
 
-  DBUG_PRINT ("input", ("epc__info: %p", (void *) epc__info));
+  DBUG_PRINT ("input", ("epc__info: %p; pipe: %s", (void *) epc__info, pipe));
 
   if (epc__info == NULL)
     {
