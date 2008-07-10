@@ -33,6 +33,15 @@ begin
   end loop;
 end print;
 
+procedure debug
+(
+  p_msg in varchar2
+)
+is
+begin
+  epc.print('DEBUG: ' || p_msg);
+end debug;
+
 end epc;
 /
 
