@@ -6,6 +6,11 @@ See the end for copying conditions.
 Please send EPC bug reports to g.paulissen@chello.nl.
 
 
+Release 5.1.1
+
+* Added epc.debug method to debug the EPC and related software.
+
+
 Release 5.1.0
 
 * Added support for stateless applications like Apex (Oracle Application
