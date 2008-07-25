@@ -51,4 +51,4 @@ end;
 
 show errors
 
-@verify "epc_clnt_object" "type body"
+@epc_verify "epc_clnt_object" "type body"

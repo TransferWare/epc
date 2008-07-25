@@ -1681,4 +1681,4 @@ end epc_clnt;
 
 show errors
 
-@verify "epc_clnt" "package body"
+@epc_verify "epc_clnt" "package body"

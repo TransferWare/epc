@@ -175,4 +175,4 @@ end std_object_mgr;
 
 show errors
 
-@verify "std_object_mgr" "package body"
+@epc_verify "std_object_mgr" "package body"

@@ -24,7 +24,7 @@ sql_scripts     += std_objects.tab
 sql_scripts     += std_object_mgr.pks std_object_mgr.pkb
 sql_scripts     += epc_clnt_object.typ epc_clnt_object.tyb
 sql_scripts     += epc_clnt.pks epc_clnt.pkb
-sql_scripts     += install.sql uninstall.sql verify.sql
+sql_scripts     += epc_install.sql epc_uninstall.sql epc_verify.sql
 
 noinst_DATA      = $(sql_scripts)
 
@@ -68,9 +68,9 @@ std_object_mgr.pkb_run: std_object_mgr.pks_run
 # but since login.sql may not be the build directory SQLPATH must be set 
 # to the source directory.
 
-uninstall: uninstall.sql_run clean
+uninstall: epc_uninstall.sql_run clean
 
-uninstall.sql_run: uninstall.sql
+epc_uninstall.sql_run: epc_uninstall.sql
 	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$< )
 
 .typ.typ_run:

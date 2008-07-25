@@ -385,4 +385,4 @@ end epc_srvr;
 
 show errors
 
-@verify "epc_srvr" "package body"
+@epc_verify "epc_srvr" "package body"
