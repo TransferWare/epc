@@ -45,4 +45,4 @@ create or replace type epc_clnt_object under std_object (
 
 show errors
 
-@verify "epc_clnt_object" "type"
+@epc_verify "epc_clnt_object" "type"

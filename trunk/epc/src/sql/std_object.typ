@@ -30,4 +30,4 @@ create or replace type std_object as object (
 
 show errors
 
-@verify "std_object" "type"
+@epc_verify "std_object" "type"

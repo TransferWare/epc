@@ -8,6 +8,9 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 
 Release 5.1.1
 
+* Renamed src/sql/install.sql into src/sql/epc_install.sql to avoid naming conflicts with PLSDBUG.
+* Renamed src/sql/uninstall.sql into src/sql/epc_uninstall.sql to avoid naming conflicts with PLSDBUG.
+* Renamed src/sql/verify.sql into src/sql/epc_verify.sql to avoid naming conflicts with PLSDBUG.
 * Added epc.debug method to debug the EPC and related software.
 
 

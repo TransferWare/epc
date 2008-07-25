@@ -25,4 +25,4 @@ end;
 
 show errors
 
-@verify "std_object" "type body"
+@epc_verify "std_object" "type body"

@@ -45,4 +45,4 @@ end debug;
 end epc;
 /
 
-@verify "epc" "package body"
+@epc_verify "epc" "package body"
