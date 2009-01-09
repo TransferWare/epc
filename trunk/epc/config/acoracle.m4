@@ -93,7 +93,7 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
-                [clntsh oran11 oran10 oran9 oran8 oran7],
+                [clntsh oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
 		[],
 		[AC_MSG_ERROR(osnsui not found)])
 

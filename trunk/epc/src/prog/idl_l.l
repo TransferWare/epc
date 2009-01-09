@@ -100,8 +100,12 @@ int lineno = 1;
 void yyerror( char *s );
 int yyparse( void );
 
-#ifndef YY_USE_PROTOS
+#ifndef YY_PROTO
+#ifdef __STDC__
 #define YY_PROTO(proto) proto
+#else
+#define YY_PROTO(proto) (void)
+#endif
 #endif 
 
 /*@unused@*/

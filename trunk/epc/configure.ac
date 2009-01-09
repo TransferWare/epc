@@ -34,6 +34,7 @@ then
   echo "$PACKAGE_VERSION" > $srcdir/VERSION
 fi
 
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_SRCDIR([test/main.c])
 AM_CONFIG_HEADER([config.h])
