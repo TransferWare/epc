@@ -21,7 +21,8 @@
 AC_DEFUN([ACX_EPC],
 [AC_REQUIRE([ACX_DBUG])
 AC_PREFIX_PROGRAM([epcdaemon])
-AC_PATH_PROG([EPCDAEMON],[epcdaemon])
+AC_ARG_VAR([EPCDAEMON],[The full path name of program epcdaemon])
+AC_PATH_PROG([EPCDAEMON],[epcdaemon],[${bindir}/epcdaemon])
 acx_epcdaemon_dir=`dirname $EPCDAEMON`
 acx_epcdaemon_dir=`dirname $acx_epcdaemon_dir`
 AC_SUBST([EPC_LIBADD],[${acx_epcdaemon_dir}/lib/libepc.la])
