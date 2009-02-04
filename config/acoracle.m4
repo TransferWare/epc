@@ -43,16 +43,16 @@ if test "$acx_cv_search_$3" = no; then
     acx_dir="$1/$acx_subdir"
     test -d $acx_dir || continue
     # is "-L$acx_dir" already part of $LDFLAGS?
-    if ! echo "$acx_func_search_save_LDFLAGS" | grep -- "-L${acx_dir}"; then
-      LDFLAGS="$acx_func_search_save_LDFLAGS -L${acx_dir}"
+    if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
+      LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
     fi
     for acx_lib in $4; do
       # is "-l$acx_lib $7" already part of $LIBS?
-      if ! echo "$acx_func_search_save_LIBS" | grep -- "-l$acx_lib $7"; then
-        LIBS="$acx_func_search_save_LIBS -l$acx_lib $7"
+      if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
+        LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
       fi
       AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-	             [acx_cv_search_$3="-L$acx_dir|-l$acx_lib $7" && break])
+	             [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break])
     done
     test "$acx_cv_search_$3" = "no" || break
   done
@@ -62,15 +62,15 @@ LIBS=$acx_func_search_save_LIBS])
 AS_IF([test "$acx_cv_search_$3" != no],
       [if test "$acx_cv_search_$3" != "none required"
 then 
-  acx_LDFLAGS=`eval echo \$acx_cv_search_$3 | cut -d'|' -f 1`
-  acx_LIBS=`eval echo \$acx_cv_search_$3 | cut -d'|' -f 2`
+  acx_LDFLAGS=`eval echo \$acx_cv_search_$3 | cut -d' ' -f 1`
+  acx_LIBS="`eval echo \$acx_cv_search_$3 | cut -d' ' -f 2` $7"
   # is "-L$acx_dir" already part of $LDFLAGS?
-  if ! echo "$LDFLAGS" | grep -- "$acx_LDFLAGS"; then
-    LDFLAGS="$LDFLAGS $acx_LDFLAGS"
+  if ! echo "$LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
+    LDFLAGS="$acx_LDFLAGS $LDFLAGS"
   fi
   # is "-l$acx_lib $7" already part of $LIBS?
-  if ! echo "$LIBS" | grep -- "$acx_LIBS"; then
-    LIBS="$LIBS $acx_LIBS"
+  if ! echo "$LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
+    LIBS="$acx_LIBS $LIBS"
   fi
 fi
        $5],

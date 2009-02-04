@@ -19,7 +19,7 @@ include $(top_srcdir)/lint.am
 
 # Flex does not produce lint quality code
 idl_l.ln: idl_l.c
-	$(LINT_c) +posixlib -temptrans -nullassign -incondefs -noeffect -evalorder -exitarg -exportlocal $<
+	$(LINT_c) +posixlib -temptrans -nullassign -incondefs -noeffect -evalorder -exitarg -exportlocal -shiftimplementation -warnlintcomments -retvalint $<
 
 # Bison does not produce lint quality code
 idl_y.ln: idl_y.c

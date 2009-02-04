@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[5.1.1],[g.paulissen@chello.nl])
+AC_INIT([epc],[5.1.2],[g.paulissen@chello.nl])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -77,8 +77,6 @@ if test "$LEX" != flex; then
 fi
 AC_PROG_YACC
 AM_PROG_CC_STDC
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
 
 # pldoc generates documentation from Oracle package specification files.
 case "$ac_cv_host" in
@@ -106,6 +104,14 @@ ACX_WITH_DBUG
 ACX_PROG_PROC
 ACX_PROG_SQLPLUS
 ACX_PROG_XML
+
+#
+# The checks for LIBTOOL must be placed after ACX_PROG_PROC, since
+# that macro changes LDFLAGS and LIBS which affects the libtool settings
+# on AIX.
+#
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
 
 # Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
 AC_CHECK_TYPES([_int64, __int64, unsigned long long])
