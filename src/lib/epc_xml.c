@@ -821,7 +821,7 @@ start_element (void *epc__xml_ctx_ptr,
 
                 switch (epc__call->function->parameters[nr].type)
                   {
-                  case C_XML: // TODO: no XML for XMLRPC
+                  case C_XML: /* TODO: no XML for XMLRPC */
                     break;
 
                   case C_STRING:
