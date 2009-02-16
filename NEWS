@@ -9,6 +9,7 @@ Please send EPC bug reports to g.paulissen@chello.nl.
 Release 5.1.2
 
 * The configure script adapted for AIX builds.
+* src/lib/epc_lib.c and src/lib/epc_xml.c adapted for AIX.
 
 
 Release 5.1.1
