@@ -201,135 +201,134 @@ static
 char *
 signal_str (int signo)
 {
-  switch (signo)
-    {
+  /* GJP 16-02-2009
+     Some defined signals may have the same number hence a switch will not compile.
+  */
 #ifdef SIGHUP
-    case SIGHUP:
-      return "SIGHUP";
+  if (signo == SIGHUP)
+    return "SIGHUP";
 #endif
 #ifdef SIGINT
-    case SIGINT:
-      return "SIGINT";
+  if (signo == SIGINT)
+    return "SIGINT";
 #endif
 #ifdef SIGQUIT
-    case SIGQUIT:
-      return "SIGQUIT";
+  if (signo == SIGQUIT)
+    return "SIGQUIT";
 #endif
 #ifdef SIGILL
-    case SIGILL:
-      return "SIGILL";
+  if (signo == SIGILL)
+    return "SIGILL";
 #endif
 #ifdef SIGTRAP
-    case SIGTRAP:
-      return "SIGTRAP";
+  if (signo == SIGTRAP)
+    return "SIGTRAP";
 #endif
 #ifdef SIGABRT
-    case SIGABRT:
-      return "SIGABRT";
+  if (signo == SIGABRT)
+    return "SIGABRT";
 #endif
 #ifdef SIGEMT
-    case SIGEMT:
-      return "SIGEMT";
+  if (signo == SIGEMT)
+    return "SIGEMT";
 #endif
 #ifdef SIGFPE
-    case SIGFPE:
-      return "SIGFPE";
+  if (signo == SIGFPE)
+    return "SIGFPE";
 #endif
 #ifdef SIGBUS
-    case SIGBUS:
-      return "SIGBUS";
+  if (signo == SIGBUS)
+    return "SIGBUS";
 #endif
 #ifdef SIGSEGV
-    case SIGSEGV:
-      return "SIGSEGV";
+  if (signo == SIGSEGV)
+    return "SIGSEGV";
 #endif
 #ifdef SIGSYS
-    case SIGSYS:
-      return "SIGSYS";
+  if (signo == SIGSYS)
+    return "SIGSYS";
 #endif
 #ifdef SIGPIPE
-    case SIGPIPE:
-      return "SIGPIPE";
+  if (signo == SIGPIPE)
+    return "SIGPIPE";
 #endif
 #ifdef SIGALRM
-    case SIGALRM:
-      return "SIGALRM";
+  if (signo == SIGALRM)
+    return "SIGALRM";
 #endif
 #ifdef SIGTERM
-    case SIGTERM:
-      return "SIGTERM";
+  if (signo == SIGTERM)
+    return "SIGTERM";
 #endif
 #ifdef SIGURG
-    case SIGURG:
-      return "SIGURG";
+  if (signo == SIGURG)
+    return "SIGURG";
 #endif
 #ifdef SIGSTOP
-    case SIGSTOP:
-      return "SIGSTOP";
+  if (signo == SIGSTOP)
+    return "SIGSTOP";
 #endif
 #ifdef SIGTSTP
-    case SIGTSTP:
-      return "SIGTSTP";
+  if (signo == SIGTSTP)
+    return "SIGTSTP";
 #endif
 #ifdef SIGCONT
-    case SIGCONT:
-      return "SIGCONT";
+  if (signo == SIGCONT)
+    return "SIGCONT";
 #endif
 #ifdef SIGCHLD
-    case SIGCHLD:
-      return "SIGCHLD";
+  if (signo == SIGCHLD)
+    return "SIGCHLD";
 #endif
 #ifdef SIGTTIN
-    case SIGTTIN:
-      return "SIGTTIN";
+  if (signo == SIGTTIN)
+    return "SIGTTIN";
 #endif
 #ifdef SIGTTOU
-    case SIGTTOU:
-      return "SIGTTOU";
+  if (signo == SIGTTOU)
+    return "SIGTTOU";
 #endif
 #ifdef SIGIO
-    case SIGIO:
-      return "SIGIO";
+  if (signo == SIGIO)
+    return "SIGIO";
 #endif
 #ifdef SIGXCPU
-    case SIGXCPU:
-      return "SIGXCPU";
+  if (signo == SIGXCPU)
+    return "SIGXCPU";
 #endif
 #ifdef SIGXFSZ
-    case SIGXFSZ:
-      return "SIGXFSZ";
+  if (signo == SIGXFSZ)
+    return "SIGXFSZ";
 #endif
 #ifdef SIGVTALRM
-    case SIGVTALRM:
-      return "SIGVTALRM";
+  if (signo == SIGVTALRM)
+    return "SIGVTALRM";
 #endif
 #ifdef SIGPROF
-    case SIGPROF:
-      return "SIGPROF";
+  if (signo == SIGPROF)
+    return "SIGPROF";
 #endif
 #ifdef SIGWINCH
-    case SIGWINCH:
-      return "SIGWINCH";
+  if (signo == SIGWINCH)
+    return "SIGWINCH";
 #endif
 #ifdef SIGLOST
-    case SIGLOST:
-      return "SIGLOST";
+  if (signo == SIGLOST)
+    return "SIGLOST";
 #endif
 #ifdef SIGUSR1
-    case SIGUSR1:
-      return "SIGUSR1";
+  if (signo == SIGUSR1)
+    return "SIGUSR1";
 #endif
 #ifdef SIGUSR2
-    case SIGUSR2:
-      return "SIGUSR2";
+  if (signo == SIGUSR2)
+    return "SIGUSR2";
 #endif
 #ifdef SIGBREAK
-    case SIGBREAK:
-      return "SIGBREAK";
+  if (signo == SIGBREAK)
+    return "SIGBREAK";
 #endif
-    default:
-      return "Unknown signal";
-    }
+  return "Unknown signal";
 }
 
 #endif /* #ifdef SERVER_INTERRUPT */
@@ -346,144 +345,116 @@ epc__set_signal_handlers (const int idx)
 #ifdef SERVER_INTERRUPT
   for (nr = 0; nr < MAX_SIGNO; nr++)
     {
-      switch (nr)
-        {
+      /* GJP 16-02-2009
+         Some defined signals may have the same number hence a switch will not compile.
+      */
+      if (0
 #ifdef SIGHUP
-        case SIGHUP:
-          break;
-#endif
-#ifdef SIGINT
-        case SIGINT:
-          continue;             /* GJP 21-02-2004 Handled by handle_interrupt() */
+          || (nr == SIGHUP)
 #endif
 #ifdef SIGQUIT
-        case SIGQUIT:
-          break;
+          || (nr == SIGQUIT)
 #endif
 #ifdef SIGILL
-        case SIGILL:
-          break;
+          || (nr == SIGILL)
 #endif
 #ifdef SIGTRAP
-        case SIGTRAP:
-          break;
+          || (nr == SIGTRAP)
 #endif
 #ifdef SIGABRT
-        case SIGABRT:
-          break;
+          || (nr == SIGABRT)
 #endif
 #ifdef SIGEMT
-        case SIGEMT:
-          break;
+          || (nr == SIGEMT)
 #endif
 #ifdef SIGFPE
-        case SIGFPE:
-          break;
+          || (nr == SIGFPE)
 #endif
 #ifdef SIGBUS
-        case SIGBUS:
-          break;
+          || (nr == SIGBUS)
 #endif
 #ifdef SIGSEGV
-        case SIGSEGV:
-          break;
+          || (nr == SIGSEGV)
 #endif
 #ifdef SIGSYS
-        case SIGSYS:
-          break;
+          || (nr == SIGSYS)
 #endif
 #ifdef SIGPIPE
-        case SIGPIPE:
-          break;
+          || (nr == SIGPIPE)
 #endif
 #ifdef SIGALRM
-        case SIGALRM:
-          break;
+          || (nr == SIGALRM)
 #endif
 #ifdef SIGTERM
-        case SIGTERM:
-          break;
+          || (nr == SIGTERM)
 #endif
 #ifdef SIGURG
-        case SIGURG:
-          break;
+          || (nr == SIGURG)
 #endif
 #ifdef SIGSTOP
-        case SIGSTOP:
-          break;
+          || (nr == SIGSTOP)
 #endif
 #ifdef SIGTSTP
-        case SIGTSTP:
-          break;
+          || (nr == SIGTSTP)
 #endif
 #ifdef SIGCONT
-        case SIGCONT:
-          break;
+          || (nr == SIGCONT)
 #endif
 #ifdef SIGCHLD
-        case SIGCHLD:
-          break;
+          || (nr == SIGCHLD)
 #endif
 #ifdef SIGTTIN
-        case SIGTTIN:
-          break;
+          || (nr == SIGTTIN)
 #endif
 #ifdef SIGTTOU
-        case SIGTTOU:
-          break;
+          || (nr == SIGTTOU)
 #endif
 #ifdef SIGIO
-        case SIGIO:
-          break;
+          || (nr == SIGIO)
 #endif
 #ifdef SIGXCPU
-        case SIGXCPU:
-          break;
+          || (nr == SIGXCPU)
 #endif
 #ifdef SIGXFSZ
-        case SIGXFSZ:
-          break;
+          || (nr == SIGXFSZ)
 #endif
 #ifdef SIGVTALRM
-        case SIGVTALRM:
-          break;
+          || (nr == SIGVTALRM)
 #endif
 #ifdef SIGPROF
-        case SIGPROF:
-          break;
+          || (nr == SIGPROF)
 #endif
 #ifdef SIGWINCH
-        case SIGWINCH:
-          break;
+          || (nr == SIGWINCH)
 #endif
 #ifdef SIGLOST
-        case SIGLOST:
-          break;
+          || (nr == SIGLOST)
 #endif
 #ifdef SIGUSR1
-        case SIGUSR1:
-          break;
+          || (nr == SIGUSR1)
 #endif
 #ifdef SIGUSR2
-        case SIGUSR2:
-          break;
+          || (nr == SIGUSR2)
 #endif
 #ifdef SIGBREAK
-        case SIGBREAK:
-          break;
+          || (nr == SIGBREAK)
 #endif
-        default:
-          continue;             /* not a known signal */
+          )
+        {
+          DBUG_PRINT ("info", ("handler for signal %d (%s): %p",
+                               nr,
+                               signal_str (nr),
+                               signal_handler_info[idx][nr].func));
+
+          /* store old handler */
+          signal_handler_info[idx][nr].func =
+            signal (nr, signal_handler_info[idx][nr].func);
         }
-
-      DBUG_PRINT ("info", ("handler for signal %d (%s): %p",
-                           nr,
-                           signal_str (nr),
-                           signal_handler_info[idx][nr].func));
-
-      /* store old handler */
-      signal_handler_info[idx][nr].func =
-        signal (nr, signal_handler_info[idx][nr].func);
+      else
+        {
+          /* SIGINT or other */
+          continue;             /* GJP 21-02-2004 Handled by handle_interrupt() */
+        }
     }
 #endif /* #ifdef SERVER_INTERRUPT */
 
