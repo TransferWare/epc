@@ -34,10 +34,10 @@ then
   echo "$PACKAGE_VERSION" > $srcdir/VERSION
 fi
 
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_MACRO_DIR([config])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_SRCDIR([test/main.c])
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 AC_CANONICAL_HOST
 
@@ -76,7 +76,7 @@ if test "$LEX" != flex; then
   AC_SUBST(LEXLIB, '')
 fi
 AC_PROG_YACC
-AM_PROG_CC_STDC
+
 
 # pldoc generates documentation from Oracle package specification files.
 case "$ac_cv_host" in
