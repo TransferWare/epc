@@ -20,7 +20,7 @@ SUBDIRS 		= doc replace src examples test utils
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 EXTRA_DIST              = VERSION lint.am
-ACLOCAL_AMFLAGS         = -I $(ac_aux_dir)
+ACLOCAL_AMFLAGS         = -I config
 
 lintdirs		= $(top_builddir)/src/lib $(top_builddir)/src/prog
 docdirs			= $(top_builddir)/doc $(top_builddir)/utils
