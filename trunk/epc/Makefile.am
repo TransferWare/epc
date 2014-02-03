@@ -20,7 +20,10 @@ SUBDIRS 		= doc replace src examples test utils
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 EXTRA_DIST              = VERSION lint.am
-ACLOCAL_AMFLAGS         = -I config
+
+# Gert-Jan Paulissen, 15-01-2014
+# libtoolize: AC_CONFIG_MACRO_DIR([config]) conflicts with ACLOCAL_AMFLAGS=-I config
+#ACLOCAL_AMFLAGS         = -I config
 
 lintdirs		= $(top_builddir)/src/lib $(top_builddir)/src/prog
 docdirs			= $(top_builddir)/doc $(top_builddir)/utils
