@@ -10,6 +10,7 @@ Release 5.1.2
 
 * The configure script adapted for AIX builds.
 * src/lib/epc_lib.c and src/lib/epc_xml.c adapted for AIX.
+* Added support for Cygwin 1.7.x
 
 
 Release 5.1.1

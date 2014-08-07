@@ -15,7 +15,19 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-generated_html_dirs  = sql c
+if PLDOC
+generated_pldoc_html_dir = sql
+else
+generated_pldoc_html_dir = 
+endif
+
+if DOXYGEN
+generated_doxygen_html_dir = c
+else
+generated_doxygen_html_dir =
+endif
+
+generated_html_dirs = $(generated_pldoc_html_dir) $(generated_doxygen_html_dir)
 
 EXTRA_DIST           = epcman.doc EPC-optimize.doc epcdistr.rtf epcpf.xls problems&changes.xls $(generated_html_dirs)
 
