@@ -54,7 +54,7 @@ REMARK
 /* line 53 */
 create or replace package body epc_clnt as
 
-subtype epc_key_subtype is binary_integer;
+-- subtype epc_key_subtype is binary_integer;
 
 /*
 

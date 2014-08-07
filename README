@@ -6,10 +6,10 @@ external procedures from Oracle PL/SQL.
 EPC itself consists of the library, libepc.la, an IDL compiler and
 the headers installed in `/usr/local/include'.
 
-The EPC toolkit depends on the package DBUG
-(see www.sourceforge.net/projects/transferware). This should be
-installed into the same lib and bin directories as EPC (e.g. use same
-prefix when installing).
+The EPC toolkit depends on the package DBUG (see
+www.sourceforge.net/projects/transferware). This should be installed
+into the same lib and bin directories as EPC (e.g. use the same prefix
+when installing).
 
 DOCUMENTATION
 =============
@@ -40,14 +40,6 @@ For Windows platforms the Cygwin suite with GCC and the MinGW extension
 can be used. There is one caveat: the libraries should not depend on the
 Cygwin DLL, but on the Microsoft run-time DLLs instead. See the file
 BUGS in the DBUG distribution for more information.
-
-The configure script will try to set the environment correctly. In case
-that fails the following configure command may be tried (provided dbug
-is installed into /cygdrive/c/usr/local):
-
-./configure CPPFLAGS="-I/cygdrive/c/usr/local/include" \
-LDFLAGS="-L/cygdrive/c/usr/local/lib" \
-CC="gcc -mno-cygwin" --prefix=/cygdrive/c/usr/local
 
 Solaris specific
 ================

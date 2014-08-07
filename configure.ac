@@ -43,7 +43,11 @@ AC_CANONICAL_HOST
 
 case ${host} in
 *-cygwin)
-	test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
+  if gcc --version | grep -E "gcc \(GCC\) [1-3]\." 1>/dev/null 2>&1
+  then
+    # gcc (GCC) 1.x or 2.x or 3.x: use -mno-cygwin
+    test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
+  fi
 	;;
 *solaris*|*sun*)
 	test "$LIBS" = "" && LIBS="-lm" && export LIBS
@@ -85,7 +89,6 @@ case "$ac_cv_host" in
 	;;
 *-cygwin)
 	pldoc=pldoc.bat
-	test "$CC" = "" && CC="gcc -mno-cygwin"
 	;;
 *)
 	pldoc=pldoc.sh
@@ -93,9 +96,11 @@ case "$ac_cv_host" in
 esac
 
 AC_CHECK_PROGS([PLDOC], [$pldoc pldoc], [])
+AM_CONDITIONAL([PLDOC], [test -n "$PLDOC"])
 
 # doxygen generates documentation from C sources.
 AC_CHECK_PROGS([DOXYGEN], [doxygen], [])
+AM_CONDITIONAL([DOXYGEN], [test -n "$DOXYGEN"])
 
 # dbug package ?
 ACX_WITH_DBUG
