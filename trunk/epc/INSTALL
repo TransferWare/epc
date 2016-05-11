@@ -49,6 +49,14 @@ The simplest way to compile this package is:
      The username (Oracle account) must have been granted the following
      object privileges:
      - execute on sys.dbms_pipe
+     - execute on sys.utl_http
+     - execute on sys.utl_tcp
+
+		 The username (Oracle account) must have acces to a tablespace for instance USERS.
+
+		 An example:
+		 SQL> alter user epc_owner default tablespace users;
+		 SQL> alter user epc_owner quota unlimited on users;
 
   3. Type `make' to compile the package.
 

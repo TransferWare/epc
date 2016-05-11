@@ -27,7 +27,7 @@ idl_y.ln: idl_y.c
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
+# AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
 AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
 
