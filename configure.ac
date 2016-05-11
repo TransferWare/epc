@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[5.1.2],[g.paulissen@chello.nl])
+AC_INIT([epc],[5.2.0],[gert.jan.paulissen@gmail.com])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -59,7 +59,7 @@ esac
 
 AM_INIT_AUTOMAKE
 
-AM_C_PROTOTYPES
+# AM_C_PROTOTYPES
 AM_WITH_DMALLOC
 
 # Checks for programs.
@@ -73,14 +73,26 @@ esac
 dnl AC_ARG_VAR(PERL,[The program name of Perl.])
 
 AC_PROG_CC
+
 AM_PROG_LEX
 if test "$LEX" != flex; then
   LEX="$SHELL $missing_dir/missing flex"
   AC_SUBST(LEX_OUTPUT_ROOT, lex.yy)
   AC_SUBST(LEXLIB, '')
 fi
-AC_PROG_YACC
+AC_PATH_PROG([LEX], [$LEX], [])
+if test -z "$LEX"; then
+ 	AC_MSG_ERROR([Please install flex, lex or one of their variants])
+fi
 
+AC_PROG_YACC
+# if $YACC equals yacc, the program may not exist...
+if test "$YACC" = "yacc"; then
+  AC_PATH_PROG([YACC], [yacc], [])
+	if test -z "$YACC"; then
+  	AC_MSG_ERROR([Please install bison, yacc or one of their variants])
+	fi
+fi
 
 # pldoc generates documentation from Oracle package specification files.
 case "$ac_cv_host" in

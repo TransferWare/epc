@@ -99,17 +99,17 @@ then
 fi
 
 ACX_SEARCH_LIBS([$acx_oracle_home],
-                [lib32 lib precomp precomp/lib precomp/lib/msvc bin],
+                [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [sqlglm],
-                [clntsh orasql11 orasql10 orasql9 orasql8 orasql7],
-		[],
+                [clntsh orasql12 orasql11 orasql10 orasql9 orasql8 orasql7],
+								[],
                 [AC_MSG_ERROR(sqlglm not found)])
 ACX_SEARCH_LIBS([$acx_oracle_home],
-                [lib32 lib precomp precomp/lib precomp/lib/msvc bin],
+                [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
-                [clntsh oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
-		[],
-		[AC_MSG_ERROR(osnsui not found)])
+                [clntsh oraociei12 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
+								[],
+								[AC_MSG_ERROR(osnsui not found)])
 
 acx_protohdrs="sqlcpr.h sqlproto.h"
 acx_protohdr=
@@ -197,42 +197,63 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib32 lib bin],
                 [xmlinit],
                 [nmemso xml11 xml10 oraxml11 oraxml10 oraxml9 oraxml8],
-		[],
-		[AC_MSG_ERROR(xmlinit not found)])
+								[],
+								[AC_MSG_ERROR(xmlinit not found)])
 
-#acx_xmlhdrs="oraxml.h"
 acx_xmlhdrs="oraxml.h oratypes.h"
-acx_xmlhdr=
-for dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null`
+AC_MSG_NOTICE([Checking headers for XML C SDK: $acx_xmlhdrs])
+for acx_file in $acx_xmlhdrs
 do
-  # Must be a directory and we must be able to change to the directory
-  test -d $dir -a -x $dir || continue
-  for file in $acx_xmlhdrs
+	# Windows: ignore case
+	if printenv WINDIR 1>/dev/null
+	then
+	  acx_file_upper=`echo $acx_file | tr 'a-z'	'A-Z'`
+	else
+	  acx_file_upper=$acx_file
+	fi
+
+  for acx_dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null`
   do
-    # Windows: ignore case
-    # Bug 849475: just return one header by using head -1
-    acx_xmlhdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
+    # Must be a directory and we must be able to change to the directory
+    test -d $acx_dir -a -x $acx_dir || continue
 
-    test -n "$acx_xmlhdr" || continue
+    AC_MSG_CHECKING([$acx_file in $acx_dir])
 
-    AC_MSG_CHECKING([$acx_xmlhdr])
+		if test -f "$acx_dir/$acx_file"
+		then
+			acx_xmlhdr="$acx_dir/$acx_file"
+		elif test -f "$acx_dir/$acx_file_upper"
+		then
+			acx_xmlhdr="$acx_dir/$acx_file_upper"
+		else
+		  acx_xmlhdr=
+	  fi
 
-    # oraxml.h.bak is not right, but ORAXML.H is (at least on Windows)
-    if test `basename "$acx_xmlhdr" | tr 'A-Z' 'a-z'` = "$file"
+    if test -n "$acx_xmlhdr"
     then
-      CPPFLAGS="-I`dirname $acx_xmlhdr` $CPPFLAGS"
-      AC_MSG_RESULT([yes])
+      if ! echo "$CPPFLAGS" | grep "\\-I${acx_dir}" 1>/dev/null; then
+        CPPFLAGS="-I${acx_dir} $CPPFLAGS"
+			fi
+			AC_MSG_RESULT([yes])
       break
     else
-      acx_xmlhdr=
-      AC_MSG_RESULT([no])
+			AC_MSG_RESULT([no])
       continue
     fi
   done
-  test -z "$acx_xmlhdr" || break
 done
 
-AC_CHECK_HEADERS([$acx_xmlhdrs], [continue], [AC_MSG_ERROR(XML header(s) $acx_xmlhdrs not found)])
+# to prevent: fatal error: orastruc.h: No such file or directory
+CPPFLAGS="-DORASTRUC $CPPFLAGS"
+for acx_var in CPPFLAGS LDFLAGS LIBS
+do
+  AC_MSG_NOTICE([environment variable $acx_var])
+	export $acx_var
+  env | grep $acx_var
+done
+
+# Do not check Oracle headers because it gives too many errors
+# AC_CHECK_HEADERS([$acx_xmlhdrs], [], [AC_MSG_ERROR(Header file(s) $acx_xmlhdrs could not be processed)])
 ])
 
 # ACX_PROG_OCI

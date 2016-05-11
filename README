@@ -20,10 +20,27 @@ DOCUMENTATION
 
 INSTALLATION
 ============
-Installation using the GNU build tools is described in INSTALL. 
 
-The EPC needs to Oracle XML C SDK. Download this from OTN and install it
-into $ORACLE_HOME/xdk.
+Oracle stuff
+------------
+First install:
+- Oracle sqlplus
+- Oracle proc
+
+The most easy way to do this is to install the Oracle database (for
+instance an XE version) and then the corresponding PRO*C compiler.
+
+The following command will give you the Oracle version: sqlplus -V
+
+This version number can be used to find the precompiler download, see
+http://www.oracle.com/technetwork/topics/precomp-112010-084940.html.
+
+Now install the proc precompiler in the same directory as the sqlplus
+executable. Ensure the headers are installed in ../include.
+
+The EPC needs to Oracle XML C SDK. Starting from Oracle 11 this is
+included in the database installation. For 10 and earlier download this
+from OTN and install it into $ORACLE_HOME/xdk.
 
 An important feature is enabling/disabling server interrupts. Because
 the EPC server waits forever for a message using
@@ -33,6 +50,10 @@ EPC server to be killed by an interrupt (CTRL-C). The default is to
 enable this, but this means that a second Oracle session is started
 which sends an empty message into the request pipe so the EPC server can
 exit. This can be disabled by --disable-server-interrupt.
+
+GNU stuff
+---------
+Installation using the GNU build tools is described in INSTALL. 
 
 Windows specific
 ================
@@ -51,6 +72,20 @@ The configure script will try to set the environment correctly. In case
 that fails the following configure command may be tried:
 
 ./configure LIBS="-lm"
+
+BUILD
+=====
+First follow the BUILD instructions in the DBUG README.
+
+DIST
+====
+See section BUILD.
+Next:
+1) mkdir build
+2) cd build
+3) ../configure
+4) make distcheck
+5) make dist
 
 Local Variables:
 fill-column: 72

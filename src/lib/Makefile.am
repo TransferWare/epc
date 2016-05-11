@@ -28,7 +28,7 @@ epc_xml.ln: epc_xml.c
 
 MAINTAINERCLEANFILES = Makefile.in
 
-AUTOMAKE_OPTIONS     = ansi2knr
+# AUTOMAKE_OPTIONS     = ansi2knr
 
 MOSTLYCLEANFILES     = epc.c
 
@@ -45,10 +45,10 @@ libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c epc_lib.h
 ## - 0:0:0 start
 ## - 1:0:0 due to add epc_abort and epc_disconnect
 ## - 2:0:0 due to adding epc_info to epc_disconnect
-## - 3:0:0 2004-10-21 funtion namespace changed: epc_ -> epc__
+## - 3:0:0 2004-10-21 function namespace changed: epc_ -> epc__
 ## - 4:0:0 2004-12-16 1) result paramater renamed to return conform XML SOAP.
 ##                    2) namespace introduced (used by web services)
-## - 5:0:0 2007-08-07 readding dbms_pipe support (no XML data just the Oracle interface)
+## - 5:0:0 2007-08-07 re-adding dbms_pipe support (no XML data just the Oracle interface)
 
 libepc_la_LDFLAGS     = -no-undefined -version-info 5:0:0
 libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la @DBUG_LIBADD@
