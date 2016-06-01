@@ -58,7 +58,7 @@ The simplest way to compile this package is:
 		 SQL> alter user epc_owner default tablespace users;
 		 SQL> alter user epc_owner quota unlimited on users;
 
-  3. Type `make' to compile the package.
+  3. Type `make' to compile the package. Please set the variable USERID (see above).
 
   4. Optionally, type `make check' to run any self-tests that come with
      the package.

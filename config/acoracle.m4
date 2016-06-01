@@ -37,10 +37,11 @@ AC_DEFUN([ACX_SEARCH_LIBS],
 acx_func_search_save_LIBS=$LIBS
 acx_cv_search_$3=no
 AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-	       [acx_cv_search_$3="none required"])
+	             [acx_cv_search_$3="none required"])
 if test "$acx_cv_search_$3" = no; then
   for acx_subdir in $2; do
     acx_dir="$1/$acx_subdir"
+    AC_MSG_NOTICE([Checking directory $acx_dir])
     test -d $acx_dir || continue
     # is "-L$acx_dir" already part of $LDFLAGS?
     if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
@@ -52,7 +53,7 @@ if test "$acx_cv_search_$3" = no; then
         LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
       fi
       AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-	             [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break])
+                     [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break])
     done
     test "$acx_cv_search_$3" = "no" || break
   done
@@ -92,10 +93,14 @@ AC_DEFUN([ACX_PROG_PROC],
 [AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)], ["$ORACLE_HOME/bin:$PATH"])dnl
 
 acx_oracle_home="$ORACLE_HOME"
+acx_proc_home=`dirname $PROC`
+acx_proc_home=`dirname $acx_proc_home`
 if test -z "$acx_oracle_home"
 then
-  acx_oracle_home=`dirname $PROC`
-  acx_oracle_home=`dirname $acx_oracle_home`
+  acx_oracle_home=$acx_proc_home
+	acx_oracle_homes=$acx_proc_home
+else
+  acx_oracle_homes="acx_oracle_home $acx_proc_home"
 fi
 
 ACX_SEARCH_LIBS([$acx_oracle_home],
@@ -107,13 +112,13 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
-                [clntsh oraociei12 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
+                [clntsh oraociei12 oran12 n12 oraociei11 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
 								[],
 								[AC_MSG_ERROR(osnsui not found)])
 
 acx_protohdrs="sqlcpr.h sqlproto.h"
 acx_protohdr=
-for dir in $acx_oracle_home/precomp/public $acx_oracle_home
+for dir in $acx_oracle_homes
 do
   test -d $dir || continue
   for file in $acx_protohdrs 
