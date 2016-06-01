@@ -24,12 +24,16 @@ test -L config/dbug.m4 || ln -s ${DBUG_HOME:=`pwd`/../dbug}/config/dbug.m4 confi
 
 set -e
 aclocal -I config
-libtoolize --force --copy
-autoheader
+chmod +x config/install-sh
+case `uname` in 
+  Darwin*) LIBTOOLIZE=glibtoolize;;
+  *) LIBTOOLIZE=libtoolize;;
+esac
+$LIBTOOLIZE --force --copy
+autoheader 
 automake --add-missing --copy
 autoconf
-# Print version info
-for p in aclocal libtoolize autoheader automake autoconf
+for p in aclocal $LIBTOOLIZE autoheader automake autoconf
 do
   $p --version | grep $p
 done

@@ -41,7 +41,6 @@ AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
 if test "$acx_cv_search_$3" = no; then
   for acx_subdir in $2; do
     acx_dir="$1/$acx_subdir"
-    AC_MSG_NOTICE([Checking directory $acx_dir])
     test -d $acx_dir || continue
     # is "-L$acx_dir" already part of $LDFLAGS?
     if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
@@ -107,14 +106,14 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
                 [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [sqlglm],
                 [clntsh orasql12 orasql11 orasql10 orasql9 orasql8 orasql7],
-								[],
+		[],
                 [AC_MSG_ERROR(sqlglm not found)])
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
                 [clntsh oraociei12 oran12 n12 oraociei11 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
-								[],
-								[AC_MSG_ERROR(osnsui not found)])
+		[],
+		[AC_MSG_ERROR(osnsui not found)])
 
 acx_protohdrs="sqlcpr.h sqlproto.h"
 acx_protohdr=
