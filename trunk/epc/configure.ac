@@ -130,6 +130,8 @@ ACX_PROG_XML
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 
+LT_INIT
+
 # Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
 AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
