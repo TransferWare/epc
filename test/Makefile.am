@@ -62,7 +62,7 @@ $(top_builddir)/src/lib/libepc.la:
 ## Test software
 ##
 
-TESTS = test.soap test.xmlrpc test.native
+TESTS = $(TESTS_PROTOCOL)
 
 COUNT = 1000
 

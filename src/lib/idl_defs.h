@@ -94,6 +94,9 @@ typedef long dword_t;
 typedef short word_t;
 #endif
 
+/* GJP 2018-08-18 Quick fix to not define string here since it is already defined in sqlcpr.h */
+#define string_defined 1
+
 #ifndef string_defined
 #define string_defined 1
 typedef char *string;
