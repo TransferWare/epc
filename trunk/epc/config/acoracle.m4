@@ -37,7 +37,8 @@ AC_DEFUN([ACX_SEARCH_LIBS],
 acx_func_search_save_LIBS=$LIBS
 acx_cv_search_$3=no
 AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-	             [acx_cv_search_$3="none required"])
+               [acx_cv_search_$3="none required"])
+AC_MSG_NOTICE([])		     
 if test "$acx_cv_search_$3" = no; then
   for acx_subdir in $2; do
     acx_dir="$1/$acx_subdir"
@@ -51,8 +52,10 @@ if test "$acx_cv_search_$3" = no; then
       if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
         LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
       fi
+      AC_MSG_CHECKING([$3 in directory $acx_dir and library $acx_lib])
       AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-                     [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break])
+                     [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && AC_MSG_RESULT([yes]) && break],
+		     [AC_MSG_RESULT([no])])
     done
     test "$acx_cv_search_$3" = "no" || break
   done
@@ -97,7 +100,7 @@ acx_proc_home=`dirname $acx_proc_home`
 if test -z "$acx_oracle_home"
 then
   acx_oracle_home=$acx_proc_home
-	acx_oracle_homes=$acx_proc_home
+  acx_oracle_homes=$acx_proc_home
 else
   acx_oracle_homes="acx_oracle_home $acx_proc_home"
 fi
@@ -106,14 +109,14 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
                 [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [sqlglm],
                 [clntsh orasql12 orasql11 orasql10 orasql9 orasql8 orasql7],
-		[],
+                [],
                 [AC_MSG_ERROR(sqlglm not found)])
 ACX_SEARCH_LIBS([$acx_oracle_home],
                 [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
                 [osnsui],
                 [clntsh oraociei12 oran12 n12 oraociei11 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
-		[],
-		[AC_MSG_ERROR(osnsui not found)])
+                [],
+                [AC_MSG_ERROR(osnsui not found)])
 
 acx_protohdrs="sqlcpr.h sqlproto.h"
 acx_protohdr=
@@ -201,20 +204,20 @@ ACX_SEARCH_LIBS([$acx_oracle_home],
                 [lib32 lib bin],
                 [xmlinit],
                 [nmemso xml11 xml10 oraxml11 oraxml10 oraxml9 oraxml8],
-								[],
-								[AC_MSG_ERROR(xmlinit not found)])
+                [],
+                [AC_MSG_WARN(xmlinit not found)])
 
 acx_xmlhdrs="oraxml.h oratypes.h"
 AC_MSG_NOTICE([Checking headers for XML C SDK: $acx_xmlhdrs])
 for acx_file in $acx_xmlhdrs
 do
-	# Windows: ignore case
-	if printenv WINDIR 1>/dev/null
-	then
-	  acx_file_upper=`echo $acx_file | tr 'a-z'	'A-Z'`
-	else
-	  acx_file_upper=$acx_file
-	fi
+  # Windows: ignore case
+  if printenv WINDIR 1>/dev/null
+  then
+    acx_file_upper=`echo $acx_file | tr 'a-z'     'A-Z'`
+  else
+    acx_file_upper=$acx_file
+  fi
 
   for acx_dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null`
   do
@@ -223,25 +226,25 @@ do
 
     AC_MSG_CHECKING([$acx_file in $acx_dir])
 
-		if test -f "$acx_dir/$acx_file"
-		then
-			acx_xmlhdr="$acx_dir/$acx_file"
-		elif test -f "$acx_dir/$acx_file_upper"
-		then
-			acx_xmlhdr="$acx_dir/$acx_file_upper"
-		else
-		  acx_xmlhdr=
-	  fi
+    if test -f "$acx_dir/$acx_file"
+    then
+            acx_xmlhdr="$acx_dir/$acx_file"
+    elif test -f "$acx_dir/$acx_file_upper"
+    then
+            acx_xmlhdr="$acx_dir/$acx_file_upper"
+    else
+      acx_xmlhdr=
+    fi
 
     if test -n "$acx_xmlhdr"
     then
       if ! echo "$CPPFLAGS" | grep "\\-I${acx_dir}" 1>/dev/null; then
         CPPFLAGS="-I${acx_dir} $CPPFLAGS"
-			fi
-			AC_MSG_RESULT([yes])
+      fi
+      AC_MSG_RESULT([yes])
       break
     else
-			AC_MSG_RESULT([no])
+      AC_MSG_RESULT([no])
       continue
     fi
   done
@@ -252,7 +255,7 @@ CPPFLAGS="-DORASTRUC $CPPFLAGS"
 for acx_var in CPPFLAGS LDFLAGS LIBS
 do
   AC_MSG_NOTICE([environment variable $acx_var])
-	export $acx_var
+  export $acx_var
   env | grep $acx_var
 done
 

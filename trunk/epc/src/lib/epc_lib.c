@@ -23,7 +23,9 @@
 
 #include <dbug.h>
 #include "epc.h"
+#ifndef XML_OFF
 #include "epc_xml.h"
+#endif
 #include "epc_lib.h"
 
 /* strtof is not a standard function */
@@ -574,11 +576,15 @@ epc__init (void)
   epc__info->num_interfaces = 0;
   epc__info->interfaces = NULL;
   epc__info->sqlca = NULL;
+#ifndef XML_OFF
   epc__info->xml_info = NULL;
+#endif
   epc__info->purge_pipe = 0;
   epc__info->interrupt = 0;
   epc__info->program = NULL;
+#ifndef XML_OFF
   (void) epc__xml_init (epc__info);
+#endif
 
   DBUG_PRINT ("info", ("epc__info: %p", (void *) epc__info));
 
@@ -594,7 +600,9 @@ epc__done (epc__info_t * epc__info)
 
   DBUG_PRINT ("input", ("epc__info: %p", epc__info));
 
+#ifndef XML_OFF
   (void) epc__xml_done (epc__info);
+#endif
 
   if (epc__info->sqlca != NULL)
     free (epc__info->sqlca);
@@ -920,6 +928,7 @@ epc__response_native(epc__call_t * epc__call)
 }
 
 
+#ifndef XML_OFF
 static void
 epc__response_soap(epc__call_t * epc__call)
 {
@@ -1158,6 +1167,7 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 
   DBUG_LEAVE();
 }
+#endif
 
 static
 int
@@ -1326,12 +1336,14 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
       result = (unsigned int) epc__native_parse (epc__info, epc__call, epc__call->msg_request);
       break;
 
+#ifndef XML_OFF
     case PROTOCOL_SOAP:
     case PROTOCOL_XMLRPC:
       result = epc__xml_parse (epc__info, epc__call, epc__call->msg_request,
                                strlen (epc__call->msg_request));
       break;
-
+#endif
+      
     default:
       assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN && EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
     }
@@ -1401,14 +1413,17 @@ epc__handle_request (epc__info_t * epc__info,
           switch (EPC__CALL_PROTOCOL(epc__call))
             {
             case PROTOCOL_NATIVE:
+#ifndef XML_OFF
             case PROTOCOL_SOAP:
             case PROTOCOL_XMLRPC:
+#endif
               switch (EPC__CALL_PROTOCOL(epc__call))
                 {
                 case PROTOCOL_NATIVE:
                   epc__response_native(epc__call);
                   break;
                   
+#ifndef XML_OFF
                 case PROTOCOL_SOAP:
                   epc__response_soap(epc__call);
                   break;
@@ -1416,6 +1431,7 @@ epc__handle_request (epc__info_t * epc__info,
                 case PROTOCOL_XMLRPC:
                   epc__response_xmlrpc(epc__call);
                   break;
+#endif
                 }
               DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
 

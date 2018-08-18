@@ -120,7 +120,24 @@ ACX_WITH_DBUG
 # Oracle checks
 ACX_PROG_PROC
 ACX_PROG_SQLPLUS
-ACX_PROG_XML
+AC_ARG_ENABLE([xml],
+              AS_HELP_STRING([--enable-xml],
+                             [enable XML processing [[default=no]]]),
+              [case "$enableval" in
+                 yes) acx_cv_xml=true ;;
+                 no)  acx_cv_xml=false ;;
+                 *)   AC_MSG_ERROR([bad value ${enableval} for --enable-xml]) ;;
+               esac],
+              [acx_cv_xml=false])
+if [ "$acx_cv_xml" == "true" ]
+then
+  ACX_PROG_XML
+  TESTS_PROTOCOL="test.soap test.xmlrpc test.native"
+else
+  AC_DEFINE([XML_OFF],[1],[Define if NOT using XML])
+  TESTS_PROTOCOL="test.native"
+fi
+AC_SUBST(TESTS_PROTOCOL)dnl
 
 #
 # The checks for LIBTOOL must be placed after ACX_PROG_PROC, since

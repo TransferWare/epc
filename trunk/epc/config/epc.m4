@@ -29,3 +29,4 @@ AC_SUBST([EPC_LIBADD],[${acx_epcdaemon_dir}/lib/libepc.la])
 AC_SUBST([EPC_LDADD],[${acx_epcdaemon_dir}/lib/libepc.la])
 AC_SUBST([EPC_CPPFLAGS],[-I${acx_epcdaemon_dir}/include])
 ])
+

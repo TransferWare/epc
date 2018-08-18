@@ -4,6 +4,8 @@
 #include <config.h>
 #endif
 
+#ifndef XML_OFF
+
 #include <stdlib.h>
 
 #ifdef HAVE_LIMITS_H
@@ -1088,3 +1090,4 @@ element_content (void *epc__xml_ctx_ptr, const oratext * ch, size_t len)
   return ecode;
 }
 
+#endif

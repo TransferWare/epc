@@ -52,8 +52,10 @@ typedef struct epc__interface
   /*@dependent@ */ epc__function_t *functions;
 } epc__interface_t;
 
+#ifndef XML_OFF
 /* forward reference */
 struct xml_info;
+#endif
 
 /*
  * epc__info_t: general info for running an EPC server
@@ -68,7 +70,9 @@ typedef struct epc__info
   /* pointing to a list of interfaces */
   /*@only@ *//*@null@ */ struct sqlca *sqlca;
   /* SQLCA area */
+#ifndef XML_OFF
   /*@only@ *//*@null@ */ struct xml_info *xml_info;
+#endif
   dword_t purge_pipe;
   dword_t interrupt;
   /*@null@ */ /*@observer@ */ char *program;
@@ -83,7 +87,9 @@ typedef struct epc__call
   char msg_response[MSG_RESPONSE_SIZE];
   /*@temp@ *//*@null@ */ epc__interface_t *interface;
   /*@temp@ *//*@null@ */ epc__function_t *function;
+#ifndef XML_OFF  
   char inline_namespace[INLINE_NAMESPACE_SIZE]; /* ns1 in xmlns:ns1="<interface>" */
+#endif
   long epc__error;              /* result of call */
   long errcode;                 /* error code returned by transport medium */
 } epc__call_t;
