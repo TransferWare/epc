@@ -22,6 +22,14 @@ BUILT_SOURCES       += str.h str.c str.pkb str.pke str.pks str.pls
 
 MOSTLYCLEANFILES     = $(BUILT_SOURCES) *.pc *.lis
 
+TESTS                = test.native
+
+if XML
+
+TESTS               += test.soap test.xmlrpc
+
+endif
+
 CLEANFILES           = $(TESTS) *.log epctest.lis *.pls_run *.idl_run
 
 # AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
@@ -61,8 +69,6 @@ $(top_builddir)/src/lib/libepc.la:
 ##
 ## Test software
 ##
-
-TESTS = $(TESTS_PROTOCOL)
 
 COUNT = 1000
 

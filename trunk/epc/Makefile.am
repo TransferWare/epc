@@ -16,7 +16,15 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AUTOMAKE_OPTIONS 	= 
-SUBDIRS 		= doc replace src examples test utils
+SUBDIRS 		= doc replace src test utils
+
+# GJP 2018-08-20  Trick to only distribute it and not build (see also configure.ac)
+if EXAMPLES
+
+SUBDIRS 	       += examples
+
+endif
+
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
 EXTRA_DIST              = VERSION lint.am

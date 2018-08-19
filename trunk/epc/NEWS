@@ -6,6 +6,11 @@ See the end for copying conditions.
 Please send EPC bug reports to g.paulissen@chello.nl.
 
 
+Release 5.2.0
+
+* Improved distribution support.
+
+
 Release 5.1.2
 
 * The configure script adapted for AIX builds.
