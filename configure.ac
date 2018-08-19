@@ -45,16 +45,18 @@ case ${host} in
 *-cygwin)
   if gcc --version | grep -E "gcc \(GCC\) [1-3]\." 1>/dev/null 2>&1
   then
-    # gcc (GCC) 1.x or 2.x or 3.x: use -mno-cygwin
-    test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
+          # gcc (GCC) 1.x or 2.x or 3.x: use -mno-cygwin
+          test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
   fi
-	;;
+  ;;
 *solaris*|*sun*)
-	test "$LIBS" = "" && LIBS="-lm" && export LIBS
-	;;
-?*)	;;
-*)	AC_MSG_ERROR([Host not set])
-	;;
+  test "$LIBS" = "" && LIBS="-lm" && export LIBS
+  ;;
+?*)
+  ;;
+*)
+  AC_MSG_ERROR([Host not set])
+  ;;
 esac
 
 AM_INIT_AUTOMAKE
@@ -66,9 +68,9 @@ AM_WITH_DMALLOC
 AC_PATH_PROG([PERL],[perl])
 case x$PERL in
 x)
-	# No Perl avaliable: stop
-	AC_MSG_ERROR([Perl must be available in \$PATH.])
-	;;
+  # No Perl avaliable: stop
+  AC_MSG_ERROR([Perl must be available in \$PATH.])
+  ;;
 esac
 dnl AC_ARG_VAR(PERL,[The program name of Perl.])
 
@@ -82,29 +84,29 @@ if test "$LEX" != flex; then
 fi
 AC_PATH_PROG([LEX], [$LEX], [])
 if test -z "$LEX"; then
- 	AC_MSG_ERROR([Please install flex, lex or one of their variants])
+  AC_MSG_ERROR([Please install flex, lex or one of their variants])
 fi
 
 AC_PROG_YACC
 # if $YACC equals yacc, the program may not exist...
 if test "$YACC" = "yacc"; then
   AC_PATH_PROG([YACC], [yacc], [])
-	if test -z "$YACC"; then
-  	AC_MSG_ERROR([Please install bison, yacc or one of their variants])
-	fi
+  if test -z "$YACC"; then
+    AC_MSG_ERROR([Please install bison, yacc or one of their variants])
+  fi
 fi
 
 # pldoc generates documentation from Oracle package specification files.
 case "$ac_cv_host" in
 *-mingw32)
-	pldoc=pldoc.bat
-	;;
+  pldoc=pldoc.bat
+  ;;
 *-cygwin)
-	pldoc=pldoc.bat
-	;;
+  pldoc=pldoc.bat
+  ;;
 *)
-	pldoc=pldoc.sh
-	;;
+  pldoc=pldoc.sh
+  ;;
 esac
 
 AC_CHECK_PROGS([PLDOC], [$pldoc pldoc], [])
@@ -129,15 +131,13 @@ AC_ARG_ENABLE([xml],
                  *)   AC_MSG_ERROR([bad value ${enableval} for --enable-xml]) ;;
                esac],
               [acx_cv_xml=false])
+AM_CONDITIONAL([XML], [test "$acx_cv_xml" == "true"])
 if [ "$acx_cv_xml" == "true" ]
 then
   ACX_PROG_XML
-  TESTS_PROTOCOL="test.soap test.xmlrpc test.native"
 else
   AC_DEFINE([XML_OFF],[1],[Define if NOT using XML])
-  TESTS_PROTOCOL="test.native"
 fi
-AC_SUBST(TESTS_PROTOCOL)dnl
 
 #
 # The checks for LIBTOOL must be placed after ACX_PROG_PROC, since
@@ -196,6 +196,8 @@ AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefil
 # Perl is substituted in these scripts
 AC_CONFIG_FILES([src/prog/epcdaemon.pl])
 AC_CONFIG_FILES([Makefile test/Makefile])
+# GJP 2018-08-20  Trick to only distribute it and not build (see also Makefile.am)
+AM_CONDITIONAL([EXAMPLES], [false])
 AC_CONFIG_FILES([examples/Makefile examples/demo/Makefile examples/soap/Makefile examples/xmlrpc/Makefile])
 AC_CONFIG_FILES([doc/Makefile doc/Doxyfile utils/Makefile])dnl
 

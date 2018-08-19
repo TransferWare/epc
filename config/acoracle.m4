@@ -105,18 +105,22 @@ else
   acx_oracle_homes="acx_oracle_home $acx_proc_home"
 fi
 
-ACX_SEARCH_LIBS([$acx_oracle_home],
-                [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
-                [sqlglm],
-                [clntsh orasql12 orasql11 orasql10 orasql9 orasql8 orasql7],
-                [],
-                [AC_MSG_ERROR(sqlglm not found)])
-ACX_SEARCH_LIBS([$acx_oracle_home],
-                [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
-                [osnsui],
-                [clntsh oraociei12 oran12 n12 oraociei11 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
-                [],
-                [AC_MSG_ERROR(osnsui not found)])
+for acx_oracle_home in $acx_oracle_homes
+do
+  test -d $acx_oracle_home || continue
+  ACX_SEARCH_LIBS([$acx_oracle_home],
+                  [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
+                  [sqlglm],
+                  [clntsh orasql12 orasql11 orasql10 orasql9 orasql8 orasql7],
+                  [],
+                  [AC_MSG_ERROR(sqlglm not found)])
+  ACX_SEARCH_LIBS([$acx_oracle_home],
+                  [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
+                  [osnsui],
+                  [clntsh oraociei12 oran12 n12 oraociei11 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
+                  [],
+                  [AC_MSG_ERROR(osnsui not found)])
+done
 
 acx_protohdrs="sqlcpr.h sqlproto.h"
 acx_protohdr=
