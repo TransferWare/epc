@@ -23,8 +23,8 @@ result: 33.45
 io_par2: 33.99
 o_par3: -1.88
 Performance test doing a null block
-Performance test doing 1000 number of calls doing nothing without results returned.
-nothing2 count: 1000
-Performance test doing 1000 number of calls doing nothing with results returned.
-nothing1 count: 1000
+Performance test doing 500 number of calls doing nothing without results returned.
+nothing2 count: 500
+Performance test doing 500 number of calls doing nothing with results returned.
+nothing1 count: 500
 Finished.

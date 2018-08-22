@@ -1681,4 +1681,5 @@ end epc_clnt;
 
 show errors
 
-@epc_verify "epc_clnt" "package body"
+rem GJP 2018-08-20  Grant execute on dbms_pipe is not necessary
+rem @epc_verify "epc_clnt" "package body"

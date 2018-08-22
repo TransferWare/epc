@@ -96,7 +96,7 @@ typedef struct
 
 extern void set_interface (char *name);
 
-extern void add_function (const char *name, const idl_type_t datatype, const dword_t size, const int oneway);
+extern void add_function (const char *name, const idl_type_t datatype, const dword_t size, const dword_t oneway);
 
 extern void
 add_parameter (char *name, idl_mode_t mode, idl_type_t datatype, dword_t size);

@@ -326,7 +326,7 @@ init_parameter ( /*@out@ */ idl_parameter_t * parm, char *name,
       break;
     default:
       (void) fprintf (stderr,
-                      "(add_parameter) Mode %ld of parameter %s unknown.\n",
+                      "(init_parameter) Mode %ld of parameter %s unknown.\n",
                       (long) mode, name);
       exit (EXIT_FAILURE);
     }
@@ -353,16 +353,17 @@ init_parameter ( /*@out@ */ idl_parameter_t * parm, char *name,
 
     default:
       (void) fprintf (stderr,
-                      "(add_parameter) Type %ld of parameter %s unknown.\n",
+                      "(init_parameter) Type %ld of parameter %s unknown.\n",
                       (long) datatype, name);
       exit (EXIT_FAILURE);
     }
+
   DBUG_LEAVE ();
 }
 
 
 void
-add_function (const char *name, const idl_type_t datatype, const dword_t size, const int oneway)
+add_function (const char *name, const idl_type_t datatype, const dword_t size, const dword_t oneway)
 {
   _interface.functions[_interface.num_functions] =
     (idl_function_t *) malloc (sizeof (idl_function_t));
@@ -372,14 +373,16 @@ add_function (const char *name, const idl_type_t datatype, const dword_t size, c
   assert (_interface.functions[_interface.num_functions] != NULL);
   assert (strlen (name) < sizeof (_interface.functions[_interface.num_functions]->name));       /* beware of the trailing '\0' */
   (void) strcpy (_interface.functions[_interface.num_functions]->name, name);
+  assert(oneway == 0L || oneway == 1L);
   _interface.functions[_interface.num_functions]->oneway = oneway;
+  assert(_interface.functions[_interface.num_functions]->oneway == 0L || _interface.functions[_interface.num_functions]->oneway == 1L);
   _interface.functions[_interface.num_functions]->num_parameters = 0;
 
   init_parameter (&_interface.functions[_interface.num_functions]->
                   return_value, "result", C_OUT, datatype, size);
 
   _interface.num_functions++;
-
+  
   DBUG_LEAVE ();
 }
 
@@ -1842,13 +1845,14 @@ EXEC SQL END DECLARE SECTION;\n\
   for (fnr = 0; fnr < _interface.num_functions; fnr++)
     {
       fun = _interface.functions[fnr];
+      assert(fun->oneway == 0 || fun->oneway == 1);
       (void) fprintf (pout, "%s { \"%s", (fnr > 0 ? "," : " "), fun->name);
       (void) fprintf (pout,
-                      "\",\n    %s%s, %ld, %ld, %s_parameters }\n",
+                      "\",\n    %s%s, %d, %ld, %s_parameters }\n",
                       EPC_PREFIX,
                       fun->name,
-                      fun->oneway,
-                      fun->num_parameters + 1,  /* return value is a parameter too */
+                      (int) fun->oneway, /* GJP 2018-08-21 Even though we specify %ld it does not print well */
+                      (dword_t) (fun->num_parameters + 1),  /* return value is a parameter too */
                       fun->name);
     }
   (void) fprintf (pout, "};\n");

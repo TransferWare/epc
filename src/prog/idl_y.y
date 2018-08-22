@@ -140,12 +140,12 @@ function_list:
 function:
                 datatype 
                 function_name 
-                { add_function( $2, $1.datatype, $1.size, 0 ); }
+                { add_function( $2, $1.datatype, $1.size, 0L ); }
                 '(' parameter_list ')' ';'
         |       ONEWAY
                 VOID
                 function_name 
-                { add_function( $3, $2.datatype, $2.size, 1 ); }
+                { add_function( $3, $2.datatype, $2.size, 1L ); }
                 '(' in_parameter_list ')' ';'
 
         ;

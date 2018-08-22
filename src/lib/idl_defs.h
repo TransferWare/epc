@@ -84,6 +84,10 @@
 /* type definitions: make sure they are a double word long in order to avoid 
    alignment problems in structures */
 
+#ifdef dword_t_defined
+qsghsgh
+#endif
+
 #ifndef dword_t_defined
 #define dword_t_defined 1
 typedef long dword_t;

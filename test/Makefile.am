@@ -70,7 +70,7 @@ $(top_builddir)/src/lib/libepc.la:
 ## Test software
 ##
 
-COUNT = 1000
+COUNT = 500
 
 FORCE = force
 

@@ -11,7 +11,7 @@ dnl  ACX_PROG_SQLPLUS
 dnl
 
 
-# ACX_SEARCH_LIBS(ROOT-DIR, SUB-DIRS, FUNCTION, SEARCH-LIBS [, ACTION-IF-FOUND
+# ACX_SEARCH_LIBS(ROOT-DIRS, SUB-DIRS, FUNCTION, SEARCH-LIBS [, ACTION-IF-FOUND
 #            [, ACTION-IF-NOT-FOUND [, OTHER-LIBRARIES]]])
 # Search for a library defining FUNC, if it's not already available.
 #
@@ -38,33 +38,50 @@ acx_func_search_save_LIBS=$LIBS
 acx_cv_search_$3=no
 AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
                [acx_cv_search_$3="none required"])
-AC_MSG_NOTICE([])		     
-if test "$acx_cv_search_$3" = no; then
-  for acx_subdir in $2; do
-    acx_dir="$1/$acx_subdir"
-    test -d $acx_dir || continue
-    # is "-L$acx_dir" already part of $LDFLAGS?
-    if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
-      LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
-    fi
-    for acx_lib in $4; do
-      # is "-l$acx_lib $7" already part of $LIBS?
-      if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
-        LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
-      fi
-      AC_MSG_CHECKING([$3 in directory $acx_dir and library $acx_lib])
-      AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-                     [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && AC_MSG_RESULT([yes]) && break],
-		     [AC_MSG_RESULT([no])])
-    done
+for acx_rootdir in $1; do
+  test -d $acx_rootdir || continue
+	if test "$acx_cv_search_$3" = no; then
+	  if test -z "$2"; then
+		  acx_subdirs=`cd $acx_rootdir; find . \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \)  -printf "%h\n" | sort -u`
+		else
+		  acx_subdirs=$2
+		fi
+	  for acx_subdir in $acx_subdirs; do
+	    acx_dir="$acx_rootdir/$acx_subdir"
+	    test -d $acx_dir || continue
+	    # is "-L$acx_dir" already part of $LDFLAGS?
+	    if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
+	      LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
+	    fi
+	    if test -z "$4"; then
+			  # GJP 2018-08-20
+				# 1) Get list of libraries and ignore errors due to different Operating Systems
+			  # 2) Get the basename of the libraries (strip extension
+			  acx_libs=`cd $acx_dir && ls *.dll lib*.so lib*.a lib*.dylib 2>/dev/null || true`
+				acx_libs=`for f in $acx_libs; do echo $f | sed -E 's/\.dll$//; s/^lib(.*)\.(so|a|dylib)$/\1/'; done`
+			else
+			  acx_libs=$4
+			fi		
+	    for acx_lib in $acx_libs; do
+	      # is "-l$acx_lib $7" already part of $LIBS?
+	      if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
+	        LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
+	      fi
+	      AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
+	                     [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break],
+			     						 [])
+	    done
+	    test "$acx_cv_search_$3" = "no" || break
+	  done
     test "$acx_cv_search_$3" = "no" || break
-  done
-fi
+	fi
+done
 LDFLAGS=$acx_func_search_save_LDFLAGS
-LIBS=$acx_func_search_save_LIBS])
+LIBS=$acx_func_search_save_LIBS
+])
 AS_IF([test "$acx_cv_search_$3" != no],
       [if test "$acx_cv_search_$3" != "none required"
-then 
+then
   acx_LDFLAGS=`eval echo \$acx_cv_search_$3 | cut -d' ' -f 1`
   acx_LIBS="`eval echo \$acx_cv_search_$3 | cut -d' ' -f 2` $7"
   # is "-L$acx_dir" already part of $LDFLAGS?
@@ -75,6 +92,8 @@ then
   if ! echo "$LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
     LIBS="$acx_LIBS $LIBS"
   fi
+	# GJP 2018-08-20 Define HAVE_<function>
+	AC_CHECK_FUNCS([$3],[],[])
 fi
        $5],
       [$6])dnl
@@ -105,24 +124,28 @@ else
   acx_oracle_homes="acx_oracle_home $acx_proc_home"
 fi
 
-for acx_oracle_home in $acx_oracle_homes
-do
-  test -d $acx_oracle_home || continue
-  ACX_SEARCH_LIBS([$acx_oracle_home],
-                  [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
-                  [sqlglm],
-                  [clntsh orasql12 orasql11 orasql10 orasql9 orasql8 orasql7],
-                  [],
-                  [AC_MSG_ERROR(sqlglm not found)])
-  ACX_SEARCH_LIBS([$acx_oracle_home],
-                  [. lib32 lib precomp precomp/lib precomp/lib/msvc bin],
-                  [osnsui],
-                  [clntsh oraociei12 oran12 n12 oraociei11 oran11 n11 oran10 n10 oran9 n9 oran8 n8 oran7 n7],
-                  [],
-                  [AC_MSG_ERROR(osnsui not found)])
-done
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
+                [sqlglm],
+                [],
+                [],
+                [AC_MSG_ERROR(sqlglm not found)])
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
+                [osnsui],
+                [],
+                [],
+                [AC_MSG_WARN(osnsui not found)])
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
+                [osncui],
+                [],
+                [],
+                [AC_MSG_WARN(osncui not found)])
 
-acx_protohdrs="sqlcpr.h sqlproto.h"
+# find one of those headers
+acx_protohdrs="oratypes.h sqlcpr.h sqlproto.h"
+acx_protohdrs_found=""
 acx_protohdr=
 for dir in $acx_oracle_homes
 do
@@ -140,7 +163,13 @@ do
     # sqlcpr.h.bak is not right, but SQLCPR.H is (at least on Windows)
     if test `basename "$acx_protohdr" | tr 'A-Z' 'a-z'` = "$file"
     then
-      CPPFLAGS="-I`dirname $acx_protohdr` $CPPFLAGS"
+		  acx_protohdr_dir=`dirname $acx_protohdr`
+			# GJP 2018-08-20  PRO*C does not like Cygwin paths so use cygpath -m to convert /cygdrive/c to c:/
+			if uname | grep -i 'cygwin' 1>/dev/null
+			then
+	  	  acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
+      fi
+      CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
       AC_MSG_RESULT([yes])
       break
     else
@@ -149,17 +178,27 @@ do
       continue
     fi
   done
-  # One is enough
-  test -z "$acx_protohdr" || break
+	acx_protohdrs_found="$acx_protohdrs_found $acx_protohdr"
 done
 
-AC_CHECK_HEADERS([$acx_protohdrs], [break], [AC_MSG_ERROR(PRO*C prototype header not found)])
+# GJP 2018-08-20
+#
+# In sqlcpr.h this code exists but oratypes.h may not be found:
+#
+# #ifndef ORATYPES
+# #include <oratypes.h>
+# #endif
+#
+if ! `echo $acx_protohdrs_found | grep oratypes.h`
+then
+  AC_DEFINE([ORATYPES],[1],[oratypes.h is missing so fake its presence])
+fi	
 
+AC_CHECK_HEADERS([$acx_protohdrs], [], [])
 PROCINCLUDES='`echo " $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
-PROCFLAGS='`echo " $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
-
 AC_SUBST(PROCINCLUDES)
-PROCFLAGS="$PROCFLAGS CODE=ANSI_C PARSE=NONE SQLCHECK=FULL USERID=\$(USERID)"
+PROCFLAGS='`echo " $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
+PROCFLAGS="$PROCFLAGS CHAR_MAP=VARCHAR2 CODE=ANSI_C PARSE=NONE SQLCHECK=FULL USERID=\$(USERID)"
 AC_SUBST(PROCFLAGS)
 ])
 
@@ -198,16 +237,20 @@ test -n "$SQLPLUS" || AC_MSG_ERROR(sqlplus not found)
 AC_DEFUN([ACX_PROG_XML],
 [
 acx_oracle_home="$ORACLE_HOME"
+acx_proc_home=`dirname $PROC`
+acx_proc_home=`dirname $acx_proc_home`
 if test -z "$acx_oracle_home"
 then
-  acx_oracle_home=`dirname $PROC`
-  acx_oracle_home=`dirname $acx_oracle_home`
+  acx_oracle_home=$acx_proc_home
+  acx_oracle_homes=$acx_proc_home
+else
+  acx_oracle_homes="acx_oracle_home $acx_proc_home"
 fi
 
-ACX_SEARCH_LIBS([$acx_oracle_home],
-                [lib32 lib bin],
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
                 [xmlinit],
-                [nmemso xml11 xml10 oraxml11 oraxml10 oraxml9 oraxml8],
+                [],
                 [],
                 [AC_MSG_WARN(xmlinit not found)])
 
@@ -232,10 +275,10 @@ do
 
     if test -f "$acx_dir/$acx_file"
     then
-            acx_xmlhdr="$acx_dir/$acx_file"
+      acx_xmlhdr="$acx_dir/$acx_file"
     elif test -f "$acx_dir/$acx_file_upper"
     then
-            acx_xmlhdr="$acx_dir/$acx_file_upper"
+      acx_xmlhdr="$acx_dir/$acx_file_upper"
     else
       acx_xmlhdr=
     fi

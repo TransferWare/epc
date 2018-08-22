@@ -30,8 +30,8 @@ begin
       self.request_pipe := 'epc_request_pipe';
       self.http_method := 'POST';
       self.http_version := utl_http.http_version_1_1;
-      self.send_timeout := 10;
-      self.recv_timeout := 10;
+      self.send_timeout := 60; /* GJP 2018-08-21 10 => 60 */
+      self.recv_timeout := 60; /* GJP 2018-08-21 10 => 60 */
   end;
 
   -- essential
