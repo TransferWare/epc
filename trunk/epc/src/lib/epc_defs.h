@@ -89,6 +89,8 @@ typedef struct epc__call
   /*@temp@ *//*@null@ */ epc__function_t *function;
 #ifndef XML_OFF  
   char inline_namespace[INLINE_NAMESPACE_SIZE]; /* ns1 in xmlns:ns1="<interface>" */
+#else  
+  char dummy[INLINE_NAMESPACE_SIZE]; /* ns1 in xmlns:ns1="<interface>" */
 #endif
   long epc__error;              /* result of call */
   long errcode;                 /* error code returned by transport medium */

@@ -172,6 +172,17 @@ procedure ping
 , p_response_pipe in varchar2
 );
 
+/**
+-- Purge a database pipe.
+--
+-- @param p_pipe  The pipe
+--
+*/
+procedure purge_pipe
+(
+  p_pipe in varchar2
+);
+
 end epc_srvr;
 /
 

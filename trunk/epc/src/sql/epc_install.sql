@@ -3,6 +3,16 @@ REMARK
 REMARK  $HeadURL$
 REMARK
 
+whenever oserror exit failure
+
+set termout on
+
+REMARK Set define off for epc_clnt.pks.
+REMARK Do not define it in epc_clnt.pks because PLDoc does not like that.
+
+prompt @@login.sql
+@@login.sql
+
 prompt @@std_object.typ
 @@std_object.typ
 prompt @@epc_clnt_object.typ

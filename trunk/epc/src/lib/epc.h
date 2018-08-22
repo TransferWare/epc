@@ -16,6 +16,8 @@ extern void epc__reset_signal_handlers (const int idx);
 
 extern void epc__call_print ( /*@notnull@ */ epc__call_t * call);
 
+extern void epc__function_print ( /*@notnull@ */ epc__function_t * function);
+
 extern int epc__get_signo (void);
 
 extern void
@@ -54,6 +56,15 @@ epc__set_logon ( /*@notnull@ */ epc__info_t * epc__info,
 extern epc__error_t
 epc__set_pipe ( /*@notnull@ */ epc__info_t * epc__info, 
                 /*@null@ */ char *pipe) /*@modifies epc__info->pipe */ ;
+
+extern void
+epc__chk_parameter (epc__parameter_t * parameter);
+
+extern void
+epc__chk_function (epc__function_t * function);
+
+extern void
+epc__chk_interface (epc__interface_t * interface);
 
 extern epc__error_t
 epc__add_interface ( /*@notnull@ */ epc__info_t * epc__info,

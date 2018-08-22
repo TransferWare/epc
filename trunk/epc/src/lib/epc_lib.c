@@ -476,22 +476,44 @@ epc__call_print (epc__call_t * call)
  * ----------------------------------------------------------------------*/
 {
   DBUG_ENTER ("epc__call_print");
-  DBUG_PRINT ("input", ("msg info: '%s'", call->msg_info));
+  DBUG_PRINT ("input", ("msg info: '%s'; protocol: %c", call->msg_info, EPC__CALL_PROTOCOL(call)));
   DBUG_PRINT ("input",
-              ("interface: '%s'; function: '%s'",
+              ("interface name: '%s'; function: %p",
                (call != NULL && call->interface != NULL
                 && call->interface->name !=
-                NULL ? call->interface->name : "(null)"), (call != NULL
-                                                           && call->
-                                                           function != NULL
-                                                           && call->function->
-                                                           name !=
-                                                           NULL ? call->
-                                                           function->
-                                                           name : "(null)")));
+                NULL ? call->interface->name : "(null)"),
+               (void*) call->function));
+  if (call->function != NULL)
+    {
+      epc__function_print(call->function);
+    }
   DBUG_PRINT ("input",
               ("status: %ld; error code: %ld", (long) call->epc__error,
                (long) call->errcode));
+  DBUG_LEAVE ();
+}
+
+void
+epc__function_print (epc__function_t * function)
+/* ----------------------------------------------------------------------
+ * Prints out all fields of a function in readable format
+ * ----------------------------------------------------------------------*/
+{
+  dword_t nr;
+  
+  DBUG_ENTER ("epc__function_print");
+  DBUG_PRINT ("input", ("name: '%s'; oneway: %ld; # parameters: %ld",
+                        function->name, function->oneway, function->num_parameters));
+  for (nr = 0L; nr < function->num_parameters; nr++)
+    {
+      DBUG_PRINT ("input",
+                  ("parameter[%ld]: name: %s; mode: %d; type: %d; size: %ld",
+                   nr,
+                   function->parameters[nr].name,
+                   function->parameters[nr].mode,
+                   function->parameters[nr].type,
+                   function->parameters[nr].size));
+    }
   DBUG_LEAVE ();
 }
 
@@ -643,12 +665,54 @@ epc__done (epc__info_t * epc__info)
   DBUG_LEAVE ();
 }
 
+void
+epc__chk_parameter (epc__parameter_t * parameter)
+{
+  assert(parameter != NULL);
+  assert(parameter->name != NULL);
+  assert(parameter->mode >= C_PARAMETER_MODE_MIN && parameter->mode <= C_PARAMETER_MODE_MAX);
+  assert(parameter->type >= C_DATATYPE_MIN && parameter->type <= C_DATATYPE_MAX);
+  assert(parameter->size >= 0);
+}
+
+void
+epc__chk_function (epc__function_t * function)
+{
+  dword_t nr;
+  
+  assert(function != NULL);
+  assert(function->name != NULL);
+  assert(function->oneway == 0 || function->oneway == 1);
+  assert(function->num_parameters >= 0);
+  for (nr = 0; nr < function->num_parameters; nr++)
+    {
+      epc__chk_parameter(&function->parameters[nr]);
+    }
+}
+
+void
+epc__chk_interface (epc__interface_t * interface)
+{
+  dword_t nr;
+
+  assert(interface != NULL);
+  assert(interface->name != NULL);
+  assert(interface->num_functions > 0);
+  for (nr = 0; nr < interface->num_functions; nr++)
+    {
+      epc__chk_function(&interface->functions[nr]);
+    }
+}
+
 epc__error_t
 epc__add_interface (epc__info_t * epc__info, epc__interface_t * interface)
 {
   epc__error_t status = OK;
 
   DBUG_ENTER ("epc__add_interface");
+
+  epc__chk_interface (interface);
+    
   DBUG_PRINT ("input", ("epc__info: %p; interface: %s", (void *) epc__info, interface->name));
 
   if (epc__info == NULL)
@@ -928,7 +992,6 @@ epc__response_native(epc__call_t * epc__call)
 }
 
 
-#ifndef XML_OFF
 static void
 epc__response_soap(epc__call_t * epc__call)
 {
@@ -936,6 +999,7 @@ epc__response_soap(epc__call_t * epc__call)
 
   DBUG_ENTER ("epc__response_soap");
 
+#ifndef XML_OFF
   assert(epc__call->function != NULL);
   assert(epc__call->interface != NULL);
 
@@ -1068,6 +1132,8 @@ epc__response_soap(epc__call_t * epc__call)
                        "</%sResponse>" SOAP_HEADER_END "\n",
                        epc__call->function->name);
     }
+#endif
+  
   DBUG_LEAVE();
 }
 
@@ -1078,6 +1144,7 @@ epc__response_xmlrpc(epc__call_t * epc__call)
 
   DBUG_ENTER ("epc__response_xmlrpc");
 
+#ifndef XML_OFF
   /* copy (strncy does not always add a terminating zero but snprintf does) */
   (void) snprintf (epc__call->msg_response,
                    MAX_MSG_RESPONSE_LEN + 1,
@@ -1164,10 +1231,10 @@ epc__response_xmlrpc(epc__call_t * epc__call)
   (void) strncat (epc__call->msg_response,
                   "</params></methodResponse>\n",
                   MAX_MSG_RESPONSE_LEN - strlen(epc__call->msg_response));
+#endif
 
   DBUG_LEAVE();
 }
-#endif
 
 static
 int
@@ -1314,6 +1381,8 @@ epc__native_parse (epc__info_t *epc__info, epc__call_t *epc__call, const char *m
       }
   } while (0);
 
+  epc__call_print(epc__call);
+    
   DBUG_LEAVE();
 
   return epc__call->epc__error;
@@ -1336,13 +1405,13 @@ epc__exec_call (epc__info_t * epc__info, epc__call_t * epc__call)
       result = (unsigned int) epc__native_parse (epc__info, epc__call, epc__call->msg_request);
       break;
 
-#ifndef XML_OFF
     case PROTOCOL_SOAP:
     case PROTOCOL_XMLRPC:
+#ifndef XML_OFF
       result = epc__xml_parse (epc__info, epc__call, epc__call->msg_request,
                                strlen (epc__call->msg_request));
-      break;
 #endif
+      break;
       
     default:
       assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN && EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
@@ -1399,31 +1468,28 @@ epc__handle_request (epc__info_t * epc__info,
       /* receive the request */
       (void) (*recv_request) (epc__info, epc__call);
 
-      DBUG_PRINT ("info", ("msg_request: %s", epc__call->msg_request));
-
       /* do the call */
       if (epc__call->epc__error == OK)
         {
           (void) epc__exec_call (epc__info, epc__call);
         }
 
-      /* construct the response for non oneway functions */
-      if (epc__call->function == NULL || epc__call->function->oneway == 0)
+      /* construct the response when oneway is equal to 0 (no function counts 
+         too since we must report back the error) */
+      if (!(epc__call->function != NULL && epc__call->function->oneway != 0))
         {
           switch (EPC__CALL_PROTOCOL(epc__call))
             {
             case PROTOCOL_NATIVE:
-#ifndef XML_OFF
             case PROTOCOL_SOAP:
             case PROTOCOL_XMLRPC:
-#endif
+              
               switch (EPC__CALL_PROTOCOL(epc__call))
                 {
                 case PROTOCOL_NATIVE:
                   epc__response_native(epc__call);
                   break;
                   
-#ifndef XML_OFF
                 case PROTOCOL_SOAP:
                   epc__response_soap(epc__call);
                   break;
@@ -1431,7 +1497,10 @@ epc__handle_request (epc__info_t * epc__info,
                 case PROTOCOL_XMLRPC:
                   epc__response_xmlrpc(epc__call);
                   break;
-#endif
+                  
+                default:
+                  assert(EPC__CALL_PROTOCOL(epc__call) >= PROTOCOL_MIN && EPC__CALL_PROTOCOL(epc__call) <= PROTOCOL_MAX);
+                  break;
                 }
               DBUG_PRINT ("info", ("msg_response: %s", epc__call->msg_response));
 

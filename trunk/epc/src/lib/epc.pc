@@ -231,6 +231,12 @@
 
 EXEC SQL INCLUDE sqlca;
 
+#if HAVE_SQLCPR_H
+#include <sqlcpr.h>
+#elif HAVE_SQLPROTO_H
+#include <sqlproto.h>
+#endif
+
 /* skip irrelevant includes during PRO*C precompilation */
 #ifndef ORA_PROC
 #include <dbug.h>
@@ -292,6 +298,7 @@ epc__send_response_pipe_db( const char *msg_info, const char *msg_response, epc_
 
 #ifdef SERVER_INTERRUPT
 
+#ifdef HAVE_OSNSUI
 /* user side interrupt set */
 extern
 dword_t
@@ -306,7 +313,9 @@ osnsui( dword_t *handlp, void (*astp)(epc__info_t *ctx), epc__info_t *ctx );
 **         be cleared using osncui. An error code is
 **         returned if an error occurs.
 */
+#endif
 
+#ifdef HAVE_OSNCUI
 /* user side interrupt clear */
 extern
 dword_t
@@ -317,7 +326,7 @@ osncui( dword_t handle );
 **         handle obtained from osnsui. An error code is
 **         returned if an error occurs.
 */
-
+#endif
 
 /*
 ** User interrupt handler template.
@@ -484,7 +493,7 @@ epc__connect_register_db( epc__info_t *epc__info )
     epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
     if :purge_pipe != 0
     then
-      dbms_pipe.purge( l_pipe_name );
+      epc_srvr.purge_pipe( l_pipe_name );
     end if;
   end;
   END-EXEC;
@@ -597,8 +606,10 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
   epc__call->function = NULL;
 
 #ifdef SERVER_INTERRUPT
+#ifdef HAVE_OSNSUI
   /* set up my user interrupt handler */
   (void) osnsui(&handle, handle_interrupt, epc__info);
+#endif  
 #endif
 
   epc__recv_request_pipe_db( epc__call->msg_info,
@@ -607,7 +618,9 @@ epc__recv_request_pipe( epc__info_t *epc__info, epc__call_t *epc__call )
                              epc__info );
 
 #ifdef SERVER_INTERRUPT
+#ifdef HAVE_OSNCUI
   (void) osncui(handle);
+#endif  
 #endif
 
   DBUG_PRINT( "info", ( "retval: %ld", retval ) );

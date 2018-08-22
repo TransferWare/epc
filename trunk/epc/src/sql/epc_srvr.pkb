@@ -380,9 +380,19 @@ begin
 /*DBUG*/
 end ping;
 
+procedure purge_pipe
+(
+  p_pipe in varchar2
+)
+is
+begin
+  dbms_pipe.purge(p_pipe);
+end purge_pipe;
+
 end epc_srvr;
 /
 
 show errors
 
-@epc_verify "epc_srvr" "package body"
+rem GJP 2018-08-20  Grant execute on dbms_pipe is not necessary
+rem @epc_verify "epc_srvr" "package body"

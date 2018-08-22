@@ -343,36 +343,36 @@ main( int argc, char **argv )
   for ( nr = 1; nr < argc; nr++ )
     {
       switch( argv[nr][0] )
-	{
-	case '-':
-	  switch( argv[nr][1] )
-	    {
-	    case 'D':
-	    case '#': /* for compability reasons */
-	      if ( argv[nr][2] != '\0' )
-		dbug_options = &argv[nr][2];
-	      else
-		dbug_options = &argv[++nr][0];
-	      DBUG_DONE();
-	      DBUG_INIT( dbug_options, NULL );
-	      break;
+  {
+  case '-':
+    switch( argv[nr][1] )
+      {
+      case 'D':
+      case '#': /* for compability reasons */
+        if ( argv[nr][2] != '\0' )
+          dbug_options = &argv[nr][2];
+        else
+          dbug_options = &argv[++nr][0];
+        DBUG_DONE();
+        DBUG_INIT( dbug_options, NULL );
+        break;
 
-	    case 'h':
-	      usage( argc, argv );
-	      exit( EXIT_SUCCESS );
-	      break;
+      case 'h':
+        usage( argc, argv );
+        exit( EXIT_SUCCESS );
+        break;
 
-	    case 'v':
-	      fprintf( stdout, "EPC idl version: %s\n", version() );
-	      exit( EXIT_SUCCESS );
-	      break;
-	    }
-	  break;
+      case 'v':
+        fprintf( stdout, "EPC idl version: %s\n", version() );
+        exit( EXIT_SUCCESS );
+        break;
+      }
+    break;
 
-	default:
-	  file = argv[nr];
-	  break;
-	}
+  default:
+    file = argv[nr];
+    break;
+  }
     }
 
   if ( file == NULL ) 
