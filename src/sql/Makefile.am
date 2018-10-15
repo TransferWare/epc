@@ -37,19 +37,13 @@ noinst_DATA      = $(sql_scripts)
 noinst_DATA     += epc_install.sql_run
 
 EXTRA_DIST       = $(sql_scripts)
-EXTRA_DIST      += login.sql
-
-# &lt and &gt are used in epc_clnt.pks
-# To prevent asking for the defines, the login.sql sets define off,
-# but since login.sql may not be the build directory SQLPATH must be set 
-# to the source directory.
 
 uninstall: epc_uninstall.sql_run clean
 
 epc_install.sql_run: epc_install.sql
-	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$< )
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
 	@touch $@
 
 epc_uninstall.sql_run: epc_uninstall.sql
-	echo exit SQL.SQLCODE | ( SQLPATH=$(srcdir) && export SQLPATH && $(SQLPLUS) $(USERID) @$< )
+	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$< 
 

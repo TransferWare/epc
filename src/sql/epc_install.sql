@@ -10,8 +10,7 @@ set termout on
 REMARK Set define off for epc_clnt.pks.
 REMARK Do not define it in epc_clnt.pks because PLDoc does not like that.
 
-prompt @@login.sql
-@@login.sql
+set define off
 
 prompt @@std_object.typ
 @@std_object.typ
