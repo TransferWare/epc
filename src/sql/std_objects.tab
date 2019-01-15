@@ -31,4 +31,4 @@ cache';
 end;
 /
 
-@epc_verify "std_objects" "table"
+@@epc_verify "std_objects" "table"
