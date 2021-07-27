@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="windows-1252" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <groupId>com.paulissoft.oracle-tools</groupId>
+    <artifactId>db</artifactId>
+    <version>${revision}</version>
+    <relativePath>../oracle-tools/db/pom.xml</relativePath>
+  </parent>
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.transfer-solutions</groupId>
+  <artifactId>epc</artifactId>
+  <version>${revision}</version>
+  <packaging>pom</packaging>
+  <description>The External Procedure Call toolkit database objects</description>
+
+  <properties>
+    <db.schema>${oracle-tools.db.schema}</db.schema>
+    <db.src.dml.scripts>${db.src.scripts}/sql</db.src.dml.scripts>
+    <db.src.full.scripts>${db.src.scripts}/sql</db.src.full.scripts>
+    <db.src.incr.scripts>${db.src.scripts}/sql</db.src.incr.scripts>
+    <db.object.type />
+    <!-- A list of object names to include or exclude (or empty to include all) -->
+    <db.object.names>
+      EPC,
+      EPC_CLNT,
+      EPC_CLNT_OBJECT,
+      EPC_SRVR,
+      STD_OBJECT
+      STD_OBJECT_MGR,
+      STD_OBJECTS
+    </db.object.names>
+    <!-- db.object.names.include specifies what to do with db.object.names: empty (no filter), 0 (exclude) or 1 (include) -->
+    <db.object.names.include>1</db.object.names.include>
+    <!-- must set it here so profile oracle-tools can override it when
+         db-generate-ddl-full is also active -->
+    <!--db.generate.ddl.full.skip>no</db.generate.ddl.full.skip-->
+    <!-- create or replace "source schema"."source name" 
+         =>
+         create or replace "source name" ? -->
+    <db.generate.full.strip.source.schema>1</db.generate.full.strip.source.schema>
+    <db.full.remove.output.directory>no</db.full.remove.output.directory>
+    <db.full.skip.install.sql>no</db.full.skip.install.sql>
+  </properties>
+</project>
+
