@@ -1,40 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-/*
-REMARK
-REMARK  $HeadURL$
-REMARK
-REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
-REMARK
-REMARK  $Log$
-REMARK  Revision 1.8  2005/01/03 13:06:31  gpaulissen
-REMARK  Release 4.4.0
-REMARK
-REMARK  Revision 1.7  2005/01/03 12:26:44  gpaulissen
-REMARK  Release 4.4.0
-REMARK
-REMARK  Revision 1.6  2004/12/28 12:18:11  gpaulissen
-REMARK  Test on Amazon
-REMARK
-REMARK  Revision 1.5  2004/12/16 18:43:08  gpaulissen
-REMARK  generated HTML added
-REMARK
-REMARK  Revision 1.4  2004/12/16 17:50:31  gpaulissen
-REMARK  REMARK blocks commented for PLDoc
-REMARK
-REMARK  Revision 1.3  2004/04/21 11:16:54  gpaulissen
-REMARK  .
-REMARK
-REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
-REMARK  Interface changed
-REMARK
-REMARK  Revision 1.1  2004/04/02 10:26:28  gpaulissen
-REMARK  New interface for epc
-REMARK
-REMARK
-REMARK
-*/
-
-create or replace package epc is
+CREATE OR REPLACE PACKAGE "EPC" IS
 /**
 --
 -- This package is used to implement RPC like functionality on Oracle.
@@ -102,7 +66,7 @@ SOAP_HEADER_END constant varchar2(1000) :=
   Exceptions are raised using raise_application_error(error_number, ...),
   which expects error numbers in the range -20000 uptill -20999.
   The EPC uses -20100 uptill -20106.
-  
+
   We have to map exceptions to an error number using the pragma lines,
   otherwise the exceptions starting with e_ (new naming convention) and
   without the e_ (old naming convention) would be distinct. So for backwards
@@ -123,7 +87,7 @@ SOAP_HEADER_END constant varchar2(1000) :=
       dbms_output.put_line('something');
       null;     
   end;
-  
+
   This does not catch e_something. 
 
   When you uncomment the pragma lines, the exception is catched.
@@ -208,4 +172,3 @@ procedure debug
 end epc;
 /
 
-show errors

@@ -1,9 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-
-create or replace type body std_object
+CREATE OR REPLACE TYPE BODY "STD_OBJECT" 
 is
 
 final
@@ -23,6 +18,3 @@ end remove;
 end;
 /
 
-show errors
-
-@@epc_verify "std_object" "type body"

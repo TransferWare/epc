@@ -1,14 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-/*
-REMARK
-REMARK  $HeadURL$
-REMARK
-REMARK  Description:    Oracle package specification for managing standard objects.
-REMARK
-REMARK
-*/
-
-create or replace package std_object_mgr is
+CREATE OR REPLACE PACKAGE "STD_OBJECT_MGR" IS
 /**
 --
 -- This package is used to manage standard objects. Standard objects can be
@@ -137,4 +127,3 @@ procedure delete_std_objects
 end;
 /
 
-show errors

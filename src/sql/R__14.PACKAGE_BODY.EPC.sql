@@ -1,9 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-
-create or replace package body epc as
+CREATE OR REPLACE PACKAGE BODY "EPC" AS
 
 procedure print(p_msg in varchar2)
 is
@@ -45,4 +40,3 @@ end debug;
 end epc;
 /
 
-@@epc_verify "epc" "package body"

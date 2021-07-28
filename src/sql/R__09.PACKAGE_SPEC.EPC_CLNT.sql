@@ -1,52 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-/*
-REMARK
-REMARK  $HeadURL$
-REMARK
-REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
-REMARK
-REMARK  $Log$
-REMARK  Revision 1.12  2005/01/03 12:59:04  gpaulissen
-REMARK  Release 4.4.0
-REMARK
-REMARK  Revision 1.11  2005/01/03 12:56:27  gpaulissen
-REMARK  Release 4.4.0
-REMARK
-REMARK  Revision 1.10  2004/12/28 12:18:11  gpaulissen
-REMARK  Test on Amazon
-REMARK
-REMARK  Revision 1.9  2004/12/16 18:43:08  gpaulissen
-REMARK  generated HTML added
-REMARK
-REMARK  Revision 1.8  2004/12/16 17:50:31  gpaulissen
-REMARK  REMARK blocks commented for PLDoc
-REMARK
-REMARK  Revision 1.7  2004/12/16 16:03:24  gpaulissen
-REMARK  Web services added
-REMARK
-REMARK  Revision 1.6  2004/10/20 20:38:44  gpaulissen
-REMARK  make lint
-REMARK
-REMARK  Revision 1.5  2004/10/15 13:53:40  gpaulissen
-REMARK  XML added
-REMARK
-REMARK  Revision 1.4  2004/05/21 15:04:34  gpaulissen
-REMARK  Eerste implementatie
-REMARK
-REMARK  Revision 1.3  2004/04/21 11:16:56  gpaulissen
-REMARK  .
-REMARK
-REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
-REMARK  Interface changed
-REMARK
-REMARK  Revision 1.1  2004/04/02 10:26:28  gpaulissen
-REMARK  New interface for epc
-REMARK
-REMARK
-REMARK
-*/
-
-create or replace package epc_clnt is
+CREATE OR REPLACE PACKAGE "EPC_CLNT" IS
 /**
 --
 -- This package is used to implement the client side of RPC like functionality
@@ -78,7 +30,7 @@ create or replace package epc_clnt is
 
 /* 
    History of protocols:
- 
+
    1 - original protocol
        To server: RESULT PIPE, PROTOCOL, INTERFACE, FUNCTION, PARAMETERS IN
        From server: EXEC CODE, SQL CODE, PARAMETERS OUT
@@ -433,4 +385,3 @@ procedure shutdown;
 end epc_clnt;
 /
 
-show errors

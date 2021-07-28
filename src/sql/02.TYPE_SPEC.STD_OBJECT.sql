@@ -1,9 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-
-create or replace type std_object as object (
+CREATE TYPE "STD_OBJECT" AS OBJECT (
   /*
   -- The dirty flag is used to speed up the performance when
   -- std_object_mgr.get_std_object()/std_object_mgr.set_std_object() are used.
@@ -35,9 +30,6 @@ create or replace type std_object as object (
 , final
   member procedure remove(self in std_object)
 
-) not instantiable not final
+) not instantiable not final;
 /
 
-show errors
-
-@@epc_verify "std_object" "type"

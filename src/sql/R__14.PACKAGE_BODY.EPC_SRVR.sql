@@ -1,28 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
-REMARK
-REMARK  $Log$
-REMARK  Revision 1.2  2004/10/21 10:37:08  gpaulissen
-REMARK  * make lint
-REMARK  * error reporting enhanced
-REMARK  * oneway functions enhanced
-REMARK
-REMARK  Revision 1.1  2004/10/15 13:53:40  gpaulissen
-REMARK  XML added
-REMARK
-REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
-REMARK  Interface changed
-REMARK
-REMARK  Revision 1.1  2004/04/02 10:26:28  gpaulissen
-REMARK  New interface for epc
-REMARK
-REMARK
-REMARK
-
-create or replace package body epc_srvr as
+CREATE OR REPLACE PACKAGE BODY "EPC_SRVR" AS
 
 g_epc_key epc_key_subtype := null;
 
@@ -392,7 +368,3 @@ end purge_pipe;
 end epc_srvr;
 /
 
-show errors
-
-rem GJP 2018-08-20  Grant execute on dbms_pipe is not necessary
-rem @epc_verify "epc_srvr" "package body"

@@ -1,58 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
-REMARK
-REMARK  $Log$
-REMARK  Revision 1.13  2005/01/03 12:26:44  gpaulissen
-REMARK  Release 4.4.0
-REMARK
-REMARK  Revision 1.12  2004/12/28 12:51:14  gpaulissen
-REMARK  Test on Amazon
-REMARK
-REMARK  Revision 1.11  2004/12/28 12:18:11  gpaulissen
-REMARK  Test on Amazon
-REMARK
-REMARK  Revision 1.10  2004/12/17 15:54:21  gpaulissen
-REMARK  inline namespaces introduced (xmlns:ns1)
-REMARK
-REMARK  Revision 1.9  2004/12/16 17:49:16  gpaulissen
-REMARK  added dbms_xmlgen.convert for converting HTML entities
-REMARK
-REMARK  Revision 1.8  2004/12/16 16:03:24  gpaulissen
-REMARK  Web services added
-REMARK
-REMARK  Revision 1.7  2004/10/21 10:37:08  gpaulissen
-REMARK  * make lint
-REMARK  * error reporting enhanced
-REMARK  * oneway functions enhanced
-REMARK
-REMARK  Revision 1.6  2004/10/20 20:38:44  gpaulissen
-REMARK  make lint
-REMARK
-REMARK  Revision 1.5  2004/10/15 20:41:32  gpaulissen
-REMARK  XML namespace bugs solved.
-REMARK
-REMARK  Revision 1.4  2004/10/15 13:53:40  gpaulissen
-REMARK  XML added
-REMARK
-REMARK  Revision 1.3  2004/05/21 15:04:35  gpaulissen
-REMARK  Eerste implementatie
-REMARK
-REMARK  Revision 1.2  2004/04/21 11:16:55  gpaulissen
-REMARK  .
-REMARK
-REMARK  Revision 1.1  2004/04/05 14:52:33  gpaulissen
-REMARK  Interface changed
-REMARK
-REMARK  Revision 1.1  2004/04/02 10:26:28  gpaulissen
-REMARK  New interface for epc
-REMARK
-REMARK
-REMARK
-/* line 53 */
-create or replace package body epc_clnt as
+CREATE OR REPLACE PACKAGE BODY "EPC_CLNT" AS
 
 -- subtype epc_key_subtype is binary_integer;
 
@@ -525,14 +471,14 @@ begin
           g_result_pipe ||
           '.'
         );
-  
+
       else -- no more return codes according to the documentation
         raise program_error;
     end case;
-  
+
     /* Get the message sequence */
     dbms_pipe.unpack_message( l_msg_seq_result );
-  
+
 /*DBUG
     print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
 /*DBUG*/
@@ -540,7 +486,7 @@ begin
     if l_msg_seq_result = g_msg_seq
     then
       dbms_pipe.unpack_message( g_msg );
-  
+
 /*DBUG
       print('info', 'g_msg: %s', g_msg);
 /*DBUG*/
@@ -557,7 +503,7 @@ begin
           , p_value => l_error_code
           , p_max_bytes => null
           );
-  
+
           if l_error_code != '0'
           then
             raise_application_error
@@ -573,7 +519,7 @@ begin
       exit msg_seq_loop; -- OK
     else
       /* Example: 
-      
+
          The client expects 1006 after it timed out, so
          1005 is still in the queue. 
          Just read that, ignore it and continue to wait for 1006.
@@ -1122,7 +1068,7 @@ begin
           else
             raise value_error;
         end case;
-      
+
       when "XMLRPC"
       then
         if p_data_type in (epc.data_type_string, epc.data_type_xml)
@@ -1336,7 +1282,7 @@ begin
         ||get_method_name(p_epc_clnt_object)
         ||'>'
         ||epc.SOAP_HEADER_END;
-    
+
     when "XMLRPC"
     then 
       g_msg :=
@@ -1438,7 +1384,7 @@ begin
       epc.print(g_doc.getstringval());
 /*DBUG*/
       check_soap_fault(g_doc);
-    
+
     when "XMLRPC"
     then 
 /*DBUG
@@ -1530,7 +1476,7 @@ begin
             '//'||p_name||l_extract_type
           , get_xmlns(p_epc_clnt_object)||'="'||p_epc_clnt_object.namespace||'"'
           );
-      
+
       when "XMLRPC"
       then 
         case p_data_type
@@ -1679,7 +1625,3 @@ begin
 end epc_clnt;
 /
 
-show errors
-
-rem GJP 2018-08-20  Grant execute on dbms_pipe is not necessary
-rem @epc_verify "epc_clnt" "package body"

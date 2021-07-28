@@ -1,9 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-
-create or replace type body epc_clnt_object
+CREATE OR REPLACE TYPE BODY "EPC_CLNT_OBJECT" 
 is
 
 constructor function epc_clnt_object
@@ -49,6 +44,3 @@ end name;
 end;
 /
 
-show errors
-
-@@epc_verify "epc_clnt_object" "type body"

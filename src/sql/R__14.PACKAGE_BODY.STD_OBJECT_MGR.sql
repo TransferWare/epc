@@ -1,9 +1,4 @@
---$NO_KEYWORD_EXPANSION$
-REMARK
-REMARK  $HeadURL$
-REMARK
-
-create or replace package body std_object_mgr is
+CREATE OR REPLACE PACKAGE BODY "STD_OBJECT_MGR" IS
 
 -- index by std_objects.object_name
 type std_object_tabtype is table of std_objects%rowtype index by std_objects.object_name%type;
@@ -173,6 +168,3 @@ end delete_std_objects;
 end std_object_mgr;
 /
 
-show errors
-
-@@epc_verify "std_object_mgr" "package body"
