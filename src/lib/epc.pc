@@ -1,6 +1,6 @@
 /* -*-mode: c-*- */
 /*
- * Filename             : $RCSfile$
+ * Filename             : epc.pc
  *
  * Creation date  : 25-AUG-1997
  *

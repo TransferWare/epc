@@ -2,7 +2,7 @@
 #define IDL_DEFS_H
 
 /*
- * Filename             : $RCSfile$
+ * Filename             : idl_defs.h
  *
  * Creation date        : 25-JUN-1997
  *

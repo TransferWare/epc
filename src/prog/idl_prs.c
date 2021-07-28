@@ -1,5 +1,5 @@
 /*
- * Filename             : $RCSfile$
+ * Filename             : idl_prs.c
  *
  * Creation date        : 25-JUN-1997
  *

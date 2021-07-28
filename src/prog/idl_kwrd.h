@@ -2,7 +2,7 @@
 #define IDL_KWRD_H
 
 /*
- * Filename             : $RCSfile$
+ * Filename             : idl_kwrd.h
  *
  * Creation date  : 25-JUN-1997
  *

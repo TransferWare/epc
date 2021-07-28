@@ -1,5 +1,5 @@
 /*
- * Filename             : $RCSfile$
+ * Filename             : lsnr.c
  *
  * Creation date        : 25-1-1998
  *
@@ -74,8 +74,6 @@
  *
  *
  */
-
-const char vcid[] = "$Id$";
 
 #if HAVE_CONFIG_H
 #include <config.h>

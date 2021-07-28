@@ -1,7 +1,7 @@
 %{
 
 /*
- * Filename             : $RCSfile$
+ * Filename             : idl_y.y
  *
  * Creation date        : 25-JUN-1997
  *
