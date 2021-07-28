@@ -1,4 +1,31 @@
-CREATE OR REPLACE PACKAGE "EPC_SRVR" IS
+--$NO_KEYWORD_EXPANSION$
+/*
+REMARK
+REMARK  $HeadURL$
+REMARK
+REMARK  Description:    Oracle package specification for External Procedure Call Toolkit.
+REMARK
+REMARK  $Log$
+REMARK  Revision 1.5  2004/12/16 18:43:08  gpaulissen
+REMARK  generated HTML added
+REMARK
+REMARK  Revision 1.4  2004/12/16 17:50:31  gpaulissen
+REMARK  REMARK blocks commented for PLDoc
+REMARK
+REMARK  Revision 1.3  2004/10/15 13:53:40  gpaulissen
+REMARK  XML added
+REMARK
+REMARK  Revision 1.2  2004/04/05 14:52:33  gpaulissen
+REMARK  Interface changed
+REMARK
+REMARK  Revision 1.1  2004/04/02 10:26:28  gpaulissen
+REMARK  New interface for epc
+REMARK
+REMARK
+REMARK
+*/
+
+create or replace package epc_srvr is
 /**
 --
 -- This package is used to implement the server side of RPC like functionality
@@ -159,3 +186,4 @@ procedure purge_pipe
 end epc_srvr;
 /
 
+show errors

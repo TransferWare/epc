@@ -1,7 +1,7 @@
 # -*-fundamental-*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2002 G.J. Paulissen
+# Copyright (C) 2002-2021 G.J. Paulissen
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[5.2.0],[gert.jan.paulissen@gmail.com])
+AC_INIT([epc],[5.3.0],[gert.jan.paulissen@gmail.com])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -32,6 +32,7 @@ if test "$version" != "$PACKAGE_VERSION"
 then
   echo "Updating file $srcdir/VERSION with package version $PACKAGE_VERSION." 1>&2
   echo "$PACKAGE_VERSION" > $srcdir/VERSION
+	echo "-Drevision=$PACKAGE_VERSION" > $srcdir/.mvn/maven.config
 fi
 
 AC_CONFIG_MACRO_DIR([config])

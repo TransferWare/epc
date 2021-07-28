@@ -1,4 +1,9 @@
-CREATE TYPE "EPC_CLNT_OBJECT" under std_object (
+--$NO_KEYWORD_EXPANSION$
+REMARK
+REMARK  $HeadURL$
+REMARK
+
+create or replace type epc_clnt_object under std_object (
   interface_name varchar2(32) /*epc.interface_name_subtype*/  /* the key */
   /* Protocol information */
 , protocol integer
@@ -35,6 +40,9 @@ CREATE TYPE "EPC_CLNT_OBJECT" under std_object (
 
 , overriding member function name(self in epc_clnt_object) return varchar2
 
-) final;
+) final
 /
 
+show errors
+
+@@epc_verify "epc_clnt_object" "type"

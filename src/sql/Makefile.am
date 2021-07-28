@@ -17,14 +17,14 @@
 
 CLEANFILES       = *.???_run pod*.tmp
 
-sql_scripts      = epc.pks epc.pkb
-sql_scripts     += epc_srvr.pks epc_srvr.pkb
-sql_scripts     += std_object.typ std_object.tyb
-sql_scripts     += std_objects.tab
-sql_scripts     += std_object_mgr.pks std_object_mgr.pkb
-sql_scripts     += epc_clnt_object.typ epc_clnt_object.tyb
-sql_scripts     += epc_clnt.pks epc_clnt.pkb
-sql_scripts     += epc_install.sql epc_uninstall.sql epc_verify.sql
+sql_scripts      = R__09.PACKAGE_SPEC.EPC.sql R__14.PACKAGE_BODY.EPC.sql
+sql_scripts     += R__09.PACKAGE_SPEC.EPC_SRVR.sql R__14.PACKAGE_BODY.EPC_SRVR.sql
+sql_scripts     += 02.TYPE_SPEC.STD_OBJECT.sql R__15.TYPE_BODY.STD_OBJECT.sql
+sql_scripts     += 06.TABLE.STD_OBJECTS.sql
+sql_scripts     += R__09.PACKAGE_SPEC.STD_OBJECT_MGR.sql R__14.PACKAGE_BODY.STD_OBJECT_MGR.sql
+sql_scripts     += 02.TYPE_SPEC.EPC_CLNT_OBJECT.sql R__15.TYPE_BODY.EPC_CLNT_OBJECT.sql
+sql_scripts     += R__09.PACKAGE_SPEC.EPC_CLNT.sql R__14.PACKAGE_BODY.EPC_CLNT.sql
+sql_scripts     += install.sql uninstall.sql
 
 noinst_DATA      = $(sql_scripts)
 
@@ -34,16 +34,16 @@ noinst_DATA      = $(sql_scripts)
 # 3) package specifications
 # 4) bodies
 
-noinst_DATA     += epc_install.sql_run
+noinst_DATA     += install.sql_run
 
 EXTRA_DIST       = $(sql_scripts)
 
-uninstall: epc_uninstall.sql_run clean
+uninstall: uninstall.sql_run clean
 
-epc_install.sql_run: epc_install.sql
+install.sql_run: install.sql
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
 	@touch $@
 
-epc_uninstall.sql_run: epc_uninstall.sql
+uninstall.sql_run: uninstall.sql
 	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$< 
 

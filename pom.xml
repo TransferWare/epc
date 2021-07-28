@@ -26,7 +26,7 @@
       EPC_CLNT,
       EPC_CLNT_OBJECT,
       EPC_SRVR,
-      STD_OBJECT
+      STD_OBJECT,
       STD_OBJECT_MGR,
       STD_OBJECTS
     </db.object.names>
