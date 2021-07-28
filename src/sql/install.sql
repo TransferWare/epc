@@ -1,8 +1,10 @@
 whenever oserror exit failure
-prompt @@02.TYPE_SPEC.EPC_CLNT_OBJECT.sql
-@@02.TYPE_SPEC.EPC_CLNT_OBJECT.sql
+whenever sqlerror exit failure
+
 prompt @@02.TYPE_SPEC.STD_OBJECT.sql
 @@02.TYPE_SPEC.STD_OBJECT.sql
+prompt @@02.TYPE_SPEC.EPC_CLNT_OBJECT.sql
+@@02.TYPE_SPEC.EPC_CLNT_OBJECT.sql
 prompt @@06.TABLE.STD_OBJECTS.sql
 @@06.TABLE.STD_OBJECTS.sql
 prompt @@R__09.PACKAGE_SPEC.EPC.sql
