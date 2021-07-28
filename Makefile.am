@@ -27,7 +27,7 @@ endif
 
 MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
 			stamp-h.in $(AUX_DIST)
-EXTRA_DIST              = VERSION lint.am
+EXTRA_DIST              = VERSION lint.am .mvn README.md CHANGELOG.md
 
 # Gert-Jan Paulissen, 15-01-2014
 # libtoolize: AC_CONFIG_MACRO_DIR([config]) conflicts with ACLOCAL_AMFLAGS=-I config

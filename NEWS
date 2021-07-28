@@ -1,134 +1,1 @@
-EPC NEWS - History of user visible changes.		-*- indented-text -*-
-Copyright (C) 2002, 2003, 2004 G.J. Paulissen 
-
-See the end for copying conditions.
-
-Please send EPC bug reports to g.paulissen@chello.nl.
-
-
-Release 5.2.0
-
-* Improved distribution support.
-
-
-Release 5.1.2
-
-* The configure script adapted for AIX builds.
-* src/lib/epc_lib.c and src/lib/epc_xml.c adapted for AIX.
-* Added support for Cygwin 1.7.x
-
-
-Release 5.1.1
-
-* Renamed src/sql/install.sql into src/sql/epc_install.sql to avoid naming conflicts with PLSDBUG.
-* Renamed src/sql/uninstall.sql into src/sql/epc_uninstall.sql to avoid naming conflicts with PLSDBUG.
-* Renamed src/sql/verify.sql into src/sql/epc_verify.sql to avoid naming conflicts with PLSDBUG.
-* Added epc.debug method to debug the EPC and related software.
-
-
-Release 5.1.0
-
-* Added support for stateless applications like Apex (Oracle Application
-  Express). See src/sql/std_object_mgr.pks.
-
-
-Release 5.0.0
-
-* Added XMLRPC protocol.
-* Added native dbms_pipe protocol without the overhead of XMLRPC and SOAP.
-* The procedure empty_pipes (util/empty_pipes.prc) now removes pipes
-  after emptying them.
-* The epc_clnt package has a new procedure shutdown for cleaning up 
-  resources (response database pipes).
-* The IDL compiler now generates both C and PRO*C files with the 
-  same functionality. Only one of them is needed to compile your 
-  application.
-* The installation directories from the DBUG package are used.
-* On Solaris the math library (-lm) is added to $LIBS (if unset).
-* Package dbug can be used or not (--without-dbug).
-* Backwards compatibility for subtypes and exceptions which are part of
-  the EPC package specification.
-* The feature server-interrupt has been added to configure. See the
-  README.
-* The manual describes how to recover from EPC communication errors 
-  (epc.e_comm_error).
-* The EPC communication error message can be retrieved via SQLERRM
-  instead of DBMS_OUTPUT.GET_LINE(S).
-* Several portability issues solved for Solaris (rpt_malloc, strtof).
-* The first (shared) library to try for xmlinit is now -lnmemso, which
-  solved linking problems on the Mac OS X, because libxml10.a is a
-  static library.
-* The EPC library has been checked for allocation errors using dmalloc
-  (http://dmalloc.com/).
-* Generated PL/SQL packages now have bounds checking enabled for
-  strings.
-* EPC exceptions have been mapped to error numbers.
-
-
-Release 4.5.0
-
-* Added support for Oracle 10g
-* Testing enhanced
-* Documentation is generated using pldoc and doxygen
-
-
-Release 4.4.0
-
-* Amazon Web services example.
-* XML IDL type added.
-* Documentation updated.
-
-
-Release 4.3.0
-
-* Web services implemented.
-* Support for HTTP added.
-* Documentation updated.
-
-
-Release 4.2.0
-
-* SOAP message layout implemented.
-* epc_* functions renamed to epc__*
-* Support enhanced for several interfaces running at the same time using a
-  different server.
-* Support for TCP/IP added.
-
-
-Release 4.0.0
-
-* Solved request id 849475: configure script problem
-* Solved request id 901781: CTRL-C kills EPC listener but not the session
-* Solved request id 915081: The EPC idl compiler fails during build of the demo
-* imake support obsoleted.
-* LGPL license applied instead of GPL license.
-
-
-Release 3.0.0
-
-* Build EPC in separate build environment.
-* GNU Programming Standards enforced (ChangeLog, NEWS, etc.).
-* make dist for imake and Autoconf separated.
-* Implement GNU build system.
-* Solved request id 699638: Empty connect string dumps core.
-* Solved request id 692220: public synonyms ts_dbug_send/ts_dbug_recv missing.
-
-
-----------------------------------------------------------------------
-Copyright information:
-
-Copyright (C) 1992, 1993, 1996 Free Software Foundation, Inc.
-
-   Permission is granted to anyone to make or distribute verbatim copies
-   of this document as received, in any medium, provided that the
-   copyright notice and this permission notice are preserved,
-   thus giving the recipient permission to redistribute in turn.
-
-   Permission is granted to distribute modified versions
-   of this document, or of portions of it,
-   under the above conditions, provided also that they
-   carry prominent notices stating who last changed them.
-
-Local Variables:
-fill-column: 72
-End:
+See markdown document CHANGELOG.md

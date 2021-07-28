@@ -32,6 +32,7 @@ if test "$version" != "$PACKAGE_VERSION"
 then
   echo "Updating file $srcdir/VERSION with package version $PACKAGE_VERSION." 1>&2
   echo "$PACKAGE_VERSION" > $srcdir/VERSION
+	test -d $srcdir/.mvn || mkdir $srcdir/.mvn
 	echo "-Drevision=$PACKAGE_VERSION" > $srcdir/.mvn/maven.config
 fi
 
