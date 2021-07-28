@@ -1,3 +1,4 @@
+whenever oserror exit failure
 prompt @@02.TYPE_SPEC.EPC_CLNT_OBJECT.sql
 @@02.TYPE_SPEC.EPC_CLNT_OBJECT.sql
 prompt @@02.TYPE_SPEC.STD_OBJECT.sql
