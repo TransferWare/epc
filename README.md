@@ -54,7 +54,7 @@ installing).
 
 This section explains how to install the complete toolkit (including the PL/SQL library).
 
-#### Preconditions
+### Preconditions
 
 First install:
 - Oracle SQL*Plus (executable name sqlplus)
