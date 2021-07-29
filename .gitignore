@@ -16,3 +16,7 @@ build/
 config/
 configure
 VERSION
+
+# Doxygen
+doc/c/
+doc/sql/

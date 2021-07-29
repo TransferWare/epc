@@ -104,12 +104,44 @@ exit. This can be disabled by `--disable-server-interrupt`.
 
 ### Build
 
-See file `INSTALL` for further installation instructions.
+See file `INSTALL` for further installation instructions. Do not forget to set environment variable USERID as the Oracle connect string.
 
 ## DOCUMENTATION
 
-In the build directory you can will these files after `make` has run:
-- doc/c/index.html
-- doc/epcman.doc
-- doc/sql/index.html
-- utils/empty_pipes.html
+To generate the C and SQL documentation you need to install:
+- Doxygen
+- PLDoc
+
+### Doxygen
+
+On the Mac OS X:
+```
+$ brew install doxygen
+```
+
+### PLDoc
+
+You should:
+- download the ZIP bundle from [the PLDoc project](http://pldoc.sourceforge.net/maven-site/downloads.html)
+- unzip the bundle to an installation directory
+- add the installation directory to your PATH
+
+The PLDoc documentation says that you need to set an environment variable ORACLE_HOME to point to an Oracle home having the Jar file `ojdbc6.jar`. Setting ORACLE_HOME can be tricky and that is why I propose to do it only when generating the documentation.
+
+### Generate the documentation
+
+Issue this to generate the documentation:
+
+```
+$ cd build
+$ ORACLE_HOME=<directory containing ojdbc6.jar>
+$ SCHEMA=<Oracle owner schema>
+$ ../configure # if you did (re-)install one of those two programs.
+$ make doc # or make
+```
+
+In the build directory you can will these files now:
+- [C documentation](doc/c/index.html)
+- [EPC manual](doc/epcman.html)
+- [SQL documentation](doc/sql/index.html)
+- [How to empty database pipes](utils/empty_pipes.html)
