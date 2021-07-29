@@ -16,7 +16,15 @@ build/
 config/
 configure
 VERSION
+Makefile
+config.h
+config.status
+Doxyfile
+Makefile
+.deps/
+libtool
+epcdaemon.pl
+stamp-h1
 
-# Doxygen
-doc/c/
-doc/sql/
+# Perl pod2html
+pod2htmd.tmp

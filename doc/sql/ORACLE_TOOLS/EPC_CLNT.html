@@ -1,0 +1,1471 @@
+<HTML xmlns:lxslt="http://xml.apache.org/xslt" xmlns:exslt="http://exslt.org/common">
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>EPC</TITLE>
+<LINK TITLE="Style" HREF="../stylesheet.css" TYPE="text/css" REL="stylesheet">
+<!--
+        sameCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesLowerCase=FALSE
+        namesUpperCase=FALSE
+        namesDefaultCase=TRUE
+        defaultNamesCase=UPPER
+        namesFromCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesToCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-->
+</HEAD>
+<BODY BGCOLOR="white">
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+<H2>
+<FONT SIZE="-1">ORACLE_TOOLS</FONT>
+<BR>Package&nbsp;EPC_CLNT</H2>
+This package is used to implement the client side of RPC like functionality
+on an Oracle database.
+Messages are sent by the client to a server. The transport mechanisms
+supported are database pipes (DBMS_PIPE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
+The flow of procedure calls will typically look like this:<br />
+1) Set connection information.<br />
+a) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
+b) epc_clnt.set_connection_info (optional for database pipes)<br />
+c) epc_clnt.set_request_send_timeout (optional)<br />
+d) epc_clnt.set_response_recv_timeout (optional)<br />
+2) Marshall a function call into a message<br />
+a) l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name)<br />
+b) epc_clnt.new_request<br />
+c) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)<br />
+3) Send the message<br />
+a) epc_clnt.send_request<br />
+4) Receive the response<br />
+a) epc_clnt.recv_response<br />
+5) Unmarshall the message<br />
+a) epc_clnt.get_response_parameter (for all OUT and IN OUT parameters)<br />
+6) Save the client info<br />
+a) l_epc_clnt_object.store()<br />
+<P></P>
+<DL></DL>
+<HR>
+<P></P>
+<A NAME="field_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Field Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=CONNECTION_METHOD_SUBTYPE
+       localTypeName=CONNECTION_METHOD_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=CONNECTION_METHOD_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#CONNECTION_METHOD_SUBTYPE">CONNECTION_METHOD_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#CONNECTION_METHOD_DBMS_PIPE">CONNECTION_METHOD_DBMS_PIPE</A></B> CONSTANT := 1</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=CONNECTION_METHOD_SUBTYPE
+       localTypeName=CONNECTION_METHOD_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=CONNECTION_METHOD_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#CONNECTION_METHOD_SUBTYPE">CONNECTION_METHOD_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#CONNECTION_METHOD_UTL_HTTP">CONNECTION_METHOD_UTL_HTTP</A></B> CONSTANT := 3</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=CONNECTION_METHOD_SUBTYPE
+       localTypeName=CONNECTION_METHOD_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=CONNECTION_METHOD_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#CONNECTION_METHOD_SUBTYPE">CONNECTION_METHOD_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#CONNECTION_METHOD_UTL_TCP">CONNECTION_METHOD_UTL_TCP</A></B> CONSTANT := 2</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PROTOCOL_SUBTYPE
+       localTypeName=PROTOCOL_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=PROTOCOL_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PROTOCOL_SUBTYPE">PROTOCOL_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#NATIVE">NATIVE</A></B> CONSTANT := 7</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      default protocol for TCP/IP
+</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PROTOCOL_SUBTYPE
+       localTypeName=PROTOCOL_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=PROTOCOL_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PROTOCOL_SUBTYPE">PROTOCOL_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#SOAP">SOAP</A></B> CONSTANT := 5</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PROTOCOL_SUBTYPE
+       localTypeName=PROTOCOL_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=PROTOCOL_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PROTOCOL_SUBTYPE">PROTOCOL_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#XMLRPC">XMLRPC</A></B> CONSTANT := 6</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      default protocol for HTTP
+</TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="type_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Type Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#CONNECTION_METHOD_SUBTYPE">CONNECTION_METHOD_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=RECORD
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=RECORD
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->RECORD</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="HTTP_CONNECTION_RECTYPE"></A><TD><CODE><B><A HREF="#HTTP_CONNECTION_RECTYPE(VARCHAR2(4000),VARCHAR2(10),VARCHAR2(10))">HTTP_CONNECTION_RECTYPE</A></B>(URL VARCHAR2(4000), METHOD VARCHAR2(10) DEFAULT 'POST', VERSION VARCHAR2(10) DEFAULT UTL_HTTP.HTTP_VERSION_1_1)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      default protocol for DBMS_PIPE
+</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=http_connection_rectype
+       localTypeName=HTTP_CONNECTION_RECTYPE
+       schema=ORACLE_TOOLS
+       fieldType=http_connection_rectype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#HTTP_CONNECTION_RECTYPE">http_connection_rectype</A></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#HTTP_CONNECTION_SUBTYPE">HTTP_CONNECTION_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#PROTOCOL_SUBTYPE">PROTOCOL_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      History of protocols:
+1 - original protocol
+To server: RESULT PIPE, PROTOCOL, INTERFACE, FUNCTION, PARAMETERS IN
+From server: EXEC CODE, SQL CODE, PARAMETERS OUT
+2 - same as protocol 1, but FUNCTION is now the FUNCTION SIGNATURE.</TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="method_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Method Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="GET_CONNECTION_INFO"></A><TD><CODE><B><A HREF="#GET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,HTTP_CONNECTION_SUBTYPE)">GET_CONNECTION_INFO</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_CONNECTION OUT NOCOPY HTTP_CONNECTION_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the HTTP connection info.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=2 
+		predecessorCount=1 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#GET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,UTL_TCP.CONNECTION)">GET_CONNECTION_INFO</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_CONNECTION OUT NOCOPY UTL_TCP.CONNECTION)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the TCP/IP connection info.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=2 
+		predecessorCount=2 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#GET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)">GET_CONNECTION_INFO</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_PIPE_NAME OUT EPC.PIPE_NAME_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the database request pipe.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="GET_PROTOCOL"></A><TD><CODE><B><A HREF="#GET_PROTOCOL(EPC.INTERFACE_NAME_SUBTYPE,PROTOCOL_SUBTYPE)">GET_PROTOCOL</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_PROTOCOL OUT PROTOCOL_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the protocol.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=5 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="GET_RESPONSE_PARAMETER"></A><TD><CODE><B><A HREF="#GET_RESPONSE_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,VARCHAR2,INTEGER)">GET_RESPONSE_PARAMETER</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, P_VALUE OUT VARCHAR2, P_MAX_BYTES IN INTEGER DEFAULT NULL)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get a response parameter (OUT or IN OUT).</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=4 
+		predecessorCount=1 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#GET_RESPONSE_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,NUMBER)">GET_RESPONSE_PARAMETER</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, P_VALUE OUT NUMBER)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=4 
+		predecessorCount=2 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#GET_RESPONSE_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,DATE)">GET_RESPONSE_PARAMETER</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, P_VALUE OUT DATE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=3 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="NEW_REQUEST"></A><TD><CODE><B><A HREF="#NEW_REQUEST(EPC_CLNT_OBJECT,EPC.METHOD_NAME_SUBTYPE,PLS_INTEGER)">NEW_REQUEST</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_METHOD_NAME IN EPC.METHOD_NAME_SUBTYPE, P_ONEWAY IN PLS_INTEGER)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Start a new request.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="RECV_RESPONSE"></A><TD><CODE><B><A HREF="#RECV_RESPONSE(EPC_CLNT_OBJECT)">RECV_RESPONSE</A></B>(P_EPC_CLNT_OBJECT IN OUT NOCOPY EPC_CLNT_OBJECT)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Receive a response.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SEND_REQUEST"></A><TD><CODE><B><A HREF="#SEND_REQUEST(EPC_CLNT_OBJECT)">SEND_REQUEST</A></B>(P_EPC_CLNT_OBJECT IN OUT NOCOPY EPC_CLNT_OBJECT)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Send a request.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_CONNECTION_INFO"></A><TD><CODE><B><A HREF="#SET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,HTTP_CONNECTION_SUBTYPE)">SET_CONNECTION_INFO</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_CONNECTION IN HTTP_CONNECTION_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the connection info for HTTP.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=2 
+		predecessorCount=1 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#SET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,UTL_TCP.CONNECTION)">SET_CONNECTION_INFO</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_CONNECTION IN UTL_TCP.CONNECTION)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the connection info for TCP/IP.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=2 
+		predecessorCount=2 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#SET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)">SET_CONNECTION_INFO</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_PIPE_NAME IN EPC.PIPE_NAME_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the connection info for database pipes.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_INLINE_NAMESPACE"></A><TD><CODE><B><A HREF="#SET_INLINE_NAMESPACE(EPC.INTERFACE_NAME_SUBTYPE,VARCHAR2)">SET_INLINE_NAMESPACE</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_INLINE_NAMESPACE IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the inline namespace.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_NAMESPACE"></A><TD><CODE><B><A HREF="#SET_NAMESPACE(EPC.INTERFACE_NAME_SUBTYPE,VARCHAR2)">SET_NAMESPACE</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_NAMESPACE IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the namespace.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_PROTOCOL"></A><TD><CODE><B><A HREF="#SET_PROTOCOL(EPC.INTERFACE_NAME_SUBTYPE,PROTOCOL_SUBTYPE)">SET_PROTOCOL</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_PROTOCOL IN PROTOCOL_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the protocol for later use.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=5 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_REQUEST_PARAMETER"></A><TD><CODE><B><A HREF="#SET_REQUEST_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,VARCHAR2,INTEGER)">SET_REQUEST_PARAMETER</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, P_VALUE IN VARCHAR2, P_MAX_BYTES IN INTEGER DEFAULT NULL)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set a request parameter (IN or IN OUT).</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=4 
+		predecessorCount=1 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#SET_REQUEST_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,NUMBER)">SET_REQUEST_PARAMETER</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, P_VALUE IN NUMBER)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=2 
+		argumentCount=4 
+		predecessorCount=2 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#SET_REQUEST_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,DATE)">SET_REQUEST_PARAMETER</A></B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, P_VALUE IN DATE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_REQUEST_SEND_TIMEOUT"></A><TD><CODE><B><A HREF="#SET_REQUEST_SEND_TIMEOUT(EPC.INTERFACE_NAME_SUBTYPE,PLS_INTEGER)">SET_REQUEST_SEND_TIMEOUT</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_REQUEST_SEND_TIMEOUT IN PLS_INTEGER)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the request send timeout.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_RESPONSE_RECV_TIMEOUT"></A><TD><CODE><B><A HREF="#SET_RESPONSE_RECV_TIMEOUT(EPC.INTERFACE_NAME_SUBTYPE,PLS_INTEGER)">SET_RESPONSE_RECV_TIMEOUT</A></B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, P_RESPONSE_RECV_TIMEOUT IN PLS_INTEGER)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the response receive timeout.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#SHUTDOWN">SHUTDOWN</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Shutdown the client.</TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="trigger_summary"></A><A NAME="field_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Field Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="CONNECTION_METHOD_DBMS_PIPE"></A>
+<H3>CONNECTION_METHOD_DBMS_PIPE</H3>
+<PRE>
+        public CONNECTION_METHOD_SUBTYPE <B>CONNECTION_METHOD_DBMS_PIPE</B> CONSTANT := 1</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="CONNECTION_METHOD_UTL_HTTP"></A>
+<H3>CONNECTION_METHOD_UTL_HTTP</H3>
+<PRE>
+        public CONNECTION_METHOD_SUBTYPE <B>CONNECTION_METHOD_UTL_HTTP</B> CONSTANT := 3</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="CONNECTION_METHOD_UTL_TCP"></A>
+<H3>CONNECTION_METHOD_UTL_TCP</H3>
+<PRE>
+        public CONNECTION_METHOD_SUBTYPE <B>CONNECTION_METHOD_UTL_TCP</B> CONSTANT := 2</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="NATIVE"></A>
+<H3>NATIVE</H3>
+<PRE>
+        public PROTOCOL_SUBTYPE <B>NATIVE</B> CONSTANT := 7</PRE>
+<DL>
+<DD>default protocol for TCP/IP
+</DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="SOAP"></A>
+<H3>SOAP</H3>
+<PRE>
+        public PROTOCOL_SUBTYPE <B>SOAP</B> CONSTANT := 5</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="XMLRPC"></A>
+<H3>XMLRPC</H3>
+<PRE>
+        public PROTOCOL_SUBTYPE <B>XMLRPC</B> CONSTANT := 6</PRE>
+<DL>
+<DD>default protocol for HTTP
+</DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="type_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Type Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="CONNECTION_METHOD_SUBTYPE"></A>
+<H3>CONNECTION_METHOD_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer <B>CONNECTION_METHOD_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="HTTP_CONNECTION_RECTYPE(VARCHAR2(4000),VARCHAR2(10),VARCHAR2(10))"></A>
+<H3>HTTP_CONNECTION_RECTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=RECORD
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=RECORD
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->RECORD <B>HTTP_CONNECTION_RECTYPE</B>(URL VARCHAR2(4000), <BR>                                      METHOD VARCHAR2(10) DEFAULT 'POST', <BR>                                      VERSION VARCHAR2(10) DEFAULT UTL_HTTP.HTTP_VERSION_1_1)</PRE>
+<DL>
+<DD>default protocol for DBMS_PIPE
+</DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="HTTP_CONNECTION_SUBTYPE"></A>
+<H3>HTTP_CONNECTION_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=http_connection_rectype
+       localTypeName=HTTP_CONNECTION_RECTYPE
+       schema=ORACLE_TOOLS
+       fieldType=http_connection_rectype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#HTTP_CONNECTION_RECTYPE">http_connection_rectype</A> <B>HTTP_CONNECTION_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PROTOCOL_SUBTYPE"></A>
+<H3>PROTOCOL_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer <B>PROTOCOL_SUBTYPE</B>()</PRE>
+<DL>
+<DD>History of protocols:
+1 - original protocol
+To server: RESULT PIPE, PROTOCOL, INTERFACE, FUNCTION, PARAMETERS IN
+From server: EXEC CODE, SQL CODE, PARAMETERS OUT
+2 - same as protocol 1, but FUNCTION is now the FUNCTION SIGNATURE.
+3 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, [ RESULT PIPE, ] PARAMETERS IN
+From server: MSG SEQ, PARAMETERS OUT
+MSG SEQ has been added in order to check for messages which have
+not been (correctly) processed by the server.
+4 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
+From server: MSG SEQ, PARAMETERS OUT
+GJP 07-04-2004
+RESULT PIPE is 'N/A' for oneway functions.
+5 - To server: PROTOCOL, MSG SEQ, SOAP REQUEST MESSAGE [, RESULT PIPE ]
+From server: MSG SEQ, SOAP RESPONSE MESSAGE
+GJP 21-10-2004
+RESULT PIPE is empty for oneway functions.
+6 - To server: PROTOCOL, MSG SEQ, XMLRPC REQUEST MESSAGE [, RESULT PIPE ]
+From server: MSG SEQ, XMLRPC RESPONSE MESSAGE
+GJP 24-07-2007
+7 - To server: PROTOCOL, MSG SEQ, NATIVE REQUEST MESSAGE [, RESULT PIPE ]
+From server: MSG SEQ, NATIVE RESPONSE MESSAGE
+The request message consists of INTERFACE, FUNCTION and PARAMETERS IN.
+The response message consists of ERROR CODE and PARAMETERS OUT.
+Each message argument is encoded as follows:
+a) data type (epc.data_type_subtype as a 1 byte character)
+b) data length (for string and xml a 4 byte hexadecimal string and for others a 2 byte hexadecimal string)
+c) the data as a string
+</DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="method_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Method Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="GET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,HTTP_CONNECTION_SUBTYPE)"></A>
+<H3>GET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_CONNECTION_INFO</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                            P_CONNECTION OUT NOCOPY HTTP_CONNECTION_SUBTYPE)</PRE>
+<DL>
+<DD>Get the HTTP connection info.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_CONNECTION</CODE> -
+              The HTTP connection info</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>NO_DATA_FOUND</CODE> -
+                connection method is not utl_http</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,UTL_TCP.CONNECTION)"></A>
+<H3>GET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_CONNECTION_INFO</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                            P_CONNECTION OUT NOCOPY UTL_TCP.CONNECTION)</PRE>
+<DL>
+<DD>Get the TCP/IP connection info.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_CONNECTION</CODE> -
+              An open TCP/IP connection
+(see utl_tcp.open_connection)</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>NO_DATA_FOUND</CODE> -
+                connection method is not utl_tcp</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)"></A>
+<H3>GET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_CONNECTION_INFO</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                            P_PIPE_NAME OUT EPC.PIPE_NAME_SUBTYPE)</PRE>
+<DL>
+<DD>Get the database request pipe.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_PIPE_NAME</CODE> -
+              The request pipe name</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>NO_DATA_FOUND</CODE> -
+                connection method is not dbms_pipe</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_PROTOCOL(EPC.INTERFACE_NAME_SUBTYPE,PROTOCOL_SUBTYPE)"></A>
+<H3>GET_PROTOCOL</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_PROTOCOL</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                     P_PROTOCOL OUT PROTOCOL_SUBTYPE)</PRE>
+<DL>
+<DD>Get the protocol.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_PROTOCOL</CODE> -
+              The protocol</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_RESPONSE_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,VARCHAR2,INTEGER)"></A>
+<H3>GET_RESPONSE_PARAMETER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_RESPONSE_PARAMETER</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                               P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, <BR>                               P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, <BR>                               P_VALUE OUT VARCHAR2, <BR>                               P_MAX_BYTES IN INTEGER DEFAULT NULL)</PRE>
+<DL>
+<DD>Get a response parameter (OUT or IN OUT).
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_CLNT_OBJECT</CODE> -
+              Epc client object</DD>
+<DD>
+<CODE>P_NAME</CODE> -
+              The name of the parameter</DD>
+<DD>
+<CODE>P_DATA_TYPE</CODE> -
+              The data type (should be epc.data_type_string)</DD>
+<DD>
+<CODE>P_VALUE</CODE> -
+              The value of the parameter</DD>
+<DD>
+<CODE>P_MAX_BYTES</CODE> -
+              The maximum length of p_value in bytes (if non-null)</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>VALUE_ERROR</CODE> -
+                  invalid datatype or or maximum length reached</DD>
+<DD>
+<CODE>ORA-6559</CODE> -
+                     wrong data type requested</DD>
+<DD>
+<CODE>PROGRAM_ERROR</CODE> -
+                Protocol and connection method do not match</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_RESPONSE_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,NUMBER)"></A>
+<H3>GET_RESPONSE_PARAMETER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_RESPONSE_PARAMETER</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                               P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, <BR>                               P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, <BR>                               P_VALUE OUT NUMBER)</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_RESPONSE_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,DATE)"></A>
+<H3>GET_RESPONSE_PARAMETER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_RESPONSE_PARAMETER</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                               P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, <BR>                               P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, <BR>                               P_VALUE OUT DATE)</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="NEW_REQUEST(EPC_CLNT_OBJECT,EPC.METHOD_NAME_SUBTYPE,PLS_INTEGER)"></A>
+<H3>NEW_REQUEST</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>NEW_REQUEST</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                    P_METHOD_NAME IN EPC.METHOD_NAME_SUBTYPE, <BR>                    P_ONEWAY IN PLS_INTEGER)</PRE>
+<DL>
+<DD>Start a new request.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_CLNT_OBJECT</CODE> -
+              Epc client object</DD>
+<DD>
+<CODE>P_METHOD_NAME</CODE> -
+              The method name</DD>
+<DD>
+<CODE>P_ONEWAY</CODE> -
+              Is the procedure call a oneway call,
+i.e. do we NOT wait for a response?
+0 means we will wait for a response.</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="RECV_RESPONSE(EPC_CLNT_OBJECT)"></A>
+<H3>RECV_RESPONSE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>RECV_RESPONSE</B>(P_EPC_CLNT_OBJECT IN OUT NOCOPY EPC_CLNT_OBJECT)</PRE>
+<DL>
+<DD>Receive a response.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_CLNT_OBJECT</CODE> -
+              Epc client object</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_COMM_ERROR</CODE> -
+                    Error while sending the message</DD>
+<DD>
+<CODE>EPC.E_WRONG_PROTOCOL</CODE> -
+                Message number sent and received do not match</DD>
+<DD>
+<CODE>PROGRAM_ERROR</CODE> -
+                       Protocol and connection method do not match</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SEND_REQUEST(EPC_CLNT_OBJECT)"></A>
+<H3>SEND_REQUEST</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SEND_REQUEST</B>(P_EPC_CLNT_OBJECT IN OUT NOCOPY EPC_CLNT_OBJECT)</PRE>
+<DL>
+<DD>Send a request.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_CLNT_OBJECT</CODE> -
+              Epc client object</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_COMM_ERROR</CODE> -
+                Error while sending the message</DD>
+<DD>
+<CODE>PROGRAM_ERROR</CODE> -
+                   Protocol and connection method do not match</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,HTTP_CONNECTION_SUBTYPE)"></A>
+<H3>SET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_CONNECTION_INFO</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                            P_CONNECTION IN HTTP_CONNECTION_SUBTYPE)</PRE>
+<DL>
+<DD>Set the connection info for HTTP.
+Set the connection method to HTTP and store the HTTP connection info for
+later use. The protocol will be set to SOAP.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_CONNECTION</CODE> -
+              The HTTP connection info.</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,UTL_TCP.CONNECTION)"></A>
+<H3>SET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_CONNECTION_INFO</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                            P_CONNECTION IN UTL_TCP.CONNECTION)</PRE>
+<DL>
+<DD>Set the connection info for TCP/IP.
+Set the connection method to TCP/IP and store the open TCP/IP connection for
+later use. The EPC will not open or close the TCP/IP connection. It is the
+responsability of the client program to open and close the connection. The
+protocol will be set to XMLRPC.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_CONNECTION</CODE> -
+              An open TCP/IP connection (see utl_tcp.open_connection)</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_CONNECTION_INFO(EPC.INTERFACE_NAME_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)"></A>
+<H3>SET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_CONNECTION_INFO</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                            P_PIPE_NAME IN EPC.PIPE_NAME_SUBTYPE)</PRE>
+<DL>
+<DD>Set the connection info for database pipes.
+Set the connection type to database pipes and store the pipe name for
+later use. Each interface may have a different connection. The
+protocol will be set to NATIVE.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_PIPE_NAME</CODE> -
+              The request pipe name</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_INLINE_NAMESPACE(EPC.INTERFACE_NAME_SUBTYPE,VARCHAR2)"></A>
+<H3>SET_INLINE_NAMESPACE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_INLINE_NAMESPACE</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                             P_INLINE_NAMESPACE IN VARCHAR2)</PRE>
+<DL>
+<DD>Set the inline namespace.
+The inline namespace for an interface is the prefix for the method name.
+The default inline namespace is ns1. For Web services this may need to be
+overridden.  The namespace is added as an attribute to the method element,
+e.g. &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_INLINE_NAMESPACE</CODE> -
+              The new inline namespace</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_NAMESPACE(EPC.INTERFACE_NAME_SUBTYPE,VARCHAR2)"></A>
+<H3>SET_NAMESPACE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_NAMESPACE</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                      P_NAMESPACE IN VARCHAR2)</PRE>
+<DL>
+<DD>Set the namespace.
+The namespace for an interface is initially equal to the interface name.
+For Web services this may need to be overridden.
+The namespace is added as an attribute to the method element, e.g.
+&lt;METHOD xmlns="NAMESPACE"&gt;
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_NAMESPACE</CODE> -
+              The new namespace</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_PROTOCOL(EPC.INTERFACE_NAME_SUBTYPE,PROTOCOL_SUBTYPE)"></A>
+<H3>SET_PROTOCOL</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_PROTOCOL</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                     P_PROTOCOL IN PROTOCOL_SUBTYPE)</PRE>
+<DL>
+<DD>Set the protocol for later use.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_PROTOCOL</CODE> -
+              The protocol</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>VALUE_ERROR</CODE> -
+                When the protocol is not NATIVE, SOAP nor XMLRPC.</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_REQUEST_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,VARCHAR2,INTEGER)"></A>
+<H3>SET_REQUEST_PARAMETER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_REQUEST_PARAMETER</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                              P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, <BR>                              P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, <BR>                              P_VALUE IN VARCHAR2, <BR>                              P_MAX_BYTES IN INTEGER DEFAULT NULL)</PRE>
+<DL>
+<DD>Set a request parameter (IN or IN OUT).
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_CLNT_OBJECT</CODE> -
+              Epc client object</DD>
+<DD>
+<CODE>P_NAME</CODE> -
+              The name of the parameter</DD>
+<DD>
+<CODE>P_DATA_TYPE</CODE> -
+              The data type (should be epc.data_type_string)</DD>
+<DD>
+<CODE>P_VALUE</CODE> -
+              The value of the parameter</DD>
+<DD>
+<CODE>P_MAX_BYTES</CODE> -
+              The maximum length of p_value in bytes (if non-null)</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_ILLEGAL_NULL_VALUE</CODE> -
+                p_value is NULL</DD>
+<DD>
+<CODE>VALUE_ERROR</CODE> -
+                             data type is incorrect or maximum length reached</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_REQUEST_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,NUMBER)"></A>
+<H3>SET_REQUEST_PARAMETER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_REQUEST_PARAMETER</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                              P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, <BR>                              P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, <BR>                              P_VALUE IN NUMBER)</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_REQUEST_PARAMETER(EPC_CLNT_OBJECT,EPC.PARAMETER_NAME_SUBTYPE,EPC.DATA_TYPE_SUBTYPE,DATE)"></A>
+<H3>SET_REQUEST_PARAMETER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_REQUEST_PARAMETER</B>(P_EPC_CLNT_OBJECT IN EPC_CLNT_OBJECT, <BR>                              P_NAME IN EPC.PARAMETER_NAME_SUBTYPE, <BR>                              P_DATA_TYPE IN EPC.DATA_TYPE_SUBTYPE, <BR>                              P_VALUE IN DATE)</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_REQUEST_SEND_TIMEOUT(EPC.INTERFACE_NAME_SUBTYPE,PLS_INTEGER)"></A>
+<H3>SET_REQUEST_SEND_TIMEOUT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_REQUEST_SEND_TIMEOUT</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                                 P_REQUEST_SEND_TIMEOUT IN PLS_INTEGER)</PRE>
+<DL>
+<DD>Set the request send timeout.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_REQUEST_SEND_TIMEOUT</CODE> -
+              The request send timeout</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_RESPONSE_RECV_TIMEOUT(EPC.INTERFACE_NAME_SUBTYPE,PLS_INTEGER)"></A>
+<H3>SET_RESPONSE_RECV_TIMEOUT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_RESPONSE_RECV_TIMEOUT</B>(P_INTERFACE_NAME IN EPC.INTERFACE_NAME_SUBTYPE, <BR>                                  P_RESPONSE_RECV_TIMEOUT IN PLS_INTEGER)</PRE>
+<DL>
+<DD>Set the response receive timeout.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_INTERFACE_NAME</CODE> -
+              The interface</DD>
+<DD>
+<CODE>P_RESPONSE_RECV_TIMEOUT</CODE> -
+              The response receive timeout</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SHUTDOWN"></A>
+<H3>SHUTDOWN</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SHUTDOWN</B>()</PRE>
+<DL>
+<DD>Shutdown the client.
+Cleanup all resources, for instance the response pipe.
+</DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="trigger_detail"></A>
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+</BODY>
+</HTML>

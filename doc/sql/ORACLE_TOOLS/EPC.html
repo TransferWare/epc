@@ -1,0 +1,1181 @@
+<HTML xmlns:lxslt="http://xml.apache.org/xslt" xmlns:exslt="http://exslt.org/common">
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>EPC</TITLE>
+<LINK TITLE="Style" HREF="../stylesheet.css" TYPE="text/css" REL="stylesheet">
+<!--
+        sameCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesLowerCase=FALSE
+        namesUpperCase=FALSE
+        namesDefaultCase=TRUE
+        defaultNamesCase=UPPER
+        namesFromCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesToCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-->
+</HEAD>
+<BODY BGCOLOR="white">
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+<H2>
+<FONT SIZE="-1">ORACLE_TOOLS</FONT>
+<BR>Package&nbsp;EPC</H2>
+This package is used to implement RPC like functionality on Oracle.
+Messages are sent by the client to a server. The transport mechanisms
+supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP)
+and TCP/IP (package UTL_TCP).
+<P></P>
+<DL></DL>
+<HR>
+<P></P>
+<A NAME="field_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Field Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_COMM_ERROR">C_COMM_ERROR</A></B> CONSTANT := -20102</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_ILLEGAL_NULL_VALUE">C_ILLEGAL_NULL_VALUE</A></B> CONSTANT := -20100</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_MSG_INTERRUPTED">C_MSG_INTERRUPTED</A></B> CONSTANT := -20105</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_MSG_TIMED_OUT">C_MSG_TIMED_OUT</A></B> CONSTANT := -20103</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_MSG_TOO_BIG">C_MSG_TOO_BIG</A></B> CONSTANT := -20104</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_PARSE_ERROR">C_PARSE_ERROR</A></B> CONSTANT := -20106</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=PLS_INTEGER
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=PLS_INTEGER
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->PLS_INTEGER</CODE></FONT></TD><TD><CODE><B><A HREF="#C_WRONG_PROTOCOL">C_WRONG_PROTOCOL</A></B> CONSTANT := -20101</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_DATE">DATA_TYPE_DATE</A></B> CONSTANT := 8</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_DOUBLE">DATA_TYPE_DOUBLE</A></B> CONSTANT := 5</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_FLOAT">DATA_TYPE_FLOAT</A></B> CONSTANT := 4</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_INT">DATA_TYPE_INT</A></B> CONSTANT := 2</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_LONG">DATA_TYPE_LONG</A></B> CONSTANT := 3</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_STRING">DATA_TYPE_STRING</A></B> CONSTANT := 1</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       numbers for each data_type function: see idl_defs.h 
+</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DATA_TYPE_SUBTYPE
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=DATA_TYPE_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></CODE></FONT></TD><TD><CODE><B><A HREF="#DATA_TYPE_XML">DATA_TYPE_XML</A></B> CONSTANT := 7</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=VARCHAR2(1000)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=VARCHAR2(1000)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->VARCHAR2(1000)</CODE></FONT></TD><TD><CODE><B><A HREF="#SOAP_HEADER_END">SOAP_HEADER_END</A></B> CONSTANT := '&lt;/SOAP-ENV:Body&gt;&lt;/SOAP-ENV:Envelope&gt;'</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=VARCHAR2(1000)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=VARCHAR2(1000)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->VARCHAR2(1000)</CODE></FONT></TD><TD><CODE><B><A HREF="#SOAP_HEADER_START">SOAP_HEADER_START</A></B> CONSTANT := '&lt;?xml version="1.0" encoding="UTF-8"?&gt;' || '&lt;SOAP-ENV:Envelope' || ' ' || 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' || ' ' || 'xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"' || ' ' || "xmlns:SOAP-ENV" || ' ' || 'xmlns:xsd="http://www.w3.org/2001/XMLSchema"' || ' ' || 'SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"' || '&gt;' || '&lt;SOAP-ENV:Body&gt;'</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=VARCHAR2(1000)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=VARCHAR2(1000)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->VARCHAR2(1000)</CODE></FONT></TD><TD><CODE><B><A HREF="#xmlns:SOAP-ENV">xmlns:SOAP-ENV</A></B> CONSTANT := 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="type_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Type Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#DATA_TYPE_SUBTYPE">DATA_TYPE_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=data_type_subtype
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=data_type_subtype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">data_type_subtype</A></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#DATATYPE_T">DATATYPE_T</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       Start of backwards compatibility for subtypes.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=date
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=date
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->date</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#DATE_SUBTYPE">DATE_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=DOUBLE PRECISION
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=DOUBLE PRECISION
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->DOUBLE PRECISION</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#DOUBLE_SUBTYPE">DOUBLE_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=float
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=float
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->float</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#FLOAT_SUBTYPE">FLOAT_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#INT_SUBTYPE">INT_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+       End of backwards compatibility for subtypes.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#INTERFACE_NAME_SUBTYPE">INTERFACE_NAME_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#LONG_SUBTYPE">LONG_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(512)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(512)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(512)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#METHOD_NAME_SUBTYPE">METHOD_NAME_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(128)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(128)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(128)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#NAMESPACE_SUBTYPE">NAMESPACE_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#PARAMETER_MODE_SUBTYPE">PARAMETER_MODE_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=parameter_mode_subtype
+       localTypeName=PARAMETER_MODE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=parameter_mode_subtype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PARAMETER_MODE_SUBTYPE">parameter_mode_subtype</A></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#PARAMETER_MODE_T">PARAMETER_MODE_T</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#PARAMETER_NAME_SUBTYPE">PARAMETER_NAME_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(128)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(128)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(128)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#PIPE_NAME_SUBTYPE">PIPE_NAME_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=pipe_name_subtype
+       localTypeName=PIPE_NAME_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=pipe_name_subtype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PIPE_NAME_SUBTYPE">pipe_name_subtype</A></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#PIPE_NAME_T">PIPE_NAME_T</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32767)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32767)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32767)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#STRING_SUBTYPE">STRING_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32767)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32767)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32767)</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#XML_SUBTYPE">XML_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="method_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Method Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="DEBUG"></A><TD><CODE><B><A HREF="#DEBUG(VARCHAR2)">DEBUG</A></B>(P_MSG IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Debug the EPC or its depending packages.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="PRINT"></A><TD><CODE><B><A HREF="#PRINT(VARCHAR2)">PRINT</A></B>(P_MSG IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Print data.</TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="trigger_summary"></A><A NAME="field_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Field Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="C_COMM_ERROR"></A>
+<H3>C_COMM_ERROR</H3>
+<PRE>
+        public PLS_INTEGER <B>C_COMM_ERROR</B> CONSTANT := -20102</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="C_ILLEGAL_NULL_VALUE"></A>
+<H3>C_ILLEGAL_NULL_VALUE</H3>
+<PRE>
+        public PLS_INTEGER <B>C_ILLEGAL_NULL_VALUE</B> CONSTANT := -20100</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="C_MSG_INTERRUPTED"></A>
+<H3>C_MSG_INTERRUPTED</H3>
+<PRE>
+        public PLS_INTEGER <B>C_MSG_INTERRUPTED</B> CONSTANT := -20105</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="C_MSG_TIMED_OUT"></A>
+<H3>C_MSG_TIMED_OUT</H3>
+<PRE>
+        public PLS_INTEGER <B>C_MSG_TIMED_OUT</B> CONSTANT := -20103</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="C_MSG_TOO_BIG"></A>
+<H3>C_MSG_TOO_BIG</H3>
+<PRE>
+        public PLS_INTEGER <B>C_MSG_TOO_BIG</B> CONSTANT := -20104</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="C_PARSE_ERROR"></A>
+<H3>C_PARSE_ERROR</H3>
+<PRE>
+        public PLS_INTEGER <B>C_PARSE_ERROR</B> CONSTANT := -20106</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="C_WRONG_PROTOCOL"></A>
+<H3>C_WRONG_PROTOCOL</H3>
+<PRE>
+        public PLS_INTEGER <B>C_WRONG_PROTOCOL</B> CONSTANT := -20101</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_DATE"></A>
+<H3>DATA_TYPE_DATE</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_DATE</B> CONSTANT := 8</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_DOUBLE"></A>
+<H3>DATA_TYPE_DOUBLE</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_DOUBLE</B> CONSTANT := 5</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_FLOAT"></A>
+<H3>DATA_TYPE_FLOAT</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_FLOAT</B> CONSTANT := 4</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_INT"></A>
+<H3>DATA_TYPE_INT</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_INT</B> CONSTANT := 2</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_LONG"></A>
+<H3>DATA_TYPE_LONG</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_LONG</B> CONSTANT := 3</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_STRING"></A>
+<H3>DATA_TYPE_STRING</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_STRING</B> CONSTANT := 1</PRE>
+<DL>
+<DD> numbers for each data_type function: see idl_defs.h 
+</DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="DATA_TYPE_XML"></A>
+<H3>DATA_TYPE_XML</H3>
+<PRE>
+        public DATA_TYPE_SUBTYPE <B>DATA_TYPE_XML</B> CONSTANT := 7</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="SOAP_HEADER_END"></A>
+<H3>SOAP_HEADER_END</H3>
+<PRE>
+        public VARCHAR2(1000) <B>SOAP_HEADER_END</B> CONSTANT := '&lt;/SOAP-ENV:Body&gt;&lt;/SOAP-ENV:Envelope&gt;'</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="SOAP_HEADER_START"></A>
+<H3>SOAP_HEADER_START</H3>
+<PRE>
+        public VARCHAR2(1000) <B>SOAP_HEADER_START</B> CONSTANT := '&lt;?xml version="1.0" encoding="UTF-8"?&gt;' || '&lt;SOAP-ENV:Envelope' || ' ' || 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' || ' ' || 'xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"' || ' ' || "xmlns:SOAP-ENV" || ' ' || 'xmlns:xsd="http://www.w3.org/2001/XMLSchema"' || ' ' || 'SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"' || '&gt;' || '&lt;SOAP-ENV:Body&gt;'</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="xmlns:SOAP-ENV"></A>
+<H3>xmlns:SOAP-ENV</H3>
+<PRE>
+        public VARCHAR2(1000) <B>xmlns:SOAP-ENV</B> CONSTANT := 'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"'</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+</DL>
+<HR>
+<A NAME="type_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Type Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="DATA_TYPE_SUBTYPE"></A>
+<H3>DATA_TYPE_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer <B>DATA_TYPE_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="DATATYPE_T"></A>
+<H3>DATATYPE_T</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=data_type_subtype
+       localTypeName=DATA_TYPE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=data_type_subtype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#DATA_TYPE_SUBTYPE">data_type_subtype</A> <B>DATATYPE_T</B>()</PRE>
+<DL>
+<DD> Start of backwards compatibility for subtypes. See epc.pls (package 4.0.0). 
+</DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="DATE_SUBTYPE"></A>
+<H3>DATE_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=date
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=date
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->date <B>DATE_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="DOUBLE_SUBTYPE"></A>
+<H3>DOUBLE_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=DOUBLE PRECISION
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=DOUBLE PRECISION
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->DOUBLE PRECISION <B>DOUBLE_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="FLOAT_SUBTYPE"></A>
+<H3>FLOAT_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=float
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=float
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->float <B>FLOAT_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="INT_SUBTYPE"></A>
+<H3>INT_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->integer <B>INT_SUBTYPE</B>()</PRE>
+<DL>
+<DD> End of backwards compatibility for subtypes. 
+</DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="INTERFACE_NAME_SUBTYPE"></A>
+<H3>INTERFACE_NAME_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32) <B>INTERFACE_NAME_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="LONG_SUBTYPE"></A>
+<H3>LONG_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->integer <B>LONG_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="METHOD_NAME_SUBTYPE"></A>
+<H3>METHOD_NAME_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(512)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(512)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(512) <B>METHOD_NAME_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="NAMESPACE_SUBTYPE"></A>
+<H3>NAMESPACE_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(128)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(128)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(128) <B>NAMESPACE_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PARAMETER_MODE_SUBTYPE"></A>
+<H3>PARAMETER_MODE_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=pls_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=pls_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->pls_integer <B>PARAMETER_MODE_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PARAMETER_MODE_T"></A>
+<H3>PARAMETER_MODE_T</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=parameter_mode_subtype
+       localTypeName=PARAMETER_MODE_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=parameter_mode_subtype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PARAMETER_MODE_SUBTYPE">parameter_mode_subtype</A> <B>PARAMETER_MODE_T</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PARAMETER_NAME_SUBTYPE"></A>
+<H3>PARAMETER_NAME_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32) <B>PARAMETER_NAME_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PIPE_NAME_SUBTYPE"></A>
+<H3>PIPE_NAME_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(128)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(128)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(128) <B>PIPE_NAME_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PIPE_NAME_T"></A>
+<H3>PIPE_NAME_T</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=pipe_name_subtype
+       localTypeName=PIPE_NAME_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=pipe_name_subtype
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#PIPE_NAME_SUBTYPE">pipe_name_subtype</A> <B>PIPE_NAME_T</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="STRING_SUBTYPE"></A>
+<H3>STRING_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32767)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32767)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32767) <B>STRING_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="XML_SUBTYPE"></A>
+<H3>XML_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=varchar2(32767)
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=varchar2(32767)
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->varchar2(32767) <B>XML_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="method_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Method Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="DEBUG(VARCHAR2)"></A>
+<H3>DEBUG</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>DEBUG</B>(P_MSG IN VARCHAR2)</PRE>
+<DL>
+<DD>Debug the EPC or its depending packages.
+Prints a debug message using the print() function.
+The message is prefixed with 'DEBUG: '
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_MSG</CODE> -
+              XML message.</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PRINT(VARCHAR2)"></A>
+<H3>PRINT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>PRINT</B>(P_MSG IN VARCHAR2)</PRE>
+<DL>
+<DD>Print data.
+Pretty prints a message using DBMS_OUTPUT.  The message is split into lines
+(chr(10) is the separator).  Next lines longer than 255 characters are
+printed in chunks of 255 characters each.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_MSG</CODE> -
+              XML message.</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="trigger_detail"></A>
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+</BODY>
+</HTML>

@@ -1,0 +1,1245 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE APPLICATION SYSTEM "application.dtd">
+<APPLICATION NAME="EPC">
+  <PACKAGE NAME="EPC" SCHEMA="ORACLE_TOOLS">
+    <COMMENT><![CDATA[
+This package is used to implement RPC like functionality on Oracle.
+Messages are sent by the client to a server. The transport mechanisms
+supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP)
+and TCP/IP (package UTL_TCP).
+]]></COMMENT>
+    <TAG TYPE="@HEADCOM">
+      <COMMENT>
+      </COMMENT>
+    </TAG>
+    <TYPE NAME="INTERFACE_NAME_SUBTYPE">
+      <RETURN TYPE="varchar2(32)"/>
+    </TYPE>
+    <TYPE NAME="NAMESPACE_SUBTYPE">
+      <RETURN TYPE="varchar2(128)"/>
+    </TYPE>
+    <TYPE NAME="METHOD_NAME_SUBTYPE">
+      <RETURN TYPE="varchar2(512)"/>
+    </TYPE>
+    <TYPE NAME="PARAMETER_NAME_SUBTYPE">
+      <RETURN TYPE="varchar2(32)"/>
+    </TYPE>
+    <TYPE NAME="DATA_TYPE_SUBTYPE">
+      <RETURN TYPE="pls_integer"/>
+    </TYPE>
+    <TYPE NAME="PARAMETER_MODE_SUBTYPE">
+      <RETURN TYPE="pls_integer"/>
+    </TYPE>
+    <TYPE NAME="PIPE_NAME_SUBTYPE">
+      <RETURN TYPE="varchar2(128)"/>
+    </TYPE>
+    <TYPE NAME="DATATYPE_T">
+      <COMMENT_FIRST_LINE><![CDATA[ Start of backwards compatibility for subtypes.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[ Start of backwards compatibility for subtypes. See epc.pls (package 4.0.0). 
+]]></COMMENT>
+      <RETURN TYPE="data_type_subtype"/>
+    </TYPE>
+    <TYPE NAME="PARAMETER_MODE_T">
+      <RETURN TYPE="parameter_mode_subtype"/>
+    </TYPE>
+    <TYPE NAME="PIPE_NAME_T">
+      <RETURN TYPE="pipe_name_subtype"/>
+    </TYPE>
+    <TYPE NAME="INT_SUBTYPE">
+      <COMMENT_FIRST_LINE><![CDATA[ End of backwards compatibility for subtypes.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[ End of backwards compatibility for subtypes. 
+]]></COMMENT>
+      <RETURN TYPE="integer"/>
+    </TYPE>
+    <TYPE NAME="LONG_SUBTYPE">
+      <RETURN TYPE="integer"/>
+    </TYPE>
+    <TYPE NAME="FLOAT_SUBTYPE">
+      <RETURN TYPE="float"/>
+    </TYPE>
+    <TYPE NAME="DOUBLE_SUBTYPE">
+      <RETURN TYPE="DOUBLE PRECISION"/>
+    </TYPE>
+    <TYPE NAME="STRING_SUBTYPE">
+      <RETURN TYPE="varchar2(32767)"/>
+    </TYPE>
+    <TYPE NAME="XML_SUBTYPE">
+      <RETURN TYPE="varchar2(32767)"/>
+    </TYPE>
+    <TYPE NAME="DATE_SUBTYPE">
+      <RETURN TYPE="date"/>
+    </TYPE>
+    <CONSTANT DEFAULT="1" NAME="DATA_TYPE_STRING">
+      <COMMENT_FIRST_LINE><![CDATA[ numbers for each data_type function: see idl_defs.h 
+]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[ numbers for each data_type function: see idl_defs.h 
+]]></COMMENT>
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="2" NAME="DATA_TYPE_INT">
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="3" NAME="DATA_TYPE_LONG">
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="4" NAME="DATA_TYPE_FLOAT">
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="5" NAME="DATA_TYPE_DOUBLE">
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="7" NAME="DATA_TYPE_XML">
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="8" NAME="DATA_TYPE_DATE">
+      <RETURN TYPE="DATA_TYPE_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="'xmlns:SOAP-ENV=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot;'" NAME="xmlns:SOAP-ENV">
+      <RETURN TYPE="VARCHAR2(1000)"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="'&amp;lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&amp;gt;' || '&amp;lt;SOAP-ENV:Envelope' || ' ' || 'xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;' || ' ' || 'xmlns:SOAP-ENC=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;' || ' ' || &quot;xmlns:SOAP-ENV&quot; || ' ' || 'xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;' || ' ' || 'SOAP-ENV:encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;' || '&amp;gt;' || '&amp;lt;SOAP-ENV:Body&amp;gt;'" NAME="SOAP_HEADER_START">
+      <RETURN TYPE="VARCHAR2(1000)"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="'&amp;lt;/SOAP-ENV:Body&amp;gt;&amp;lt;/SOAP-ENV:Envelope&amp;gt;'" NAME="SOAP_HEADER_END">
+      <RETURN TYPE="VARCHAR2(1000)"/>
+    </CONSTANT>
+    <EXCEPTION NAME="E_ILLEGAL_NULL_VALUE">
+      <COMMENT_FIRST_LINE><![CDATA[Exceptions are raised using raise_application_error(error_number, ...),
+which expects error numbers in the range -20000 uptill -20999.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Exceptions are raised using raise_application_error(error_number, ...),
+which expects error numbers in the range -20000 uptill -20999.
+The EPC uses -20100 uptill -20106.
+We have to map exceptions to an error number using the pragma lines,
+otherwise the exceptions starting with e_ (new naming convention) and
+without the e_ (old naming convention) would be distinct. So for backwards
+compatibility we must map them.
+Proof: run the following PL/SQL block:
+declare
+e_something exception;
+pragma exception_init(e_something, -20000);
+something exception;
+pragma exception_init(something, -20000);
+begin
+raise e_something;
+exception
+when something
+then
+dbms_output.put_line('something');
+null;
+end;
+This does not catch e_something.
+When you uncomment the pragma lines, the exception is catched.
+]]></COMMENT>
+    </EXCEPTION>
+    <CONSTANT DEFAULT="-20100" NAME="C_ILLEGAL_NULL_VALUE">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="E_WRONG_PROTOCOL"/>
+    <CONSTANT DEFAULT="-20101" NAME="C_WRONG_PROTOCOL">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="E_COMM_ERROR"/>
+    <CONSTANT DEFAULT="-20102" NAME="C_COMM_ERROR">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="E_MSG_TIMED_OUT"/>
+    <CONSTANT DEFAULT="-20103" NAME="C_MSG_TIMED_OUT">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="E_MSG_TOO_BIG"/>
+    <CONSTANT DEFAULT="-20104" NAME="C_MSG_TOO_BIG">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="E_MSG_INTERRUPTED"/>
+    <CONSTANT DEFAULT="-20105" NAME="C_MSG_INTERRUPTED">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="E_PARSE_ERROR"/>
+    <CONSTANT DEFAULT="-20106" NAME="C_PARSE_ERROR">
+      <RETURN TYPE="PLS_INTEGER"/>
+    </CONSTANT>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="ILLEGAL_NULL_VALUE">
+      <COMMENT_FIRST_LINE><![CDATA[ Start of backwards compatibility for exceptions.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[ Start of backwards compatibility for exceptions. See epc.pls (package 4.0.0). 
+]]></COMMENT>
+    </EXCEPTION>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="WRONG_PROTOCOL"/>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="COMM_ERROR"/>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="MSG_TIMED_OUT"/>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="MSG_TOO_BIG"/>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <EXCEPTION NAME="MSG_INTERRUPTED"/>
+    <PRAGMA NAME="EXCEPTION_INIT"/>
+    <PROCEDURE NAME="PRINT">
+      <COMMENT_FIRST_LINE><![CDATA[Print data.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Print data.
+Pretty prints a message using DBMS_OUTPUT.  The message is split into lines
+(chr(10) is the separator).  Next lines longer than 255 characters are
+printed in chunks of 255 characters each.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_MSG" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[XML message.]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_msg  XML message.]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="157" LINES="4" START_COLUMN="11" START_LINE="154"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="DEBUG">
+      <COMMENT_FIRST_LINE><![CDATA[Debug the EPC or its depending packages.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Debug the EPC or its depending packages.
+Prints a debug message using the print() function.
+The message is prefixed with 'DEBUG: '
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_MSG" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[XML message.]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_msg  XML message.]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="170" LINES="4" START_COLUMN="11" START_LINE="167"/>
+    </PROCEDURE>
+    <SUMMARY END_COLUMN="8" END_LINE="172" LINES="172" START_COLUMN="27" START_LINE="1"/>
+  </PACKAGE>
+  <PACKAGE NAME="EPC_CLNT" SCHEMA="ORACLE_TOOLS">
+    <COMMENT><![CDATA[
+This package is used to implement the client side of RPC like functionality
+on an Oracle database.
+Messages are sent by the client to a server. The transport mechanisms
+supported are database pipes (DBMS_PIPE), HTTP (UTL_HTTP) and TCP/IP (UTL_TCP).
+The flow of procedure calls will typically look like this:<br />
+1) Set connection information.<br />
+a) epc_clnt.set_protocol (optional, the default is NATIVE)<br />
+b) epc_clnt.set_connection_info (optional for database pipes)<br />
+c) epc_clnt.set_request_send_timeout (optional)<br />
+d) epc_clnt.set_response_recv_timeout (optional)<br />
+2) Marshall a function call into a message<br />
+a) l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name)<br />
+b) epc_clnt.new_request<br />
+c) epc_clnt.set_request_parameter (for all IN and IN OUT parameters)<br />
+3) Send the message<br />
+a) epc_clnt.send_request<br />
+4) Receive the response<br />
+a) epc_clnt.recv_response<br />
+5) Unmarshall the message<br />
+a) epc_clnt.get_response_parameter (for all OUT and IN OUT parameters)<br />
+6) Save the client info<br />
+a) l_epc_clnt_object.store()<br />
+]]></COMMENT>
+    <TAG TYPE="@HEADCOM">
+      <COMMENT>
+      </COMMENT>
+    </TAG>
+    <TYPE NAME="PROTOCOL_SUBTYPE">
+      <COMMENT_FIRST_LINE><![CDATA[History of protocols:
+1 - original protocol
+To server: RESULT PIPE, PROTOCOL, INTERFACE, FUNCTION, PARAMETERS IN
+From server: EXEC CODE, SQL CODE, PARAMETERS OUT
+2 - same as protocol 1, but FUNCTION is now the FUNCTION SIGNATURE.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[History of protocols:
+1 - original protocol
+To server: RESULT PIPE, PROTOCOL, INTERFACE, FUNCTION, PARAMETERS IN
+From server: EXEC CODE, SQL CODE, PARAMETERS OUT
+2 - same as protocol 1, but FUNCTION is now the FUNCTION SIGNATURE.
+3 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, [ RESULT PIPE, ] PARAMETERS IN
+From server: MSG SEQ, PARAMETERS OUT
+MSG SEQ has been added in order to check for messages which have
+not been (correctly) processed by the server.
+4 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
+From server: MSG SEQ, PARAMETERS OUT
+GJP 07-04-2004
+RESULT PIPE is 'N/A' for oneway functions.
+5 - To server: PROTOCOL, MSG SEQ, SOAP REQUEST MESSAGE [, RESULT PIPE ]
+From server: MSG SEQ, SOAP RESPONSE MESSAGE
+GJP 21-10-2004
+RESULT PIPE is empty for oneway functions.
+6 - To server: PROTOCOL, MSG SEQ, XMLRPC REQUEST MESSAGE [, RESULT PIPE ]
+From server: MSG SEQ, XMLRPC RESPONSE MESSAGE
+GJP 24-07-2007
+7 - To server: PROTOCOL, MSG SEQ, NATIVE REQUEST MESSAGE [, RESULT PIPE ]
+From server: MSG SEQ, NATIVE RESPONSE MESSAGE
+The request message consists of INTERFACE, FUNCTION and PARAMETERS IN.
+The response message consists of ERROR CODE and PARAMETERS OUT.
+Each message argument is encoded as follows:
+a) data type (epc.data_type_subtype as a 1 byte character)
+b) data length (for string and xml a 4 byte hexadecimal string and for others a 2 byte hexadecimal string)
+c) the data as a string
+]]></COMMENT>
+      <RETURN TYPE="pls_integer"/>
+    </TYPE>
+    <CONSTANT DEFAULT="5" NAME="SOAP">
+      <RETURN TYPE="PROTOCOL_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="6" NAME="XMLRPC">
+      <COMMENT_FIRST_LINE><![CDATA[default protocol for HTTP
+]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[default protocol for HTTP
+]]></COMMENT>
+      <RETURN TYPE="PROTOCOL_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="7" NAME="NATIVE">
+      <COMMENT_FIRST_LINE><![CDATA[default protocol for TCP/IP
+]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[default protocol for TCP/IP
+]]></COMMENT>
+      <RETURN TYPE="PROTOCOL_SUBTYPE"/>
+    </CONSTANT>
+    <TYPE NAME="HTTP_CONNECTION_RECTYPE">
+      <COMMENT_FIRST_LINE><![CDATA[default protocol for DBMS_PIPE
+]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[default protocol for DBMS_PIPE
+]]></COMMENT>
+      <FIELD NAME="URL" TYPE="VARCHAR2(4000)"/>
+      <FIELD DEFAULT="'POST'" NAME="METHOD" TYPE="VARCHAR2(10)"/>
+      <FIELD DEFAULT="UTL_HTTP.HTTP_VERSION_1_1" NAME="VERSION" TYPE="VARCHAR2(10)"/>
+      <RETURN TYPE="RECORD"/>
+    </TYPE>
+    <TYPE NAME="HTTP_CONNECTION_SUBTYPE">
+      <RETURN TYPE="http_connection_rectype"/>
+    </TYPE>
+    <TYPE NAME="CONNECTION_METHOD_SUBTYPE">
+      <RETURN TYPE="pls_integer"/>
+    </TYPE>
+    <CONSTANT DEFAULT="1" NAME="CONNECTION_METHOD_DBMS_PIPE">
+      <RETURN TYPE="CONNECTION_METHOD_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="2" NAME="CONNECTION_METHOD_UTL_TCP">
+      <RETURN TYPE="CONNECTION_METHOD_SUBTYPE"/>
+    </CONSTANT>
+    <CONSTANT DEFAULT="3" NAME="CONNECTION_METHOD_UTL_HTTP">
+      <RETURN TYPE="CONNECTION_METHOD_SUBTYPE"/>
+    </CONSTANT>
+    <PROCEDURE NAME="SET_PROTOCOL">
+      <COMMENT_FIRST_LINE><![CDATA[Set the protocol for later use.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the protocol for later use.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_PROTOCOL" TYPE="PROTOCOL_SUBTYPE">
+        <COMMENT><![CDATA[The protocol]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="VALUE_ERROR">
+        <COMMENT><![CDATA[  When the protocol is not NATIVE, SOAP nor XMLRPC.]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_protocol        The protocol]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[value_error  When the protocol is not NATIVE, SOAP nor XMLRPC.]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="111" LINES="4" START_COLUMN="11" START_LINE="108"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_PROTOCOL">
+      <COMMENT_FIRST_LINE><![CDATA[Get the protocol.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the protocol.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT" NAME="P_PROTOCOL" TYPE="PROTOCOL_SUBTYPE">
+        <COMMENT><![CDATA[The protocol]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_protocol        The protocol]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="122" LINES="4" START_COLUMN="11" START_LINE="119"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Set the connection info for HTTP.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the connection info for HTTP.
+Set the connection method to HTTP and store the HTTP connection info for
+later use. The protocol will be set to SOAP.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_CONNECTION" TYPE="HTTP_CONNECTION_SUBTYPE">
+        <COMMENT><![CDATA[The HTTP connection info.]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_connection      The HTTP connection info.]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="140" LINES="4" START_COLUMN="11" START_LINE="137"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Get the HTTP connection info.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the HTTP connection info.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT NOCOPY" NAME="P_CONNECTION" TYPE="HTTP_CONNECTION_SUBTYPE">
+        <COMMENT><![CDATA[The HTTP connection info]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="NO_DATA_FOUND">
+        <COMMENT><![CDATA[  connection method is not utl_http]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_connection      The HTTP connection info]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[no_data_found  connection method is not utl_http]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="153" LINES="4" START_COLUMN="11" START_LINE="150"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Set the connection info for TCP/IP.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the connection info for TCP/IP.
+Set the connection method to TCP/IP and store the open TCP/IP connection for
+later use. The EPC will not open or close the TCP/IP connection. It is the
+responsability of the client program to open and close the connection. The
+protocol will be set to XMLRPC.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_CONNECTION" TYPE="UTL_TCP.CONNECTION">
+        <COMMENT><![CDATA[An open TCP/IP connection (see utl_tcp.open_connection)]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_connection      An open TCP/IP connection (see utl_tcp.open_connection)]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="169" LINES="4" START_COLUMN="11" START_LINE="166"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Get the TCP/IP connection info.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the TCP/IP connection info.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT NOCOPY" NAME="P_CONNECTION" TYPE="UTL_TCP.CONNECTION">
+        <COMMENT><![CDATA[An open TCP/IP connection
+(see utl_tcp.open_connection)]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="NO_DATA_FOUND">
+        <COMMENT><![CDATA[  connection method is not utl_tcp]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_connection      An open TCP/IP connection
+(see utl_tcp.open_connection)]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[no_data_found  connection method is not utl_tcp]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="183" LINES="4" START_COLUMN="11" START_LINE="180"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Set the connection info for database pipes.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the connection info for database pipes.
+Set the connection type to database pipes and store the pipe name for
+later use. Each interface may have a different connection. The
+protocol will be set to NATIVE.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_PIPE_NAME" TYPE="EPC.PIPE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The request pipe name]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_pipe_name       The request pipe name]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="198" LINES="4" START_COLUMN="11" START_LINE="195"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Get the database request pipe.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the database request pipe.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT" NAME="P_PIPE_NAME" TYPE="EPC.PIPE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The request pipe name]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="NO_DATA_FOUND">
+        <COMMENT><![CDATA[  connection method is not dbms_pipe]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_pipe_name       The request pipe name]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[no_data_found  connection method is not dbms_pipe]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="211" LINES="4" START_COLUMN="11" START_LINE="208"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_REQUEST_SEND_TIMEOUT">
+      <COMMENT_FIRST_LINE><![CDATA[Set the request send timeout.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the request send timeout.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_REQUEST_SEND_TIMEOUT" TYPE="PLS_INTEGER">
+        <COMMENT><![CDATA[The request send timeout]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name        The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_request_send_timeout  The request send timeout]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="222" LINES="4" START_COLUMN="11" START_LINE="219"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_RESPONSE_RECV_TIMEOUT">
+      <COMMENT_FIRST_LINE><![CDATA[Set the response receive timeout.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the response receive timeout.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_RESPONSE_RECV_TIMEOUT" TYPE="PLS_INTEGER">
+        <COMMENT><![CDATA[The response receive timeout]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name         The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_response_recv_timeout  The response receive timeout]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="233" LINES="4" START_COLUMN="11" START_LINE="230"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_NAMESPACE">
+      <COMMENT_FIRST_LINE><![CDATA[Set the namespace.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the namespace.
+The namespace for an interface is initially equal to the interface name.
+For Web services this may need to be overridden.
+The namespace is added as an attribute to the method element, e.g.
+&lt;METHOD xmlns="NAMESPACE"&gt;
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_NAMESPACE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The new namespace]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name  The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_namespace       The new namespace]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="249" LINES="4" START_COLUMN="11" START_LINE="246"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_INLINE_NAMESPACE">
+      <COMMENT_FIRST_LINE><![CDATA[Set the inline namespace.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the inline namespace.
+The inline namespace for an interface is the prefix for the method name.
+The default inline namespace is ns1. For Web services this may need to be
+overridden.  The namespace is added as an attribute to the method element,
+e.g. &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_INTERFACE_NAME" TYPE="EPC.INTERFACE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The interface]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_INLINE_NAMESPACE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The new inline namespace]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_interface_name    The interface]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_inline_namespace  The new inline namespace]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="265" LINES="4" START_COLUMN="11" START_LINE="262"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="NEW_REQUEST">
+      <COMMENT_FIRST_LINE><![CDATA[Start a new request.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Start a new request.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT">
+        <COMMENT><![CDATA[Epc client object]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_METHOD_NAME" TYPE="EPC.METHOD_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The method name]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_ONEWAY" TYPE="PLS_INTEGER">
+        <COMMENT><![CDATA[Is the procedure call a oneway call,
+i.e. do we NOT wait for a response?
+0 means we will wait for a response.]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_clnt_object  Epc client object]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_method_name      The method name]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_oneway           Is the procedure call a oneway call,
+i.e. do we NOT wait for a response?
+0 means we will wait for a response.]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="282" LINES="5" START_COLUMN="11" START_LINE="278"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_REQUEST_PARAMETER">
+      <COMMENT_FIRST_LINE><![CDATA[Set a request parameter (IN or IN OUT).]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set a request parameter (IN or IN OUT).
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT">
+        <COMMENT><![CDATA[Epc client object]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_NAME" TYPE="EPC.PARAMETER_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The name of the parameter]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_DATA_TYPE" TYPE="EPC.DATA_TYPE_SUBTYPE">
+        <COMMENT><![CDATA[The data type (should be epc.data_type_string)]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_VALUE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The value of the parameter]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT DEFAULT="NULL" MODE="IN" NAME="P_MAX_BYTES" TYPE="INTEGER">
+        <COMMENT><![CDATA[The maximum length of p_value in bytes (if non-null)]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_ILLEGAL_NULL_VALUE">
+        <COMMENT><![CDATA[  p_value is NULL]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="VALUE_ERROR">
+        <COMMENT><![CDATA[               data type is incorrect or maximum length reached]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_clnt_object  Epc client object]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_name             The name of the parameter]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_data_type        The data type (should be epc.data_type_string)]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_value            The value of the parameter]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_max_bytes        The maximum length of p_value in bytes (if non-null)]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_illegal_null_value  p_value is NULL]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[value_error               data type is incorrect or maximum length reached]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="302" LINES="7" START_COLUMN="11" START_LINE="296"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_REQUEST_PARAMETER">
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT"/>
+      <ARGUMENT MODE="IN" NAME="P_NAME" TYPE="EPC.PARAMETER_NAME_SUBTYPE"/>
+      <ARGUMENT MODE="IN" NAME="P_DATA_TYPE" TYPE="EPC.DATA_TYPE_SUBTYPE"/>
+      <ARGUMENT MODE="IN" NAME="P_VALUE" TYPE="NUMBER"/>
+      <SUMMARY END_COLUMN="2" END_LINE="309" LINES="6" START_COLUMN="11" START_LINE="304"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_REQUEST_PARAMETER">
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT"/>
+      <ARGUMENT MODE="IN" NAME="P_NAME" TYPE="EPC.PARAMETER_NAME_SUBTYPE"/>
+      <ARGUMENT MODE="IN" NAME="P_DATA_TYPE" TYPE="EPC.DATA_TYPE_SUBTYPE"/>
+      <ARGUMENT MODE="IN" NAME="P_VALUE" TYPE="DATE"/>
+      <SUMMARY END_COLUMN="2" END_LINE="316" LINES="6" START_COLUMN="11" START_LINE="311"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SEND_REQUEST">
+      <COMMENT_FIRST_LINE><![CDATA[Send a request.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Send a request.
+]]></COMMENT>
+      <ARGUMENT MODE="IN OUT NOCOPY" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT">
+        <COMMENT><![CDATA[Epc client object]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_COMM_ERROR">
+        <COMMENT><![CDATA[  Error while sending the message]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="PROGRAM_ERROR">
+        <COMMENT><![CDATA[     Protocol and connection method do not match]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_clnt_object  Epc client object]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_comm_error  Error while sending the message]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[program_error     Protocol and connection method do not match]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="328" LINES="3" START_COLUMN="11" START_LINE="326"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="RECV_RESPONSE">
+      <COMMENT_FIRST_LINE><![CDATA[Receive a response.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Receive a response.
+]]></COMMENT>
+      <ARGUMENT MODE="IN OUT NOCOPY" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT">
+        <COMMENT><![CDATA[Epc client object]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_COMM_ERROR">
+        <COMMENT><![CDATA[      Error while sending the message]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="EPC.E_WRONG_PROTOCOL">
+        <COMMENT><![CDATA[  Message number sent and received do not match]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="PROGRAM_ERROR">
+        <COMMENT><![CDATA[         Protocol and connection method do not match]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_clnt_object  Epc client object]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_comm_error      Error while sending the message]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_wrong_protocol  Message number sent and received do not match]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[program_error         Protocol and connection method do not match]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="341" LINES="3" START_COLUMN="11" START_LINE="339"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_RESPONSE_PARAMETER">
+      <COMMENT_FIRST_LINE><![CDATA[Get a response parameter (OUT or IN OUT).]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get a response parameter (OUT or IN OUT).
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT">
+        <COMMENT><![CDATA[Epc client object]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_NAME" TYPE="EPC.PARAMETER_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The name of the parameter]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_DATA_TYPE" TYPE="EPC.DATA_TYPE_SUBTYPE">
+        <COMMENT><![CDATA[The data type (should be epc.data_type_string)]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT" NAME="P_VALUE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The value of the parameter]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT DEFAULT="NULL" MODE="IN" NAME="P_MAX_BYTES" TYPE="INTEGER">
+        <COMMENT><![CDATA[The maximum length of p_value in bytes (if non-null)]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="VALUE_ERROR">
+        <COMMENT><![CDATA[    invalid datatype or or maximum length reached]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="ORA-6559">
+        <COMMENT><![CDATA[       wrong data type requested]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="PROGRAM_ERROR">
+        <COMMENT><![CDATA[  Protocol and connection method do not match]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_clnt_object  Epc client object]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_name             The name of the parameter]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_data_type        The data type (should be epc.data_type_string)]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_value            The value of the parameter]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_max_bytes        The maximum length of p_value in bytes (if non-null)]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[value_error    invalid datatype or or maximum length reached]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[ORA-6559       wrong data type requested]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[program_error  Protocol and connection method do not match]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="362" LINES="7" START_COLUMN="11" START_LINE="356"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_RESPONSE_PARAMETER">
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT"/>
+      <ARGUMENT MODE="IN" NAME="P_NAME" TYPE="EPC.PARAMETER_NAME_SUBTYPE"/>
+      <ARGUMENT MODE="IN" NAME="P_DATA_TYPE" TYPE="EPC.DATA_TYPE_SUBTYPE"/>
+      <ARGUMENT MODE="OUT" NAME="P_VALUE" TYPE="NUMBER"/>
+      <SUMMARY END_COLUMN="2" END_LINE="369" LINES="6" START_COLUMN="11" START_LINE="364"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_RESPONSE_PARAMETER">
+      <ARGUMENT MODE="IN" NAME="P_EPC_CLNT_OBJECT" TYPE="EPC_CLNT_OBJECT"/>
+      <ARGUMENT MODE="IN" NAME="P_NAME" TYPE="EPC.PARAMETER_NAME_SUBTYPE"/>
+      <ARGUMENT MODE="IN" NAME="P_DATA_TYPE" TYPE="EPC.DATA_TYPE_SUBTYPE"/>
+      <ARGUMENT MODE="OUT" NAME="P_VALUE" TYPE="DATE"/>
+      <SUMMARY END_COLUMN="2" END_LINE="376" LINES="6" START_COLUMN="11" START_LINE="371"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SHUTDOWN">
+      <COMMENT_FIRST_LINE><![CDATA[Shutdown the client.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Shutdown the client.
+Cleanup all resources, for instance the response pipe.
+]]></COMMENT>
+      <SUMMARY END_COLUMN="19" END_LINE="383" LINES="1" START_COLUMN="11" START_LINE="383"/>
+    </PROCEDURE>
+    <SUMMARY END_COLUMN="13" END_LINE="385" LINES="385" START_COLUMN="27" START_LINE="1"/>
+  </PACKAGE>
+  <PACKAGE NAME="EPC_SRVR" SCHEMA="ORACLE_TOOLS">
+    <COMMENT><![CDATA[
+This package is used to implement the server side of RPC like functionality
+on an Oracle database. Messages are sent by the client to a server. The
+transport mechanisms supported are database pipes (DBMS_PIPE),
+HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for
+database pipe transport. TCP/IP servers should not use
+the TCP/IP functionality of Oracle, but of the OS instead.
+The flow of procedure calls will typically look like this:<br />
+1) Set connection information.<br />
+a) epc_srvr.register (once in a database session)<br />
+b) epc_srvr.set_connection_info<br />
+c) epc_srvr.set_request_recv_timeout (optional)<br />
+2) Receive the request<br />
+a) epc_srvr.recv_request<br />
+3) Process the message<br />
+4) Send the response<br />
+a) epc_srvr.send_response<br />
+]]></COMMENT>
+    <TAG TYPE="@HEADCOM">
+      <COMMENT>
+      </COMMENT>
+    </TAG>
+    <TYPE NAME="EPC_KEY_SUBTYPE">
+      <RETURN TYPE="binary_integer"/>
+    </TYPE>
+    <TYPE NAME="MSG_INFO_SUBTYPE">
+      <RETURN TYPE="epc.string_subtype"/>
+    </TYPE>
+    <FUNCTION NAME="REGISTER">
+      <COMMENT_FIRST_LINE><![CDATA[Register an interface
+]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Register an interface
+]]></COMMENT>
+      <RETURN TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[A unique key which has to be used in all other epc_srvr calls.]]></COMMENT>
+      </RETURN>
+      <TAG TYPE="@RETURN">
+        <COMMENT><![CDATA[A unique key which has to be used in all other epc_srvr calls.]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="23" END_LINE="34" LINES="2" START_COLUMN="10" START_LINE="33"/>
+    </FUNCTION>
+    <FUNCTION NAME="GET_EPC_KEY">
+      <COMMENT_FIRST_LINE><![CDATA[Get the key
+]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the key
+]]></COMMENT>
+      <RETURN TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[The unique key for this session]]></COMMENT>
+      </RETURN>
+      <TAG TYPE="@RETURN">
+        <COMMENT><![CDATA[The unique key for this session]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="23" END_LINE="42" LINES="2" START_COLUMN="10" START_LINE="41"/>
+    </FUNCTION>
+    <PROCEDURE NAME="SET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Set the connection type to database pipes and store the pipe name for
+later use.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the connection type to database pipes and store the pipe name for
+later use. Each interface may have a different connection.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[The key]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_PIPE_NAME" TYPE="EPC.PIPE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The request pipe name]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key    The key]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_pipe_name  The request pipe name]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="54" LINES="4" START_COLUMN="11" START_LINE="51"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_CONNECTION_INFO">
+      <COMMENT_FIRST_LINE><![CDATA[Get the database request pipe.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the database request pipe.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[The key]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT" NAME="P_PIPE_NAME" TYPE="EPC.PIPE_NAME_SUBTYPE">
+        <COMMENT><![CDATA[The request pipe name]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key    The key]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_pipe_name  The request pipe name]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="65" LINES="4" START_COLUMN="11" START_LINE="62"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_RESPONSE_SEND_TIMEOUT">
+      <COMMENT_FIRST_LINE><![CDATA[Set the response send timeout.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the response send timeout.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[The key]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_RESPONSE_SEND_TIMEOUT" TYPE="PLS_INTEGER">
+        <COMMENT><![CDATA[The response send timeout]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key                The key]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_response_send_timeout  The response send timeout]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="76" LINES="4" START_COLUMN="11" START_LINE="73"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="RECV_REQUEST">
+      <COMMENT_FIRST_LINE><![CDATA[Receive a request.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Receive a request.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[Needed for the connection info]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT" NAME="P_MSG_INFO" TYPE="EPC_SRVR.MSG_INFO_SUBTYPE">
+        <COMMENT><![CDATA[The message information]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT" NAME="P_MSG_REQUEST" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The message request]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_MSG_TIMED_OUT">
+        <COMMENT><![CDATA[    Message timed out]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="EPC.E_MSG_TOO_BIG">
+        <COMMENT><![CDATA[      Message too big]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="EPC.E_MSG_INTERRUPTED">
+        <COMMENT><![CDATA[  Message interrupted]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key         Needed for the connection info]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_msg_info        The message information]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_msg_request     The message request]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_timed_out    Message timed out]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_too_big      Message too big]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_interrupted  Message interrupted]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="93" LINES="5" START_COLUMN="11" START_LINE="89"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SEND_RESPONSE">
+      <COMMENT_FIRST_LINE><![CDATA[Send a response to a request.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Send a response to a request.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[Needed for the connection info]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_MSG_INFO" TYPE="EPC_SRVR.MSG_INFO_SUBTYPE">
+        <COMMENT><![CDATA[The message information as received by recv_request]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_MSG_RESPONSE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The message response]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_MSG_TIMED_OUT">
+        <COMMENT><![CDATA[    Message timed out]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="EPC.E_MSG_INTERRUPTED">
+        <COMMENT><![CDATA[  Message interrupted]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key       Needed for the connection info]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_msg_info      The message information as received by recv_request]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_msg_response  The message response]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_timed_out    Message timed out]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_interrupted  Message interrupted]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="110" LINES="6" START_COLUMN="11" START_LINE="105"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SEND_REQUEST_INTERRUPT">
+      <COMMENT_FIRST_LINE><![CDATA[Interrupt the receipt of a request.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Interrupt the receipt of a request. When database
+pipes are used to receive the request, the session can not
+easily be interrupted by a user defined interrupt (for example a CTRL-C).
+The way to do this, is to call this procedure from another session.
+This will interrupt the server.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[Needed for connection info]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_MSG_TIMED_OUT">
+        <COMMENT><![CDATA[    Message timed out]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="EPC.E_MSG_INTERRUPTED">
+        <COMMENT><![CDATA[  Message interrupted]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key   Needed for connection info]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_timed_out    Message timed out]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_interrupted  Message interrupted]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="127" LINES="4" START_COLUMN="11" START_LINE="124"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="PING">
+      <COMMENT_FIRST_LINE><![CDATA[Ping a server.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Ping a server.
+The string 'PING' and the response pipe will be sent into the request pipe
+(use set_connection_info/get_connection_info to set/get that).  The answer
+in the response pipe should be 'PONG'.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_EPC_KEY" TYPE="EPC_KEY_SUBTYPE">
+        <COMMENT><![CDATA[Needed for connection info]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_RESPONSE_PIPE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The response pipe]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="EPC.E_MSG_TIMED_OUT">
+        <COMMENT><![CDATA[    Message timed out]]></COMMENT>
+      </THROWS>
+      <THROWS NAME="EPC.E_MSG_INTERRUPTED">
+        <COMMENT><![CDATA[  Message interrupted]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_epc_key        Needed for connection info]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_response_pipe  The response pipe]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_timed_out    Message timed out]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[epc.e_msg_interrupted  Message interrupted]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="146" LINES="5" START_COLUMN="11" START_LINE="142"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="PURGE_PIPE">
+      <COMMENT_FIRST_LINE><![CDATA[Purge a database pipe.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Purge a database pipe.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_PIPE" TYPE="VARCHAR2">
+        <COMMENT><![CDATA[The pipe]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_pipe  The pipe]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="157" LINES="4" START_COLUMN="11" START_LINE="154"/>
+    </PROCEDURE>
+    <SUMMARY END_COLUMN="13" END_LINE="159" LINES="159" START_COLUMN="27" START_LINE="1"/>
+  </PACKAGE>
+  <PACKAGE NAME="STD_OBJECT_MGR" SCHEMA="ORACLE_TOOLS">
+    <COMMENT><![CDATA[
+This package is used to manage standard objects. Standard objects can be
+used for package state. Since package state by definition is attached to an
+Oracle session, some applications which are stateless (i.e. Apex) can not
+use normal package state. But the standard objects can be used to implement
+normal or stateless package state. First create an object type under
+std_object. As an example see object type epc_clnt_object. Instead of
+package variables an object must be created which contains the information
+needed. This object is set and get by std_object_mgr.set_std_object()
+respectively std_object_mgr.get_std_object(). Again see package epc_clnt
+for examples.
+Normal package state is implemented by leaving the group name null, i.e.
+never call std_object_mgr.set_group_name() or call
+std_object_mgr.set_group_name(null).  Now the objects will be retrieved
+from a PL/SQL table indexed by the object name.
+Stateless package state is implemented by setting the group name, a group
+of associated objects.  Now the objects will be retrieved from the database
+table std_objects using group name and object name.
+An Apex session acts as a group. So the Apex session id can be used as the
+group name. It is required to call std_object_mgr.set_group_name every time
+another Oracle session may be used, which is while entering an Apex HTML
+page.
+]]></COMMENT>
+    <TAG TYPE="@HEADCOM">
+      <COMMENT>
+      </COMMENT>
+    </TAG>
+    <PROCEDURE NAME="SET_GROUP_NAME">
+      <COMMENT_FIRST_LINE><![CDATA[Set the group name.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set the group name.
+Setting the group name to a non-NULL value will force the objects to use
+table std_objects.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_GROUP_NAME" TYPE="STD_OBJECTS.GROUP_NAME%TYPE">
+        <COMMENT><![CDATA[The group name]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_group_name  The group name]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="42" LINES="3" START_COLUMN="11" START_LINE="40"/>
+    </PROCEDURE>
+    <FUNCTION NAME="GET_GROUP_NAME">
+      <COMMENT_FIRST_LINE><![CDATA[Get the group name.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get the group name.
+]]></COMMENT>
+      <RETURN TYPE="STD_OBJECTS.GROUP_NAME%TYPE">
+        <COMMENT><![CDATA[The group name set by set_group_name()]]></COMMENT>
+      </RETURN>
+      <TAG TYPE="@RETURN">
+        <COMMENT><![CDATA[The group name set by set_group_name()]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="35" END_LINE="50" LINES="2" START_COLUMN="10" START_LINE="49"/>
+    </FUNCTION>
+    <PROCEDURE NAME="GET_STD_OBJECT">
+      <COMMENT_FIRST_LINE><![CDATA[Get a standard object.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get a standard object.
+Retrieve an object from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_OBJECT_NAME" TYPE="STD_OBJECTS.OBJECT_NAME%TYPE">
+        <COMMENT><![CDATA[The object name]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="OUT NOCOPY" NAME="P_STD_OBJECT" TYPE="STD_OBJECT">
+        <COMMENT><![CDATA[The object]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="NO_DATA_FOUND">
+        <COMMENT><![CDATA[  No object found]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_object_name  The object name]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_std_object   The object]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[no_data_found  No object found]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="66" LINES="4" START_COLUMN="11" START_LINE="63"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="SET_STD_OBJECT">
+      <COMMENT_FIRST_LINE><![CDATA[Set a standard object.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Set a standard object.
+Store an object in persistent storage (table std_objects) or into an
+internal PL/SQL table.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_OBJECT_NAME" TYPE="STD_OBJECTS.OBJECT_NAME%TYPE">
+        <COMMENT><![CDATA[The object name]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT MODE="IN" NAME="P_STD_OBJECT" TYPE="STD_OBJECT">
+        <COMMENT><![CDATA[The object]]></COMMENT>
+      </ARGUMENT>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_object_name  The object name]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_std_object   The object]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="80" LINES="4" START_COLUMN="11" START_LINE="77"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="DEL_STD_OBJECT">
+      <COMMENT_FIRST_LINE><![CDATA[Delete a standard object.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Delete a standard object.
+Deletes an object from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+]]></COMMENT>
+      <ARGUMENT MODE="IN" NAME="P_OBJECT_NAME" TYPE="STD_OBJECTS.OBJECT_NAME%TYPE">
+        <COMMENT><![CDATA[The object name.]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="VALUE_ERROR">
+        <COMMENT><![CDATA[  p_object_name is NULL]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_object_name  The object name.]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[value_error  p_object_name is NULL]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="94" LINES="3" START_COLUMN="11" START_LINE="92"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="GET_OBJECT_NAMES">
+      <COMMENT_FIRST_LINE><![CDATA[Get object names.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Get object names.
+Get the object names from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+]]></COMMENT>
+      <ARGUMENT MODE="OUT NOCOPY" NAME="P_OBJECT_NAME_TAB" TYPE="SYS.ODCIVARCHAR2LIST">
+        <COMMENT><![CDATA[The list of object names found.]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="VALUE_ERROR">
+        <COMMENT><![CDATA[  p_object_name is NULL]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_object_name_tab  The list of object names found.]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[value_error  p_object_name is NULL]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="108" LINES="3" START_COLUMN="11" START_LINE="106"/>
+    </PROCEDURE>
+    <PROCEDURE NAME="DELETE_STD_OBJECTS">
+      <COMMENT_FIRST_LINE><![CDATA[Delete objects.]]></COMMENT_FIRST_LINE>
+      <COMMENT><![CDATA[Delete objects.
+Delete objects from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+]]></COMMENT>
+      <ARGUMENT DEFAULT="'%'" MODE="IN" NAME="P_GROUP_NAME" TYPE="STD_OBJECTS.GROUP_NAME%TYPE">
+        <COMMENT><![CDATA[The group name (wildcards allowed, escape character is '\').
+If null the PL/SQL table will be used to delete from.]]></COMMENT>
+      </ARGUMENT>
+      <ARGUMENT DEFAULT="'%'" MODE="IN" NAME="P_OBJECT_NAME" TYPE="STD_OBJECTS.OBJECT_NAME%TYPE">
+        <COMMENT><![CDATA[The object name (wildcards allowed, escape character is '\').]]></COMMENT>
+      </ARGUMENT>
+      <THROWS NAME="VALUE_ERROR">
+        <COMMENT><![CDATA[  p_object_name is NULL]]></COMMENT>
+      </THROWS>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_group_name   The group name (wildcards allowed, escape character is '\').
+If null the PL/SQL table will be used to delete from.]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@PARAM">
+        <COMMENT><![CDATA[p_object_name  The object name (wildcards allowed, escape character is '\').]]></COMMENT>
+      </TAG>
+      <TAG TYPE="@THROWS">
+        <COMMENT><![CDATA[value_error  p_object_name is NULL]]></COMMENT>
+      </TAG>
+      <SUMMARY END_COLUMN="2" END_LINE="125" LINES="4" START_COLUMN="11" START_LINE="122"/>
+    </PROCEDURE>
+    <SUMMARY END_COLUMN="4" END_LINE="127" LINES="127" START_COLUMN="27" START_LINE="1"/>
+  </PACKAGE>
+  <GENERATOR>
+    <OBJECTS>
+      <PROCESSED COUNT="4"/>
+      <SKIPPED COUNT="0"/>
+    </OBJECTS>
+    <CREATED DATE="29/07/2021" TIME="14:49"/>
+    <SETTINGS DEFAULT_KEYWORDS_CASE="UPPER" DEFAULT_NAMES_CASE="UPPER" IGNORE_INFORMAL_COMMENTS="FALSE" INPUT_ENCODING="UTF-8" KEYWORDS_TO_DEFAULT_CASE="TRUE" KEYWORDS_TO_LOWER_CASE="FALSE" KEYWORDS_TO_UPPER_CASE="FALSE" NAMES_TO_DEFAULT_CASE="TRUE" NAMES_TO_LOWER_CASE="FALSE" NAMES_TO_UPPER_CASE="FALSE" SHOW_SKIPPED_PACKAGES="FALSE" VERBOSE="FALSE"/>
+  </GENERATOR>
+</APPLICATION>

@@ -1,0 +1,657 @@
+<HTML xmlns:lxslt="http://xml.apache.org/xslt" xmlns:exslt="http://exslt.org/common">
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>EPC</TITLE>
+<LINK TITLE="Style" HREF="../stylesheet.css" TYPE="text/css" REL="stylesheet">
+<!--
+        sameCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesLowerCase=FALSE
+        namesUpperCase=FALSE
+        namesDefaultCase=TRUE
+        defaultNamesCase=UPPER
+        namesFromCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesToCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-->
+</HEAD>
+<BODY BGCOLOR="white">
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+<H2>
+<FONT SIZE="-1">ORACLE_TOOLS</FONT>
+<BR>Package&nbsp;EPC_SRVR</H2>
+This package is used to implement the server side of RPC like functionality
+on an Oracle database. Messages are sent by the client to a server. The
+transport mechanisms supported are database pipes (DBMS_PIPE),
+HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for
+database pipe transport. TCP/IP servers should not use
+the TCP/IP functionality of Oracle, but of the OS instead.
+The flow of procedure calls will typically look like this:<br />
+1) Set connection information.<br />
+a) epc_srvr.register (once in a database session)<br />
+b) epc_srvr.set_connection_info<br />
+c) epc_srvr.set_request_recv_timeout (optional)<br />
+2) Receive the request<br />
+a) epc_srvr.recv_request<br />
+3) Process the message<br />
+4) Send the response<br />
+a) epc_srvr.send_response<br />
+<P></P>
+<DL></DL>
+<HR>
+<P></P>
+<A NAME="field_summary"></A><A NAME="type_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Type Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=binary_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=binary_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->binary_integer</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#EPC_KEY_SUBTYPE">EPC_KEY_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=epc.string_subtype
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=epc.string_subtype
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->epc.string_subtype</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#MSG_INFO_SUBTYPE">MSG_INFO_SUBTYPE</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      </TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="method_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Method Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="GET_CONNECTION_INFO"></A><TD><CODE><B><A HREF="#GET_CONNECTION_INFO(EPC_KEY_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)">GET_CONNECTION_INFO</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, P_PIPE_NAME OUT EPC.PIPE_NAME_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the database request pipe.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=EPC_KEY_SUBTYPE
+       localTypeName=EPC_KEY_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=EPC_KEY_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#EPC_KEY_SUBTYPE">EPC_KEY_SUBTYPE</A></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#GET_EPC_KEY">GET_EPC_KEY</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the key
+</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="PING"></A><TD><CODE><B><A HREF="#PING(EPC_KEY_SUBTYPE,VARCHAR2)">PING</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, P_RESPONSE_PIPE IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Ping a server.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="PURGE_PIPE"></A><TD><CODE><B><A HREF="#PURGE_PIPE(VARCHAR2)">PURGE_PIPE</A></B>(P_PIPE IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Purge a database pipe.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=3 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="RECV_REQUEST"></A><TD><CODE><B><A HREF="#RECV_REQUEST(EPC_KEY_SUBTYPE,EPC_SRVR.MSG_INFO_SUBTYPE,VARCHAR2)">RECV_REQUEST</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, P_MSG_INFO OUT EPC_SRVR.MSG_INFO_SUBTYPE, P_MSG_REQUEST OUT VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Receive a request.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=EPC_KEY_SUBTYPE
+       localTypeName=EPC_KEY_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=EPC_KEY_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#EPC_KEY_SUBTYPE">EPC_KEY_SUBTYPE</A></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#REGISTER">REGISTER</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Register an interface
+</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SEND_REQUEST_INTERRUPT"></A><TD><CODE><B><A HREF="#SEND_REQUEST_INTERRUPT(EPC_KEY_SUBTYPE)">SEND_REQUEST_INTERRUPT</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Interrupt the receipt of a request.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=3 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SEND_RESPONSE"></A><TD><CODE><B><A HREF="#SEND_RESPONSE(EPC_KEY_SUBTYPE,EPC_SRVR.MSG_INFO_SUBTYPE,VARCHAR2)">SEND_RESPONSE</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, P_MSG_INFO IN EPC_SRVR.MSG_INFO_SUBTYPE, P_MSG_RESPONSE IN VARCHAR2)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Send a response to a request.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_CONNECTION_INFO"></A><TD><CODE><B><A HREF="#SET_CONNECTION_INFO(EPC_KEY_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)">SET_CONNECTION_INFO</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, P_PIPE_NAME IN EPC.PIPE_NAME_SUBTYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the connection type to database pipes and store the pipe name for
+later use.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_RESPONSE_SEND_TIMEOUT"></A><TD><CODE><B><A HREF="#SET_RESPONSE_SEND_TIMEOUT(EPC_KEY_SUBTYPE,PLS_INTEGER)">SET_RESPONSE_SEND_TIMEOUT</A></B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, P_RESPONSE_SEND_TIMEOUT IN PLS_INTEGER)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the response send timeout.</TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="trigger_summary"></A><A NAME="field_detail"></A><A NAME="type_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Type Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="EPC_KEY_SUBTYPE"></A>
+<H3>EPC_KEY_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=binary_integer
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=binary_integer
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->binary_integer <B>EPC_KEY_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="MSG_INFO_SUBTYPE"></A>
+<H3>MSG_INFO_SUBTYPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=epc.string_subtype
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=epc.string_subtype
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->epc.string_subtype <B>MSG_INFO_SUBTYPE</B>()</PRE>
+<DL>
+<DD></DD>
+<DD>
+<DL></DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="method_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Method Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="GET_CONNECTION_INFO(EPC_KEY_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)"></A>
+<H3>GET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_CONNECTION_INFO</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, <BR>                            P_PIPE_NAME OUT EPC.PIPE_NAME_SUBTYPE)</PRE>
+<DL>
+<DD>Get the database request pipe.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              The key</DD>
+<DD>
+<CODE>P_PIPE_NAME</CODE> -
+              The request pipe name</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_EPC_KEY"></A>
+<H3>GET_EPC_KEY</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=EPC_KEY_SUBTYPE
+       localTypeName=EPC_KEY_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=EPC_KEY_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#EPC_KEY_SUBTYPE">EPC_KEY_SUBTYPE</A> <B>GET_EPC_KEY</B>()</PRE>
+<DL>
+<DD>Get the key
+</DD>
+<DD>
+<DL>
+<DT>Returns:
+          <DD>The unique key for this session</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PING(EPC_KEY_SUBTYPE,VARCHAR2)"></A>
+<H3>PING</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>PING</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, <BR>             P_RESPONSE_PIPE IN VARCHAR2)</PRE>
+<DL>
+<DD>Ping a server.
+The string 'PING' and the response pipe will be sent into the request pipe
+(use set_connection_info/get_connection_info to set/get that).  The answer
+in the response pipe should be 'PONG'.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              Needed for connection info</DD>
+<DD>
+<CODE>P_RESPONSE_PIPE</CODE> -
+              The response pipe</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_MSG_TIMED_OUT</CODE> -
+                  Message timed out</DD>
+<DD>
+<CODE>EPC.E_MSG_INTERRUPTED</CODE> -
+                Message interrupted</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="PURGE_PIPE(VARCHAR2)"></A>
+<H3>PURGE_PIPE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>PURGE_PIPE</B>(P_PIPE IN VARCHAR2)</PRE>
+<DL>
+<DD>Purge a database pipe.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_PIPE</CODE> -
+              The pipe</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="RECV_REQUEST(EPC_KEY_SUBTYPE,EPC_SRVR.MSG_INFO_SUBTYPE,VARCHAR2)"></A>
+<H3>RECV_REQUEST</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>RECV_REQUEST</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, <BR>                     P_MSG_INFO OUT EPC_SRVR.MSG_INFO_SUBTYPE, <BR>                     P_MSG_REQUEST OUT VARCHAR2)</PRE>
+<DL>
+<DD>Receive a request.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              Needed for the connection info</DD>
+<DD>
+<CODE>P_MSG_INFO</CODE> -
+              The message information</DD>
+<DD>
+<CODE>P_MSG_REQUEST</CODE> -
+              The message request</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_MSG_TIMED_OUT</CODE> -
+                  Message timed out</DD>
+<DD>
+<CODE>EPC.E_MSG_TOO_BIG</CODE> -
+                    Message too big</DD>
+<DD>
+<CODE>EPC.E_MSG_INTERRUPTED</CODE> -
+                Message interrupted</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="REGISTER"></A>
+<H3>REGISTER</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=EPC_KEY_SUBTYPE
+       localTypeName=EPC_KEY_SUBTYPE
+       schema=ORACLE_TOOLS
+       fieldType=EPC_KEY_SUBTYPE
+       synonymsFile=,,--><!--localTypeNameParameter--><A href="#EPC_KEY_SUBTYPE">EPC_KEY_SUBTYPE</A> <B>REGISTER</B>()</PRE>
+<DL>
+<DD>Register an interface
+</DD>
+<DD>
+<DL>
+<DT>Returns:
+          <DD>A unique key which has to be used in all other epc_srvr calls.</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SEND_REQUEST_INTERRUPT(EPC_KEY_SUBTYPE)"></A>
+<H3>SEND_REQUEST_INTERRUPT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SEND_REQUEST_INTERRUPT</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE)</PRE>
+<DL>
+<DD>Interrupt the receipt of a request. When database
+pipes are used to receive the request, the session can not
+easily be interrupted by a user defined interrupt (for example a CTRL-C).
+The way to do this, is to call this procedure from another session.
+This will interrupt the server.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              Needed for connection info</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_MSG_TIMED_OUT</CODE> -
+                  Message timed out</DD>
+<DD>
+<CODE>EPC.E_MSG_INTERRUPTED</CODE> -
+                Message interrupted</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SEND_RESPONSE(EPC_KEY_SUBTYPE,EPC_SRVR.MSG_INFO_SUBTYPE,VARCHAR2)"></A>
+<H3>SEND_RESPONSE</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SEND_RESPONSE</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, <BR>                      P_MSG_INFO IN EPC_SRVR.MSG_INFO_SUBTYPE, <BR>                      P_MSG_RESPONSE IN VARCHAR2)</PRE>
+<DL>
+<DD>Send a response to a request.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              Needed for the connection info</DD>
+<DD>
+<CODE>P_MSG_INFO</CODE> -
+              The message information as received by recv_request</DD>
+<DD>
+<CODE>P_MSG_RESPONSE</CODE> -
+              The message response</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>EPC.E_MSG_TIMED_OUT</CODE> -
+                  Message timed out</DD>
+<DD>
+<CODE>EPC.E_MSG_INTERRUPTED</CODE> -
+                Message interrupted</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_CONNECTION_INFO(EPC_KEY_SUBTYPE,EPC.PIPE_NAME_SUBTYPE)"></A>
+<H3>SET_CONNECTION_INFO</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_CONNECTION_INFO</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, <BR>                            P_PIPE_NAME IN EPC.PIPE_NAME_SUBTYPE)</PRE>
+<DL>
+<DD>Set the connection type to database pipes and store the pipe name for
+later use. Each interface may have a different connection.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              The key</DD>
+<DD>
+<CODE>P_PIPE_NAME</CODE> -
+              The request pipe name</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_RESPONSE_SEND_TIMEOUT(EPC_KEY_SUBTYPE,PLS_INTEGER)"></A>
+<H3>SET_RESPONSE_SEND_TIMEOUT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_RESPONSE_SEND_TIMEOUT</B>(P_EPC_KEY IN EPC_KEY_SUBTYPE, <BR>                                  P_RESPONSE_SEND_TIMEOUT IN PLS_INTEGER)</PRE>
+<DL>
+<DD>Set the response send timeout.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_EPC_KEY</CODE> -
+              The key</DD>
+<DD>
+<CODE>P_RESPONSE_SEND_TIMEOUT</CODE> -
+              The response send timeout</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="trigger_detail"></A>
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+</BODY>
+</HTML>

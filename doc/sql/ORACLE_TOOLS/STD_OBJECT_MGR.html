@@ -1,0 +1,427 @@
+<HTML xmlns:lxslt="http://xml.apache.org/xslt" xmlns:exslt="http://exslt.org/common">
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<TITLE>EPC</TITLE>
+<LINK TITLE="Style" HREF="../stylesheet.css" TYPE="text/css" REL="stylesheet">
+<!--
+        sameCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesLowerCase=FALSE
+        namesUpperCase=FALSE
+        namesDefaultCase=TRUE
+        defaultNamesCase=UPPER
+        namesFromCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
+        namesToCase=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-->
+</HEAD>
+<BODY BGCOLOR="white">
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+<H2>
+<FONT SIZE="-1">ORACLE_TOOLS</FONT>
+<BR>Package&nbsp;STD_OBJECT_MGR</H2>
+This package is used to manage standard objects. Standard objects can be
+used for package state. Since package state by definition is attached to an
+Oracle session, some applications which are stateless (i.e. Apex) can not
+use normal package state. But the standard objects can be used to implement
+normal or stateless package state. First create an object type under
+std_object. As an example see object type epc_clnt_object. Instead of
+package variables an object must be created which contains the information
+needed. This object is set and get by std_object_mgr.set_std_object()
+respectively std_object_mgr.get_std_object(). Again see package epc_clnt
+for examples.
+Normal package state is implemented by leaving the group name null, i.e.
+never call std_object_mgr.set_group_name() or call
+std_object_mgr.set_group_name(null).  Now the objects will be retrieved
+from a PL/SQL table indexed by the object name.
+Stateless package state is implemented by setting the group name, a group
+of associated objects.  Now the objects will be retrieved from the database
+table std_objects using group name and object name.
+An Apex session acts as a group. So the Apex session id can be used as the
+group name. It is required to call std_object_mgr.set_group_name every time
+another Oracle session may be used, which is while entering an Apex HTML
+page.
+<P></P>
+<DL></DL>
+<HR>
+<P></P>
+<A NAME="field_summary"></A><A NAME="type_summary"></A><A NAME="method_summary"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="2"><FONT SIZE="+2"><B>Method Summary</B></FONT></TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="DEL_STD_OBJECT"></A><TD><CODE><B><A HREF="#DEL_STD_OBJECT(STD_OBJECTS.OBJECT_NAME%TYPE)">DEL_STD_OBJECT</A></B>(P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Delete a standard object.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="DELETE_STD_OBJECTS"></A><TD><CODE><B><A HREF="#DELETE_STD_OBJECTS(STD_OBJECTS.GROUP_NAME%TYPE,STD_OBJECTS.OBJECT_NAME%TYPE)">DELETE_STD_OBJECTS</A></B>(P_GROUP_NAME IN STD_OBJECTS.GROUP_NAME%TYPE DEFAULT '%', P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE DEFAULT '%')</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Delete objects.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=STD_OBJECTS.GROUP_NAME%TYPE
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=STD_OBJECTS.GROUP_NAME%TYPE
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->STD_OBJECTS.GROUP_NAME%TYPE</CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=0 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><TD><CODE><B><A HREF="#GET_GROUP_NAME">GET_GROUP_NAME</A></B>()</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get the group name.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="GET_OBJECT_NAMES"></A><TD><CODE><B><A HREF="#GET_OBJECT_NAMES(SYS.ODCIVARCHAR2LIST)">GET_OBJECT_NAMES</A></B>(P_OBJECT_NAME_TAB OUT NOCOPY SYS.ODCIVARCHAR2LIST)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get object names.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="GET_STD_OBJECT"></A><TD><CODE><B><A HREF="#GET_STD_OBJECT(STD_OBJECTS.OBJECT_NAME%TYPE,STD_OBJECT)">GET_STD_OBJECT</A></B>(P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE, P_STD_OBJECT OUT NOCOPY STD_OBJECT)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Get a standard object.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=1 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_GROUP_NAME"></A><TD><CODE><B><A HREF="#SET_GROUP_NAME(STD_OBJECTS.GROUP_NAME%TYPE)">SET_GROUP_NAME</A></B>(P_GROUP_NAME IN STD_OBJECTS.GROUP_NAME%TYPE)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set the group name.</TD>
+</TR>
+<TR CLASS="TableRowColor">
+<TD WIDTH="1%" VALIGN="top" ALIGN="right"><FONT SIZE="-1"><CODE>&nbsp;<!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--></CODE></FONT></TD>
+<!-- 
+		siblingCount=0 
+		argumentCount=2 
+		predecessorCount=0 
+		siblingNoArgumentCount=0--><A NAME="SET_STD_OBJECT"></A><TD><CODE><B><A HREF="#SET_STD_OBJECT(STD_OBJECTS.OBJECT_NAME%TYPE,STD_OBJECT)">SET_STD_OBJECT</A></B>(P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE, P_STD_OBJECT IN STD_OBJECT)</CODE>
+<BR>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Set a standard object.</TD>
+</TR>
+</TABLE>
+<P></P>
+<A NAME="trigger_summary"></A><A NAME="field_detail"></A><A NAME="type_detail"></A><A NAME="method_detail"></A>
+<TABLE WIDTH="100%" CELLSPACING="0" CELLPADDING="3" BORDER="1">
+<TR CLASS="TableHeadingColor">
+<TD COLSPAN="1"><FONT SIZE="+2"><B>Method Detail</B></FONT></TD>
+</TR>
+</TABLE>
+<A NAME="DEL_STD_OBJECT(STD_OBJECTS.OBJECT_NAME%TYPE)"></A>
+<H3>DEL_STD_OBJECT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>DEL_STD_OBJECT</B>(P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE)</PRE>
+<DL>
+<DD>Delete a standard object.
+Deletes an object from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_OBJECT_NAME</CODE> -
+              The object name.</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>VALUE_ERROR</CODE> -
+                p_object_name is NULL</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="DELETE_STD_OBJECTS(STD_OBJECTS.GROUP_NAME%TYPE,STD_OBJECTS.OBJECT_NAME%TYPE)"></A>
+<H3>DELETE_STD_OBJECTS</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>DELETE_STD_OBJECTS</B>(P_GROUP_NAME IN STD_OBJECTS.GROUP_NAME%TYPE DEFAULT '%', <BR>                           P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE DEFAULT '%')</PRE>
+<DL>
+<DD>Delete objects.
+Delete objects from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_GROUP_NAME</CODE> -
+              The group name (wildcards allowed, escape character is '\').
+If null the PL/SQL table will be used to delete from.</DD>
+<DD>
+<CODE>P_OBJECT_NAME</CODE> -
+              The object name (wildcards allowed, escape character is '\').</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>VALUE_ERROR</CODE> -
+                p_object_name is NULL</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_GROUP_NAME"></A>
+<H3>GET_GROUP_NAME</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=STD_OBJECTS.GROUP_NAME%TYPE
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=STD_OBJECTS.GROUP_NAME%TYPE
+       synonymsFile=,,--><!--GenerateTypeLink: default reached-->STD_OBJECTS.GROUP_NAME%TYPE <B>GET_GROUP_NAME</B>()</PRE>
+<DL>
+<DD>Get the group name.
+</DD>
+<DD>
+<DL>
+<DT>Returns:
+          <DD>The group name set by set_group_name()</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_OBJECT_NAMES(SYS.ODCIVARCHAR2LIST)"></A>
+<H3>GET_OBJECT_NAMES</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_OBJECT_NAMES</B>(P_OBJECT_NAME_TAB OUT NOCOPY SYS.ODCIVARCHAR2LIST)</PRE>
+<DL>
+<DD>Get object names.
+Get the object names from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_OBJECT_NAME_TAB</CODE> -
+              The list of object names found.</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>VALUE_ERROR</CODE> -
+                p_object_name is NULL</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="GET_STD_OBJECT(STD_OBJECTS.OBJECT_NAME%TYPE,STD_OBJECT)"></A>
+<H3>GET_STD_OBJECT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>GET_STD_OBJECT</B>(P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE, <BR>                       P_STD_OBJECT OUT NOCOPY STD_OBJECT)</PRE>
+<DL>
+<DD>Get a standard object.
+Retrieve an object from persistent storage (table std_objects) or from an
+internal PL/SQL table.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_OBJECT_NAME</CODE> -
+              The object name</DD>
+<DD>
+<CODE>P_STD_OBJECT</CODE> -
+              The object</DD>
+</DT>
+<DT>Throws:
+        <DD>
+<CODE>NO_DATA_FOUND</CODE> -
+                No object found</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_GROUP_NAME(STD_OBJECTS.GROUP_NAME%TYPE)"></A>
+<H3>SET_GROUP_NAME</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_GROUP_NAME</B>(P_GROUP_NAME IN STD_OBJECTS.GROUP_NAME%TYPE)</PRE>
+<DL>
+<DD>Set the group name.
+Setting the group name to a non-NULL value will force the objects to use
+table std_objects.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_GROUP_NAME</CODE> -
+              The group name</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="SET_STD_OBJECT(STD_OBJECTS.OBJECT_NAME%TYPE,STD_OBJECT)"></A>
+<H3>SET_STD_OBJECT</H3>
+<PRE>public <!--
+       schemaName=ORACLE_TOOLS
+       typeName=
+       localTypeName=
+       schema=ORACLE_TOOLS
+       fieldType=
+       synonymsFile=,,--><!--GenerateTypeLink: default reached--> <B>SET_STD_OBJECT</B>(P_OBJECT_NAME IN STD_OBJECTS.OBJECT_NAME%TYPE, <BR>                       P_STD_OBJECT IN STD_OBJECT)</PRE>
+<DL>
+<DD>Set a standard object.
+Store an object in persistent storage (table std_objects) or into an
+internal PL/SQL table.
+</DD>
+<DD>
+<DL>
+<DT>Parameters:
+        <DD>
+<CODE>P_OBJECT_NAME</CODE> -
+              The object name</DD>
+<DD>
+<CODE>P_STD_OBJECT</CODE> -
+              The object</DD>
+</DT>
+</DL>
+</DD>
+<P></P>
+<DL></DL>
+</DL>
+<HR>
+<A NAME="trigger_detail"></A>
+<TABLE CELLSPACING="0" CELLPADDING="1" WIDTH="100%" BORDER="0">
+<TR>
+<TD CLASS="NavBarRow1" COLSPAN="2">
+<TABLE CELLSPACING="3" CELLPADDING="0" BORDER="0">
+<TR VALIGN="top" ALIGN="center">
+<TD CLASS="NavBarRow1"><A HREF="../summary.html"><FONT CLASS="NavBarFont1"><B>Overview</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../deprecated-list.html"><FONT CLASS="NavBarFont1"><B>Deprecated</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../index-list.html"><FONT CLASS="NavBarFont1"><B>Index</B></FONT></A> &nbsp;</TD><TD CLASS="NavBarRow1"><A HREF="../generator.html"><FONT CLASS="NavBarFont1"><B>Generator</B></FONT></A> &nbsp;</TD>
+</TR>
+</TABLE>
+</TD><TD rowspan="3" VALIGN="top" ALIGN="right"><EM><b>EPC</b></EM></TD>
+</TR>
+<TR>
+<TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+      SUMMARY:  <A HREF="#field_summary">FIELD</A> | <A HREF="#type_summary">TYPE</A> | <A HREF="#method_summary">METHOD</A></FONT></TD><TD CLASS="NavBarRow3" VALIGN="top"><FONT SIZE="-2">
+    DETAIL:  <A HREF="#field_detail">FIELD</A> | <A HREF="#type_detail">TYPE</A> | <A HREF="#method_detail">METHOD</A></FONT></TD>
+</TR>
+</TABLE>
+<HR>
+</BODY>
+</HTML>

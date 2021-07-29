@@ -45,7 +45,7 @@ doc: $(generated_html_dirs)
 # Create HTML documentation in the source tree
 sql: $(FORCE)
 	@cd $(srcdir); if test -d $@; then chmod +w $@; rm -fr $@; fi; mkdir -p $@
-	@$(PLDOC) -d $@ -doctitle EPC -user $(SCHEMA) $(srcdir)/../src/sql/R__*PACKAGE_SPEC*.sql
+	@$(PLDOC) -d $@ -doctitle EPC -user '$(SCHEMA)' $(srcdir)/../src/sql/R__*PACKAGE_SPEC*.sql
 
 # Create HTML documentation in the source tree
 c: $(FORCE)

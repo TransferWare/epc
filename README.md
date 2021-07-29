@@ -134,10 +134,9 @@ Issue this to generate the documentation:
 
 ```
 $ cd build
-$ ORACLE_HOME=<directory containing ojdbc6.jar>
-$ SCHEMA=<Oracle owner schema>
+$ ORACLE_HOME='<directory containing ojdbc6.jar>'
 $ ../configure # if you did (re-)install one of those two programs.
-$ make doc # or make
+$ SCHEMA='<Oracle owner schema>' make doc # or make
 ```
 
 In the build directory you can will these files now:
