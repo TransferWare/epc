@@ -22,7 +22,7 @@ This section explains how to install just the PL/SQL library as a foundation for
 There are two methods:
 1. use the [Oracle Tools GUI](https://github.com/paulissoft/oracle-tools-gui)
 with the pom.xml file from the project root and schema ORACLE_TOOLS as the owner
-2. execute src/sql/install.sql connected as the owner using SQL*Plus, SQLcl or SQL Developer
+2. execute `src/sql/install.sql` connected as the owner using SQL*Plus, SQLcl or SQL Developer
 
 The advantage of the first method is that you the installation is tracked and
 that you can upgrade later on.
@@ -79,7 +79,7 @@ You may need to grant (as SYS) those SYS packages to the owner.
 The EPC can thus process XML messages and for that you need the Oracle XML C
 SDK. Starting from Oracle 11 this is included in the database
 installation. For 10 and earlier download this from OTN and install it into
-$ORACLE_HOME/xdk.
+`$ORACLE_HOME/xdk`.
 
 ### Configure
 
