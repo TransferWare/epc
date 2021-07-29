@@ -8,13 +8,7 @@
 -- target database link: 
 -- object type         : 
 -- object names include: 1
--- object names        : EPC,
-EPC_CLNT,
-EPC_CLNT_OBJECT,
-EPC_SRVR,
-STD_OBJECT,
-STD_OBJECT_MGR,
-STD_OBJECTS
+-- object names        : EPC,EPC_CLNT,EPC_CLNT_OBJECT,EPC_SRVR,STD_OBJECT,STD_OBJECT_MGR,STD_OBJECTS
 -- skip repeatables    : 0
 -- interface           : pkg_ddl_util v4
 -- owner               : ORACLE_TOOLS
