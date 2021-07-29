@@ -1,35 +1,21 @@
 # External Procedure Call toolkit
 
-This is 'EPC', the External Procedure Call toolkit.
+This is EPC, the External Procedure Call toolkit.
 
 It is used to:
-1. provide a PL/SQL library as foundation for [PLSDBUG, a PL/SQL debugging library](https://github.com/TransferWare/plsdbug)
-2. invoke external procedures from Oracle PL/SQL
-
-When you are interested in the first usage only, just follow the instructions
-in the [first section of INSTALLATION](#installation).
+- provide an Oracle PL/SQL library as foundation for [PLSDBUG, a PL/SQL debugging library](https://github.com/TransferWare/plsdbug)
+- invoke external procedures from Oracle PL/SQL
 
 EPC itself consists of:
-- the library, libepc.la
-- an IDL compiler
-- the headers installed in '/usr/local/include'
-- a PL/SQL library to be installed in the database
+1. a PL/SQL library to be installed in the database
+2. the C library (-lepc)
+3. an IDL compiler
+4. C headers
 
-The EPC toolkit depends on the package
-[DBUG, a C debugging library](https://github.com/TransferWare/dbug). This should be installed into
-the same lib and bin directories as EPC (e.g. use the same prefix when
-installing).
+When you are interested in the first item only, just follow the instructions
+in [DATABASE INSTALL](#database-install).
 
-## DOCUMENTATION
-
-- doc/c/index.html
-- doc/epcman.doc
-- doc/sql/index.html
-- utils/empty_pipes.html
-
-## INSTALLATION
-
-### Just the PL/SQL library as foundation for PLSDBUG
+## DATABASE INSTALL
 
 This section explains how to install just the PL/SQL library as a foundation for PLSDBUG.
 
@@ -41,92 +27,89 @@ with the pom.xml file from the project root and schema ORACLE_TOOLS as the owner
 The advantage of the first method is that you the installation is tracked and
 that you can upgrade later on.
 
-### Everything
+## INSTALL FROM SOURCE
+
+Also called the MAINTAINER BUILD. You just need the sources either cloned from [EPC on GitHub](https://github.com/TransferWare/epc) or from a source archive.
+
+You need a Unix shell which is available on Mac OS X, Linux and Unix of course.
+On Windows you can use the Windows Subsystem for Linux (WSL), Cygwin or Git Bash.
+
+You need the following programs:
+- automake
+- autoconf
+- libtool (on a Mac OS X glibtool)
+
+Next the following command will generate the Autotools `configure` script:
+
+```
+$ ./bootstrap
+```
+
+## INSTALL
+
+The EPC toolkit depends on the package [DBUG, a C debugging
+library](https://github.com/TransferWare/dbug). Both packages should be
+installed into the same lib and bin directories (e.g. use the same prefix when
+installing).
 
 This section explains how to install the complete toolkit (including the PL/SQL library).
 
-### Oracle stuff
+#### Preconditions
 
 First install:
 - Oracle SQL*Plus (executable name sqlplus)
 - Oracle PRO*C (executable name proc)
 
-The most easy way to do this is to install the Oracle database (for
-instance an XE version) and then the corresponding PRO*C compiler.
+You can use the [Oracle Instant Client Downloads](https://www.oracle.com/database/technologies/instant-client/downloads.html).
 
-The following command will give you the Oracle version: sqlplus -V
+The correct procedure is to:
+1. first download and install (unzip) the newest Basic (Light) Package
+2. next download and install (unzip) the newest SQL*Plus Package
+3. next download and install (unzip) the newest Instant Client Package - Precompiler
 
-This version number can be used to find the [precompiler download](https://www.oracle.com/database/technologies/instant-client/precompiler-112010-downloads.html).
-
-Now install the proc precompiler in the same directory as the sqlplus
-executable. Ensure the headers are installed in ../include.
+For the Mac OS X the precompiler package has not the same version as the other packages but that is not a problem. Just add the installation directories to your PATH.
 
 The EPC has the following modes of communication:
-- SOAP (via HTTP, i.e. SYS.UTL_HTTP)
-- XMLRPC (via TCP/IP, i.e. SYS.UTL_HTTP)
-- NATIVE (database pipes, I.E. SYS.DBMS_PIPE)
+- SOAP (via HTTP, i.e. package SYS.UTL_HTTP)
+- XMLRPC (via TCP/IP, i.e. package SYS.UTL_HTTP)
+- NATIVE (database pipes, i.e. package SYS.DBMS_PIPE)
 
-You may need to grant (as SYS) those packages to the owner.
+You may need to grant (as SYS) those SYS packages to the owner.
 
 The EPC can thus process XML messages and for that you need the Oracle XML C
 SDK. Starting from Oracle 11 this is included in the database
 installation. For 10 and earlier download this from OTN and install it into
 $ORACLE_HOME/xdk.
 
-An important feature is enabling/disabling server interrupts. Because
-the EPC server waits forever for a message using
-dbms_pipe.receive_message, it may be difficult to stop the server
-gracefully. The --enable-server-interrupt configure option enables the
-EPC server to be killed by an interrupt (CTRL-C). The default is to
-enable this, but this means that a second Oracle session is started
-which sends an empty message into the request pipe so the EPC server can
-exit. This can be disabled by --disable-server-interrupt.
+### Configure
 
-### GNU stuff
+Here you need either a distribution archive with the `configure` script or you must have bootstrapped your environment.
 
-Installation using the GNU build tools is described in INSTALL. 
-
-#### Windows specific
-
-For Windows platforms the Cygwin suite with GCC and the MinGW extension
-can be used. There is one caveat: the libraries should not depend on the
-Cygwin DLL, but on the Microsoft run-time DLLs instead. See the file
-BUGS in the DBUG distribution for more information.
-
-#### Solaris specific
-
-On SUN Solaris version 9 or higher the library libm has to be added to
-the list of libraries, because the Oracle XML library may need
-it. 
-
-The configure script will try to set the environment correctly. In case
-that fails the following configure command may be tried:
+In order to have an out-of-source build create a `build` directory first and configure from that directory:
 
 ```
-$ ./configure LIBS="-lm"
-```
-
-## BUILD
-
-First follow the BUILD instructions in the DBUG README.
-
-Next (creating a build directory to separate generated and source files):
-
-```shell
 $ mkdir build
 $ cd build
 $ ../configure
-$ make
 ```
 
-## DIST
+An important feature is enabling/disabling server interrupts. Because
+the EPC server waits forever for a message using
+`dbms_pipe.receive_message`, it may be difficult to stop the server
+gracefully. The `--enable-server-interrupt` configure option enables the
+EPC server to be killed by an interrupt (CTRL-C). The default is to
+enable this, but this means that a second Oracle session is started
+which sends an empty message into the request pipe so the EPC server can
+exit. This can be disabled by `--disable-server-interrupt`.
 
-Follow instructions from [BUILD](#build).
+### Build
 
-Next:
+See file `INSTALL` for further installation instructions.
 
-```shell
-$ make distcheck
-$ make dist
-```
+## DOCUMENTATION
 
+In the build directory you can will these files after `make` has run:
+- doc/c/index.html
+- doc/epcman.doc
+- doc/sql/index.html
+- utils/empty_pipes.html

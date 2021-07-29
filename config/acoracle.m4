@@ -42,7 +42,7 @@ for acx_rootdir in $1; do
   test -d $acx_rootdir || continue
 	if test "$acx_cv_search_$3" = no; then
 	  if test -z "$2"; then
-		  acx_subdirs=`cd $acx_rootdir; find . \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \)  -printf "%h\n" | sort -u`
+		  acx_subdirs=`cd $acx_rootdir; find . \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \) -exec dirname {} \; | sort -u`
 		else
 		  acx_subdirs=$2
 		fi
