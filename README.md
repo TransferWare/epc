@@ -139,7 +139,7 @@ $ ../configure # if you did (re-)install one of those two programs.
 $ SCHEMA='<Oracle owner schema>' make doc # or make
 ```
 
-In the build directory you can will these files now:
+In the build directory you will find these files now:
 - [C documentation](doc/c/index.html)
 - [EPC manual](doc/epcman.html)
 - [SQL documentation](doc/sql/index.html)
