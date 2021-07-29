@@ -156,7 +156,7 @@ AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h errno.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
+AC_CHECK_HEADERS([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
 AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -194,7 +194,7 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
 AC_CONFIG_FILES([replace/Makefile])
-AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
+AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile])
 # Perl is substituted in these scripts
 AC_CONFIG_FILES([src/prog/epcdaemon.pl])
 AC_CONFIG_FILES([Makefile test/Makefile])

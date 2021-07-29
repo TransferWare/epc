@@ -4,7 +4,7 @@ This is EPC, the External Procedure Call toolkit.
 
 It is used to:
 - provide an Oracle PL/SQL library as foundation for [PLSDBUG, a PL/SQL debugging library](https://github.com/TransferWare/plsdbug)
-- invoke external procedures from Oracle PL/SQL
+- invoke external procedures written in C from Oracle PL/SQL
 
 EPC itself consists of:
 1. a PL/SQL library to be installed in the database
@@ -12,12 +12,17 @@ EPC itself consists of:
 3. an IDL compiler
 4. C headers
 
-When you are interested in the first item only, just follow the instructions
-in [DATABASE INSTALL](#database-install).
+Follow these installation steps:
+
+| Step | When |
+| :--- | :--- |
+| [DATABASE INSTALL](#database-install) | Always |
+| [INSTALL FROM SOURCE](#install-from-source) | When you want the install the rest (not the database) from source |
+| [INSTALL](#install) | When you want the install the rest and you have a `configure` script |
 
 ## DATABASE INSTALL
 
-This section explains how to install just the PL/SQL library as a foundation for PLSDBUG.
+This section explains how to install the PL/SQL library as a foundation for PLSDBUG.
 
 There are two methods:
 1. use the [Oracle Tools GUI](https://github.com/paulissoft/oracle-tools-gui)
@@ -29,7 +34,8 @@ that you can upgrade later on.
 
 ## INSTALL FROM SOURCE
 
-Also called the MAINTAINER BUILD. You just need the sources either cloned from [EPC on GitHub](https://github.com/TransferWare/epc) or from a source archive.
+The Autotools community calls this a MAINTAINER BUILD. You just need the sources either cloned from
+[EPC on GitHub](https://github.com/TransferWare/epc) or from a source archive.
 
 You need a Unix shell which is available on Mac OS X, Linux and Unix of course.
 On Windows you can use the Windows Subsystem for Linux (WSL), Cygwin or Git Bash.
@@ -52,7 +58,7 @@ library](https://github.com/TransferWare/dbug). Both packages should be
 installed into the same lib and bin directories (e.g. use the same prefix when
 installing).
 
-This section explains how to install the complete toolkit (including the PL/SQL library).
+This section explains how to install everything except the database.
 
 ### Preconditions
 
@@ -60,12 +66,12 @@ First install:
 - Oracle SQL*Plus (executable name sqlplus)
 - Oracle PRO*C (executable name proc)
 
-You can use the [Oracle Instant Client Downloads](https://www.oracle.com/database/technologies/instant-client/downloads.html).
+You can use a local database installation or the [Oracle Instant Client Downloads web site](https://www.oracle.com/database/technologies/instant-client/downloads.html).
 
 The correct procedure is to:
 1. first download and install (unzip) the newest Basic (Light) Package
 2. next download and install (unzip) the newest SQL*Plus Package
-3. next download and install (unzip) the newest Instant Client Package - Precompiler
+3. finally download and install (unzip) the newest Instant Client Package - Precompiler
 
 For the Mac OS X the precompiler package has not the same version as the other packages but that is not a problem. Just add the installation directories to your PATH.
 
@@ -74,12 +80,11 @@ The EPC has the following modes of communication:
 - XMLRPC (via TCP/IP, i.e. package SYS.UTL_HTTP)
 - NATIVE (database pipes, i.e. package SYS.DBMS_PIPE)
 
-You may need to grant (as SYS) those SYS packages to the owner.
+You may need to grant (as SYS) SYS.DBMS_PIPE to the owner (SYS.UTL_HTTP is usually already granted publicly).
 
 The EPC can thus process XML messages and for that you need the Oracle XML C
-SDK. Starting from Oracle 11 this is included in the database
-installation. For 10 and earlier download this from OTN and install it into
-`$ORACLE_HOME/xdk`.
+SDK. Starting from Oracle 11 this is included in the installation. For 10 and
+earlier download this from OTN and install it into `$ORACLE_HOME/xdk`.
 
 ### Configure
 
@@ -104,13 +109,13 @@ exit. This can be disabled by `--disable-server-interrupt`.
 
 ### Build
 
-See file `INSTALL` for further installation instructions. Do not forget to set environment variable USERID as the Oracle connect string.
+See file `INSTALL` for further installation instructions.
 
 ## DOCUMENTATION
 
 To generate the C and SQL documentation you need to install:
-- Doxygen
-- PLDoc
+1. Doxygen
+2. PLDoc
 
 ### Doxygen
 
@@ -136,7 +141,7 @@ Issue this to generate the documentation:
 $ cd build
 $ ORACLE_HOME='<directory containing ojdbc6.jar>'
 $ ../configure # if you did (re-)install one of those two programs.
-$ SCHEMA='<Oracle owner schema>' make doc # or make
+$ SCHEMA='<Oracle owner schema>' make doc
 ```
 
 In the build directory you will find these files now:
