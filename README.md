@@ -140,7 +140,8 @@ $ SCHEMA='<Oracle owner schema>' make doc # or make
 ```
 
 In the build directory you will find these files now:
-- [C documentation](doc/c/index.html)
 - [EPC manual](doc/epcman.html)
-- [SQL documentation](doc/sql/index.html)
+- [an article in the dutch magazine Optimize about the EPC](doc/EPC-optimize.html)
+- [C reference documentation](doc/c/index.html)
+- [SQL reference documentation](doc/sql/index.html)
 - [How to empty database pipes](utils/empty_pipes.html)
