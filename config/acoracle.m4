@@ -84,16 +84,18 @@ AS_IF([test "$acx_cv_search_$3" != no],
 then
   acx_LDFLAGS=`eval echo \$acx_cv_search_$3 | cut -d' ' -f 1`
   acx_LIBS="`eval echo \$acx_cv_search_$3 | cut -d' ' -f 2` $7"
-  # is "-L$acx_dir" already part of $LDFLAGS?
-  if ! echo "$LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
-    LDFLAGS="$acx_LDFLAGS $LDFLAGS"
+  # is "-L$acx_dir" already part of $ORACLE_LDFLAGS?
+  if ! echo "$ORACLE_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
+    ORACLE_LDFLAGS="$acx_LDFLAGS $ORACLE_LDFLAGS"
   fi
-  # is "-l$acx_lib $7" already part of $LIBS?
-  if ! echo "$LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
-    LIBS="$acx_LIBS $LIBS"
+  # is "-l$acx_lib $7" already part of $ORACLE_LIBS?
+  if ! echo "$ORACLE_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
+    ORACLE_LIBS="$acx_LIBS $ORACLE_LIBS"
   fi
 	# GJP 2018-08-20 Define HAVE_<function>
 	AC_CHECK_FUNCS([$3],[],[])
+	AC_SUBST(ORACLE_LDFLAGS,[])
+	AC_SUBST(ORACLE_LIBS,[])
 fi
        $5],
       [$6])dnl

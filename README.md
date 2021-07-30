@@ -129,6 +129,9 @@ enable this, but this means that a second Oracle session is started
 which sends an empty message into the request pipe so the EPC server can
 exit. This can be disabled by `--disable-server-interrupt`.
 
+On the Mac OS X there are problems with creating shared libraries so you
+should disable it by setting the `--disable-shared` configure line option.
+
 To get help:
 
 ```
@@ -189,3 +192,5 @@ You will find these files now:
 - [doc/c/index.html](doc/c/index.html), the C reference documentation
 - [doc/sql/index.html](doc/sql/index.html), the SQL reference documentation
 - [utils/empty_pipes.html](utils/empty_pipes.html), an HOWTO about how to empty database pipes
+
+You can also have a look at [the EPC GitHub Pages](https://TransferWare.github.io/epc/).

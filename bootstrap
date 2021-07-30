@@ -32,12 +32,6 @@ case `uname` in
        ;;
 esac
 $LIBTOOLIZE --force --copy
-# GJP 2021-07-30 patch for libtool
-case `uname` in 
-    Darwin*) cd config && patch -u ltmain.sh -i ../ltmain.sh.patch
-             ;;
-    *) ;;
-esac
 autoheader 
 automake --add-missing --copy
 autoconf

@@ -10,14 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Please see the [EPC issue queue](https://github.com/TransferWare/epc/issues) for issues.
 
-## [5.3.1] - 2021-07-28
-
-### Changed
-
-- Removed RCS keywords like $Header$, $Id$ and $RCSfile$ from source files.
-- Corrected small errors in CHANGELOG.md like Copyright
-
-## [5.3.0] - 2021-07-28
+## [5.3.0] - 2021-07-30
 
 A new version on GitHub.
 
@@ -31,7 +24,11 @@ A new version on GitHub.
 - README now refers to README.md
 - ChangeLog now refers to CHANGELOG.md
 - NEWS now refers to CHANGELOG.md
+- Removed RCS keywords like $Header$, $Id$ and $RCSfile$ from source files.
+- Corrected small errors in CHANGELOG.md like Copyright
 - src/sql SQL scripts have been created using the DDL generation of [Oracle Tools](https://github.com/paulissoft/oracle-tools)
+- Build on Mac OS X works now
+- When no XML communication is used, the respective C sources are not processed
 
 ## [5.2.0] -  2018-08-19
 
