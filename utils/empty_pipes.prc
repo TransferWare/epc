@@ -34,11 +34,7 @@ CREATE OR REPLACE
 PROCEDURE
 empty_pipes( i_pipe_name_wildcard IN VARCHAR2 := '%', i_timeout IN INTEGER := 0 )
 
-/*POD
-
-=cut
-
-POD*/
+-- =cut
 
 IS
 procedure empty_pipe

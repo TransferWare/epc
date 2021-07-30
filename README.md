@@ -8,9 +8,8 @@ It is used to:
 
 EPC itself consists of:
 1. a PL/SQL library to be installed in the database
-2. the C library (-lepc)
-3. an IDL compiler
-4. C headers
+2. the C library (-lepc) and headers
+3. an interface definition language (IDL) compiler to parse interface descriptions
 
 Follow these installation steps:
 
@@ -24,13 +23,52 @@ Follow these installation steps:
 
 This section explains how to install the PL/SQL library as a foundation for PLSDBUG.
 
+### Preconditions
+
+You need Oracle SQL*Plus (executable name sqlplus). Test whether it exist by showing the version:
+
+```
+$ sqlplus -V
+```
+
+You can download and install the SQL*Plus package from the [Oracle Instant Client Downloads web site](https://www.oracle.com/database/technologies/instant-client/downloads.html).
+
+For the Mac OS X use DMG files if available otherwise you will have to use the Security & Privacy panel in the System Preferences to accept opening executables and shared libraries which is quite annoying.
+
+The correct procedure is to download and install (unzip) the newest Basic (Light) Package and SQL*Plus Package into the same instantclient directory. The versions should be the same.
+
+In the end add the instantclient directory `<instantclient directory>` to your executable path environment variable PATH and shared library path environment variable (DYLD_LIBRARY_PATH on Mac OS X, LD_LIBRARY_PATH for the rest).
+
+Test whether sqlplus exists now.
+
+### Installation
+
 There are two methods:
 1. use the [Oracle Tools GUI](https://github.com/paulissoft/oracle-tools-gui)
-with the pom.xml file from the project root and schema ORACLE_TOOLS as the owner
-2. execute `src/sql/install.sql` connected as the owner using SQL*Plus, SQLcl or SQL Developer
+with the pom.xml file from the project root and schema ORACLE_TOOLS as the EPC owner
+2. execute `src/sql/install.sql` connected as the EPC owner using SQL*Plus, SQLcl or SQL Developer
 
 The advantage of the first method is that you the installation is tracked and
 that you can upgrade later on.
+
+The username (Oracle account) must have been granted the following 
+system privileges:
+- create session
+- create table
+- create procedure
+- create type
+ 
+The username (Oracle account) must have been granted the following
+object privileges:
+- execute on sys.dbms_pipe
+- execute on sys.utl_http
+- execute on sys.utl_tcp
+
+The username (Oracle account) must have acces to a data tablespace, for instance USERS.
+
+An example:
+SQL> alter user <EPC owner> default tablespace users;
+SQL> alter user <EPC owner> quota unlimited on users;
 
 ## INSTALL FROM SOURCE
 
@@ -62,41 +100,25 @@ This section explains how to install everything except the database.
 
 ### Preconditions
 
-First install:
-- Oracle SQL*Plus (executable name sqlplus)
-- Oracle PRO*C (executable name proc)
+You need Oracle PRO*C (executable name proc). Test whether it exist by:
 
-You can use a local database installation or the [Oracle Instant Client Downloads web site](https://www.oracle.com/database/technologies/instant-client/downloads.html).
+```
+$ proc
+```
 
-The correct procedure is to:
-1. first download and install (unzip) the newest Basic (Light) Package
-2. next download and install (unzip) the newest SQL*Plus Package
-3. finally download and install (unzip) the newest Instant Client Package - Precompiler
+You can download and install it from the [Oracle Instant Client Downloads web site](https://www.oracle.com/database/technologies/instant-client/downloads.html).
 
-For the Mac OS X the precompiler package has not the same version as the other packages but that is not a problem. Just add the installation directories to your PATH.
+For the Mac OS X use DMG files if available.
 
-The EPC has the following modes of communication:
-- SOAP (via HTTP, i.e. package SYS.UTL_HTTP)
-- XMLRPC (via TCP/IP, i.e. package SYS.UTL_HTTP)
-- NATIVE (database pipes, i.e. package SYS.DBMS_PIPE)
+The correct procedure is to download and install (unzip) the newest Instant Client Package - Precompiler.
 
-You may need to grant (as SYS) SYS.DBMS_PIPE to the owner (SYS.UTL_HTTP is usually already granted publicly).
+For the Mac OS X the precompiler package has not the same version as the SQL*Plus packages but that is not a problem **AS LONG YOU USE THE SAME INSTANTCLIENT DIRECTORY** for all instantclient packages.
 
-The EPC can thus process XML messages and for that you need the Oracle XML C
-SDK. Starting from Oracle 11 this is included in the installation. For 10 and
-earlier download this from OTN and install it into `$ORACLE_HOME/xdk`.
+In the end add the instantclient directory `<instantclient directory>/sdk` to your PATH. Test whether proc exists now.
 
 ### Configure
 
 Here you need either a distribution archive with the `configure` script or you must have bootstrapped your environment.
-
-In order to have an out-of-source build create a `build` directory first and configure from that directory:
-
-```
-$ mkdir build
-$ cd build
-$ ../configure
-```
 
 An important feature is enabling/disabling server interrupts. Because
 the EPC server waits forever for a message using
@@ -107,9 +129,27 @@ enable this, but this means that a second Oracle session is started
 which sends an empty message into the request pipe so the EPC server can
 exit. This can be disabled by `--disable-server-interrupt`.
 
+To get help:
+
+```
+$ ./configure --help
+```
+
 ### Build
 
-See file `INSTALL` for further installation instructions.
+See file `INSTALL` for further installation instructions. Do not forget to set USERID (a connect string) as specified in that file.
+
+You can set USERID for connecting to your local orcl database by:
+
+```
+$ export USERID=<EPC owner>/<EPC password>@//localhost:1521/orcl
+```
+
+or using TNS:
+
+```
+$ export USERID=<EPC owner>/<EPC password>@orcl
+```
 
 ## DOCUMENTATION
 
@@ -135,18 +175,17 @@ The PLDoc documentation says that you need to set an environment variable ORACLE
 
 ### Generate the documentation
 
-Issue this to generate the documentation:
+Issue this to generate the documentation (you need to set variable SCHEMA as well but you can do that in front of make):
 
 ```
-$ cd build
 $ ORACLE_HOME='<directory containing ojdbc6.jar>'
-$ ../configure # if you did (re-)install one of those two programs.
-$ SCHEMA='<Oracle owner schema>' make doc
+$ ./configure # if you did (re-)install one of those two programs.
+$ SCHEMA='<EPC owner>' make doc
 ```
 
-In the build directory you will find these files now:
-- [EPC manual](doc/epcman.html)
-- [an article in the dutch magazine Optimize about the EPC](doc/EPC-optimize.html)
-- [C reference documentation](doc/c/index.html)
-- [SQL reference documentation](doc/sql/index.html)
-- [How to empty database pipes](utils/empty_pipes.html)
+You will find these files now:
+- [doc/epcman.html](doc/epcman.html), the EPC manual 
+- [doc/EPC-optimize.html](doc/EPC-optimize.html), an article in the dutch magazine Optimize about the EPC
+- [doc/c/index.html](doc/c/index.html), the C reference documentation
+- [doc/sql/index.html](doc/sql/index.html), the SQL reference documentation
+- [utils/empty_pipes.html](utils/empty_pipes.html), an HOWTO about how to empty database pipes

@@ -1,0 +1,14 @@
+--- ltmain.sh.bak	2021-07-30 11:52:10.000000000 +0200
++++ ltmain.sh	2021-07-30 11:58:36.000000000 +0200
+@@ -6818,9 +6818,9 @@
+ 	  continue
+ 	  ;;
+ 	rpath | xrpath)
+-	  # We need an absolute path.
++	  # We need an absolute path or a runpath.
+ 	  case $arg in
+-	  [\\/]* | [A-Za-z]:[\\/]*) ;;
++	  [\\/]* | [A-Za-z]:[\\/]* | @rpath[\\/]*) ;;
+ 	  *)
+ 	    func_fatal_error "only absolute run-paths are allowed"
+ 	    ;;
