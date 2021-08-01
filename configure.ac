@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[5.3.0],[gert.jan.paulissen@gmail.com])
+AC_INIT([epc],[6.0.0],[gert.jan.paulissen@gmail.com])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -69,8 +69,13 @@ AC_PROG_LIBTOOL
 case ${host_os} in
 *darwin*)
   case "${enable_shared}" in
-	yes) AC_MSG_ERROR([On Mac OS X you should disable shared libraries]) ;;
-	no)  ;;
+	yes)
+    AC_MSG_NOTICE([On Mac OS X you should disable shared libraries (configure --help)])
+    enable_shared=no
+    enable_static=yes
+    ;;
+	no)
+    ;;
   esac
   darwin=true
   ;;

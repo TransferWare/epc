@@ -19,6 +19,10 @@ Follow these installation steps:
 | [INSTALL FROM SOURCE](#install-from-source) | When you want the install the rest (not the database) from source |
 | [INSTALL](#install) | When you want the install the rest and you have a `configure` script |
 
+## CHANGELOG
+
+See the file [CHANGELOG.md](CHANGELOG.md).
+
 ## DATABASE INSTALL
 
 This section explains how to install the PL/SQL library as a foundation for PLSDBUG.
