@@ -29,7 +29,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 # AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	     = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
+AM_CPPFLAGS	         = -I$(top_srcdir)/src/lib -I$(top_srcdir)/replace @DBUG_CPPFLAGS@
 
 bin_SCRIPTS          = epcdaemon epcdaemon.cmd epcdaemon.pl
 bin_PROGRAMS         = idl

@@ -10,14 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Please see the [EPC issue queue](https://github.com/TransferWare/epc/issues) for issues.
 
-## [5.3.1] - 2021-07-28
-
-### Changed
-
-- Removed RCS keywords like $Header$, $Id$ and $RCSfile$ from source files.
-- Corrected small errors in CHANGELOG.md like Copyright
-
-## [5.3.0] - 2021-07-28
+## [6.0.0] - 2021-08-01
 
 A new version on GitHub.
 
@@ -31,7 +24,16 @@ A new version on GitHub.
 - README now refers to README.md
 - ChangeLog now refers to CHANGELOG.md
 - NEWS now refers to CHANGELOG.md
+- Removed RCS keywords like $Header$, $Id$ and $RCSfile$ from source files.
+- Corrected small errors in CHANGELOG.md like Copyright
 - src/sql SQL scripts have been created using the DDL generation of [Oracle Tools](https://github.com/paulissoft/oracle-tools)
+- Build on Mac OS X works now
+- When no XML communication is used, the respective C sources are not processed
+- [On Mac OS X you should disable shared libraries](https://github.com/TransferWare/epc/issues/2)
+- [The configure script sets ORACLE_LIBS and ORACLE_LDFLAGS instead of LIBS and LDFLAGS](https://github.com/TransferWare/epc/issues/4)
+- [On Mac OS X libraries or executables with @rpath pose problems while testing](https://github.com/TransferWare/epc/issues/3)
+- Word files in doc folder converted to HTML
+- make distcheck works now
 
 ## [5.2.0] -  2018-08-19
 

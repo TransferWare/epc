@@ -17,6 +17,8 @@
 
 include $(top_srcdir)/lint.am
 
+if XML
+
 # too difficult to lint epc_xml.c
 #epc_xml_ln = epc_xml.ln
 
@@ -25,6 +27,7 @@ include $(top_srcdir)/lint.am
 epc_xml.ln: epc_xml.c
 	$(LINT_c) +posixlib $<
 
+endif
 
 MAINTAINERCLEANFILES = Makefile.in
 
@@ -38,7 +41,13 @@ include_HEADERS      = epc.h epc_defs.h idl_defs.h
 
 lib_LTLIBRARIES      = libepc.la
 
-libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c epc_lib.h
+libepc_la_SOURCES    = lsnr.c epc.pc epc_lib.c epc_lib.h
+
+if XML
+
+libepc_la_SOURCES   += epc_xml.c epc_xml.h
+
+endif
 
 ##
 ## History of interface versions:
@@ -50,8 +59,13 @@ libepc_la_SOURCES    = lsnr.c epc.pc epc_xml.c epc_xml.h epc_lib.c epc_lib.h
 ##                    2) namespace introduced (used by web services)
 ## - 5:0:0 2007-08-07 re-adding dbms_pipe support (no XML data just the Oracle interface)
 
-libepc_la_LDFLAGS     = -no-undefined -version-info 5:0:0
-libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la @DBUG_LIBADD@
+libepc_la_LDFLAGS     = -no-undefined -version-info 5:0:0 @ORACLE_LDFLAGS@
+libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la @DBUG_LIBADD@ @ORACLE_LIBS@
 
 .pc.c:
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$< ONAME=$@
+
+
+# https://stackoverflow.com/questions/17703510/dyld-library-not-loaded-reason-image-not-found
+# https://stackoverflow.com/questions/44979427/overriding-installation-path-in-shared-libraries-built-with-automake-libtool-dur
+# https://stackoverflow.com/questions/45817690/autotools-libtool-link-rpath-with-executable-path-on-macos

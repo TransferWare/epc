@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 AC_REVISION([$Revision$])
-AC_INIT([epc],[5.3.0],[gert.jan.paulissen@gmail.com])
+AC_INIT([epc],[6.0.0],[gert.jan.paulissen@gmail.com])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -47,8 +47,8 @@ case ${host} in
 *-cygwin)
   if gcc --version | grep -E "gcc \(GCC\) [1-3]\." 1>/dev/null 2>&1
   then
-          # gcc (GCC) 1.x or 2.x or 3.x: use -mno-cygwin
-          test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
+    # gcc (GCC) 1.x or 2.x or 3.x: use -mno-cygwin
+    test "$CC" = "" && CC="gcc -mno-cygwin" && export CC
   fi
   ;;
 *solaris*|*sun*)
@@ -62,6 +62,29 @@ case ${host} in
 esac
 
 AM_INIT_AUTOMAKE
+
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+
+case ${host_os} in
+*darwin*)
+  case "${enable_shared}" in
+	yes)
+    AC_MSG_NOTICE([On Mac OS X you should disable shared libraries (configure --help)])
+    enable_shared=no
+    enable_static=yes
+    ;;
+	no)
+    ;;
+  esac
+  darwin=true
+  ;;
+*)
+  darwin=false
+  ;;
+esac
+
+AM_CONDITIONAL([DARWIN], [test x$darwin = xtrue])
 
 # AM_C_PROTOTYPES
 AM_WITH_DMALLOC
@@ -141,14 +164,6 @@ else
   AC_DEFINE([XML_OFF],[1],[Define if NOT using XML])
 fi
 
-#
-# The checks for LIBTOOL must be placed after ACX_PROG_PROC, since
-# that macro changes LDFLAGS and LIBS which affects the libtool settings
-# on AIX.
-#
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
-
 LT_INIT
 
 # Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
@@ -156,7 +171,7 @@ AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h errno.h malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
+AC_CHECK_HEADERS([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
 AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -194,7 +209,7 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
 AC_CONFIG_FILES([replace/Makefile])
-AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
+AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile])
 # Perl is substituted in these scripts
 AC_CONFIG_FILES([src/prog/epcdaemon.pl])
 AC_CONFIG_FILES([Makefile test/Makefile])

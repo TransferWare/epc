@@ -18,7 +18,7 @@
 empty_pipes.html: empty_pipes.prc
 # MinGW make uses CreateProcess which can not find /usr/bin/perl
 #	@PERL@ -S pod2html --infile=$< --outfile=$@
-	perl -S pod2html --infile=$< --outfile=$@
+	sed 's/-- =pod/=pod/g;s/-- =cut/=cut/g' $< | @PERL@ -S pod2html --outfile=$@
 
 EXTRA_DIST           = empty_pipes.html empty_pipes.prc
 

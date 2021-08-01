@@ -29,7 +29,7 @@ endif
 
 generated_html_dirs = $(generated_pldoc_html_dir) $(generated_doxygen_html_dir)
 
-EXTRA_DIST           = epcman.doc EPC-optimize.doc epcdistr.rtf epcpf.xls problems&changes.xls $(generated_html_dirs)
+EXTRA_DIST           = epcman.html epcman_files/ EPC-optimize.html EPC-optimize_files/ $(generated_html_dirs)
 
 CLEANFILES           = sql/* c/* *.tmp
 

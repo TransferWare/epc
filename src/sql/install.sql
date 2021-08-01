@@ -1,5 +1,6 @@
 whenever oserror exit failure
 whenever sqlerror exit failure
+set define off sqlblanklines on
 
 prompt @@02.TYPE_SPEC.STD_OBJECT.sql
 @@02.TYPE_SPEC.STD_OBJECT.sql

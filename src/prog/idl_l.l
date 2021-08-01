@@ -90,10 +90,16 @@
 #include <string.h>
 #endif
 
+#if HAVE_MALLOC_MALLOC_H
+#include <malloc/malloc.h>
+#endif
+
 #include "idl_y.h"
 #include "idl_defs.h"
 #include "idl_prs.h"
 #include "dbug.h"
+
+#include "replace.h"
 
 int lineno = 1;
 

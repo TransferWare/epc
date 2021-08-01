@@ -36,7 +36,8 @@ noinst_DATA          = demo.pls_run
 
 noinst_PROGRAMS      = demo
 demo_SOURCES         = demo.idl demo.c main.c
-demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@
+demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@ @ORACLE_LIBS@
+demo_LDFLAGS         = @ORACLE_LDFLAGS@
 
 IDL                  = $(top_builddir)/src/prog/idl$(EXEEXT)
 

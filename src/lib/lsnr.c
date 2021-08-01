@@ -102,6 +102,7 @@
 #include <dbug.h>
 
 #ifndef  ORA_PROC               /* skip during precompiling */
+# define ORACA_NONE 1 /* no variable of type struct oraca here */
 # if defined(HAVE_SQLPROTO_H) && HAVE_SQLPROTO_H
 #  include <sqlproto.h>
 # elif defined(HAVE_SQLCPR_H) && HAVE_SQLCPR_H
