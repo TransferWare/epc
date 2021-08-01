@@ -29,7 +29,7 @@ This section explains how to install the PL/SQL library as a foundation for PLSD
 
 ### Preconditions
 
-You need Oracle SQL*Plus (executable name sqlplus). Test whether it exist by showing the version:
+You need Oracle SQL*Plus (executable name `sqlplus`). Test whether it exist by showing the version:
 
 ```
 $ sqlplus -V
@@ -41,9 +41,9 @@ For the Mac OS X use DMG files if available otherwise you will have to use the S
 
 The correct procedure is to download and install (unzip) the newest Basic (Light) Package and SQL*Plus Package into the same instantclient directory. The versions should be the same.
 
-In the end add the instantclient directory `<instantclient directory>` to your executable path environment variable PATH and shared library path environment variable (DYLD_LIBRARY_PATH on Mac OS X, LD_LIBRARY_PATH for the rest).
+In the end add the instantclient directory `<instantclient directory>` to your executable path environment variable PATH.
 
-Test whether sqlplus exists now.
+Test whether `sqlplus` exists now.
 
 ### Installation
 
@@ -191,10 +191,10 @@ $ SCHEMA='<EPC owner>' make doc
 ```
 
 You will find these files now:
-- [doc/epcman.html](doc/epcman.html), the EPC manual 
-- [doc/EPC-optimize.html](doc/EPC-optimize.html), an article in the dutch magazine Optimize about the EPC
-- [doc/c/index.html](doc/c/index.html), the C reference documentation
-- [doc/sql/index.html](doc/sql/index.html), the SQL reference documentation
-- [utils/empty_pipes.html](utils/empty_pipes.html), an HOWTO about how to empty database pipes
+- `doc/epcman.html`, the EPC manual 
+- `doc/EPC-optimize.html`, an article in the dutch magazine Optimize about the EPC
+- `doc/c/index.html`, the C reference documentation
+- `doc/sql/index.html`, the SQL reference documentation
+- `utils/empty_pipes.html`, an HOWTO about how to empty database pipes
 
 You can also have a look at [the EPC GitHub Pages](https://TransferWare.github.io/epc/).
