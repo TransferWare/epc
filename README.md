@@ -29,7 +29,7 @@ This section explains how to install the PL/SQL library as a foundation for PLSD
 
 ### Preconditions
 
-You need Oracle SQL*Plus (executable name sqlplus). Test whether it exist by showing the version:
+You need Oracle SQL*Plus (executable name `sqlplus`). Test whether it exist by showing the version:
 
 ```
 $ sqlplus -V
@@ -41,9 +41,9 @@ For the Mac OS X use DMG files if available otherwise you will have to use the S
 
 The correct procedure is to download and install (unzip) the newest Basic (Light) Package and SQL*Plus Package into the same instantclient directory. The versions should be the same.
 
-In the end add the instantclient directory `<instantclient directory>` to your executable path environment variable PATH and shared library path environment variable (DYLD_LIBRARY_PATH on Mac OS X, LD_LIBRARY_PATH for the rest).
+In the end add the instantclient directory `<instantclient directory>` to your executable path environment variable PATH.
 
-Test whether sqlplus exists now.
+Test whether `sqlplus` exists now.
 
 ### Installation
 
