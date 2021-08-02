@@ -15,28 +15,29 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AUTOMAKE_OPTIONS 	= 
-SUBDIRS 		= doc replace src test utils
+AUTOMAKE_OPTIONS 	   = 
+SUBDIRS 		         = doc replace src test utils
 
 # GJP 2018-08-20  Trick to only distribute it and not build (see also configure.ac)
 if EXAMPLES
 
-SUBDIRS 	       += examples
+SUBDIRS 	          += examples
 
 endif
 
-MAINTAINERCLEANFILES 	= Makefile.in aclocal.m4 configure config-h.in \
-			stamp-h.in $(AUX_DIST)
-EXTRA_DIST              = VERSION lint.am .mvn README.md CHANGELOG.md
+MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config-h.in \
+                       stamp-h.in $(AUX_DIST)
+DISTCLEANFILES       = $(distdir).tar.gz
+EXTRA_DIST           = VERSION lint.am .mvn README.md CHANGELOG.md
 
 # Gert-Jan Paulissen, 15-01-2014
 # libtoolize: AC_CONFIG_MACRO_DIR([config]) conflicts with ACLOCAL_AMFLAGS=-I config
-ACLOCAL_AMFLAGS         = -I config
+ACLOCAL_AMFLAGS      = -I config
 
 lintdirs		= $(top_builddir)/src/lib $(top_builddir)/src/prog
 docdirs			= $(top_builddir)/doc $(top_builddir)/utils
 
-FORCE                   = force
+FORCE                = force
 
 force: ;
 

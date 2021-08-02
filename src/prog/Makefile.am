@@ -26,6 +26,7 @@ idl_y.ln: idl_y.c
 	$(LINT_c) -noeffect -branchstate -usereleased -exportlocal $<
 
 MAINTAINERCLEANFILES = Makefile.in
+DISTCLEANFILES       = idl_y.c idl_l.c idl_y.h
 
 # AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
