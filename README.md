@@ -29,7 +29,7 @@ This section explains how to install the PL/SQL library as a foundation for PLSD
 
 ### Preconditions
 
-You need Oracle SQL*Plus (executable name `sqlplus`). Test whether it exist by showing the version:
+You need Oracle SQL*Plus (executable name `sqlplus`). Test whether it exists by showing the version:
 
 ```
 $ sqlplus -V
@@ -104,7 +104,7 @@ This section explains how to install everything except the database.
 
 ### Preconditions
 
-You need Oracle PRO*C (executable name proc). Test whether it exist by:
+You need Oracle PRO*C (executable name proc). Test whether it exists by:
 
 ```
 $ proc
