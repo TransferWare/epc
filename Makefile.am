@@ -34,7 +34,7 @@ EXTRA_DIST           = VERSION lint.am .mvn README.md CHANGELOG.md darwin-remove
 # libtoolize: AC_CONFIG_MACRO_DIR([config]) conflicts with ACLOCAL_AMFLAGS=-I config
 ACLOCAL_AMFLAGS      = -I config
 
-lintdirs		= $(top_builddir)/src/lib $(top_builddir)/src/prog
+lintdirs	           = $(top_builddir)/src/lib $(top_builddir)/src/prog
 
 dist: lint html
 
