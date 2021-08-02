@@ -77,10 +77,7 @@ $(top_builddir)/src/lib/libepc.la:
 if DARWIN
 
 epctest.no_dynamic:
-	rpath_from=`otool -L epctest | grep '@rpath' | cut -d '(' -f 1`; \
-	rpath_to_dir=`echo @ORACLE_LDFLAGS@ | cut -c 3-`; \
-	rpath_to_lib=`echo @ORACLE_LIBS@ | cut -c 3-`; \
-	install_name_tool -change $$rpath_from "$${rpath_to_dir}/lib$${rpath_to_lib}.dylib" epctest
+	ORACLE_LIBS=$(ORACLE_LIBS) ORACLE_LDFLAGS=$(ORACLE_LDFLAGS) $(top_srcdir)/darwin-remove-rpath.sh epctest
 
 endif
 
