@@ -8,7 +8,7 @@
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.transfer-solutions</groupId>
+  <groupId>com.transferware</groupId>
   <artifactId>epc</artifactId>
   <version>${revision}</version>
   <packaging>pom</packaging>

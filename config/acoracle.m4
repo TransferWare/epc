@@ -1,5 +1,3 @@
-dnl $Id$
-dnl
 dnl acoracle.m4
 dnl
 dnl Author: G.J. Paulissen (g.paulissen@chello.nl)
@@ -361,4 +359,3 @@ done
 AC_CHECK_HEADERS([$acx_ocihdrs], [continue], [AC_MSG_ERROR(OCI header(s) $acx_ocihdrs not found)])
 ])
 
-dnl $Id$

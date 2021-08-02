@@ -1,5 +1,3 @@
-REMARK $Id$
-
 rem WHENEVER SQLERROR EXIT FAILURE
 
 SET TERMOUT OFF
@@ -170,15 +168,11 @@ The I<empty_pipes> procedure uses the Oracle package I<DBMS_PIPE> and the dictio
 
 =head1 AUTHOR
 
-Gert-Jan Paulissen, E<lt>gpaulissen@transfer-solutions.comE<gt>.
+Gert-Jan Paulissen
 
 =head1 BUGS
 
 =head1 SEE ALSO
-
-=head1 COPYRIGHT
-
-All rights reserved by Transfer Solutions b.v.
 
 =cut
 

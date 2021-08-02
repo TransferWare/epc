@@ -15,14 +15,13 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-CLEANFILES       = *.???_run pod*.tmp
+CLEANFILES       = pod*.tmp
 
 sql_scripts      = R__09.PACKAGE_SPEC.EPC.sql R__14.PACKAGE_BODY.EPC.sql
 sql_scripts     += R__09.PACKAGE_SPEC.EPC_SRVR.sql R__14.PACKAGE_BODY.EPC_SRVR.sql
-sql_scripts     += 02.TYPE_SPEC.STD_OBJECT.sql R__15.TYPE_BODY.STD_OBJECT.sql
-sql_scripts     += 06.TABLE.STD_OBJECTS.sql
+sql_scripts     += R__15.TYPE_BODY.STD_OBJECT.sql
 sql_scripts     += R__09.PACKAGE_SPEC.STD_OBJECT_MGR.sql R__14.PACKAGE_BODY.STD_OBJECT_MGR.sql
-sql_scripts     += 02.TYPE_SPEC.EPC_CLNT_OBJECT.sql R__15.TYPE_BODY.EPC_CLNT_OBJECT.sql
+sql_scripts     += R__15.TYPE_BODY.EPC_CLNT_OBJECT.sql
 sql_scripts     += R__09.PACKAGE_SPEC.EPC_CLNT.sql R__14.PACKAGE_BODY.EPC_CLNT.sql
 sql_scripts     += install.sql uninstall.sql
 
@@ -34,16 +33,5 @@ noinst_DATA      = $(sql_scripts)
 # 3) package specifications
 # 4) bodies
 
-noinst_DATA     += install.sql_run
-
 EXTRA_DIST       = $(sql_scripts)
-
-uninstall: uninstall.sql_run clean
-
-install.sql_run: install.sql
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$<
-	@touch $@
-
-uninstall.sql_run: uninstall.sql
-	echo exit SQL.SQLCODE | $(SQLPLUS) $(USERID) @$< 
 
