@@ -1,5 +1,0 @@
-interface qotd
-{
-   char *getQuote ( );
-}
-

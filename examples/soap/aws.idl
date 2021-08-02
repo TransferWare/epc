@@ -1,3 +1,0 @@
-interface aws {
-  void ItemSearch([in] string SubscriptionId, [in] xml Request, [out] xml Items);
-}

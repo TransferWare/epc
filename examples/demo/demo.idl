@@ -1,5 +1,0 @@
-interface demo
-{
-   int do_system_call ( [in] char* cmd );
-}
-

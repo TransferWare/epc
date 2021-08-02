@@ -1,3 +1,0 @@
-interface mirror {
-  xml Random();
-}
