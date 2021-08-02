@@ -35,21 +35,12 @@ EXTRA_DIST           = VERSION lint.am .mvn README.md CHANGELOG.md
 ACLOCAL_AMFLAGS      = -I config
 
 lintdirs		= $(top_builddir)/src/lib $(top_builddir)/src/prog
-docdirs			= $(top_builddir)/doc $(top_builddir)/utils
 
-FORCE                = force
-
-force: ;
-
-dist: lint doc
+dist: lint html
 
 lint:
 	@echo Making $@ in $(lintdirs)
 	@for d in $(lintdirs); do (cd $$d && make $@); done
-
-doc: $(FORCE)
-	@echo Making $@ in $(docdirs)
-	@for d in $(docdirs); do (cd $$d && make $@); done
 
 dist-hook:
 	chmod +x $(top_srcdir)/config/install-sh

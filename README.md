@@ -182,12 +182,12 @@ The PLDoc documentation says that you need to set an environment variable ORACLE
 
 ### Generate the documentation
 
-Issue this to generate the documentation (you need to set variable SCHEMA as well but you can do that in front of make):
+Issue this to generate the documentation (you need to set variable USERID as above):
 
 ```
 $ ORACLE_HOME='<directory containing ojdbc6.jar>'
 $ ./configure # if you did (re-)install one of those two programs.
-$ SCHEMA='<EPC owner>' make doc
+$ make html
 ```
 
 You will find these files now:
