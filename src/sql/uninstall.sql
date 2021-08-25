@@ -1,4 +1,4 @@
-/* perl generate_ddl.pl (version 2021-07-28) --nodynamic-sql --force-view --noremove-output-directory --skip-install-sql --nostrip-source-schema */
+/* perl generate_ddl.pl (version 2021-08-24) --nodynamic-sql --force-view --noremove-output-directory --skip-install-sql --nostrip-source-schema */
 
 /*
 -- JDBC url            : jdbc:oracle:thin:ORACLE_TOOLS@//localhost:1521/orcl
@@ -8,12 +8,19 @@
 -- target database link: 
 -- object type         : 
 -- object names include: 1
--- object names        : EPC,EPC_CLNT,EPC_CLNT_OBJECT,EPC_SRVR,STD_OBJECT,STD_OBJECT_MGR,STD_OBJECTS
+-- object names        : EPC,
+EPC_CLNT,
+EPC_CLNT_OBJECT,
+EPC_SRVR,
+STD_OBJECT,
+STD_OBJECT_MGR,
+STD_OBJECTS
 -- skip repeatables    : 0
--- interface           : pkg_ddl_util v4
+-- interface           : pkg_ddl_util v5
+-- transform params    : 
 -- owner               : ORACLE_TOOLS
 */
--- pkg_ddl_util v4
+-- pkg_ddl_util v5
 call dbms_application_info.set_module('uninstall.sql', null);
 /* SQL statement 1 (ALTER;ORACLE_TOOLS;CONSTRAINT;STD_OBJECTS_CHK4;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
 call dbms_application_info.set_action('SQL statement 1');
