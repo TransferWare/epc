@@ -38,41 +38,41 @@ AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
                [acx_cv_search_$3="none required"])
 for acx_rootdir in $1; do
   test -d $acx_rootdir || continue
-	if test "$acx_cv_search_$3" = no; then
-	  if test -z "$2"; then
-		  acx_subdirs=`cd $acx_rootdir; find . \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \) -exec dirname {} \; | sort -u`
-		else
-		  acx_subdirs=$2
-		fi
-	  for acx_subdir in $acx_subdirs; do
-	    acx_dir="$acx_rootdir/$acx_subdir"
-	    test -d $acx_dir || continue
-	    # is "-L$acx_dir" already part of $LDFLAGS?
-	    if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
-	      LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
-	    fi
-	    if test -z "$4"; then
-			  # GJP 2018-08-20
-				# 1) Get list of libraries and ignore errors due to different Operating Systems
-			  # 2) Get the basename of the libraries (strip extension
-			  acx_libs=`cd $acx_dir && ls *.dll lib*.so lib*.a lib*.dylib 2>/dev/null || true`
-				acx_libs=`for f in $acx_libs; do echo $f | sed -E 's/\.dll$//; s/^lib(.*)\.(so|a|dylib)$/\1/'; done`
-			else
-			  acx_libs=$4
-			fi		
-	    for acx_lib in $acx_libs; do
-	      # is "-l$acx_lib $7" already part of $LIBS?
-	      if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
-	        LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
-	      fi
-	      AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-	                     [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break],
-			     						 [])
-	    done
-	    test "$acx_cv_search_$3" = "no" || break
-	  done
+  if test "$acx_cv_search_$3" = no; then
+    if test -z "$2"; then
+      acx_subdirs=`cd $acx_rootdir; find . \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \) -exec dirname {} \; | sort -u`
+    else
+      acx_subdirs=$2
+    fi
+    for acx_subdir in $acx_subdirs; do
+      acx_dir="$acx_rootdir/$acx_subdir"
+      test -d $acx_dir || continue
+      # is "-L$acx_dir" already part of $LDFLAGS?
+      if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
+        LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
+      fi
+      if test -z "$4"; then
+        # GJP 2018-08-20
+        # 1) Get list of libraries and ignore errors due to different Operating Systems
+        # 2) Get the basename of the libraries (strip extension
+        acx_libs=`cd $acx_dir && ls *.dll lib*.so lib*.a lib*.dylib 2>/dev/null || true`
+        acx_libs=`for f in $acx_libs; do echo $f | sed -E 's/\.dll$//; s/^lib(.*)\.(so|a|dylib)$/\1/'; done`
+      else
+        acx_libs=$4
+      fi    
+      for acx_lib in $acx_libs; do
+        # is "-l$acx_lib $7" already part of $LIBS?
+        if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
+          LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
+        fi
+        AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
+                       [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break],
+                       [])
+      done
+      test "$acx_cv_search_$3" = "no" || break
+    done
     test "$acx_cv_search_$3" = "no" || break
-	fi
+  fi
 done
 LDFLAGS=$acx_func_search_save_LDFLAGS
 LIBS=$acx_func_search_save_LIBS
@@ -90,8 +90,8 @@ then
   if ! echo "$ORACLE_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
     ORACLE_LIBS="$acx_LIBS $ORACLE_LIBS"
   fi
-	# GJP 2018-08-20 Define HAVE_<function>
-	AC_CHECK_FUNCS([$3],[],[])
+  # GJP 2018-08-20 Define HAVE_<function>
+  AC_CHECK_FUNCS([$3],[],[])
 fi
        $5],
       [$6])dnl
@@ -103,10 +103,10 @@ fi
 # Sets/updates the following variables:
 # - PROC          the full path name of the PRO*C compiler
 # - PROCFLAGS     PRO*C compiler flags.
-#                 The -D.. flags of CPPFLAGS are converted into define=..
+#                 The -D.. flags of DEFS are converted into define=..
 # - PROCINCLUDES  PRO*C compiler includes including directory
 #                 of the PRO*C prototype header.
-#                 The -I flags of CPPFLAGS are converted into include=..
+#                 The -I flags of INCLUDE macros are converted into include=..
 
 AC_DEFUN([ACX_PROG_PROC],
 [AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)], ["$ORACLE_HOME/bin:$PATH"])dnl
@@ -161,11 +161,11 @@ do
     # sqlcpr.h.bak is not right, but SQLCPR.H is (at least on Windows)
     if test `basename "$acx_protohdr" | tr 'A-Z' 'a-z'` = "$file"
     then
-		  acx_protohdr_dir=`dirname $acx_protohdr`
-			# GJP 2018-08-20  PRO*C does not like Cygwin paths so use cygpath -m to convert /cygdrive/c to c:/
-			if uname | grep -i 'cygwin' 1>/dev/null
-			then
-	  	  acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
+      acx_protohdr_dir=`dirname $acx_protohdr`
+      # GJP 2018-08-20  PRO*C does not like Cygwin paths so use cygpath -m to convert /cygdrive/c to c:/
+      if uname | grep -i 'cygwin' 1>/dev/null
+      then
+        acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
       fi
       CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
       AC_MSG_RESULT([yes])
@@ -176,7 +176,7 @@ do
       continue
     fi
   done
-	acx_protohdrs_found="$acx_protohdrs_found $acx_protohdr"
+  acx_protohdrs_found="$acx_protohdrs_found $acx_protohdr"
 done
 
 # GJP 2018-08-20
@@ -190,12 +190,15 @@ done
 if ! `echo $acx_protohdrs_found | grep oratypes.h`
 then
   AC_DEFINE([ORATYPES],[1],[oratypes.h is missing so fake its presence])
-fi	
+fi  
+
+# GJP 2022-08-11
+# Let CPPFLAGS be shown before AM_CPPFLAGS since AM_CPPFLAGS may be something like -I/usr/local/include having a sqlca.h from PostgreSQL
 
 AC_CHECK_HEADERS([$acx_protohdrs], [], [])
-PROCINCLUDES='`echo " $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
+PROCINCLUDES='`echo " $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(AM_CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
 AC_SUBST(PROCINCLUDES)
-PROCFLAGS='`echo " $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
+PROCFLAGS='`echo " $(DEFS) $(CPPFLAGS) $(AM_CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
 PROCFLAGS="$PROCFLAGS CHAR_MAP=VARCHAR2 CODE=ANSI_C PARSE=NONE SQLCHECK=FULL USERID=\$(USERID)"
 AC_SUBST(PROCFLAGS)
 AC_SUBST(ORACLE_LDFLAGS,[])

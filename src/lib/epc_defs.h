@@ -68,7 +68,7 @@ typedef struct epc__info
   dword_t num_interfaces;
   /*@only@ *//*@null@ */ epc__interface_t **interfaces;
   /* pointing to a list of interfaces */
-  /*@only@ *//*@null@ */ void *sqlca_ptr;
+  /*@only@ *//*@null@ */ struct sqlca *sqlca;
   /* SQLCA area */
 #ifndef XML_OFF
   /*@only@ *//*@null@ */ struct xml_info *xml_info;

@@ -1,6 +1,6 @@
 # Changelog
 
-Copyright (C) 1997-2021 G.J. Paulissen 
+Copyright (C) 1997-2022 G.J. Paulissen 
 
 
 All notable changes to this project will be documented in this file.
@@ -9,6 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Please see the [EPC issue queue](https://github.com/TransferWare/epc/issues) for issues.
+
+[Unreleased]
+
+- [On Mac OS X you should disable shared libraries.](https://github.com/TransferWare/epc/issues/2)
+- [On Mac OS X libraries or executables with @rpath pose problems while testing.](https://github.com/TransferWare/epc/issues/3)
+- [The configure script must set ORACLE_LIBS and ORACLE_LDFLAGS instead of LIBS and LDFLAGS.](https://github.com/TransferWare/epc/issues/4)
+- [When PostgreSQL sqlca is installed in /usr/local/include it override Oracle's sqlca.](https://github.com/TransferWare/epc/issues/5)
 
 ## [6.0.0] - 2021-08-02
 

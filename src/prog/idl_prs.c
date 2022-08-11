@@ -895,7 +895,7 @@ generate_plsql_function_body (FILE * pout, idl_function_t * fun, const int packa
                           "    BEGIN\n");
           (void) fprintf (pout,
                           "      epc_clnt.new_request(l_epc_clnt_object, '%s', %ld);\n",
-                          fun->name, fun->oneway);
+                          fun->name, (long) fun->oneway);
 
           for (nr = 0; nr < fun->num_parameters; nr++)
             {

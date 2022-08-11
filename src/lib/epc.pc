@@ -229,7 +229,11 @@
 #define SQLCA_INIT
 #endif
 
+EXEC SQL BEGIN DECLARE SECTION;
+
 EXEC SQL INCLUDE sqlca;
+
+EXEC SQL END DECLARE SECTION;
 
 #if HAVE_SQLCPR_H
 #include <sqlcpr.h>
@@ -378,8 +382,8 @@ epc__abort( char *msg )
 
   (void) fprintf(stderr, "%s\n", msg);
   buf_len = sizeof (err_msg);
-  sqlglm(err_msg, &buf_len, &msg_len);
-  (void) fprintf(stderr, "%.*s\n", msg_len, err_msg);
+  sqlglm((unsigned char*)err_msg, &buf_len, &msg_len);
+  (void) fprintf(stderr, "%.*s\n", (int) msg_len, err_msg);
 
   exit(EXIT_FAILURE);
 }
@@ -445,6 +449,9 @@ epc__connect( epc__info_t *epc__info )
   return status;
 }
 
+#ifdef  sqlca
+#undef  sqlca
+#endif
 #define sqlca (*(epc__info->sqlca))
 
 static
