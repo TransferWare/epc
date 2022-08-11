@@ -30,7 +30,7 @@ dnl
 # LIBS before calling this macro.
 
 AC_DEFUN([ACX_SEARCH_LIBS],
-[AC_CACHE_CHECK([for directory and library containing $3], [acx_cv_search_$3],
+[AC_CACHE_CHECK([for library containing $3 in directories $1], [acx_cv_search_$3],
 [acx_func_search_save_LDFLAGS=$LDFLAGS
 acx_func_search_save_LIBS=$LIBS
 acx_cv_search_$3=no
@@ -119,7 +119,7 @@ then
   acx_oracle_home=$acx_proc_home
   acx_oracle_homes=$acx_proc_home
 else
-  acx_oracle_homes="acx_oracle_home $acx_proc_home"
+  acx_oracle_homes="$acx_oracle_home $acx_proc_home"
 fi
 
 ACX_SEARCH_LIBS([$acx_oracle_homes],

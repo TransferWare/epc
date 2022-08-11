@@ -24,3 +24,4 @@ doc/sql/
 # Make build directories
 build/
 b/
+.deps/
