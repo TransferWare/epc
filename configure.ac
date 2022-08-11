@@ -1,7 +1,7 @@
-# -*-fundamental-*-
+# -*-autoconf-*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2002-2021 G.J. Paulissen
+# Copyright (C) 2002-2022 G.J. Paulissen
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AC_REVISION([2021-08-02])
-AC_INIT([epc],[6.0.0],[gert.jan.paulissen@gmail.com])
+AC_REVISION([2022-08-11])
+AC_INIT([epc],[6.1.0],[gert.jan.paulissen@gmail.com])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -208,6 +208,7 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
            sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
+
 AC_CONFIG_FILES([replace/Makefile])
 AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile])
 # Perl is substituted in these scripts
