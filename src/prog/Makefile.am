@@ -30,7 +30,11 @@ DISTCLEANFILES       = idl_y.c idl_l.c idl_y.h
 
 # AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS	         = -I$(top_srcdir)/src/lib -I$(top_srcdir)/replace @DBUG_CPPFLAGS@
+AM_CPPFLAGS	         = -I$(top_srcdir)/src/lib -I$(top_srcdir)/replace
+
+# See https://github.com/TransferWare/epc/issues/5
+
+AM_CFLAGS  	         = @DBUG_CPPFLAGS@
 
 bin_SCRIPTS          = epcdaemon epcdaemon.cmd epcdaemon.pl
 bin_PROGRAMS         = idl

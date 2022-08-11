@@ -35,7 +35,11 @@ MAINTAINERCLEANFILES = Makefile.in
 
 MOSTLYCLEANFILES     = epc.c
 
-AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib
+
+# See https://github.com/TransferWare/epc/issues/5
+
+AM_CFLAGS            = @DBUG_CPPFLAGS@
 
 include_HEADERS      = epc.h epc_defs.h idl_defs.h
 

@@ -167,6 +167,7 @@ do
       then
         acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
       fi
+      # See https://github.com/TransferWare/epc/issues/5
       CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
       AC_MSG_RESULT([yes])
       break
@@ -192,13 +193,13 @@ then
   AC_DEFINE([ORATYPES],[1],[oratypes.h is missing so fake its presence])
 fi  
 
-# GJP 2022-08-11
-# Let CPPFLAGS be shown before AM_CPPFLAGS since AM_CPPFLAGS may be something like -I/usr/local/include having a sqlca.h from PostgreSQL
+# See https://github.com/TransferWare/epc/issues/5
+# Use COMPILE definition from Makefile for the echo.
 
 AC_CHECK_HEADERS([$acx_protohdrs], [], [])
-PROCINCLUDES='`echo " $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(AM_CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
+PROCINCLUDES='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
 AC_SUBST(PROCINCLUDES)
-PROCFLAGS='`echo " $(DEFS) $(CPPFLAGS) $(AM_CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
+PROCFLAGS='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
 PROCFLAGS="$PROCFLAGS CHAR_MAP=VARCHAR2 CODE=ANSI_C PARSE=NONE SQLCHECK=FULL USERID=\$(USERID)"
 AC_SUBST(PROCFLAGS)
 AC_SUBST(ORACLE_LDFLAGS,[])
