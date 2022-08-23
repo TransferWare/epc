@@ -35,11 +35,7 @@ MAINTAINERCLEANFILES = Makefile.in
 
 MOSTLYCLEANFILES     = epc.c
 
-AM_CPPFLAGS          = -I$(top_srcdir)/src/lib
-
-# See https://github.com/TransferWare/epc/issues/5
-
-AM_CFLAGS            = @DBUG_CPPFLAGS@
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @ORACLE_CPPFLAGS@ @DBUG_CPPFLAGS@
 
 include_HEADERS      = epc.h epc_defs.h idl_defs.h
 
@@ -64,7 +60,7 @@ endif
 ## - 5:0:0 2007-08-07 re-adding dbms_pipe support (no XML data just the Oracle interface)
 
 libepc_la_LDFLAGS     = -no-undefined -version-info 5:0:0 @ORACLE_LDFLAGS@
-libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la @DBUG_LIBADD@ @ORACLE_LIBS@
+libepc_la_LIBADD      = $(top_builddir)/replace/libreplace.la @ORACLE_LIBS@ @DBUG_LIBADD@ 
 
 .pc.c:
 	$(PROC) $(PROCINCLUDES) $(PROCFLAGS) INAME=$< ONAME=$@

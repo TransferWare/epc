@@ -144,6 +144,9 @@ AM_CONDITIONAL([DOXYGEN], [test -n "$DOXYGEN"])
 # dbug package ?
 ACX_WITH_DBUG
 
+# Checks for header files.
+AC_HEADER_STDC
+
 # Oracle checks
 ACX_PROG_PROC
 ACX_PROG_SQLPLUS
@@ -169,10 +172,10 @@ LT_INIT
 # Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
 AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
-# Checks for header files.
-AC_HEADER_STDC
 AC_CHECK_HEADERS([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
-AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
+# GJP 2022-08-23
+# Use old preprocessor check, i.e. only existence of the header ([-])
+AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oratypes.h oraxml.h xml.h], [], [], [-])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

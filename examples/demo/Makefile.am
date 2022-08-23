@@ -26,7 +26,7 @@ CLEANFILES           = *.pls_run *.idl_run
 
 # AUTOMAKE_OPTIONS     = $(top_builddir)/src/lib/ansi2knr
 
-AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @DBUG_CPPFLAGS@
+AM_CPPFLAGS          = -I$(top_srcdir)/src/lib @ORACLE_CPPFLAGS@ @DBUG_CPPFLAGS@
 
 # Just the SQL*Plus scripts
 EXTRA_DIST           = demo.pkb demo.pks demo.pls
@@ -36,7 +36,7 @@ noinst_DATA          = demo.pls_run
 
 noinst_PROGRAMS      = demo
 demo_SOURCES         = demo.idl demo.c main.c
-demo_LDADD           = $(top_builddir)/src/lib/libepc.la @DBUG_LDADD@ @ORACLE_LIBS@
+demo_LDADD           = $(top_builddir)/src/lib/libepc.la @ORACLE_LIBS@ @DBUG_LDADD@
 demo_LDFLAGS         = @ORACLE_LDFLAGS@
 
 IDL                  = $(top_builddir)/src/prog/idl$(EXEEXT)

@@ -102,11 +102,14 @@ fi
 # Look for the Oracle PRO*C compiler. 
 # Sets/updates the following variables:
 # - PROC          the full path name of the PRO*C compiler
-# - PROCFLAGS     PRO*C compiler flags.
-#                 The -D.. flags of DEFS are converted into define=..
 # - PROCINCLUDES  PRO*C compiler includes including directory
 #                 of the PRO*C prototype header.
 #                 The -I flags of INCLUDE macros are converted into include=..
+# - PROCFLAGS     PRO*C compiler flags.
+#                 The -D.. flags of DEFS are converted into define=..
+# - ORACLE_CPPFLAGS
+# - ORACLE_LDFLAGS
+# - ORACLE_LIBS
 
 AC_DEFUN([ACX_PROG_PROC],
 [AC_PATH_PROG([PROC], [proc], [AC_MSG_ERROR(proc not found)], ["$ORACLE_HOME/bin:$PATH"])dnl
@@ -145,6 +148,8 @@ ACX_SEARCH_LIBS([$acx_oracle_homes],
 acx_protohdrs="oratypes.h sqlcpr.h sqlproto.h"
 acx_protohdrs_found=""
 acx_protohdr=
+acx_prog_proc_save_CPPFLAGS=$CPPFLAGS
+CPPFLAGS=
 for dir in $acx_oracle_homes
 do
   test -d $dir || continue
@@ -168,7 +173,7 @@ do
         acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
       fi
       # See https://github.com/TransferWare/epc/issues/5
-      CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
+			CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
       AC_MSG_RESULT([yes])
       break
     else
@@ -188,22 +193,27 @@ done
 # #include <oratypes.h>
 # #endif
 #
-if ! `echo $acx_protohdrs_found | grep oratypes.h`
-then
-  AC_DEFINE([ORATYPES],[1],[oratypes.h is missing so fake its presence])
-fi  
+
+# GJP 2022-08-23 The check is better now so remove this
+# if ! `echo $acx_protohdrs_found | grep oratypes.h`
+# then
+#   AC_DEFINE([ORATYPES],[1],[oratypes.h is missing so fake its presence])
+# fi  
 
 # See https://github.com/TransferWare/epc/issues/5
 # Use COMPILE definition from Makefile for the echo.
 
 AC_CHECK_HEADERS([$acx_protohdrs], [], [])
+ORACLE_CPPFLAGS=$CPPFLAGS
+CPPFLAGS=$acx_prog_proc_save_CPPFLAGS
 PROCINCLUDES='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
 AC_SUBST(PROCINCLUDES)
 PROCFLAGS='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
 PROCFLAGS="$PROCFLAGS CHAR_MAP=VARCHAR2 CODE=ANSI_C PARSE=NONE SQLCHECK=FULL USERID=\$(USERID)"
 AC_SUBST(PROCFLAGS)
-AC_SUBST(ORACLE_LDFLAGS,[])
-AC_SUBST(ORACLE_LIBS,[])
+AC_SUBST(ORACLE_CPPFLAGS)
+AC_SUBST(ORACLE_LDFLAGS)
+AC_SUBST(ORACLE_LIBS)
 ])
 
 
@@ -258,7 +268,8 @@ ACX_SEARCH_LIBS([$acx_oracle_homes],
                 [],
                 [AC_MSG_WARN(xmlinit not found)])
 
-acx_xmlhdrs="oraxml.h oratypes.h"
+# oraxml.h is deprecated, use xml.h now
+acx_xmlhdrs="oratypes.h xml.h oraxml.h"
 AC_MSG_NOTICE([Checking headers for XML C SDK: $acx_xmlhdrs])
 for acx_file in $acx_xmlhdrs
 do
@@ -270,7 +281,7 @@ do
     acx_file_upper=$acx_file
   fi
 
-  for acx_dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null`
+  for acx_dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null` /usr/local/include
   do
     # Must be a directory and we must be able to change to the directory
     test -d $acx_dir -a -x $acx_dir || continue
@@ -302,16 +313,17 @@ do
 done
 
 # to prevent: fatal error: orastruc.h: No such file or directory
-CPPFLAGS="-DORASTRUC $CPPFLAGS"
+# CPPFLAGS="-DORASTRUC $CPPFLAGS"
 for acx_var in CPPFLAGS LDFLAGS LIBS
 do
-  AC_MSG_NOTICE([environment variable $acx_var])
+  AC_MSG_NOTICE([Setting environment variable $acx_var])
   export $acx_var
   env | grep $acx_var
 done
 
-# Do not check Oracle headers because it gives too many errors
-# AC_CHECK_HEADERS([$acx_xmlhdrs], [], [AC_MSG_ERROR(Header file(s) $acx_xmlhdrs could not be processed)])
+# GJP 2022-08-23
+# Use old preprocessor check, i.e. only existence of the header ([-])
+AC_CHECK_HEADERS([$acx_xmlhdrs], [], [], [-])
 ])
 
 # ACX_PROG_OCI
