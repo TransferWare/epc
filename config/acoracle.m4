@@ -1,13 +1,13 @@
 dnl acoracle.m4
 dnl
-dnl Author: G.J. Paulissen (g.paulissen@chello.nl)
+dnl Author: G.J. Paulissen (gert.jan.paulissen@gmail.com)
 dnl
 dnl Defines the macros:
 dnl  ACX_SEARCH_LIBS
 dnl  ACX_PROG_PROC
 dnl  ACX_PROG_SQLPLUS
+dnl  ACX_PROG_XML
 dnl
-
 
 # ACX_SEARCH_LIBS(ROOT-DIRS, SUB-DIRS, FUNCTION, SEARCH-LIBS [, ACTION-IF-FOUND
 #            [, ACTION-IF-NOT-FOUND [, OTHER-LIBRARIES]]])
@@ -40,7 +40,7 @@ for acx_rootdir in $1; do
   test -d $acx_rootdir || continue
   if test "$acx_cv_search_$3" = no; then
     if test -z "$2"; then
-      acx_subdirs=`cd $acx_rootdir; find . \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \) -exec dirname {} \; | sort -u`
+      acx_subdirs=`cd $acx_rootdir; find . -follow \( -name '*.dll' -o -name '*.so' -o -name '*.a' -o -name '*.dylib' \) -exec dirname {} \; | sort -u`
     else
       acx_subdirs=$2
     fi
@@ -124,6 +124,10 @@ then
 else
   acx_oracle_homes="$acx_oracle_home $acx_proc_home"
 fi
+AC_MSG_NOTICE([Checking for PROC in one of these directories (before removing duplicates): $acx_oracle_homes])
+# https://unix.stackexchange.com/questions/353321/remove-all-duplicate-word-from-string-using-shell-script
+acx_oracle_homes=`echo "$acx_oracle_homes" | xargs -n1 | sort -u | xargs`
+AC_MSG_NOTICE([Checking for PROC in one of these directories (after  removing duplicates): $acx_oracle_homes])
 
 ACX_SEARCH_LIBS([$acx_oracle_homes],
                 [],
@@ -152,14 +156,23 @@ acx_prog_proc_save_CPPFLAGS=$CPPFLAGS
 CPPFLAGS=
 for dir in $acx_oracle_homes
 do
-  test -d $dir || continue
+  if [ ! test -d $dir ]
+  then
+    AC_MSG_NOTICE([Directory $dir does not exist])
+    continue
+  fi
+  AC_MSG_NOTICE([Checking PROC prototype headers: $acx_protohdrs])
   for file in $acx_protohdrs 
   do
     # Windows: ignore case
     # Bug 849475: just return one header by using head -1
-    acx_protohdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
+    acx_protohdr=`find $dir -follow \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
 
-    test -n "$acx_protohdr" || continue
+    if [ test -z "$acx_protohdr" ]
+    then
+      AC_MSG_NOTICE([File $file can not be found in directory $dir])
+      continue
+    fi
 
     AC_MSG_CHECKING([$acx_protohdr])
 
@@ -173,12 +186,13 @@ do
         acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
       fi
       # See https://github.com/TransferWare/epc/issues/5
-			CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
+      CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
       AC_MSG_RESULT([yes])
       break
     else
-      acx_protohdr=
       AC_MSG_RESULT([no])
+      AC_MSG_NOTICE([File $acx_protohdr does not match one of the allowed file names: $acx_protohdrs])
+      acx_protohdr=
       continue
     fi
   done
@@ -209,7 +223,7 @@ CPPFLAGS=$acx_prog_proc_save_CPPFLAGS
 PROCINCLUDES='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
 AC_SUBST(PROCINCLUDES)
 PROCFLAGS='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -D/ DEFINE=/g;s/ -[[^ \t]]*//g"`'
-PROCFLAGS="$PROCFLAGS CHAR_MAP=VARCHAR2 CODE=ANSI_C PARSE=NONE SQLCHECK=FULL USERID=\$(USERID)"
+PROCFLAGS="$PROCFLAGS CHAR_MAP=VARCHAR2 CODE=ANSI_C PARSE=NONE SQLCHECK=SEMANTICS USERID=\$(USERID)"
 AC_SUBST(PROCFLAGS)
 AC_SUBST(ORACLE_CPPFLAGS)
 AC_SUBST(ORACLE_LDFLAGS)
@@ -260,6 +274,10 @@ then
 else
   acx_oracle_homes="acx_oracle_home $acx_proc_home"
 fi
+AC_MSG_NOTICE([Checking for XML headers in one of these directories (before removing duplicates): $acx_oracle_homes])
+# https://unix.stackexchange.com/questions/353321/remove-all-duplicate-word-from-string-using-shell-script
+acx_oracle_homes=`echo "$acx_oracle_homes" | xargs -n1 | sort -u | xargs`
+AC_MSG_NOTICE([Checking for XML headers in one of these directories (after  removing duplicates): $acx_oracle_homes])
 
 ACX_SEARCH_LIBS([$acx_oracle_homes],
                 [],
@@ -281,7 +299,7 @@ do
     acx_file_upper=$acx_file
   fi
 
-  for acx_dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -name include -type d 2>/dev/null` /usr/local/include
+  for acx_dir in $acx_oracle_home/xdk/include $acx_oracle_home/xdk/c/parser/include $acx_oracle_home `find $acx_oracle_home -follow -name include -type d 2>/dev/null` /usr/local/include
   do
     # Must be a directory and we must be able to change to the directory
     test -d $acx_dir -a -x $acx_dir || continue
@@ -343,7 +361,7 @@ fi
 
 acx_ocihdrs="oci.h"
 acx_ocihdr=
-for dir in $acx_oracle_home/rdbms/public `find $acx_oracle_home -name include -type d 2>/dev/null` $acx_oracle_home
+for dir in $acx_oracle_home/rdbms/public `find $acx_oracle_home -follow -name include -type d 2>/dev/null` $acx_oracle_home
 do
   # Must be a directory and we must be able to change to the directory
   test -d $dir -a -x $dir || continue
@@ -351,7 +369,7 @@ do
   do
     # Windows: ignore case
     # Bug 849475: just return one header by using head -1
-    acx_ocihdr=`find $dir \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
+    acx_ocihdr=`find $dir -follow \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
 
     test -n "$acx_ocihdr" || continue
 
