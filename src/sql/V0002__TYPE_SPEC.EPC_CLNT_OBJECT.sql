@@ -1,4 +1,4 @@
-CREATE TYPE "EPC_CLNT_OBJECT" under std_object (
+CREATE TYPE "EPC_CLNT_OBJECT" AUTHID DEFINER under std_object (
   interface_name varchar2(32) /*epc.interface_name_subtype*/  /* the key */
   /* Protocol information */
 , protocol integer

@@ -5,14 +5,18 @@ ALTER SESSION SET PLSQL_WARNINGS = 'ENABLE:ALL';
 
 prompt @@0001.TYPE_SPEC.STD_OBJECT.sql
 @@0001.TYPE_SPEC.STD_OBJECT.sql
+show errors type std_object
 prompt @@0002.TYPE_SPEC.EPC_CLNT_OBJECT.sql
 @@0002.TYPE_SPEC.EPC_CLNT_OBJECT.sql
+show errors type epc_clnt_object
 prompt @@0003.TABLE.STD_OBJECTS.sql
 @@0003.TABLE.STD_OBJECTS.sql
 prompt @@R__0004.PACKAGE_SPEC.STD_OBJECT_MGR.sql
 @@R__0004.PACKAGE_SPEC.STD_OBJECT_MGR.sql
+show errors package std_object_mgr
 prompt @@R__0005.TYPE_BODY.STD_OBJECT.sql
 @@R__0005.TYPE_BODY.STD_OBJECT.sql
+show errors type body std_object
 prompt @@R__0006.PACKAGE_SPEC.EPC.sql
 @@R__0006.PACKAGE_SPEC.EPC.sql
 prompt @@R__0007.PACKAGE_SPEC.EPC_SRVR.sql

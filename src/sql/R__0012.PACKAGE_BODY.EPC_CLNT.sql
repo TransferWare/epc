@@ -263,7 +263,7 @@ begin
            'Timed out while sending message number ' ||
            to_char(g_msg_seq) ||
            ' for pipe ' || p_epc_clnt_object.request_pipe ||
-           ' and timeout ' || to_char(p_epc_clnt_object.send_timeout)
+           ' and timeout ' || to_char(p_epc_clnt_object.send_timeout) ||
            '.'
          );
 

@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE "STD_OBJECT_MGR" IS
+CREATE OR REPLACE PACKAGE "STD_OBJECT_MGR" AUTHID DEFINER IS
 /**
 --
 -- This package is used to manage standard objects. Standard objects can be

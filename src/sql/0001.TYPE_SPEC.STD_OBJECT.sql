@@ -1,4 +1,4 @@
-CREATE TYPE "STD_OBJECT" AS OBJECT (
+CREATE TYPE "STD_OBJECT" AUTHID DEFINER AS OBJECT (
   /*
   -- The dirty flag is used to speed up the performance when
   -- std_object_mgr.get_std_object()/std_object_mgr.set_std_object() are used.
