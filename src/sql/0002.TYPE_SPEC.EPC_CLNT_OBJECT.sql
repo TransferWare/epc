@@ -35,6 +35,8 @@ CREATE TYPE "EPC_CLNT_OBJECT" under std_object (
 
 , overriding member function name(self in epc_clnt_object) return varchar2
 
+, overriding member procedure print(self in epc_clnt_object)
+
 ) final;
 /
 

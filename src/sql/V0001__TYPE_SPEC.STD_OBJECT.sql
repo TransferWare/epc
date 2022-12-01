@@ -30,6 +30,8 @@ CREATE TYPE "STD_OBJECT" AS OBJECT (
 , final
   member procedure remove(self in std_object)
 
+, member procedure print(self in std_object)
+
 ) not instantiable not final;
 /
 

@@ -41,6 +41,83 @@ begin
   return 'EPC_CLNT' || '.' || interface_name;
 end name;
 
+overriding
+member procedure print(self in epc_clnt_object)
+is
+begin
+  (self as std_object).print; -- Generalized invocation 
+  dbms_output.put_line
+  ( utl_lms.format_message
+    ( '%s.%s.%s; interface: %s; protocol: %s; namespace: %s'
+    , $$PLSQL_UNIT_OWNER
+    , $$PLSQL_UNIT
+    , 'PRINT'
+    , interface_name
+    , to_char(protocol)
+    , namespace
+    )
+  );
+  dbms_output.put_line
+  ( utl_lms.format_message
+    ( '%s.%s.%s; inline namespace: %s; connection method: %s'
+    , $$PLSQL_UNIT_OWNER
+    , $$PLSQL_UNIT
+    , 'PRINT'
+    , inline_namespace
+    , to_char(connection_method)
+    )
+  );
+
+  case connection_method
+    when epc_clnt.CONNECTION_METHOD_UTL_TCP
+    then
+      dbms_output.put_line
+      ( utl_lms.format_message
+        ( '%s.%s.%s; remote host/port (%s/%s); local host/port (%s/%s); timeout: %s'
+        , $$PLSQL_UNIT_OWNER
+        , $$PLSQL_UNIT
+        , 'PRINT'
+        , tcp_remote_host
+        , to_char(tcp_remote_port)
+        , tcp_local_host
+        , to_char(tcp_local_port)
+        --, tcp_charset     varchar2(30)
+        --, tcp_newline     varchar2(2)
+        , to_char(tcp_tx_timeout)
+        --, tcp_private_sd  integer
+        )
+      );
+
+    when epc_clnt.CONNECTION_METHOD_UTL_HTTP
+    then
+      dbms_output.put_line
+      ( utl_lms.format_message
+        ( '%s.%s.%s; http url: %s; method: %s; version: %s'
+        , $$PLSQL_UNIT_OWNER
+        , $$PLSQL_UNIT
+        , 'PRINT'
+        , http_url
+        , http_method
+        , http_version
+        )
+      );
+  
+    when epc_clnt.CONNECTION_METHOD_DBMS_PIPE
+    then
+      dbms_output.put_line
+      ( utl_lms.format_message
+        ( '%s.%s.%s; request pipe: %s; send timeout: %s; recv timeout: %s'
+        , $$PLSQL_UNIT_OWNER
+        , $$PLSQL_UNIT
+        , 'PRINT'
+        , request_pipe
+        , to_char(send_timeout)
+        , to_char(recv_timeout)
+        )
+      );
+  end case;
+end print;
+
 end;
 /
 

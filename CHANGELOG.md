@@ -10,12 +10,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Please see the [EPC issue queue](https://github.com/TransferWare/epc/issues) for issues.
 
+Types of changes:
+- *Added* for new features.
+- *Changed* for changes in existing functionality.
+- *Deprecated* for soon-to-be removed features.
+- *Removed* for now removed features.
+- *Fixed* for any bug fixes.
+- *Security* in case of vulnerabilities.
+
 [Unreleased]
+
+- [Add debugging to EPC_CLNT when no message can be sent for a database pipe.](https://github.com/TransferWare/epc/issues/8)
+
+## [6.1.0] - 2021-08-11
+
+### Fixed
 
 - [On Mac OS X you should disable shared libraries.](https://github.com/TransferWare/epc/issues/2)
 - [On Mac OS X libraries or executables with @rpath pose problems while testing.](https://github.com/TransferWare/epc/issues/3)
 - [The configure script must set ORACLE_LIBS and ORACLE_LDFLAGS instead of LIBS and LDFLAGS.](https://github.com/TransferWare/epc/issues/4)
-- [When PostgreSQL sqlca is installed in /usr/local/include it override Oracle's sqlca.](https://github.com/TransferWare/epc/issues/5)
+- [When PostgreSQL sqlca is installed in /usr/local/include it overrides Oracle's sqlca.](https://github.com/TransferWare/epc/issues/5)
 
 ## [6.0.0] - 2021-08-02
 

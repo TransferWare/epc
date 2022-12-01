@@ -249,7 +249,7 @@ begin
     dbms_pipe.send_message
     ( 
       p_epc_clnt_object.request_pipe
-    , p_epc_clnt_object.send_timeout 
+    , p_epc_clnt_object.send_timeout
     );
 
   case l_retval
@@ -263,6 +263,7 @@ begin
            'Timed out while sending message number ' ||
            to_char(g_msg_seq) ||
            ' for pipe ' || p_epc_clnt_object.request_pipe ||
+           ' and timeout ' || to_char(p_epc_clnt_object.send_timeout)
            '.'
          );
 
@@ -954,8 +955,15 @@ is
 begin
 /*DBUG
   enter('epc_clnt.new_request');
-  print('input', 'p_method_name: %s', p_method_name);
-  print('input', 'p_oneway: %s', p_oneway);
+  p_epc_clnt_object.print;
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_method_name: %s; p_oneway: %s'
+    , p_method_name
+    , to_char(p_oneway)
+    )
+  );
 /*DBUG*/
 
   g_msg := null;
@@ -1011,10 +1019,16 @@ is
 begin
 /*DBUG
   enter('epc_clnt.set_request_parameter (1)');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_value: %s', p_value);
-  print('input', 'p_max_bytes: %s', p_max_bytes);
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_value: %s; p_max_bytes: %s: %s'
+    , p_name
+    , to_char(p_data_type)
+    , p_value
+    , to_char(p_max_bytes)
+    )
+  );
 /*DBUG*/
 
   if p_value is null
@@ -1107,9 +1121,15 @@ is
 begin
 /*DBUG
   enter('epc_clnt.set_request_parameter (2)');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_value: %s', p_value);
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_value: %s'
+    , p_name
+    , to_char(p_data_type)
+    , to_char(p_value)
+    )
+  );
 /*DBUG*/
 
   if p_value is null
@@ -1203,9 +1223,15 @@ is
 begin
 /*DBUG
   enter('epc_clnt.set_request_parameter (3)');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_value: %s', l_value);
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_value: %s'
+    , p_name
+    , to_char(p_data_type)
+    , l_value
+    )
+  );
 /*DBUG*/
 
   if p_value is null
@@ -1423,9 +1449,15 @@ is
 begin
 /*DBUG
   enter('epc_clnt.get_response_parameter');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_max_bytes: %s', p_max_bytes);
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_max_bytes: %s: %s'
+    , p_name
+    , to_char(p_data_type)
+    , to_char(p_max_bytes)
+    )
+  );
 /*DBUG*/
 
   if p_epc_clnt_object.protocol = "NATIVE"
@@ -1554,8 +1586,14 @@ begin
   end if;
 
 /*DBUG
-  print('output', 'g_msg: %s', g_msg);
-  print('output', 'p_value: %s', p_value);
+  print
+  ( 'output'
+  , utl_lms.format_message
+    ( 'g_msg: %s; p_value: %s'
+    , g_msg
+    , p_value
+    )
+  );
   leave;
 /*DBUG*/
 end get_response_parameter;

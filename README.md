@@ -48,7 +48,7 @@ Test whether `sqlplus` exists now.
 ### Installation
 
 There are two methods:
-1. use the [Oracle Tools GUI](https://github.com/paulissoft/oracle-tools-gui)
+1. use the [Paulissoft Application Tools for Oracle (PATO) GUI](https://github.com/paulissoft/pato-gui)
 with the pom.xml file from the project root and schema ORACLE_TOOLS as the EPC owner
 2. execute `src/sql/install.sql` connected as the EPC owner using SQL*Plus, SQLcl or SQL Developer
 
