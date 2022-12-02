@@ -23,13 +23,10 @@
     <db.object.type />
     <!-- A list of object names to include or exclude (or empty to include all) -->
     <db.object.names>
+      EPC_CLNT_OBJECT,
       EPC,
       EPC_CLNT,
-      EPC_CLNT_OBJECT,
       EPC_SRVR,
-      STD_OBJECT,
-      STD_OBJECT_MGR,
-      STD_OBJECTS
     </db.object.names>
     <!-- db.object.names.include specifies what to do with db.object.names: empty (no filter), 0 (exclude) or 1 (include) -->
     <db.object.names.include>1</db.object.names.include>
