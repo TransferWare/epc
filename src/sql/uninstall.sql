@@ -1,16 +1,16 @@
-/* perl generate_ddl.pl (version 2021-08-27) --nodynamic-sql --force-view --skip-install-sql --nostrip-source-schema */
+/* perl generate_ddl.pl (version 2022-12-02) --nodynamic-sql --force-view --group-constraints --skip-install-sql --source-schema=EPCAPP --strip-source-schema */
 
 /*
--- JDBC url            : jdbc:oracle:thin:ORACLE_TOOLS@//localhost:1521/orcl
+-- JDBC url            : jdbc:oracle:thin:EPCAPP@//localhost:1521/orcl
 -- source schema       : 
 -- source database link: 
--- target schema       : ORACLE_TOOLS
+-- target schema       : EPCAPP
 -- target database link: 
 -- object type         : 
 -- object names include: 1
--- object names        : EPC,
+-- object names        : EPC_CLNT_OBJECT,
+EPC,
 EPC_CLNT,
-EPC_CLNT_OBJECT,
 EPC_SRVR,
 -- skip repeatables    : 0
 -- interface           : pkg_ddl_util v5
@@ -19,37 +19,35 @@ EPC_SRVR,
 */
 -- pkg_ddl_util v5
 call dbms_application_info.set_module('uninstall.sql', null);
-
-/* SQL statement 7 (DROP;ORACLE_TOOLS;PACKAGE_BODY;EPC;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 7');
+/* SQL statement 1 (DROP;EPCAPP;PACKAGE_BODY;EPC;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 1');
 DROP PACKAGE BODY EPC;
 
-/* SQL statement 8 (DROP;ORACLE_TOOLS;PACKAGE_BODY;EPC_CLNT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 8');
+/* SQL statement 2 (DROP;EPCAPP;PACKAGE_BODY;EPC_CLNT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 2');
 DROP PACKAGE BODY EPC_CLNT;
 
-/* SQL statement 9 (DROP;ORACLE_TOOLS;PACKAGE_BODY;EPC_SRVR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 9');
+/* SQL statement 3 (DROP;EPCAPP;PACKAGE_BODY;EPC_SRVR;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 3');
 DROP PACKAGE BODY EPC_SRVR;
 
-/* SQL statement 11 (DROP;ORACLE_TOOLS;TYPE_BODY;EPC_CLNT_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 11');
+/* SQL statement 4 (DROP;EPCAPP;TYPE_BODY;EPC_CLNT_OBJECT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 4');
 DROP TYPE BODY EPC_CLNT_OBJECT;
 
-/* SQL statement 12 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;EPC_CLNT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 12');
+/* SQL statement 5 (DROP;EPCAPP;PACKAGE_SPEC;EPC_CLNT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 5');
 DROP PACKAGE EPC_CLNT;
 
-/* SQL statement 13 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;EPC_SRVR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 13');
+/* SQL statement 6 (DROP;EPCAPP;PACKAGE_SPEC;EPC_SRVR;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 6');
 DROP PACKAGE EPC_SRVR;
 
-/* SQL statement 14 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;EPC;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 14');
+/* SQL statement 7 (DROP;EPCAPP;PACKAGE_SPEC;EPC;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 7');
 DROP PACKAGE EPC;
 
-/* SQL statement 18 (DROP;ORACLE_TOOLS;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 18');
+/* SQL statement 8 (DROP;EPCAPP;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 8');
 DROP TYPE EPC_CLNT_OBJECT;
-
 

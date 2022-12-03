@@ -28,7 +28,7 @@ CREATE OR REPLACE PACKAGE "EPC_CLNT" AUTHID DEFINER IS
 -- @headcom
 */
 
-/* 
+/*
    History of protocols:
 
    1 - original protocol
@@ -41,7 +41,7 @@ CREATE OR REPLACE PACKAGE "EPC_CLNT" AUTHID DEFINER IS
        From server: MSG SEQ, PARAMETERS OUT
 
        MSG SEQ has been added in order to check for messages which have
-       not been (correctly) processed by the server. 
+       not been (correctly) processed by the server.
 
    4 - To server: PROTOCOL, MSG SEQ, INTERFACE, FUNCTION, RESULT PIPE, PARAMETERS IN
        From server: MSG SEQ, PARAMETERS OUT
@@ -93,13 +93,13 @@ CONNECTION_METHOD_DBMS_PIPE constant connection_method_subtype := 1;
 CONNECTION_METHOD_UTL_TCP constant connection_method_subtype := 2;
 CONNECTION_METHOD_UTL_HTTP constant connection_method_subtype := 3;
 
-/* 
+/*
 || Protocol related functions/procedures.
 */
 
 /**
 -- Set the protocol for later use.
--- 
+--
 -- @param p_interface_name  The interface
 -- @param p_protocol        The protocol
 --
@@ -111,8 +111,8 @@ procedure set_protocol
 );
 
 /**
--- Get the protocol. 
--- 
+-- Get the protocol.
+--
 -- @param p_interface_name  The interface
 -- @param p_protocol        The protocol
 */
@@ -121,7 +121,7 @@ procedure get_protocol
 , p_protocol out nocopy protocol_subtype
 );
 
-/* 
+/*
 || Connection related functions/procedures.
 */
 
@@ -130,7 +130,7 @@ procedure get_protocol
 --
 -- Set the connection method to HTTP and store the HTTP connection info for
 -- later use. The protocol will be set to SOAP.
--- 
+--
 -- @param p_interface_name  The interface
 -- @param p_connection      The HTTP connection info.
 */
@@ -140,8 +140,8 @@ procedure set_connection_info
 );
 
 /**
--- Get the HTTP connection info. 
--- 
+-- Get the HTTP connection info.
+--
 -- @param p_interface_name  The interface
 -- @param p_connection      The HTTP connection info
 --
@@ -159,7 +159,7 @@ procedure get_connection_info
 -- later use. The EPC will not open or close the TCP/IP connection. It is the
 -- responsability of the client program to open and close the connection. The
 -- protocol will be set to XMLRPC.
--- 
+--
 -- @param p_interface_name  The interface
 -- @param p_connection      An open TCP/IP connection (see utl_tcp.open_connection)
 */
@@ -169,8 +169,8 @@ procedure set_connection_info
 );
 
 /**
--- Get the TCP/IP connection info. 
--- 
+-- Get the TCP/IP connection info.
+--
 -- @param p_interface_name  The interface
 -- @param p_connection      An open TCP/IP connection
 --                          (see utl_tcp.open_connection)
@@ -188,7 +188,7 @@ procedure get_connection_info
 -- Set the connection type to database pipes and store the pipe name for
 -- later use. Each interface may have a different connection. The
 -- protocol will be set to NATIVE.
--- 
+--
 -- @param p_interface_name  The interface
 -- @param p_pipe_name       The request pipe name
 */
@@ -199,7 +199,7 @@ procedure set_connection_info
 
 /**
 -- Get the database request pipe.
--- 
+--
 -- @param p_interface_name  The interface
 -- @param p_pipe_name       The request pipe name
 --
@@ -212,7 +212,7 @@ procedure get_connection_info
 
 /**
 -- Set the request send timeout.
--- 
+--
 -- @param p_interface_name        The interface
 -- @param p_request_send_timeout  The request send timeout
 */
@@ -223,7 +223,7 @@ procedure set_request_send_timeout
 
 /**
 -- Set the response receive timeout.
--- 
+--
 -- @param p_interface_name         The interface
 -- @param p_response_recv_timeout  The response receive timeout
 */
@@ -239,7 +239,7 @@ procedure set_response_recv_timeout
 -- For Web services this may need to be overridden.
 -- The namespace is added as an attribute to the method element, e.g.
 -- &lt;METHOD xmlns="NAMESPACE"&gt;
--- 
+--
 -- @param p_interface_name  The interface
 -- @param p_namespace       The new namespace
 */
@@ -255,7 +255,7 @@ procedure set_namespace
 -- The default inline namespace is ns1. For Web services this may need to be
 -- overridden.  The namespace is added as an attribute to the method element,
 -- e.g. &lt;INLINE_NAMESPACE:METHOD xmlns:INLINE_NAMESPACE="NAMESPACE"&gt;
--- 
+--
 -- @param p_interface_name    The interface
 -- @param p_inline_namespace  The new inline namespace
 */
@@ -268,11 +268,11 @@ procedure set_inline_namespace
 
 /**
 -- Start a new request.
--- 
+--
 -- @param p_epc_clnt_object  Epc client object
 -- @param p_method_name      The method name
 -- @param p_oneway           Is the procedure call a oneway call,
-                             i.e. do we NOT wait for a response? 
+                             i.e. do we NOT wait for a response?
                              0 means we will wait for a response.
 */
 procedure new_request
@@ -283,7 +283,7 @@ procedure new_request
 
 /**
 -- Set a request parameter (IN or IN OUT).
--- 
+--
 -- @param p_epc_clnt_object  Epc client object
 -- @param p_name             The name of the parameter
 -- @param p_data_type        The data type (should be epc.data_type_string)
@@ -317,7 +317,7 @@ procedure set_request_parameter
 
 /**
 -- Send a request.
--- 
+--
 -- @param p_epc_clnt_object  Epc client object
 --
 -- @throws epc.e_comm_error  Error while sending the message
@@ -329,7 +329,7 @@ procedure send_request
 
 /**
 -- Receive a response.
--- 
+--
 -- @param p_epc_clnt_object  Epc client object
 --
 -- @throws epc.e_comm_error      Error while sending the message
@@ -342,7 +342,7 @@ procedure recv_response
 
 /**
 -- Get a response parameter (OUT or IN OUT).
--- 
+--
 -- @param p_epc_clnt_object  Epc client object
 -- @param p_name             The name of the parameter
 -- @param p_data_type        The data type (should be epc.data_type_string)
@@ -377,7 +377,7 @@ procedure get_response_parameter
 
 /**
 -- Shutdown the client.
--- 
+--
 -- Cleanup all resources, for instance the response pipe.
 */
 procedure shutdown;

@@ -3,7 +3,7 @@ CREATE OR REPLACE PACKAGE "EPC" AUTHID DEFINER IS
 --
 -- This package is used to implement RPC like functionality on Oracle.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP) 
+-- supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP)
 -- and TCP/IP (package UTL_TCP).
 --
 -- @headcom
@@ -40,7 +40,7 @@ data_type_double constant data_type_subtype := 5;
 data_type_xml    constant data_type_subtype := 7;
 data_type_date   constant data_type_subtype := 8;
 
-"xmlns:SOAP-ENV" constant varchar2(1000) := 
+"xmlns:SOAP-ENV" constant varchar2(1000) :=
   'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
 
 SOAP_HEADER_START constant varchar2(1000) :=
@@ -59,10 +59,10 @@ SOAP_HEADER_START constant varchar2(1000) :=
   ||'>'
   ||'<SOAP-ENV:Body>';
 
-SOAP_HEADER_END constant varchar2(1000) := 
+SOAP_HEADER_END constant varchar2(1000) :=
   '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
-/* 
+/*
   Exceptions are raised using raise_application_error(error_number, ...),
   which expects error numbers in the range -20000 uptill -20999.
   The EPC uses -20100 uptill -20106.
@@ -85,10 +85,10 @@ SOAP_HEADER_END constant varchar2(1000) :=
     when something
     then
       dbms_output.put_line('something');
-      null;     
+      null;
   end;
 
-  This does not catch e_something. 
+  This does not catch e_something.
 
   When you uncomment the pragma lines, the exception is catched.
 */
@@ -148,7 +148,7 @@ pragma exception_init(msg_interrupted, -20105);
 -- Pretty prints a message using DBMS_OUTPUT.  The message is split into lines
 -- (chr(10) is the separator).  Next lines longer than 255 characters are
 -- printed in chunks of 255 characters each.
--- 
+--
 -- @param p_msg  XML message.
 */
 procedure print
@@ -161,7 +161,7 @@ procedure print
 --
 -- Prints a debug message using the print() function.
 -- The message is prefixed with 'DEBUG: '
--- 
+--
 -- @param p_msg  XML message.
 */
 procedure debug

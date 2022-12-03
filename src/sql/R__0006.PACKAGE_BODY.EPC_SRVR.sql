@@ -115,7 +115,7 @@ begin
 end set_response_send_timeout;
 
 procedure recv_request
-( 
+(
   p_epc_key in epc_key_subtype
 , p_msg_info out nocopy epc_srvr.msg_info_subtype
 , p_msg_request out nocopy varchar2
@@ -198,7 +198,7 @@ exception
 end recv_request;
 
 procedure send_response
-( 
+(
   p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
 , p_msg_response in varchar2

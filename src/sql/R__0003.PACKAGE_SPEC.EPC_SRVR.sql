@@ -2,9 +2,9 @@ CREATE OR REPLACE PACKAGE "EPC_SRVR" AUTHID DEFINER IS
 /**
 --
 -- This package is used to implement the server side of RPC like functionality
--- on an Oracle database. Messages are sent by the client to a server. The 
+-- on an Oracle database. Messages are sent by the client to a server. The
 -- transport mechanisms supported are database pipes (DBMS_PIPE),
--- HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for 
+-- HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for
 -- database pipe transport. TCP/IP servers should not use
 -- the TCP/IP functionality of Oracle, but of the OS instead.
 --
@@ -44,7 +44,7 @@ return epc_key_subtype;
 /**
 -- Set the connection type to database pipes and store the pipe name for
 -- later use. Each interface may have a different connection.
--- 
+--
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
 */
@@ -55,7 +55,7 @@ procedure set_connection_info
 
 /**
 -- Get the database request pipe.
--- 
+--
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
 */
@@ -66,7 +66,7 @@ procedure get_connection_info
 
 /**
 -- Set the response send timeout.
--- 
+--
 -- @param p_epc_key                The key
 -- @param p_response_send_timeout  The response send timeout
 */
@@ -77,7 +77,7 @@ procedure set_response_send_timeout
 
 /**
 -- Receive a request.
--- 
+--
 -- @param p_epc_key         Needed for the connection info
 -- @param p_msg_info        The message information
 -- @param p_msg_request     The message request
@@ -94,7 +94,7 @@ procedure recv_request
 
 /**
 -- Send a response to a request.
--- 
+--
 -- @param p_epc_key       Needed for the connection info
 -- @param p_msg_info      The message information as received by recv_request
 -- @param p_msg_response  The message response
@@ -103,7 +103,7 @@ procedure recv_request
 -- @throws epc.e_msg_interrupted  Message interrupted
 */
 procedure send_response
-( 
+(
   p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
 , p_msg_response in varchar2
@@ -111,7 +111,7 @@ procedure send_response
 
 /**
 -- Interrupt the receipt of a request. When database
--- pipes are used to receive the request, the session can not 
+-- pipes are used to receive the request, the session can not
 -- easily be interrupted by a user defined interrupt (for example a CTRL-C).
 -- The way to do this, is to call this procedure from another session.
 -- This will interrupt the server.

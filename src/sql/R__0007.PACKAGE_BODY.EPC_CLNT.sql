@@ -65,7 +65,7 @@ g_result_pipe epc.pipe_name_subtype := null;
 /* The current message sequence number.
    The message sequence number is incremented before a message
    is sent. This (incremented) number if part of the message
-   and must be returned as part of the result message. Now 
+   and must be returned as part of the result message. Now
    this can be checked.
 */
 g_msg_seq pls_integer := c_max_msg_seq;
@@ -245,9 +245,9 @@ begin
     dbms_pipe.pack_message( g_result_pipe );
   end if;
 
-  l_retval := 
+  l_retval :=
     dbms_pipe.send_message
-    ( 
+    (
       p_epc_clnt_object.request_pipe
     , p_epc_clnt_object.send_timeout
     );
@@ -295,7 +295,7 @@ is
 begin
   epc_clnt_info_obj2connection(p_epc_clnt_object, l_http_connection_rec);
 
-  g_http_req := 
+  g_http_req :=
     utl_http.begin_request
     ( l_http_connection_rec.url
     , l_http_connection_rec.method
@@ -364,7 +364,7 @@ begin
   while l_length > 0
   loop
     begin
-      l_bytes_written := 
+      l_bytes_written :=
         utl_tcp.write_text
         ( c => l_tcp_connection
         , data => substr(g_msg, l_offset, l_length)
@@ -415,12 +415,12 @@ begin
 /*DBUG*/
     l_start := sysdate;
     l_retval :=
-      case 
-        when p_epc_clnt_object.recv_timeout > 0 and l_timeout <= 0 
+      case
+        when p_epc_clnt_object.recv_timeout > 0 and l_timeout <= 0
         then 1 -- timeout
         else
           dbms_pipe.receive_message
-          ( 
+          (
             g_result_pipe
           , l_timeout
           )
@@ -429,12 +429,12 @@ begin
     case l_retval
       when 0 -- Success
       then
-        l_timeout := 
-          case 
+        l_timeout :=
+          case
             when p_epc_clnt_object.recv_timeout = 0
             then 0
             else
-              l_timeout - 
+              l_timeout -
               /* elapsed time in seconds */ (sysdate - l_start) * ( 24 * 60 * 60 )
           end;
 
@@ -519,14 +519,14 @@ begin
 
       exit msg_seq_loop; -- OK
     else
-      /* Example: 
+      /* Example:
 
          The client expects 1006 after it timed out, so
-         1005 is still in the queue. 
+         1005 is still in the queue.
          Just read that, ignore it and continue to wait for 1006.
-      */                  
+      */
       null;
-/*    
+/*
       raise_application_error
       ( epc.c_wrong_protocol
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
@@ -534,7 +534,7 @@ begin
         'Expected "' || to_char(g_msg_seq) || '"' ||
         ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
       );
-*/      
+*/
     end if;
   end loop msg_seq_loop;
 
@@ -575,7 +575,7 @@ begin
   epc_clnt_info_obj2connection(p_epc_clnt_object, l_tcp_connection);
 
   begin
-    l_bytes_read := 
+    l_bytes_read :=
       utl_tcp.read_text
       ( c => l_tcp_connection
       , data => g_msg
@@ -603,13 +603,13 @@ as
 begin
   l_fault_node := p_doc.extract('/SOAP-ENV:Fault', epc."xmlns:SOAP-ENV");
   if (l_fault_node is not null) then
-    l_fault_code := 
+    l_fault_code :=
       l_fault_node.extract
       (
         '/SOAP-ENV:Fault/faultcode/child::text()'
       , epc."xmlns:SOAP-ENV"
       ).getstringval();
-    l_fault_string := 
+    l_fault_string :=
       l_fault_node.extract
       (
         '/SOAP-ENV:Fault/faultstring/child::text()'
@@ -629,12 +629,12 @@ as
 begin
   l_fault_node := p_doc.extract('/methodResponse/fault');
   if (l_fault_node is not null) then
-    l_fault_code := 
+    l_fault_code :=
       l_fault_node.extract
       (
         '/value/struct/member/value/int/child::text()'
       ).getstringval();
-    l_fault_string := 
+    l_fault_string :=
       l_fault_node.extract
       (
         '/value/struct/member/value/string/child::text()'
@@ -1041,7 +1041,7 @@ begin
     case p_epc_clnt_object.protocol
       when "NATIVE"
       then
-        case 
+        case
           when p_data_type in (epc.data_type_string, epc.data_type_xml)
           then
             g_msg :=
@@ -1097,11 +1097,11 @@ begin
             ||chr(10);
         else
           raise value_error;
-        end if; 
+        end if;
 
       else
         raise program_error;
-    end case;            
+    end case;
   end if;
 
 /*DBUG
@@ -1167,7 +1167,7 @@ begin
         end case;
 
         g_msg :=
-          g_msg 
+          g_msg
           ||'<'||p_name||' xsi:type="xsd:'||l_data_type||'">'
           ||replace(to_char(p_value), g_decimal_char, '.')
           ||'</'||p_name||'>';
@@ -1216,7 +1216,7 @@ procedure set_request_parameter
 , p_value in date
 )
 is
-  l_value constant varchar2(17) := 
+  l_value constant varchar2(17) :=
     to_char(p_value, 'yyyymmdd')
     ||'T'
     ||to_char(p_value, 'hh24:mi:ss');
@@ -1310,7 +1310,7 @@ begin
         ||epc.SOAP_HEADER_END;
 
     when "XMLRPC"
-    then 
+    then
       g_msg :=
         '<methodCall>'
         ||chr(10)
@@ -1344,7 +1344,7 @@ begin
 
         else
           raise program_error;
-      end case;  
+      end case;
 
     when CONNECTION_METHOD_UTL_HTTP
     then
@@ -1364,7 +1364,7 @@ begin
 
         else
           raise program_error;
-      end case;  
+      end case;
   end case;
 end send_request;
 
@@ -1412,7 +1412,7 @@ begin
       check_soap_fault(g_doc);
 
     when "XMLRPC"
-    then 
+    then
 /*DBUG
       epc.print(g_msg);
 /*DBUG*/
@@ -1502,7 +1502,7 @@ begin
     case p_epc_clnt_object.protocol
       when "SOAP"
       then
-        l_xml := 
+        l_xml :=
           g_doc.extract
           (
             '//'||p_name||l_extract_type
@@ -1510,7 +1510,7 @@ begin
           );
 
       when "XMLRPC"
-      then 
+      then
         case p_data_type
           when epc.data_type_xml
           then
@@ -1537,7 +1537,7 @@ begin
             raise value_error;
         end case;
 
-        l_xml := 
+        l_xml :=
           g_doc.extract
           (
             '/methodResponse/params/param['
@@ -1551,7 +1551,7 @@ begin
 
       else
         raise program_error;
-    end case;   
+    end case;
 
     l_value := l_xml.getstringval();
 
@@ -1569,7 +1569,7 @@ begin
           );
       end if;
 
-      p_value := 
+      p_value :=
         dbms_xmlgen.convert
         (
           xmlData => l_value
@@ -1654,9 +1654,9 @@ begin
 
   g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
 
-  /* 
-  || GJP 08-01-2001 
-  || Emptying the result pipe seems to prevent timeouts on receipt. 
+  /*
+  || GJP 08-01-2001
+  || Emptying the result pipe seems to prevent timeouts on receipt.
   */
 
   dbms_pipe.purge( g_result_pipe );
