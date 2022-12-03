@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE "EPC_CLNT" IS
+CREATE OR REPLACE PACKAGE "EPC_CLNT" AUTHID DEFINER IS
 /**
 --
 -- This package is used to implement the client side of RPC like functionality
@@ -118,7 +118,7 @@ procedure set_protocol
 */
 procedure get_protocol
 ( p_interface_name in epc.interface_name_subtype
-, p_protocol out protocol_subtype
+, p_protocol out nocopy protocol_subtype
 );
 
 /* 
@@ -207,7 +207,7 @@ procedure set_connection_info
 */
 procedure get_connection_info
 ( p_interface_name in epc.interface_name_subtype
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 );
 
 /**
@@ -357,7 +357,7 @@ procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out varchar2
+, p_value out nocopy varchar2
 , p_max_bytes in integer default null
 );
 
@@ -365,14 +365,14 @@ procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out number
+, p_value out nocopy number
 );
 
 procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out date
+, p_value out nocopy date
 );
 
 /**

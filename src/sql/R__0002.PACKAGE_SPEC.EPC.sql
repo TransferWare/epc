@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE "EPC" IS
+CREATE OR REPLACE PACKAGE "EPC" AUTHID DEFINER IS
 /**
 --
 -- This package is used to implement RPC like functionality on Oracle.

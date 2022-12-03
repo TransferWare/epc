@@ -665,7 +665,7 @@ end set_protocol;
 
 procedure get_protocol
 ( p_epc_clnt_object in epc_clnt_object
-, p_protocol out protocol_subtype
+, p_protocol out nocopy protocol_subtype
 )
 is
 begin
@@ -685,7 +685,7 @@ end set_connection_info;
 
 procedure get_connection_info
 ( p_epc_clnt_object in epc_clnt_object
-, p_connection out http_connection_subtype
+, p_connection out nocopy http_connection_subtype
 )
 is
 begin
@@ -745,7 +745,7 @@ end set_connection_info;
 
 procedure get_connection_info
 ( p_epc_clnt_object in epc_clnt_object
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 )
 is
 begin
@@ -831,7 +831,7 @@ end set_protocol;
 
 procedure get_protocol
 ( p_interface_name in epc.interface_name_subtype
-, p_protocol out protocol_subtype
+, p_protocol out nocopy protocol_subtype
 )
 is
   l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
@@ -894,7 +894,7 @@ end set_connection_info;
 
 procedure get_connection_info
 ( p_interface_name in epc.interface_name_subtype
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 )
 is
   l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
@@ -1439,7 +1439,7 @@ procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out varchar2
+, p_value out nocopy varchar2
 , p_max_bytes in integer
 )
 is
@@ -1602,7 +1602,7 @@ procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out number
+, p_value out nocopy number
 )
 is
   l_value epc.string_subtype;
@@ -1621,7 +1621,7 @@ procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out date
+, p_value out nocopy date
 )
 is
   l_value epc.string_subtype;

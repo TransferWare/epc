@@ -2,7 +2,8 @@ CREATE OR REPLACE TYPE BODY "EPC_CLNT_OBJECT"
 is
 
 constructor function epc_clnt_object
-( p_interface_name in varchar2
+( self in out nocopy epc_clnt_object
+, p_interface_name in varchar2
 )
 return self as result
 is
@@ -25,7 +26,7 @@ begin
       self.request_pipe := 'epc_request_pipe';
       self.http_method := 'POST';
       self.http_version := utl_http.http_version_1_1;
-      self.send_timeout := 60; /* GJP 2018-08-21 10 => 60 */
+      self.send_timeout := 0; /* GJP 2018-08-21 10 => 60 */ /* GJP 2022-12-03 60 => 0 */
       self.recv_timeout := 60; /* GJP 2018-08-21 10 => 60 */
   end;
 
@@ -42,81 +43,31 @@ begin
 end name;
 
 overriding
-member procedure print(self in epc_clnt_object)
+member procedure serialize(self in epc_clnt_object, p_json_object in out nocopy json_object_t)
 is
 begin
-  (self as std_object).print; -- Generalized invocation 
-  dbms_output.put_line
-  ( utl_lms.format_message
-    ( '%s.%s.%s; interface: %s; protocol: %s; namespace: %s'
-    , $$PLSQL_UNIT_OWNER
-    , $$PLSQL_UNIT
-    , 'PRINT'
-    , interface_name
-    , to_char(protocol)
-    , namespace
-    )
-  );
-  dbms_output.put_line
-  ( utl_lms.format_message
-    ( '%s.%s.%s; inline namespace: %s; connection method: %s'
-    , $$PLSQL_UNIT_OWNER
-    , $$PLSQL_UNIT
-    , 'PRINT'
-    , inline_namespace
-    , to_char(connection_method)
-    )
-  );
+  -- every sub type must first start with (self as <super type>).serialize(p_json_object)
+  (self as std_object).serialize(p_json_object);
 
-  case connection_method
-    when epc_clnt.CONNECTION_METHOD_UTL_TCP
-    then
-      dbms_output.put_line
-      ( utl_lms.format_message
-        ( '%s.%s.%s; remote host/port (%s/%s); local host/port (%s/%s); timeout: %s'
-        , $$PLSQL_UNIT_OWNER
-        , $$PLSQL_UNIT
-        , 'PRINT'
-        , tcp_remote_host
-        , to_char(tcp_remote_port)
-        , tcp_local_host
-        , to_char(tcp_local_port)
-        --, tcp_charset     varchar2(30)
-        --, tcp_newline     varchar2(2)
-        , to_char(tcp_tx_timeout)
-        --, tcp_private_sd  integer
-        )
-      );
-
-    when epc_clnt.CONNECTION_METHOD_UTL_HTTP
-    then
-      dbms_output.put_line
-      ( utl_lms.format_message
-        ( '%s.%s.%s; http url: %s; method: %s; version: %s'
-        , $$PLSQL_UNIT_OWNER
-        , $$PLSQL_UNIT
-        , 'PRINT'
-        , http_url
-        , http_method
-        , http_version
-        )
-      );
-  
-    when epc_clnt.CONNECTION_METHOD_DBMS_PIPE
-    then
-      dbms_output.put_line
-      ( utl_lms.format_message
-        ( '%s.%s.%s; request pipe: %s; send timeout: %s; recv timeout: %s'
-        , $$PLSQL_UNIT_OWNER
-        , $$PLSQL_UNIT
-        , 'PRINT'
-        , request_pipe
-        , to_char(send_timeout)
-        , to_char(recv_timeout)
-        )
-      );
-  end case;
-end print;
+  p_json_object.put('INTERFACE_NAME', interface_name);
+  p_json_object.put('PROTOCOL', protocol);
+  p_json_object.put('NAMESPACE', namespace);
+  p_json_object.put('CONNECTION_METHOD', connection_method);
+  p_json_object.put('TCP_REMOTE_HOST', tcp_remote_host);
+  p_json_object.put('TCP_REMOTE_PORT', tcp_remote_port);
+  p_json_object.put('TCP_LOCAL_HOST ', tcp_local_host );
+  p_json_object.put('TCP_LOCAL_PORT ', tcp_local_port );
+  p_json_object.put('TCP_CHARSET    ', tcp_charset    );
+  p_json_object.put('TCP_NEWLINE    ', tcp_newline    );
+  p_json_object.put('TCP_TX_TIMEOUT ', tcp_tx_timeout );
+  p_json_object.put('TCP_PRIVATE_SD ', tcp_private_sd );
+  p_json_object.put('HTTP_URL', http_url);
+  p_json_object.put('HTTP_METHOD', http_method);
+  p_json_object.put('HTTP_VERSION', http_version);
+  p_json_object.put('REQUEST_PIPE', request_pipe);
+  p_json_object.put('SEND_TIMEOUT', send_timeout);
+  p_json_object.put('RECV_TIMEOUT', recv_timeout);
+end serialize;
 
 end;
 /

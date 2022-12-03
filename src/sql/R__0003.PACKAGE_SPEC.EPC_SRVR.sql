@@ -1,4 +1,4 @@
-CREATE OR REPLACE PACKAGE "EPC_SRVR" IS
+CREATE OR REPLACE PACKAGE "EPC_SRVR" AUTHID DEFINER IS
 /**
 --
 -- This package is used to implement the server side of RPC like functionality
@@ -61,7 +61,7 @@ procedure set_connection_info
 */
 procedure get_connection_info
 ( p_epc_key in epc_key_subtype
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 );
 
 /**
@@ -88,8 +88,8 @@ procedure set_response_send_timeout
 */
 procedure recv_request
 ( p_epc_key in epc_key_subtype
-, p_msg_info out epc_srvr.msg_info_subtype
-, p_msg_request out varchar2
+, p_msg_info out nocopy epc_srvr.msg_info_subtype
+, p_msg_request out nocopy varchar2
 );
 
 /**
