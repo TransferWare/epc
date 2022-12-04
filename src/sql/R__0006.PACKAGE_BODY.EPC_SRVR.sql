@@ -69,7 +69,7 @@ begin
     dbug.leave_on_error;
     dbug.activate("PLSDBUG", true); -- on
   else
-    dbug.leave_on_error
+    dbug.leave_on_error;
   end if;
 end leave_on_error;
 
