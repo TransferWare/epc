@@ -9,7 +9,8 @@ CREATE OR REPLACE PACKAGE "EPC" AUTHID DEFINER IS
 -- @headcom
 */
 
-c_debugging constant boolean := $if $$Debugging $then true $else false $end;
+-- debugging only when you really need
+c_debugging constant boolean := false;
 
 subtype interface_name_subtype is varchar2(32);
 subtype namespace_subtype is varchar2(128);
