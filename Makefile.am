@@ -45,7 +45,7 @@ check-version:
 	chmod +x $(top_srcdir)/ln_oracle_tools.sh && $(top_srcdir)/ln_oracle_tools.sh $(top_srcdir)
 	@mvn_version=`echo '$${revision}' | $(MVN) -f $(top_srcdir)/pom.xml -N help:evaluate | grep -v '[INFO]'`; set -x; test "$(PACKAGE_VERSION)" = "$$mvn_version"
 
-dist: lint html
+dist: html
 
 lint:
 	@echo Making $@ in $(lintdirs)

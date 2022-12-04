@@ -17,6 +17,10 @@ config/
 configure
 VERSION
 
+# Copied by bootstrap
+config/dbug.m4
+ln_oracle_tools.sh
+
 # Doxygen
 doc/c/
 doc/sql/
