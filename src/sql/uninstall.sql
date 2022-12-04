@@ -19,35 +19,31 @@ EPC_SRVR,
 */
 -- pkg_ddl_util v5
 call dbms_application_info.set_module('uninstall.sql', null);
-/* SQL statement 1 (DROP;EPCAPP;PACKAGE_BODY;EPC;;;;;;;;2) */
+/* SQL statement 1 (DROP;EPCAPP;PACKAGE_BODY;EPC_CLNT;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 1');
-DROP PACKAGE BODY EPC;
-
-/* SQL statement 2 (DROP;EPCAPP;PACKAGE_BODY;EPC_CLNT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 2');
 DROP PACKAGE BODY EPC_CLNT;
 
-/* SQL statement 3 (DROP;EPCAPP;PACKAGE_BODY;EPC_SRVR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 3');
+/* SQL statement 2 (DROP;EPCAPP;PACKAGE_BODY;EPC_SRVR;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 2');
 DROP PACKAGE BODY EPC_SRVR;
 
-/* SQL statement 4 (DROP;EPCAPP;TYPE_BODY;EPC_CLNT_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 4');
+/* SQL statement 3 (DROP;EPCAPP;TYPE_BODY;EPC_CLNT_OBJECT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 3');
 DROP TYPE BODY EPC_CLNT_OBJECT;
 
-/* SQL statement 5 (DROP;EPCAPP;PACKAGE_SPEC;EPC_CLNT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 5');
+/* SQL statement 4 (DROP;EPCAPP;PACKAGE_SPEC;EPC_CLNT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 4');
 DROP PACKAGE EPC_CLNT;
 
-/* SQL statement 6 (DROP;EPCAPP;PACKAGE_SPEC;EPC_SRVR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 6');
+/* SQL statement 5 (DROP;EPCAPP;PACKAGE_SPEC;EPC_SRVR;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 5');
 DROP PACKAGE EPC_SRVR;
 
-/* SQL statement 7 (DROP;EPCAPP;PACKAGE_SPEC;EPC;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 7');
+/* SQL statement 6 (DROP;EPCAPP;PACKAGE_SPEC;EPC;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 6');
 DROP PACKAGE EPC;
 
-/* SQL statement 8 (DROP;EPCAPP;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 8');
+/* SQL statement 7 (DROP;EPCAPP;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
+call dbms_application_info.set_action('SQL statement 7');
 DROP TYPE EPC_CLNT_OBJECT;
 
