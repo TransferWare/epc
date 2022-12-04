@@ -22,7 +22,12 @@ test ! -d autom4te.cache || rm -fr autom4te.cache
 # Use ln_oracle_tools.sh from dbug
 for f in config/dbug.m4 ln_oracle_tools.sh
 do
-    test -f $f || ls -l ${DBUG_HOME:=`pwd`/../dbug}/$f && ln -s ${DBUG_HOME:=`pwd`/../dbug}/$f $f && test -f $f
+    if ! test -f $f
+    then
+        ls -l ${DBUG_HOME:=`pwd`/../dbug}/$f
+        ln -s ${DBUG_HOME:=`pwd`/../dbug}/$f $f
+        test -f $f
+    fi
 done
 
 set -e
