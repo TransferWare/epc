@@ -9,6 +9,8 @@ CREATE OR REPLACE PACKAGE "EPC" AUTHID DEFINER IS
 -- @headcom
 */
 
+c_debugging constant boolean := $if $$Debugging $then true $else false $end;
+
 subtype interface_name_subtype is varchar2(32);
 subtype namespace_subtype is varchar2(128);
 subtype method_name_subtype is varchar2(512);
@@ -141,33 +143,6 @@ pragma exception_init(msg_interrupted, -20105);
 /* End of backwards compatibility for exceptions. */
 
 /*ORA-06558 is raised if the message buffer overflows (currently 4096 bytes)*/
-
-/**
--- Print data.
---
--- Pretty prints a message using DBMS_OUTPUT.  The message is split into lines
--- (chr(10) is the separator).  Next lines longer than 255 characters are
--- printed in chunks of 255 characters each.
---
--- @param p_msg  XML message.
-*/
-procedure print
-(
-  p_msg in varchar2
-);
-
-/**
--- Debug the EPC or its depending packages.
---
--- Prints a debug message using the print() function.
--- The message is prefixed with 'DEBUG: '
---
--- @param p_msg  XML message.
-*/
-procedure debug
-(
-  p_msg in varchar2
-);
 
 end epc;
 /

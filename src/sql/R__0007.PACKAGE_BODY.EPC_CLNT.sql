@@ -74,55 +74,74 @@ g_cdata_tag_end   constant varchar2(3) := ']]>';
 
 g_decimal_char varchar2(1); -- needed to convert numbers to/from strings
 
-$if epc.c_debugging $then
-g_indent pls_integer := 1;
-$end
-
 -- LOCAL
 
 $if epc.c_debugging $then
+
+/*
+-- GJP 2022-12-04
+--
+-- We want to debug EPC using DBUG but there is one quirk: 
+-- you can not debug EPC while using PLSDBUG since that is based on EPC so you get infinite recursion.
+--
+-- The solution is to disable the PLSDBUG method just before the DBUG call and activate it thereafter.
+*/
+
+"PLSDBUG" constant dbug.method_t := 'PLSDBUG';
+
 procedure enter(p_procname in varchar2)
 is
 begin
-  dbms_output.put_line(substr(lpad('>', g_indent, ' ')||p_procname, 1, 255));
-  g_indent := g_indent + 2;
-exception
-  when others
-  then null;
-end;
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.enter(p_procname);
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.enter(p_procname);
+  end if;
+end enter;
 
 procedure print(p_break_point in varchar2, p_format in varchar2, p_data in varchar2 default null)
 is
 begin
-  dbms_output.put_line(substr(lpad(' ', g_indent-1, ' ')||p_break_point||': '||replace(p_format, '%s', p_data), 1, 255));
-exception
-  when others
-  then null;
-end;
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.print(p_break_point, p_format, p_data);
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.print(p_break_point, p_format, p_data);
+  end if;
+end print;
 
 procedure leave
 is
 begin
-  g_indent := g_indent - 2;
-  dbms_output.put_line(substr(lpad('<', g_indent, ' '), 1, 255));
-exception
-  when others
-  then null;
-end;
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.leave;
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.leave;
+  end if;
+end leave;
 
 procedure leave_on_error
 is
-  l_error_stack constant varchar2(32767) := dbms_utility.format_error_backtrace;
 begin
-  leave;
-  dbms_output.put_line(substr(l_error_stack, 1+0*255, 255));
-  dbms_output.put_line(substr(l_error_stack, 1+1*255, 255));
-  dbms_output.put_line(substr(l_error_stack, 1+2*255, 255));
-exception
-  when others
-  then null;
-end;
-$end
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.leave_on_error;
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.leave_on_error
+  end if;
+end leave_on_error;
+
+$end -- $if epc.c_debugging $then
 
 procedure connection2epc_clnt_info_obj
 ( p_connection in http_connection_rectype
@@ -283,6 +302,11 @@ $end
 
 $if epc.c_debugging $then
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end send_request_dbms_pipe;
 
@@ -540,6 +564,11 @@ $end
 
 $if epc.c_debugging $then
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end recv_response_dbms_pipe;
 
@@ -549,6 +578,10 @@ procedure recv_response_utl_http
 is
   http_resp utl_http.resp;
 begin
+$if epc.c_debugging $then
+  enter('epc_clnt.recv_response_utl_http');
+$end
+
   http_resp :=
     utl_http.get_response(g_http_req);
   begin
@@ -558,11 +591,20 @@ begin
     when others
     then
 $if epc.c_debugging $then
-      epc.print(g_msg);
+      print('info', 'msg: %s', g_msg);
 $end
       utl_http.end_response(http_resp);
       raise;
   end;
+
+$if epc.c_debugging $then
+  leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end recv_response_utl_http;
 
 procedure recv_response_utl_tcp
@@ -1005,6 +1047,11 @@ $end
 
 $if epc.c_debugging $then
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end new_request;
 
@@ -1107,6 +1154,11 @@ $end
 $if epc.c_debugging $then
   print('output', 'msg: %s', g_msg);
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end set_request_parameter;
 
@@ -1206,6 +1258,11 @@ $end
 $if epc.c_debugging $then
   print('output', 'msg: %s', g_msg);
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end set_request_parameter;
 
@@ -1279,6 +1336,11 @@ $end
 $if epc.c_debugging $then
   print('output', 'msg: %s', g_msg);
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end set_request_parameter;
 
@@ -1399,7 +1461,7 @@ $end
     when "SOAP"
     then
 $if epc.c_debugging $then
-      epc.print(g_msg);
+      print('info', 'msg: %s', g_msg);
 $end
       g_doc :=
         xmltype.createxml(g_msg).extract
@@ -1407,19 +1469,19 @@ $end
         , epc."xmlns:SOAP-ENV"
         );
 $if epc.c_debugging $then
-      epc.print(g_doc.getstringval());
+      print('info', 'msg: %s', g_doc.getstringval());
 $end
       check_soap_fault(g_doc);
 
     when "XMLRPC"
     then
 $if epc.c_debugging $then
-      epc.print(g_msg);
+      print('info', 'msg: %s', g_msg);     
 $end
       g_doc := xmltype.createxml(g_msg);
 
 $if epc.c_debugging $then
-      epc.print(g_doc.getstringval());
+      print('info', 'msg: %s', g_doc.getstringval());
 $end
       check_xmlrpc_fault(g_doc);
 
@@ -1432,6 +1494,11 @@ $end
 $if epc.c_debugging $then
   print('output', 'g_msg: %s', g_msg);
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end recv_response;
 
@@ -1595,6 +1662,11 @@ $if epc.c_debugging $then
     )
   );
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end get_response_parameter;
 

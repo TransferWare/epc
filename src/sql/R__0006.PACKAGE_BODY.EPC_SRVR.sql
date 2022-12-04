@@ -1,10 +1,79 @@
 CREATE OR REPLACE PACKAGE BODY "EPC_SRVR" AS
 
+-- LOCAL
+
 g_epc_key epc_key_subtype := null;
 
 /* dbms_pipe parameters */
 g_pipe_name epc.pipe_name_subtype := 'EPC_REQUEST_PIPE';
 g_response_send_timeout pls_integer := 10;
+
+$if epc.c_debugging $then
+
+/*
+-- GJP 2022-12-04
+--
+-- We want to debug EPC using DBUG but there is one quirk: 
+-- you can not debug EPC while using PLSDBUG since that is based on EPC so you get infinite recursion.
+--
+-- The solution is to disable the PLSDBUG method just before the DBUG call and activate it thereafter.
+*/
+
+"PLSDBUG" constant dbug.method_t := 'PLSDBUG';
+
+procedure enter(p_procname in varchar2)
+is
+begin
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.enter(p_procname);
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.enter(p_procname);
+  end if;
+end enter;
+
+procedure print(p_break_point in varchar2, p_format in varchar2, p_data in varchar2 default null)
+is
+begin
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.print(p_break_point, p_format, p_data);
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.print(p_break_point, p_format, p_data);
+  end if;
+end print;
+
+procedure leave
+is
+begin
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.leave;
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.leave;
+  end if;
+end leave;
+
+procedure leave_on_error
+is
+begin
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.leave_on_error;
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.leave_on_error
+  end if;
+end leave_on_error;
+
+$end -- $if epc.c_debugging $then
 
 -- GLOBAL
 
@@ -202,6 +271,11 @@ $end
 
 $if epc.c_debugging $then
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end send_response;
 
@@ -251,6 +325,11 @@ $end
 
 $if epc.c_debugging $then
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end send_request_interrupt;
 
@@ -303,6 +382,11 @@ $end
 
 $if epc.c_debugging $then
   leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
 $end
 end ping;
 
