@@ -277,13 +277,13 @@ keyword keywords[] = {
   {C_OUT,
    {
     {C, "*", "C_OUT"},
-    {PLSQL, "OUT", "??epc.c_out"}
+    {PLSQL, "OUT NOCOPY", "??epc.c_out"}
     }
    },
   {C_INOUT,
    {
     {C, "*", "C_INOUT"},
-    {PLSQL, "IN OUT", "??epc.c_inout"}
+    {PLSQL, "IN OUT NOCOPY", "??epc.c_inout"}
     }
    }
 };
@@ -841,7 +841,7 @@ generate_plsql_header (FILE * pout)
     /* do not print an empty package */
     if (_interface.num_functions > 0)
       {
-        (void) fprintf( pout, "CREATE OR REPLACE PACKAGE %s%s IS\n\n",
+        (void) fprintf( pout, "CREATE OR REPLACE PACKAGE %s%s AUTHID DEFINER IS\n\n",
                         _interface.name, package_type_str[package_type] );
     
         for ( nr = 0; nr < _interface.num_functions; nr++ ) {
