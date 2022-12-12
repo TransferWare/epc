@@ -8,26 +8,39 @@ constructor function epc_clnt_object
 return self as result
 is
   l_object_name constant std_objects.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
-  l_std_object std_object;
 begin
   begin
-    std_object_mgr.get_std_object(l_object_name, l_std_object);
-    self := treat(l_std_object as epc_clnt_object);
-    self.dirty := 0;
+    std_object_mgr.get_std_object(l_object_name, self);
   exception
     when no_data_found
     then
-      self.dirty := 1; -- a new object is dirty
-      self.interface_name := p_interface_name;
-      self.protocol := epc_clnt."NATIVE";
-      self.namespace := p_interface_name;
-      self.inline_namespace := 'ns1';
-      self.connection_method := epc_clnt.CONNECTION_METHOD_DBMS_PIPE;
-      self.request_pipe := 'epc_request_pipe';
-      self.http_method := 'POST';
-      self.http_version := utl_http.http_version_1_1;
-      self.send_timeout := 0; /* GJP 2018-08-21 10 => 60 */ /* GJP 2022-12-03 60 => 0 */
-      self.recv_timeout := 60; /* GJP 2018-08-21 10 => 60 */
+      self := epc_clnt_object
+              ( 0                                    -- dirty
+              , p_interface_name                     -- interface_name
+              , epc_clnt."NATIVE"                    -- protocol
+              , p_interface_name                     -- namespace
+              , 'ns1'                                -- inline_namespace
+              , epc_clnt.CONNECTION_METHOD_DBMS_PIPE -- connection_method
+                /* Fields of type utl_tcp.connection */
+              , null                                 -- tcp_remote_host
+              , null                                 -- tcp_remote_port
+              , null                                 -- tcp_local_host
+              , null                                 -- tcp_local_port
+              , null                                 -- tcp_charset
+              , null                                 -- tcp_newline
+              , null                                 -- tcp_tx_timeout
+              , null                                 -- tcp_private_sd
+                /* Fields of type epc_clnt.http_connection_rectype */
+              , null                                 -- http_url
+              , 'POST'                               -- http_method
+              , utl_http.http_version_1_1            -- http_version
+                /* Fields used for dbms_pipe */
+              , 'epc_request_pipe'                   -- request_pipe
+              , 0                                    -- send_timeout /* GJP 2022-12-03 60 => 0 */
+              , 60                                   -- recv_timeout /* GJP 2018-08-21 10 => 60 */
+              );
+      -- make it a singleton by storing it
+      std_object_mgr.set_std_object(l_object_name, self);
   end;
 
   -- essential

@@ -1,4 +1,4 @@
-# External Procedure Call toolkit
+# EPC - Oracle PL/SQL External Procedure Call toolkit
 
 This is EPC, the External Procedure Call toolkit.
 
