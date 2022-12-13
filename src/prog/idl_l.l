@@ -328,12 +328,14 @@ void
 usage( int argc, char **argv )
 {
   (void) fprintf( stdout, "\
-Syntax: %s [ -D DBUG_OPTIONS ] [ -h ] [ -v ] <input file>\n\
+Syntax: %s [ -c ] [ -D DBUG_OPTIONS ] [ -h ] [ -p ] [ -v ] <input file>\n\
 \n\
 OPTIONS\n\
+  -c    Only output C code.\n\
+  -D    Set DBUG_OPTIONS. See the DBUG package.\n\
   -h    This message.\n\
-  -v    Print the version.\n\
-  -D    Set DBUG_OPTIONS. See the DBUG package.\n",
+  -p    Only output PL/SQL code.\n\
+  -v    Print the version.\n",
 	   argv[0] );
 }
 
@@ -343,42 +345,52 @@ main( int argc, char **argv )
   char *file = NULL;
   char *dbug_options = "";
   int nr;
+  int only_c = 0;
+  int only_plsql = 0;
 
   DBUG_INIT( dbug_options, NULL );
 
   for ( nr = 1; nr < argc; nr++ )
     {
       switch( argv[nr][0] )
-  {
-  case '-':
-    switch( argv[nr][1] )
-      {
-      case 'D':
-      case '#': /* for compability reasons */
-        if ( argv[nr][2] != '\0' )
-          dbug_options = &argv[nr][2];
-        else
-          dbug_options = &argv[++nr][0];
-        DBUG_DONE();
-        DBUG_INIT( dbug_options, NULL );
-        break;
+        {
+        case '-':
+          switch( argv[nr][1] )
+            {
+            case 'c':
+              only_c = 1;
+              break;
+              
+            case 'D':
+            case '#': /* for compability reasons */
+              if ( argv[nr][2] != '\0' )
+                dbug_options = &argv[nr][2];
+              else
+                dbug_options = &argv[++nr][0];
+              DBUG_DONE();
+              DBUG_INIT( dbug_options, NULL );
+              break;
 
-      case 'h':
-        usage( argc, argv );
-        exit( EXIT_SUCCESS );
-        break;
+            case 'h':
+              usage( argc, argv );
+              exit( EXIT_SUCCESS );
+              break;
 
-      case 'v':
-        fprintf( stdout, "EPC idl version: %s\n", version() );
-        exit( EXIT_SUCCESS );
-        break;
-      }
-    break;
+            case 'p':
+              only_plsql = 1;
+              break;
+              
+            case 'v':
+              fprintf( stdout, "EPC idl version: %s\n", version() );
+              exit( EXIT_SUCCESS );
+              break;
+            }
+          break;
 
-  default:
-    file = argv[nr];
-    break;
-  }
+        default:
+          file = argv[nr];
+          break;
+        }
     }
 
   if ( file == NULL ) 
@@ -392,7 +404,7 @@ main( int argc, char **argv )
       perror(file);
       exit( EXIT_FAILURE );
     }
-
+  
   /* a new block for DBUG_ENTER */
   {
     DBUG_ENTER( "main" );
@@ -400,9 +412,28 @@ main( int argc, char **argv )
   
     if ( !yyparse () ) 
       {
-        generate_plsql();
-        generate_c( include_text );
-        (void) printf( "Code generated...\n" );
+        switch( only_c * 2 + only_plsql )
+          {
+          case 3: /* only_c and only_plsql both true: conflicting things */
+            (void) printf( "Only C code and only PL/SQL code is conflicting, hence no code will be generated...\n" );
+            break;
+            
+          case 2: /* only C */
+            generate_c( include_text );
+            (void) printf( "Only C code has been generated...\n" );
+            break;
+            
+          case 1: /* only PL/SQL */
+            generate_plsql();
+            (void) printf( "Only PL/SQL code has been generated...\n" );
+            break;
+
+          case 0:
+            generate_plsql();
+            generate_c( include_text );
+            (void) printf( "Both C and PL/SQL code have been generated...\n" );
+            break;            
+          }
       }
     else 
       {

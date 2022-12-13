@@ -20,6 +20,7 @@ Types of changes:
 
 [Unreleased]
 
+- [Add the ability to only output C or PL/SQL code.](https://github.com/TransferWare/epc/issues/9)
 - [Add debugging to EPC_CLNT when no message can be sent for a database pipe.](https://github.com/TransferWare/epc/issues/8)
 
 ## [6.1.0] - 2021-08-11
