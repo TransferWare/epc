@@ -43,6 +43,13 @@ begin
       std_object_mgr.set_std_object(l_object_name, self);
   end;
 
+  if self.dirty = 0
+  then
+    null; -- ok
+  else
+    raise program_error;
+  end if;
+
   -- essential
   return;
 end;
@@ -68,12 +75,12 @@ begin
   p_json_object.put('CONNECTION_METHOD', connection_method);
   p_json_object.put('TCP_REMOTE_HOST', tcp_remote_host);
   p_json_object.put('TCP_REMOTE_PORT', tcp_remote_port);
-  p_json_object.put('TCP_LOCAL_HOST ', tcp_local_host );
-  p_json_object.put('TCP_LOCAL_PORT ', tcp_local_port );
-  p_json_object.put('TCP_CHARSET    ', tcp_charset    );
-  p_json_object.put('TCP_NEWLINE    ', tcp_newline    );
-  p_json_object.put('TCP_TX_TIMEOUT ', tcp_tx_timeout );
-  p_json_object.put('TCP_PRIVATE_SD ', tcp_private_sd );
+  p_json_object.put('TCP_LOCAL_HOST ', tcp_local_host);
+  p_json_object.put('TCP_LOCAL_PORT ', tcp_local_port);
+  p_json_object.put('TCP_CHARSET    ', tcp_charset);
+  p_json_object.put('TCP_NEWLINE    ', tcp_newline);
+  p_json_object.put('TCP_TX_TIMEOUT ', tcp_tx_timeout);
+  p_json_object.put('TCP_PRIVATE_SD ', tcp_private_sd);
   p_json_object.put('HTTP_URL', http_url);
   p_json_object.put('HTTP_METHOD', http_method);
   p_json_object.put('HTTP_VERSION', http_version);
