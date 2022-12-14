@@ -191,23 +191,30 @@ procedure ut_set_connection_info;
 --%test
 procedure ut_get_connection_info;
 
+--%test
 procedure ut_set_response_send_timeout;
 
+--%test
 --%throws(epc.e_not_tested)
 procedure ut_recv_request;
 
+--%test
 --%throws(epc.e_not_tested)
 procedure ut_send_response;
 
+--%test
 --%throws(epc.e_not_tested)
 procedure ut_send_request_interrupt;
 
+--%test
 --%throws(epc.e_not_tested)
 procedure ut_ping;
 
+--%test
 --%throws(epc.e_not_tested)
 procedure ut_create_pipe;
 
+--%test
 --%throws(epc.e_not_tested)
 procedure ut_purge_pipe;
 

@@ -382,6 +382,71 @@ procedure get_response_parameter
 */
 procedure shutdown;
 
+$if epc.c_testing $then
+
+--%suitepath(EPC)
+--%suite
+
+--%beforeeach
+procedure ut_reset;
+
+--%test
+--%throws(program_error)
+procedure ut_set_protocol;
+
+--%test
+procedure ut_get_protocol;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_set_connection_info;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_get_connection_info;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_set_request_send_timeout;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_set_response_recv_timeout;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_set_namespace;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_set_inline_namespace;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_new_request;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_set_request_parameter;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_send_request;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_recv_response;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_get_response_parameter;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_shutdown;
+
+$end
+
 end epc_clnt;
 /
 

@@ -49,13 +49,15 @@ A typical XML-RPC fault would be:
 
 */
 
+/* !!! SEE ALSO UT_RESET BELOW !!! */
+
 /* global variables used by a method call */
-g_method_name epc.method_name_subtype;
-g_oneway pls_integer;
+g_method_name epc.method_name_subtype := null;
+g_oneway pls_integer := null;
 g_http_req utl_http.req;
-g_msg epc.xml_subtype; /* input/output */
-g_doc xmltype; /* output */
-g_next_out_parameter pls_integer; /* number of next out (or in/out) parameter to read for XMLRPC */
+g_msg epc.xml_subtype := null; /* input/output */
+g_doc xmltype := null; /* output */
+g_next_out_parameter pls_integer := null; /* number of next out (or in/out) parameter to read for XMLRPC */
 
 -- constants
 c_max_msg_seq   constant pls_integer := 65535; /* msg seq wraps from 0 up till 65535 */
@@ -72,7 +74,7 @@ g_msg_seq pls_integer := c_max_msg_seq;
 g_cdata_tag_start constant varchar2(9) := '<![CDATA[';
 g_cdata_tag_end   constant varchar2(3) := ']]>';
 
-g_decimal_char varchar2(1); -- needed to convert numbers to/from strings
+g_decimal_char varchar2(1) := null; -- needed to convert numbers to/from strings
 
 -- LOCAL
 
@@ -1717,6 +1719,154 @@ begin
     null;
   end if;
 end shutdown;
+
+$if epc.c_testing $then
+
+procedure ut_reset
+is
+begin
+  g_method_name := null;
+  g_oneway := null;
+  g_msg := null; /* input/output */
+  g_doc := null; /* output */
+  g_next_out_parameter := null; /* number of next out (or in/out) parameter to read for XMLRPC */
+  g_result_pipe := null;
+  g_msg_seq := c_max_msg_seq;
+  g_decimal_char := null; -- needed to convert numbers to/from strings
+end;
+
+procedure ut_set_protocol
+is
+begin
+  -- first three OK
+  set_protocol
+  ( p_interface_name => 'dummy'
+  , p_protocol => "NATIVE"
+  );
+  set_protocol
+  ( p_interface_name => 'dummy'
+  , p_protocol => "SOAP"
+  );
+  set_protocol
+  ( p_interface_name => 'dummy'
+  , p_protocol => "XMLRPC"
+  );
+  begin
+    set_protocol
+    ( p_interface_name => 'dummy'
+    , p_protocol => null
+    );
+  exception
+    when value_error
+    then
+      raise program_error;
+  end;
+end;  
+
+procedure ut_get_protocol
+is
+  l_protocol_exp protocol_subtype;
+  l_protocol_act protocol_subtype;
+begin
+  for i_idx in 1..4
+  loop
+    l_protocol_exp := case i_idx when 1 then "NATIVE" when 2 then "SOAP" when 3 then "XMLRPC" end;
+
+    begin    
+      set_protocol
+      ( p_interface_name => 'dummy'
+      , p_protocol => l_protocol_exp
+      );
+    exception
+      when value_error
+      then
+        if l_protocol_exp is not null
+        then
+          raise;
+        end if;
+    end;
+
+    get_protocol
+    ( p_interface_name => 'dummy'
+    , p_protocol => l_protocol_act
+    );
+    ut.expect(l_protocol_act, to_char(i_idx)).to_equal(l_protocol_exp);
+  end loop;
+end;
+
+procedure ut_set_connection_info
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_get_connection_info
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_request_send_timeout
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_response_recv_timeout
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_namespace
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_inline_namespace
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_new_request
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_request_parameter
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_send_request
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_recv_response
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_get_response_parameter
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_shutdown
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+$end
 
 begin
   select  substr(value, 1, 1) as decimal_char

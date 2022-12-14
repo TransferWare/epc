@@ -38,8 +38,6 @@ begin
               , 'epc_request_pipe'                   -- request_pipe
               , 0                                    -- send_timeout /* GJP 2022-12-03 60 => 0 */
               , 60                                   -- recv_timeout /* GJP 2018-08-21 10 => 60 */
-              , 8192                                 -- max_pipe_size
-              , 1                                    -- private
               );
       -- make it a singleton by storing it
       std_object_mgr.set_std_object(l_object_name, self);
@@ -89,8 +87,6 @@ begin
   p_json_object.put('REQUEST_PIPE', request_pipe);
   p_json_object.put('SEND_TIMEOUT', send_timeout);
   p_json_object.put('RECV_TIMEOUT', recv_timeout);
-  p_json_object.put('MAX_PIPE_SIZE', max_pipe_size);
-  p_json_object.put('PRIVATE', private);
 end serialize;
 
 end;

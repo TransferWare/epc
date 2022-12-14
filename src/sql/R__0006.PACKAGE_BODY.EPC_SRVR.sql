@@ -2,7 +2,8 @@ CREATE OR REPLACE PACKAGE BODY "EPC_SRVR" AS
 
 -- LOCAL
 
-/* see also ut_reset below */
+/* !!! SEE ALSO UT_RESET BELOW !!! */
+
 g_epc_key epc_key_subtype := null;
 
 /* dbms_pipe parameters */
@@ -422,8 +423,6 @@ procedure ut_reset
 is
 begin
   g_epc_key := null;
-
-  /* dbms_pipe parameters */
   g_pipe_name := 'EPC_REQUEST_PIPE';
   g_response_send_timeout := 10;
 end ut_reset;
@@ -500,7 +499,7 @@ end;
 procedure ut_set_response_send_timeout
 is
 begin
-  ut.expect(g_response_send_timeout).to_be_null();
+  ut.expect(g_response_send_timeout).to_equal(10);
   if register is null
   then
     raise program_error;
