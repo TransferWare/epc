@@ -1790,7 +1790,7 @@ begin
     ( p_interface_name => 'dummy'
     , p_protocol => l_protocol_act
     );
-    ut.expect(l_protocol_act, to_char(i_idx)).to_equal(l_protocol_exp);
+    ut.expect(l_protocol_act, to_char(i_idx)).to_equal(nvl(l_protocol_exp, "XMLRPC")); -- latest not null is stored
   end loop;
 end;
 
