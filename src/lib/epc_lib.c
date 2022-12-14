@@ -604,6 +604,9 @@ epc__init (void)
   epc__info->purge_pipe = 0;
   epc__info->interrupt = 0;
   epc__info->program = NULL;
+  /* GJP 2022-12-14 It must be possible to create a private request pipe with a custom maximum pipe size. */
+  epc__info->max_pipe_size = 8192;
+  epc__info->private = 0;
 #ifndef XML_OFF
   (void) epc__xml_init (epc__info);
 #endif
