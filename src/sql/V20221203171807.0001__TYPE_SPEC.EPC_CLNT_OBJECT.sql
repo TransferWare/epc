@@ -27,6 +27,8 @@ CREATE TYPE "EPC_CLNT_OBJECT" AUTHID DEFINER under std_object (
 , request_pipe varchar2(128) /*epc.pipe_name_subtype*/
 , send_timeout integer
 , recv_timeout integer
+, max_pipe_size integer -- defaults to 8192
+, private integer -- default to 1 (true)
 
 , constructor function epc_clnt_object
   ( self in out nocopy epc_clnt_object
