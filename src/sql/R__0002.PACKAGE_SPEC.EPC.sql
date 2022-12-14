@@ -11,6 +11,11 @@ CREATE OR REPLACE PACKAGE "EPC" AUTHID DEFINER IS
 
 -- debugging only when you really need
 c_debugging constant boolean := false;
+c_testing constant boolean := $if $$Testing $then true $else false $end;
+
+-- to skip some tests
+e_not_tested exception;
+pragma exception_init(e_not_tested, -20002);
 
 subtype interface_name_subtype is varchar2(32);
 subtype namespace_subtype is varchar2(128);

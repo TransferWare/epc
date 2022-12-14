@@ -146,6 +146,21 @@ procedure ping
 );
 
 /**
+-- Create a database pipe.
+--
+-- @param p_pipe_name      The pipe name.
+-- @param p_max_pipe_size  The maximum size allowed for the pipe, in bytes.
+-- @param p_private        Uses the default, TRUE, to create a private pipe.
+--
+*/
+procedure create_pipe
+(
+  p_pipe_name in epc.pipe_name_subtype
+, p_max_pipe_size in integer default 8192
+, p_private in boolean default true
+);
+
+/**
 -- Purge a database pipe.
 --
 -- @param p_pipe  The pipe
@@ -153,8 +168,50 @@ procedure ping
 */
 procedure purge_pipe
 (
-  p_pipe in varchar2
+  p_pipe_name in epc.pipe_name_subtype
 );
+
+$if epc.c_testing $then
+
+--%suitepath(EPC)
+--%suite
+
+--%beforeeach
+procedure ut_reset;
+
+--%test
+procedure ut_register;
+
+--%test
+procedure ut_get_epc_key;
+
+--%test
+procedure ut_set_connection_info;
+
+--%test
+procedure ut_get_connection_info;
+
+procedure ut_set_response_send_timeout;
+
+--%throws(epc.e_not_tested)
+procedure ut_recv_request;
+
+--%throws(epc.e_not_tested)
+procedure ut_send_response;
+
+--%throws(epc.e_not_tested)
+procedure ut_send_request_interrupt;
+
+--%throws(epc.e_not_tested)
+procedure ut_ping;
+
+--%throws(epc.e_not_tested)
+procedure ut_create_pipe;
+
+--%throws(epc.e_not_tested)
+procedure ut_purge_pipe;
+
+$end
 
 end epc_srvr;
 /

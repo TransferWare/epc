@@ -2,6 +2,7 @@ CREATE OR REPLACE PACKAGE BODY "EPC_SRVR" AS
 
 -- LOCAL
 
+/* see also ut_reset below */
 g_epc_key epc_key_subtype := null;
 
 /* dbms_pipe parameters */
@@ -390,14 +391,184 @@ exception
 $end
 end ping;
 
-procedure purge_pipe
+procedure create_pipe
 (
-  p_pipe in varchar2
+  p_pipe_name in epc.pipe_name_subtype
+, p_max_pipe_size in integer default 8192
+, p_private in boolean default true
 )
 is
 begin
-  dbms_pipe.purge(p_pipe);
+  if dbms_pipe.create_pipe(p_pipe_name, p_max_pipe_size, p_private) = 0
+  then
+    null;
+  else
+    raise program_error;
+  end if;
+end create_pipe;
+
+procedure purge_pipe
+(
+  p_pipe_name in epc.pipe_name_subtype
+)
+is
+begin
+  dbms_pipe.purge(p_pipe_name);
 end purge_pipe;
+
+$if epc.c_testing $then
+
+procedure ut_reset
+is
+begin
+  g_epc_key := null;
+
+  /* dbms_pipe parameters */
+  g_pipe_name := 'EPC_REQUEST_PIPE';
+  g_response_send_timeout := 10;
+end ut_reset;
+
+--%test
+procedure ut_register
+is
+begin
+  ut.expect(g_epc_key).to_be_null();
+  for i_idx in 1..2
+  loop
+    ut.expect(register, to_char(i_idx)).to_equal(1);
+    ut.expect(g_epc_key, to_char(i_idx)).to_equal(1);
+  end loop;
+end;
+
+--%test
+procedure ut_get_epc_key
+is
+begin
+  ut.expect(get_epc_key).to_be_null();
+  if register is null
+  then
+    raise program_error;
+  end if;
+  for i_idx in 1..2
+  loop
+    ut.expect(get_epc_key, to_char(i_idx)).to_equal(register);
+  end loop;
+end;  
+
+--%test
+procedure ut_set_connection_info
+is
+begin
+  ut.expect(g_pipe_name).to_equal('EPC_REQUEST_PIPE');
+  if register is null
+  then
+    raise program_error;
+  end if;
+  for i_idx in 1..2
+  loop
+    set_connection_info(get_epc_key, to_char(i_idx));
+    ut.expect(g_pipe_name, to_char(i_idx)).to_equal(to_char(i_idx));
+  end loop;
+end;
+
+--%test
+procedure ut_get_connection_info
+is
+  l_pipe_name epc.pipe_name_subtype;
+begin
+  for i_idx in 1..2
+  loop
+    get_connection_info
+    ( p_epc_key => get_epc_key
+    , p_pipe_name => l_pipe_name
+    );
+    case i_idx
+      when 1
+      then
+        ut.expect(l_pipe_name, to_char(i_idx)).to_be_null();
+        if register is null
+        then
+          raise program_error;
+        end if;
+      when 2
+      then
+        ut.expect(l_pipe_name, to_char(i_idx)).to_equal(g_pipe_name);
+    end case;
+  end loop;
+end;
+
+procedure ut_set_response_send_timeout
+is
+begin
+  ut.expect(g_response_send_timeout).to_be_null();
+  if register is null
+  then
+    raise program_error;
+  end if;
+  for i_idx in 1..2
+  loop
+    set_response_send_timeout(get_epc_key, i_idx);
+    ut.expect(g_response_send_timeout, to_char(i_idx)).to_equal(i_idx);
+  end loop;
+end;
+
+procedure ut_recv_request
+is
+  l_msg_info epc_srvr.msg_info_subtype := '0';
+  l_msg_request varchar2(1) := '1';
+begin
+  -- without register nothing happens
+  recv_request
+  ( get_epc_key
+  , l_msg_info
+  , l_msg_request
+  );
+  raise epc.e_not_tested;
+end;
+
+procedure ut_send_response
+is
+  l_msg_info epc_srvr.msg_info_subtype := null;
+  l_msg_request varchar2(1) := null;
+begin
+  -- without register nothing happens
+  send_response
+  ( get_epc_key
+  , l_msg_info
+  , l_msg_request
+  );
+  raise epc.e_not_tested;
+end;
+
+procedure ut_send_request_interrupt
+is
+begin
+  -- without register nothing happens
+  send_request_interrupt
+  ( get_epc_key
+  );
+  raise epc.e_not_tested;
+end;
+
+procedure ut_ping
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_create_pipe
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_purge_pipe
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+$end
 
 end epc_srvr;
 /
