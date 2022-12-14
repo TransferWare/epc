@@ -81,7 +81,7 @@ $if epc.c_debugging $then
 /*
 -- GJP 2022-12-04
 --
--- We want to debug EPC using DBUG but there is one quirk: 
+-- We want to debug EPC using DBUG but there is one quirk:
 -- you can not debug EPC while using PLSDBUG since that is based on EPC so you get infinite recursion.
 --
 -- The solution is to disable the PLSDBUG method just before the DBUG call and activate it thereafter.
@@ -1476,7 +1476,7 @@ $end
     when "XMLRPC"
     then
 $if epc.c_debugging $then
-      print('info', 'msg: %s', g_msg);     
+      print('info', 'msg: %s', g_msg);
 $end
       g_doc := xmltype.createxml(g_msg);
 
