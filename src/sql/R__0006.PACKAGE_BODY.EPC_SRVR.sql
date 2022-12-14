@@ -515,7 +515,7 @@ end;
 procedure ut_recv_request
 is
   l_msg_info epc_srvr.msg_info_subtype := '0';
-  l_msg_request varchar2(1) := '1';
+  l_msg_request varchar2(32767) := rpad('x', 32767, 'y');
 begin
   -- without register nothing happens
   recv_request
@@ -529,7 +529,7 @@ end;
 procedure ut_send_response
 is
   l_msg_info epc_srvr.msg_info_subtype := null;
-  l_msg_request varchar2(1) := null;
+  l_msg_request varchar2(32767) := rpad('x', 32767, 'y');
 begin
   -- without register nothing happens
   send_response
@@ -553,6 +553,8 @@ end;
 procedure ut_ping
 is
 begin
+  -- without register nothing happens
+  ping(get_epc_key, rpad('x', 32767, 'y'));
   raise epc.e_not_tested;
 end;
 
