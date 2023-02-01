@@ -24,3 +24,6 @@ doc/sql/
 # Make build directories
 build/
 b/
+
+# Soft Links
+ln_oracle_tools.sh
