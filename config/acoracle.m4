@@ -9,7 +9,7 @@ dnl  ACX_PROG_SQLPLUS
 dnl  ACX_PROG_XML
 dnl
 
-# ACX_SEARCH_LIBS(ROOT-DIRS, SUB-DIRS, FUNCTION, SEARCH-LIBS [, ACTION-IF-FOUND
+# ACX_SEARCH_LIBS(ROOT-DIRS, SUB-DIRS, FUNCTION, FUNCTION-CALL, SEARCH-LIBS [, ACTION-IF-FOUND
 #            [, ACTION-IF-NOT-FOUND [, OTHER-LIBRARIES]]])
 # Search for a library defining FUNC, if it's not already available.
 #
@@ -51,22 +51,23 @@ for acx_rootdir in $1; do
       if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
         LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
       fi
-      if test -z "$4"; then
+      if test -z "$5"; then
         # GJP 2018-08-20
         # 1) Get list of libraries and ignore errors due to different Operating Systems
-        # 2) Get the basename of the libraries (strip extension
+        # 2) Get the basename of the libraries (strip extension)
         acx_libs=`cd $acx_dir && ls *.dll lib*.so lib*.a lib*.dylib 2>/dev/null || true`
         acx_libs=`for f in $acx_libs; do echo $f | sed -E 's/\.dll$//; s/^lib(.*)\.(so|a|dylib)$/\1/'; done`
       else
-        acx_libs=$4
+        acx_libs=$5
       fi    
       for acx_lib in $acx_libs; do
-        # is "-l$acx_lib $7" already part of $LIBS?
-        if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $7" 1>/dev/null; then
-          LIBS="-l$acx_lib $7 $acx_func_search_save_LIBS"
+        # is "-l$acx_lib $8" already part of $LIBS?
+        if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $8" 1>/dev/null; then
+          # Use aargs to strip whitespace
+          LIBS=`echo "-l$acx_lib $8 $acx_func_search_save_LIBS" | xargs`
         fi
-        AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
-                       [acx_cv_search_$3="-L$acx_dir -l$acx_lib $7" && break],
+        AC_LINK_IFELSE([AC_LANG_PROGRAM([[$acx_prologue]], [[$4]])],
+                       [acx_cv_search_$3="-L$acx_dir -l$acx_lib $8" && echo break],
                        [])
       done
       test "$acx_cv_search_$3" = "no" || break
@@ -81,20 +82,20 @@ AS_IF([test "$acx_cv_search_$3" != no],
       [if test "$acx_cv_search_$3" != "none required"
 then
   acx_LDFLAGS=`eval echo \$acx_cv_search_$3 | cut -d' ' -f 1`
-  acx_LIBS="`eval echo \$acx_cv_search_$3 | cut -d' ' -f 2` $7"
+  acx_LIBS="`eval echo \$acx_cv_search_$3 | cut -d' ' -f 2` $8"
   # is "-L$acx_dir" already part of $ORACLE_LDFLAGS?
   if ! echo "$ORACLE_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
     ORACLE_LDFLAGS="$acx_LDFLAGS $ORACLE_LDFLAGS"
   fi
-  # is "-l$acx_lib $7" already part of $ORACLE_LIBS?
+  # is "-l$acx_lib $8" already part of $ORACLE_LIBS?
   if ! echo "$ORACLE_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
     ORACLE_LIBS="$acx_LIBS $ORACLE_LIBS"
   fi
   # GJP 2018-08-20 Define HAVE_<function>
   AC_CHECK_FUNCS([$3],[],[])
 fi
-       $5],
-      [$6])dnl
+       $6],
+      [$7])dnl
 ])
 
 # ACX_PROG_PROC
@@ -127,31 +128,16 @@ fi
 AC_MSG_NOTICE([Checking for PROC in one of these directories (before removing duplicates): $acx_oracle_homes])
 # https://unix.stackexchange.com/questions/353321/remove-all-duplicate-word-from-string-using-shell-script
 acx_oracle_homes=`echo "$acx_oracle_homes" | xargs -n1 | sort -u | xargs`
-AC_MSG_NOTICE([Checking for PROC in one of these directories (after  removing duplicates): $acx_oracle_homes])
+AC_MSG_NOTICE([Checking for PROC in one of these directories (after removing duplicates): $acx_oracle_homes])
 
-ACX_SEARCH_LIBS([$acx_oracle_homes],
-                [],
-                [sqlglm],
-                [],
-                [],
-                [AC_MSG_ERROR(sqlglm not found)])
-ACX_SEARCH_LIBS([$acx_oracle_homes],
-                [],
-                [osnsui],
-                [],
-                [],
-                [AC_MSG_WARN(osnsui not found)])
-ACX_SEARCH_LIBS([$acx_oracle_homes],
-                [],
-                [osncui],
-                [],
-                [],
-                [AC_MSG_WARN(osncui not found)])
+# GJP 2023-02-01 Find headers before compiling code to search for functions
 
 # find one of those headers
 acx_protohdrs="oratypes.h sqlcpr.h sqlproto.h"
 acx_protohdrs_found=""
 acx_protohdr=
+acx_prologue_file=conftest.prologue
+echo "#include <stddef.h>" > $acx_prologue_file
 acx_prog_proc_save_CPPFLAGS=$CPPFLAGS
 CPPFLAGS=
 for dir in $acx_oracle_homes
@@ -186,18 +172,51 @@ do
         acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
       fi
       # See https://github.com/TransferWare/epc/issues/5
-      CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
+      if ! echo "$CPPFLAGS" | grep "\\-I$acx_protohdr_dir" 1>/dev/null; then
+        CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
+      fi
       AC_MSG_RESULT([yes])
-      break
+      acx_protohdrs_found="$acx_protohdrs_found $acx_protohdr"
+      echo "#include \"$file\"" >> $acx_prologue_file
     else
       AC_MSG_RESULT([no])
       AC_MSG_NOTICE([File $acx_protohdr does not match one of the allowed file names: $acx_protohdrs])
-      acx_protohdr=
-      continue
     fi
   done
-  acx_protohdrs_found="$acx_protohdrs_found $acx_protohdr"
 done
+
+echo "void sig_handler(void) { return; }" >> $acx_prologue_file
+acx_prologue=`cat $acx_prologue_file`
+rm $acx_prologue_file
+
+AC_MSG_NOTICE([PRO\*C headers found: $acx_protohdrs_found])
+
+# GJP 2023-02-01 Now headers are known ($acx_protohdrs_found) we can compile code to search for functions
+
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
+                [sqlglm],
+                [unsigned char msg[200]; size_t buf_len = sizeof(&msg); size_t msg_len; 
+sqlglm(msg, &buf_len, &msg_len)],
+                [],
+                [],
+                [AC_MSG_ERROR(sqlglm not found)])
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
+                [osnsui],
+                [int handle, err;
+err = osnsui(&handle, sig_handler, (char *) 0)],
+                [],
+                [],
+                [AC_MSG_WARN(osnsui not found)])
+ACX_SEARCH_LIBS([$acx_oracle_homes],
+                [],
+                [osncui],
+                [int handle, err;
+err = osncui(handle)],
+                [],
+                [],
+                [AC_MSG_WARN(osncui not found)])
 
 # GJP 2018-08-20
 #
