@@ -51,9 +51,9 @@ for acx_rootdir in $1; do
       test -d $acx_dir || continue
       acx_LDFLAGS="-L${acx_dir}"
       # is $acx_LDFLAGS already part of (original) $LDFLAGS?
-      if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
+      if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
         # Use xargs to strip whitespace
-        LDFLAGS=`echo "${acx_LDFLAGS} $acx_func_search_save_LDFLAGS" | xargs`
+        LDFLAGS=`echo "-L${acx_dir} $acx_func_search_save_LDFLAGS" | xargs`
       fi
       if test -z "$5"; then
         # GJP 2018-08-20
@@ -67,13 +67,13 @@ for acx_rootdir in $1; do
       for acx_lib in $acx_libs; do
         acx_LIBS="-l$acx_lib $8"
         # is $acx_LIBS already part of (original) $LIBS?
-        if ! echo "$acx_func_search_save_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
+        if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $8" 1>/dev/null; then
           # Use xargs to strip whitespace
-          LIBS=`echo "${acx_LIBS} $acx_func_search_save_LIBS" | xargs`
+          LIBS=`echo "-l$acx_lib $8 $acx_func_search_save_LIBS" | xargs`
         fi
         AC_LINK_IFELSE([AC_LANG_PROGRAM([[$acx_prologue]], [[$4]])],
                        [acx_cv_search_$3="$acx_lib" && break],
-                       [echo $3 NOT found && echo "conftest.c: `cat conftest.c`"])
+                       [echo "CPPFLAGS=$CPPFLAGS\nLDFLAGS=$LDFLAGS\nLIBS=$LIBS\nconftest.c: `cat conftest.c`" > my.log && exit 1])
       done
       test "$acx_cv_search_$3" = "no" || break
     done
