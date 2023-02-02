@@ -63,8 +63,7 @@ esac
 
 AM_INIT_AUTOMAKE
 
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+LT_INIT([win32-dll])
 
 case ${host_os} in
 *darwin*)
@@ -101,7 +100,7 @@ dnl AC_ARG_VAR(PERL,[The program name of Perl.])
 
 AC_PROG_CC
 
-AM_PROG_LEX
+AC_PROG_LEX(yywrap)
 if test "$LEX" != flex; then
   LEX="$SHELL $missing_dir/missing flex"
   AC_SUBST(LEX_OUTPUT_ROOT, lex.yy)
@@ -145,7 +144,12 @@ AM_CONDITIONAL([DOXYGEN], [test -n "$DOXYGEN"])
 ACX_WITH_DBUG
 
 # Checks for header files.
-AC_HEADER_STDC
+
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
 
 # Oracle checks
 ACX_PROG_PROC
@@ -172,10 +176,7 @@ LT_INIT
 # Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
 AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
-AC_CHECK_HEADERS([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
-# GJP 2022-08-23
-# Use old preprocessor check, i.e. only existence of the header ([-])
-AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oratypes.h oraxml.h xml.h], [], [], [-])
+AC_CHECK_HEADERS_ONCE([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

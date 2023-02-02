@@ -34,6 +34,8 @@ AC_DEFUN([ACX_SEARCH_LIBS],
 [acx_func_search_save_LDFLAGS=$LDFLAGS
 acx_func_search_save_LIBS=$LIBS
 acx_cv_search_$3=no
+acx_LDFLAGS=
+acx_LIBS=
 AC_LINK_IFELSE([AC_LANG_CALL([], [$3])],
                [acx_cv_search_$3="none required"])
 for acx_rootdir in $1; do
@@ -47,9 +49,11 @@ for acx_rootdir in $1; do
     for acx_subdir in $acx_subdirs; do
       acx_dir="$acx_rootdir/$acx_subdir"
       test -d $acx_dir || continue
-      # is "-L$acx_dir" already part of $LDFLAGS?
-      if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
-        LDFLAGS="-L${acx_dir} $acx_func_search_save_LDFLAGS"
+      acx_LDFLAGS="-L${acx_dir}"
+      # is $acx_LDFLAGS already part of (original) $LDFLAGS?
+      if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
+        # Use xargs to strip whitespace
+        LDFLAGS=`echo "${acx_LDFLAGS} $acx_func_search_save_LDFLAGS" | xargs`
       fi
       if test -z "$5"; then
         # GJP 2018-08-20
@@ -61,14 +65,15 @@ for acx_rootdir in $1; do
         acx_libs=$5
       fi    
       for acx_lib in $acx_libs; do
-        # is "-l$acx_lib $8" already part of $LIBS?
-        if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $8" 1>/dev/null; then
-          # Use aargs to strip whitespace
-          LIBS=`echo "-l$acx_lib $8 $acx_func_search_save_LIBS" | xargs`
+        acx_LIBS="-l$acx_lib $8"
+        # is $acx_LIBS already part of (original) $LIBS?
+        if ! echo "$acx_func_search_save_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
+          # Use xargs to strip whitespace
+          LIBS=`echo "${acx_LIBS} $acx_func_search_save_LIBS" | xargs`
         fi
         AC_LINK_IFELSE([AC_LANG_PROGRAM([[$acx_prologue]], [[$4]])],
-                       [acx_cv_search_$3="-L$acx_dir -l$acx_lib $8" && echo break],
-                       [])
+                       [acx_cv_search_$3="$acx_lib" && break],
+                       [echo $3 NOT found && echo "conftest.c: `cat conftest.c`"])
       done
       test "$acx_cv_search_$3" = "no" || break
     done
@@ -81,18 +86,25 @@ LIBS=$acx_func_search_save_LIBS
 AS_IF([test "$acx_cv_search_$3" != no],
       [if test "$acx_cv_search_$3" != "none required"
 then
-  acx_LDFLAGS=`eval echo \$acx_cv_search_$3 | cut -d' ' -f 1`
-  acx_LIBS="`eval echo \$acx_cv_search_$3 | cut -d' ' -f 2` $8"
-  # is "-L$acx_dir" already part of $ORACLE_LDFLAGS?
-  if ! echo "$ORACLE_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
-    ORACLE_LDFLAGS="$acx_LDFLAGS $ORACLE_LDFLAGS"
+  if test -n "$acx_LDFLAGS"; then
+    if ! echo "$ORACLE_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
+      # Use xargs to strip whitespace
+      ORACLE_LDFLAGS=`echo "$acx_LDFLAGS $ORACLE_LDFLAGS" | xargs`
+    fi
   fi
-  # is "-l$acx_lib $8" already part of $ORACLE_LIBS?
-  if ! echo "$ORACLE_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
-    ORACLE_LIBS="$acx_LIBS $ORACLE_LIBS"
+  if test -n "$acx_LIBS"; then
+    if ! echo "$ORACLE_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
+	    # Use xargs to strip whitespace
+      ORACLE_LIBS=`echo "$acx_LIBS $ORACLE_LIBS" | xargs`
+    fi
   fi
   # GJP 2018-08-20 Define HAVE_<function>
+  # GJP 2023-02-02 Use the Oracle LDFLAGS and LIBS to check for the functions but restore them at the end
+  LDFLAGS="$ORACLE_LDFLAGS"
+  LIBS="$ORACLE_LIBS"
   AC_CHECK_FUNCS([$3],[],[])
+  LDFLAGS=$acx_func_search_save_LDFLAGS
+  LIBS=$acx_func_search_save_LIBS
 fi
        $6],
       [$7])dnl
@@ -142,7 +154,7 @@ acx_prog_proc_save_CPPFLAGS=$CPPFLAGS
 CPPFLAGS=
 for dir in $acx_oracle_homes
 do
-  if [ ! test -d $dir ]
+  if ! test -d $dir
   then
     AC_MSG_NOTICE([Directory $dir does not exist])
     continue
@@ -154,7 +166,7 @@ do
     # Bug 849475: just return one header by using head -1
     acx_protohdr=`find $dir -follow \( -name \*.h -o -name \*.H \) | grep -i $file | head -1 2>/dev/null`
 
-    if [ test -z "$acx_protohdr" ]
+    if test -z "$acx_protohdr"
     then
       AC_MSG_NOTICE([File $file can not be found in directory $dir])
       continue
@@ -173,7 +185,8 @@ do
       fi
       # See https://github.com/TransferWare/epc/issues/5
       if ! echo "$CPPFLAGS" | grep "\\-I$acx_protohdr_dir" 1>/dev/null; then
-        CPPFLAGS="-I$acx_protohdr_dir $CPPFLAGS"
+        # Use xargs to strip whitespace
+        CPPFLAGS=`echo "-I$acx_protohdr_dir $CPPFLAGS" | xargs`
       fi
       AC_MSG_RESULT([yes])
       acx_protohdrs_found="$acx_protohdrs_found $acx_protohdr"
@@ -189,7 +202,7 @@ echo "void sig_handler(void) { return; }" >> $acx_prologue_file
 acx_prologue=`cat $acx_prologue_file`
 rm $acx_prologue_file
 
-AC_MSG_NOTICE([PRO\*C headers found: $acx_protohdrs_found])
+AC_MSG_NOTICE([PROC headers found: $acx_protohdrs_found])
 
 # GJP 2023-02-01 Now headers are known ($acx_protohdrs_found) we can compile code to search for functions
 
@@ -205,6 +218,7 @@ ACX_SEARCH_LIBS([$acx_oracle_homes],
                 [],
                 [osnsui],
                 [int handle, err;
+extern int osnsui(int *handlp, void (*astp), char * ctx);
 err = osnsui(&handle, sig_handler, (char *) 0)],
                 [],
                 [],
@@ -213,6 +227,7 @@ ACX_SEARCH_LIBS([$acx_oracle_homes],
                 [],
                 [osncui],
                 [int handle, err;
+extern int osncui(int handlp);
 err = osncui(handle)],
                 [],
                 [],
@@ -236,7 +251,7 @@ err = osncui(handle)],
 # See https://github.com/TransferWare/epc/issues/5
 # Use COMPILE definition from Makefile for the echo.
 
-AC_CHECK_HEADERS([$acx_protohdrs], [], [])
+AC_CHECK_HEADERS_ONCE([oratypes.h sqlcpr.h sqlproto.h])
 ORACLE_CPPFLAGS=$CPPFLAGS
 CPPFLAGS=$acx_prog_proc_save_CPPFLAGS
 PROCINCLUDES='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
@@ -338,7 +353,8 @@ do
     if test -n "$acx_xmlhdr"
     then
       if ! echo "$CPPFLAGS" | grep "\\-I${acx_dir}" 1>/dev/null; then
-        CPPFLAGS="-I${acx_dir} $CPPFLAGS"
+        # Use xargs to strip whitespace
+        CPPFLAGS=`echo "-I${acx_dir} $CPPFLAGS" | xargs`
       fi
       AC_MSG_RESULT([yes])
       break
@@ -360,7 +376,8 @@ done
 
 # GJP 2022-08-23
 # Use old preprocessor check, i.e. only existence of the header ([-])
-AC_CHECK_HEADERS([$acx_xmlhdrs], [], [], [-])
+# AC_CHECK_HEADERS([oratypes.h xml.h oraxml.h], [], [], [-])
+AC_CHECK_HEADERS_ONCE([oratypes.h xml.h oraxml.h])
 ])
 
 # ACX_PROG_OCI
@@ -409,6 +426,6 @@ do
   test -z "$acx_ocihdr" || break
 done
 
-AC_CHECK_HEADERS([$acx_ocihdrs], [continue], [AC_MSG_ERROR(OCI header(s) $acx_ocihdrs not found)])
+AC_CHECK_HEADERS([oci.h], [continue], [AC_MSG_ERROR(OCI header(s) $acx_ocihdrs not found)])
 ])
 
