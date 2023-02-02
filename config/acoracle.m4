@@ -51,7 +51,7 @@ for acx_rootdir in $1; do
       test -d $acx_dir || continue
       acx_LDFLAGS="-L${acx_dir}"
       # is $acx_LDFLAGS already part of (original) $LDFLAGS?
-      if ! echo "$acx_func_search_save_LDFLAGS" | grep "\\-L${acx_dir}" 1>/dev/null; then
+      if ! echo "$acx_func_search_save_LDFLAGS" | grep -- "-L${acx_dir}" 1>/dev/null; then
         # Use xargs to strip whitespace
         LDFLAGS=`echo "-L${acx_dir} $acx_func_search_save_LDFLAGS" | xargs`
       fi
@@ -67,13 +67,13 @@ for acx_rootdir in $1; do
       for acx_lib in $acx_libs; do
         acx_LIBS="-l$acx_lib $8"
         # is $acx_LIBS already part of (original) $LIBS?
-        if ! echo "$acx_func_search_save_LIBS" | grep "\\-l$acx_lib $8" 1>/dev/null; then
+        if ! echo "$acx_func_search_save_LIBS" | grep -- "-l$acx_lib $8" 1>/dev/null; then
           # Use xargs to strip whitespace
           LIBS=`echo "-l$acx_lib $8 $acx_func_search_save_LIBS" | xargs`
         fi
         AC_LINK_IFELSE([AC_LANG_PROGRAM([[$acx_prologue]], [[$4]])],
                        [acx_cv_search_$3="$acx_lib" && break],
-                       [echo "CPPFLAGS=$CPPFLAGS\nLDFLAGS=$LDFLAGS\nLIBS=$LIBS\nconftest.c: `cat conftest.c`" > my.log && exit 1])
+                       [])
       done
       test "$acx_cv_search_$3" = "no" || break
     done
@@ -87,17 +87,18 @@ AS_IF([test "$acx_cv_search_$3" != no],
       [if test "$acx_cv_search_$3" != "none required"
 then
   if test -n "$acx_LDFLAGS"; then
-    if ! echo "$ORACLE_LDFLAGS" | grep "\\$acx_LDFLAGS" 1>/dev/null; then
+    if ! echo "$ORACLE_LDFLAGS" | grep -- "$acx_LDFLAGS" 1>/dev/null; then
       # Use xargs to strip whitespace
       ORACLE_LDFLAGS=`echo "$acx_LDFLAGS $ORACLE_LDFLAGS" | xargs`
     fi
   fi
   if test -n "$acx_LIBS"; then
-    if ! echo "$ORACLE_LIBS" | grep "\\$acx_LIBS" 1>/dev/null; then
+    if ! echo "$ORACLE_LIBS" | grep -- "$acx_LIBS" 1>/dev/null; then
 	    # Use xargs to strip whitespace
       ORACLE_LIBS=`echo "$acx_LIBS $ORACLE_LIBS" | xargs`
     fi
   fi
+  test -z "$ORACLE_LIBS" || ORACLE_LIBS=`echo "$ORACLE_LIBS" | xargs -n1 | sort -u | xargs`
   # GJP 2018-08-20 Define HAVE_<function>
   # GJP 2023-02-02 Use the Oracle LDFLAGS and LIBS to check for the functions but restore them at the end
   LDFLAGS="$ORACLE_LDFLAGS"
@@ -137,10 +138,9 @@ then
 else
   acx_oracle_homes="$acx_oracle_home $acx_proc_home"
 fi
-AC_MSG_NOTICE([Checking for PROC in one of these directories (before removing duplicates): $acx_oracle_homes])
 # https://unix.stackexchange.com/questions/353321/remove-all-duplicate-word-from-string-using-shell-script
 acx_oracle_homes=`echo "$acx_oracle_homes" | xargs -n1 | sort -u | xargs`
-AC_MSG_NOTICE([Checking for PROC in one of these directories (after removing duplicates): $acx_oracle_homes])
+AC_MSG_NOTICE([Checking for PROC in one of these directories: $acx_oracle_homes])
 
 # GJP 2023-02-01 Find headers before compiling code to search for functions
 
@@ -184,7 +184,7 @@ do
         acx_protohdr_dir=`cygpath -m $acx_protohdr_dir`
       fi
       # See https://github.com/TransferWare/epc/issues/5
-      if ! echo "$CPPFLAGS" | grep "\\-I$acx_protohdr_dir" 1>/dev/null; then
+      if ! echo "$CPPFLAGS" | grep -- "-I$acx_protohdr_dir" 1>/dev/null; then
         # Use xargs to strip whitespace
         CPPFLAGS=`echo "-I$acx_protohdr_dir $CPPFLAGS" | xargs`
       fi
@@ -352,7 +352,7 @@ do
 
     if test -n "$acx_xmlhdr"
     then
-      if ! echo "$CPPFLAGS" | grep "\\-I${acx_dir}" 1>/dev/null; then
+      if ! echo "$CPPFLAGS" | grep -- "-I${acx_dir}" 1>/dev/null; then
         # Use xargs to strip whitespace
         CPPFLAGS=`echo "-I${acx_dir} $CPPFLAGS" | xargs`
       fi
