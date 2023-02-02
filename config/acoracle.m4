@@ -251,7 +251,7 @@ err = osncui(handle)],
 # See https://github.com/TransferWare/epc/issues/5
 # Use COMPILE definition from Makefile for the echo.
 
-AC_CHECK_HEADERS_ONCE([oratypes.h sqlcpr.h sqlproto.h])
+AC_CHECK_HEADERS([oratypes.h sqlcpr.h sqlproto.h])
 ORACLE_CPPFLAGS=$CPPFLAGS
 CPPFLAGS=$acx_prog_proc_save_CPPFLAGS
 PROCINCLUDES='`echo "$(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)" | sed "s/ -I/ INCLUDE=/g;s/ -[[^ \t]]*//g"`'
@@ -377,7 +377,7 @@ done
 # GJP 2022-08-23
 # Use old preprocessor check, i.e. only existence of the header ([-])
 # AC_CHECK_HEADERS([oratypes.h xml.h oraxml.h], [], [], [-])
-AC_CHECK_HEADERS_ONCE([oratypes.h xml.h oraxml.h])
+AC_CHECK_HEADERS([oratypes.h xml.h oraxml.h])
 ])
 
 # ACX_PROG_OCI
