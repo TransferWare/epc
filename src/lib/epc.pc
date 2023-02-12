@@ -736,6 +736,7 @@ epc__error_t
 epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 {
   DBUG_ENTER( "epc__send_response_pipe" );
+  DBUG_PRINT( "input", ( "epc__call->function: %p; epc__call->function->oneway: %d; epc__call->msg_info: %s", (void*)epc__call->function, epc__call->function->oneway, epc__call->msg_info ) );
 
   epc__call->epc__error = OK;
 
@@ -774,6 +775,7 @@ EXEC SQL END DECLARE SECTION;
 epc__info_t *epc__info;
 {
   DBUG_ENTER("epc__send_response_pipe_db");
+  DBUG_PRINT( "input", ( "msg_response: %s; msg_info: %s", msg_response, msg_info ) );
 
   EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 

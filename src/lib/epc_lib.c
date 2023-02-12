@@ -487,7 +487,7 @@ epc__call_print (epc__call_t * call)
     {
       epc__function_print(call->function);
     }
-  DBUG_PRINT ("input",
+  DBUG_PRINT ("output",
               ("status: %ld; error code: %ld", (long) call->epc__error,
                (long) call->errcode));
   DBUG_LEAVE ();
@@ -622,7 +622,6 @@ void
 epc__done (epc__info_t * epc__info)
 {
   DBUG_ENTER ("epc__done");
-
   DBUG_PRINT ("input", ("epc__info: %p", epc__info));
 
 #ifndef XML_OFF
@@ -803,7 +802,6 @@ epc__set_pipe (epc__info_t * epc__info, char *pipe)
   epc__error_t status = OK;
 
   DBUG_ENTER ("epc__set_pipe");
-
   DBUG_PRINT ("input", ("epc__info: %p; pipe: %s", (void *) epc__info, pipe));
 
   if (epc__info == NULL)
@@ -828,8 +826,8 @@ epc__set_pipe (epc__info_t * epc__info, char *pipe)
     }
 
   DBUG_PRINT ("output", ("status: %d", (int) status));
-
   DBUG_LEAVE ();
+  
   return (status);
 }
 
@@ -839,7 +837,6 @@ epc__set_logon (epc__info_t * epc__info, char *logon)
   epc__error_t status = OK;
 
   DBUG_ENTER ("epc__set_logon");
-
   DBUG_PRINT ("input", ("epc__info: %p", (void *) epc__info));
 
   if (epc__info == NULL)
@@ -865,7 +862,6 @@ epc__set_logon (epc__info_t * epc__info, char *logon)
     }
 
   DBUG_PRINT ("output", ("status: %d", (int) status));
-
   DBUG_LEAVE ();
 
   return (status);
@@ -991,6 +987,7 @@ epc__response_native(epc__call_t * epc__call)
         }
     }
 
+  DBUG_PRINT ("output", ("epc__call->msg_response: %s", epc__call->msg_response));
   DBUG_LEAVE();
 }
 
@@ -1463,7 +1460,6 @@ epc__handle_request (epc__info_t * epc__info,
   long retval = -1L;
 
   DBUG_ENTER ("epc__handle_request");
-
   DBUG_PRINT ("input", ("epc__info: %p", (void *) epc__info));
 
   do
@@ -1577,7 +1573,6 @@ epc__handle_requests (epc__info_t * epc__info,
   epc__call_t epc__call = EPC__CALL_INIT;
 
   DBUG_ENTER ("epc__handle_requests");
-
   DBUG_PRINT ("input", ("epc__info: %p", (void *) epc__info));
 
   for (epc__call.errcode = 0; G_signo == 0; epc__call.errcode = 0)
