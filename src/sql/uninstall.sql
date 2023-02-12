@@ -1,7 +1,7 @@
-/* perl generate_ddl.pl (version 2022-12-02) --nodynamic-sql --force-view --group-constraints --skip-install-sql --source-schema=EPCAPP --strip-source-schema */
+/* perl generate_ddl.pl (version 2023-01-05) --nodynamic-sql --force-view --group-constraints --skip-install-sql --source-schema=EPCAPP --strip-source-schema */
 
 /*
--- JDBC url            : jdbc:oracle:thin:EPCAPP@//localhost:1521/orcl
+-- JDBC url - username : jdbc:oracle:thin:@pato - EPCAPP
 -- source schema       : 
 -- source database link: 
 -- target schema       : EPCAPP
@@ -9,12 +9,14 @@
 -- object type         : 
 -- object names include: 1
 -- object names        : EPC_CLNT_OBJECT,
-EPC,
-EPC_CLNT,
-EPC_SRVR,
+      EPC,
+      EPC_CLNT,
+      EPC_SRVR,
 -- skip repeatables    : 0
 -- interface           : pkg_ddl_util v5
 -- transform params    : 
+-- exclude objects     : 
+-- include objects     : 
 -- owner               : ORACLE_TOOLS
 */
 -- pkg_ddl_util v5
@@ -45,5 +47,5 @@ DROP PACKAGE EPC;
 
 /* SQL statement 7 (DROP;EPCAPP;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 7');
-DROP TYPE EPC_CLNT_OBJECT;
+DROP TYPE EPC_CLNT_OBJECT FORCE;
 
