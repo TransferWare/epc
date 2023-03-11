@@ -999,7 +999,7 @@ is
 begin
 $if epc.c_debugging $then
   enter('epc_clnt.new_request');
-  p_epc_clnt_object.print;
+  --p_epc_clnt_object.print;
   print
   ( 'input'
   , utl_lms.format_message
