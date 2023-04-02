@@ -75,6 +75,38 @@ begin
   end if;
 end leave_on_error;
 
+procedure inspect_message
+is
+  l_number number;
+  l_varchar2 varchar2(4000);
+  l_rowid rowid;
+  l_date date;
+  l_raw raw(2000);
+  l_item positiven := 1;
+begin
+  -- dbms_pipe.NEXT_ITEM_TYPE Function Return Values
+  -- Return  Description
+  --      0  No more items
+  --      6  NUMBER
+  --      9  VARCHAR2
+  --     11  ROWID
+  --     12  DATE
+  --     23  RAW
+
+  loop
+    print('debug', 'item: %s', l_item);
+    case dbms_pipe.next_item_type
+      when  0 then exit;
+      when  6 then dbms_pipe.unpack_message(l_number);   print('debug', 'number: %s'  , l_number);
+      when  9 then dbms_pipe.unpack_message(l_varchar2); print('debug', 'varchar2: %s', l_varchar2);
+      when 11 then dbms_pipe.unpack_message(l_rowid);    print('debug', 'rowid: %s'   , rowidtochar(l_rowid));
+      when 12 then dbms_pipe.unpack_message(l_date);     print('debug', 'date: %s'    , to_char(l_date, 'yyyy-mm-dd hh24:mi:ss'));
+      when 23 then dbms_pipe.unpack_message(l_raw);      print('debug', 'raw: %s'     , utl_raw.cast_to_varchar2(l_raw));
+    end case;
+    l_item := l_item + 1;
+  end loop;
+end inspect_message;
+
 $end -- $if epc.c_debugging $then
 
 -- GLOBAL
@@ -146,6 +178,54 @@ is
   l_msg_protocol pls_integer;
   l_msg_seq pls_integer;
   l_result_pipe epc.pipe_name_subtype := null;
+
+  -- ORA-06559: wrong datatype requested, 6, actual datatype is 9
+  e_wrong_data_type_requested exception;
+  pragma exception_init (e_wrong_data_type_requested, -6559);
+
+$if epc.c_debugging $then
+
+  procedure show_msg_request
+  is
+    l_data_type epc.data_type_subtype;
+    l_data_length pls_integer;
+    l_data_value varchar2(32767);
+    l_start pls_integer := 1;
+    l_part pls_integer := 1;
+  begin
+    while l_start <= length(p_msg_request)
+    loop
+      l_data_type := to_number(substr(p_msg_request, l_start, 1));
+      case 
+        when l_data_type in (epc.data_type_string, epc.data_type_xml)
+        then
+          l_data_length := to_number(substr(p_msg_request, l_start+1, 4), 'FM000X'); -- see EPC_CLNT
+          l_data_value := substrb(p_msg_request, l_start+1+4, l_data_length);
+          l_start := l_start+1+4+nvl(length(l_data_value), 0);
+        else
+          l_data_length := to_number(substr(p_msg_request, l_start+1, 2), 'FM0X'); -- see EPC_CLNT
+          l_data_value := substrb(p_msg_request, l_start+1+2, l_data_length);
+          l_start := l_start+1+2+nvl(length(l_data_value), 0);
+      end case;
+      print
+      ( 'info'
+      , 'msg request: %s'
+      , utl_lms.format_message
+        ( 'part: %d; data type: %d; data length: %d; data value: "%s"'
+        , l_part
+        , l_data_type
+        , l_data_length
+        , l_data_value
+        )
+      );
+      l_part := l_part + 1;
+    end loop;
+  exception
+    when others
+    then print('error', 'sqlerrm: %s', sqlerrm);
+  end show_msg_request;
+
+$end
 begin
 $if epc.c_debugging $then
   enter('epc_srvr.recv_request');
@@ -175,6 +255,10 @@ $if epc.c_debugging $then
 $end
 
         dbms_pipe.unpack_message(p_msg_request);
+
+$if epc.c_debugging $then
+        show_msg_request;
+$end        
 
         if dbms_pipe.next_item_type != 0
         then
@@ -211,6 +295,11 @@ $if epc.c_debugging $then
   print('output', 'p_msg_request: %s', p_msg_request);
   leave;
 exception
+  when e_wrong_data_type_requested
+  then
+    inspect_message;
+    raise;
+    
   when others
   then
     leave_on_error;
