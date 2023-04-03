@@ -1071,7 +1071,7 @@ $if epc.c_debugging $then
   print
   ( 'input'
   , utl_lms.format_message
-    ( 'p_name: %s; p_data_type: %s; p_value: %s; p_max_bytes: %s: %s'
+    ( 'p_name: %s; p_data_type: %s; p_value: %s; p_max_bytes: %s'
     , p_name
     , to_char(p_data_type)
     , p_value
