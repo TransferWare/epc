@@ -1082,7 +1082,13 @@ $end
 
   if p_value is null
   then
-    raise epc.e_illegal_null_value;
+    raise_application_error
+    ( epc.c_illegal_null_value
+    , utl_lms.format_message
+      ( epc.c_illegal_null_value_msg
+      , p_name
+      )
+    );
   elsif p_max_bytes is not null and lengthb(p_value) > p_max_bytes
   then
     raise value_error;
@@ -1188,7 +1194,13 @@ $end
 
   if p_value is null
   then
-    raise epc.e_illegal_null_value;
+    raise_application_error
+    ( epc.c_illegal_null_value
+    , utl_lms.format_message
+      ( epc.c_illegal_null_value_msg
+      , p_name
+      )
+    );
   else
     case p_epc_clnt_object.protocol
       when "NATIVE"
@@ -1295,7 +1307,13 @@ $end
 
   if p_value is null
   then
-    raise epc.e_illegal_null_value;
+    raise_application_error
+    ( epc.c_illegal_null_value
+    , utl_lms.format_message
+      ( epc.c_illegal_null_value_msg
+      , p_name
+      )
+    );
   else
     case p_epc_clnt_object.protocol
       when "NATIVE"

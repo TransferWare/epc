@@ -36,7 +36,8 @@ begin
               , utl_http.http_version_1_1            -- http_version
                 /* Fields used for dbms_pipe */
               , 'epc_request_pipe'                   -- request_pipe
-              , 0                                    -- send_timeout /* GJP 2022-12-03 60 => 0 */
+              --, 0                                    -- send_timeout /* GJP 2022-12-03 60 => 0 */
+              , 10                                    -- send_timeout /* GJP 2023-04-03 0 => 10 */
               , 60                                   -- recv_timeout /* GJP 2018-08-21 10 => 60 */
               );
       -- make it a singleton by storing it

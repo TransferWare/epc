@@ -237,7 +237,7 @@ $end
 $if epc.c_debugging $then
     print('info', 'receiving from %s', g_pipe_name);
 $end
-    l_retval := dbms_pipe.receive_message(g_pipe_name); /* wait forever */
+    l_retval := dbms_pipe.receive_message(pipename => g_pipe_name, timeout => dbms_pipe.maxwait); /* wait forever */
 
 $if epc.c_debugging $then
     print('info', 'l_retval: %s', l_retval);
@@ -274,7 +274,15 @@ $end
 
       when 1
       then
-        raise epc.e_msg_timed_out;
+        raise_application_error
+        ( epc.c_msg_timed_out
+        , utl_lms.format_message
+          ( epc.c_msg_timed_out_msg
+          , 'receiving from'
+          , g_pipe_name
+          , to_char(dbms_pipe.maxwait)
+          )
+        );
 
       when 2
       then
@@ -282,7 +290,14 @@ $end
 
       when 3
       then
-        raise epc.e_msg_interrupted;
+        raise_application_error
+        ( epc.c_msg_interrupted
+        , utl_lms.format_message
+          ( epc.c_msg_interrupted_msg
+          , 'receiving from'
+          , g_pipe_name
+          )
+        );
 
       else
         /* ?? */
@@ -349,11 +364,26 @@ $end
 
       when 1
       then
-        raise epc.msg_timed_out;
+        raise_application_error
+        ( epc.c_msg_timed_out
+        , utl_lms.format_message
+          ( epc.c_msg_timed_out_msg
+          , 'sending to'
+          , l_result_pipe
+          , to_char(g_response_send_timeout)
+          )
+        );
 
       when 3
       then
-        raise epc.msg_interrupted;
+        raise_application_error
+        ( epc.c_msg_interrupted
+        , utl_lms.format_message
+          ( epc.c_msg_interrupted_msg
+          , 'sending to'
+          , l_result_pipe
+          )
+        );
 
       else
         raise value_error;
@@ -403,11 +433,26 @@ $end
 
       when 1
       then
-        raise epc.msg_timed_out;
+        raise_application_error
+        ( epc.c_msg_timed_out
+        , utl_lms.format_message
+          ( epc.c_msg_timed_out_msg
+          , 'sending to'
+          , g_pipe_name
+          , to_char(dbms_pipe.maxwait)
+          )
+        );
 
       when 3
       then
-        raise epc.msg_interrupted;
+        raise_application_error
+        ( epc.c_msg_interrupted
+        , utl_lms.format_message
+          ( epc.c_msg_interrupted_msg
+          , 'sending to'
+          , g_pipe_name
+          )
+        );
 
       else
         raise value_error;
@@ -460,11 +505,26 @@ $end
 
       when 1
       then
-        raise epc.msg_timed_out;
+        raise_application_error
+        ( epc.c_msg_timed_out
+        , utl_lms.format_message
+          ( epc.c_msg_timed_out_msg
+          , 'sending to'
+          , g_pipe_name
+          , to_char(dbms_pipe.maxwait)
+          )
+        );
 
       when 3
       then
-        raise epc.msg_interrupted;
+        raise_application_error
+        ( epc.c_msg_interrupted
+        , utl_lms.format_message
+          ( epc.c_msg_interrupted_msg
+          , 'sending to'
+          , g_pipe_name
+          )
+        );
 
       else
         raise value_error;

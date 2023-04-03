@@ -103,6 +103,8 @@ SOAP_HEADER_END constant varchar2(1000) :=
 e_illegal_null_value exception;
 c_illegal_null_value constant pls_integer := -20100;
 pragma exception_init(e_illegal_null_value, -20100);
+-- p1: parameter name
+c_illegal_null_value_msg constant varchar2(4000 char) := 'Null value not allowed for parameter %s';
 
 e_wrong_protocol     exception;
 c_wrong_protocol     constant pls_integer := -20101;
@@ -115,17 +117,21 @@ pragma exception_init(e_comm_error, -20102);
 e_msg_timed_out      exception;
 c_msg_timed_out      constant pls_integer := -20103;
 pragma exception_init(e_msg_timed_out, -20103);
+-- p1: receiving from/sending to; p2: pipe; p3: timeout
+c_msg_timed_out_msg  constant varchar2(2000 char) := 'Timeout on %s pipe %s after %s seconds';
 
 e_msg_too_big        exception;
 c_msg_too_big        constant pls_integer := -20104;
 pragma exception_init(e_msg_too_big, -20104);
 
-e_msg_interrupted    exception;
-c_msg_interrupted    constant pls_integer := -20105;
+e_msg_interrupted     exception;
+c_msg_interrupted     constant pls_integer := -20105;
 pragma exception_init(e_msg_interrupted, -20105);
+-- p1: receiving from/sending to; p2: pipe
+c_msg_interrupted_msg constant varchar2(2000 char) := 'Message interrupted on %s pipe %s';
 
-e_parse_error        exception;
-c_parse_error        constant pls_integer := -20106;
+e_parse_error         exception;
+c_parse_error         constant pls_integer := -20106;
 pragma exception_init(e_parse_error, -20106);
 
 /* Start of backwards compatibility for exceptions. See epc.pls (package 4.0.0). */
