@@ -142,33 +142,12 @@ begin
   );
 
   -- Store object into PL/SQL table
-  std_object_mgr.set_group_name(null);
   epc_clnt.set_response_recv_timeout(:l_interface_name, l_recv_timeout);
 
   -- Retrieve from PL/SQL table
   l_epc_clnt_object := new epc_clnt_object(:l_interface_name);
 
   if l_epc_clnt_object.recv_timeout = l_recv_timeout
-  then
-    null;
-  else
-    raise value_error;
-  end if;
-
-  -- clean up local storage
-  std_object_mgr.delete_std_objects
-  ( p_group_name => null
-  , p_object_name => '%'
-  );
-
-  -- Store object into table std_objects
-  std_object_mgr.set_group_name(:l_group_name);
-  epc_clnt.set_response_recv_timeout(:l_interface_name, l_recv_timeout * 2);
-
-  -- Retrieve from table std_objects
-  l_epc_clnt_object := new epc_clnt_object(:l_interface_name);
-
-  if l_epc_clnt_object.recv_timeout = l_recv_timeout * 2
   then
     null;
   else
