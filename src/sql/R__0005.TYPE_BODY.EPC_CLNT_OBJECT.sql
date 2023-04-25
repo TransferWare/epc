@@ -7,7 +7,7 @@ constructor function epc_clnt_object
 )
 return self as result
 is
-  l_object_name constant std_objects.object_name%type := 'EPC_CLNT' || '.' || p_interface_name;
+  l_object_name constant std_object_mgr.object_name_t := 'EPC_CLNT' || '.' || p_interface_name;
 begin
   begin
     std_object_mgr.get_std_object(l_object_name, self);
@@ -16,10 +16,6 @@ begin
     then
       self := epc_clnt_object
               ( 0                                    -- dirty
-              , null                                 -- db_session
-              , null                                 -- db_username
-              , null                                 -- app_session
-              , null                                 -- app_username
               , p_interface_name                     -- interface_name
               , epc_clnt."NATIVE"                    -- protocol
               , p_interface_name                     -- namespace
@@ -40,11 +36,9 @@ begin
               , utl_http.http_version_1_1            -- http_version
                 /* Fields used for dbms_pipe */
               , 'epc_request_pipe'                   -- request_pipe
-              --, 0                                    -- send_timeout /* GJP 2022-12-03 60 => 0 */
               , 10                                   -- send_timeout /* GJP 2023-04-03 0 => 10 */
               , 60                                   -- recv_timeout /* GJP 2018-08-21 10 => 60 */
               );
-      self.set_session_attributes();
       
       -- make it a singleton by storing it
       std_object_mgr.set_std_object(l_object_name, self);
