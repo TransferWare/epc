@@ -1,10 +1,10 @@
-CREATE OR REPLACE PACKAGE "EPC_SRVR" IS
+CREATE OR REPLACE PACKAGE "EPC_SRVR" AUTHID DEFINER IS
 /**
 --
 -- This package is used to implement the server side of RPC like functionality
--- on an Oracle database. Messages are sent by the client to a server. The 
+-- on an Oracle database. Messages are sent by the client to a server. The
 -- transport mechanisms supported are database pipes (DBMS_PIPE),
--- HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for 
+-- HTTP (UTL_HTTP) and TCP/IP (UTL_TCP). This package is only needed for
 -- database pipe transport. TCP/IP servers should not use
 -- the TCP/IP functionality of Oracle, but of the OS instead.
 --
@@ -44,7 +44,7 @@ return epc_key_subtype;
 /**
 -- Set the connection type to database pipes and store the pipe name for
 -- later use. Each interface may have a different connection.
--- 
+--
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
 */
@@ -55,18 +55,18 @@ procedure set_connection_info
 
 /**
 -- Get the database request pipe.
--- 
+--
 -- @param p_epc_key    The key
 -- @param p_pipe_name  The request pipe name
 */
 procedure get_connection_info
 ( p_epc_key in epc_key_subtype
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 );
 
 /**
 -- Set the response send timeout.
--- 
+--
 -- @param p_epc_key                The key
 -- @param p_response_send_timeout  The response send timeout
 */
@@ -77,7 +77,7 @@ procedure set_response_send_timeout
 
 /**
 -- Receive a request.
--- 
+--
 -- @param p_epc_key         Needed for the connection info
 -- @param p_msg_info        The message information
 -- @param p_msg_request     The message request
@@ -88,13 +88,13 @@ procedure set_response_send_timeout
 */
 procedure recv_request
 ( p_epc_key in epc_key_subtype
-, p_msg_info out epc_srvr.msg_info_subtype
-, p_msg_request out varchar2
+, p_msg_info out nocopy epc_srvr.msg_info_subtype
+, p_msg_request out nocopy varchar2
 );
 
 /**
 -- Send a response to a request.
--- 
+--
 -- @param p_epc_key       Needed for the connection info
 -- @param p_msg_info      The message information as received by recv_request
 -- @param p_msg_response  The message response
@@ -103,7 +103,7 @@ procedure recv_request
 -- @throws epc.e_msg_interrupted  Message interrupted
 */
 procedure send_response
-( 
+(
   p_epc_key in epc_key_subtype
 , p_msg_info in epc_srvr.msg_info_subtype
 , p_msg_response in varchar2
@@ -111,7 +111,7 @@ procedure send_response
 
 /**
 -- Interrupt the receipt of a request. When database
--- pipes are used to receive the request, the session can not 
+-- pipes are used to receive the request, the session can not
 -- easily be interrupted by a user defined interrupt (for example a CTRL-C).
 -- The way to do this, is to call this procedure from another session.
 -- This will interrupt the server.
@@ -146,6 +146,21 @@ procedure ping
 );
 
 /**
+-- Create a database pipe.
+--
+-- @param p_pipe_name      The pipe name.
+-- @param p_max_pipe_size  The maximum size allowed for the pipe, in bytes.
+-- @param p_private        Uses the default, TRUE, to create a private pipe.
+--
+*/
+procedure create_pipe
+(
+  p_pipe_name in epc.pipe_name_subtype
+, p_max_pipe_size in integer default 8192
+, p_private in boolean default true
+);
+
+/**
 -- Purge a database pipe.
 --
 -- @param p_pipe  The pipe
@@ -153,8 +168,57 @@ procedure ping
 */
 procedure purge_pipe
 (
-  p_pipe in varchar2
+  p_pipe_name in epc.pipe_name_subtype
 );
+
+$if epc.c_testing $then
+
+--%suitepath(EPC)
+--%suite
+
+--%beforeeach
+procedure ut_reset;
+
+--%test
+procedure ut_register;
+
+--%test
+procedure ut_get_epc_key;
+
+--%test
+procedure ut_set_connection_info;
+
+--%test
+procedure ut_get_connection_info;
+
+--%test
+procedure ut_set_response_send_timeout;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_recv_request;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_send_response;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_send_request_interrupt;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_ping;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_create_pipe;
+
+--%test
+--%throws(epc.e_not_tested)
+procedure ut_purge_pipe;
+
+$end
 
 end epc_srvr;
 /

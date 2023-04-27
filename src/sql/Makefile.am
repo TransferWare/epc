@@ -15,23 +15,19 @@
 ## License along with this library; if not, write to the Free Software
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-CLEANFILES       = pod*.tmp
-
-sql_scripts      = R__09.PACKAGE_SPEC.EPC.sql R__14.PACKAGE_BODY.EPC.sql
-sql_scripts     += R__09.PACKAGE_SPEC.EPC_SRVR.sql R__14.PACKAGE_BODY.EPC_SRVR.sql
-sql_scripts     += R__15.TYPE_BODY.STD_OBJECT.sql
-sql_scripts     += R__09.PACKAGE_SPEC.STD_OBJECT_MGR.sql R__14.PACKAGE_BODY.STD_OBJECT_MGR.sql
-sql_scripts     += R__15.TYPE_BODY.EPC_CLNT_OBJECT.sql
-sql_scripts     += R__09.PACKAGE_SPEC.EPC_CLNT.sql R__14.PACKAGE_BODY.EPC_CLNT.sql
-sql_scripts     += install.sql uninstall.sql
+sql_scripts      = 0001.TYPE_SPEC.EPC_CLNT_OBJECT.sql \
+									 R__0002.PACKAGE_SPEC.EPC.sql \
+									 R__0003.PACKAGE_SPEC.EPC_SRVR.sql \
+									 R__0004.PACKAGE_SPEC.EPC_CLNT.sql \
+									 R__0005.TYPE_BODY.EPC_CLNT_OBJECT.sql \
+									 R__0006.PACKAGE_BODY.EPC_SRVR.sql \
+									 R__0007.PACKAGE_BODY.EPC_CLNT.sql \
+									 R__0008.PACKAGE_BODY.EPC.sql \
+									 V0001__TYPE_SPEC.EPC_CLNT_OBJECT.sql \
+                   install.sql \
+                   uninstall.sql
 
 noinst_DATA      = $(sql_scripts)
-
-# Use order of installation: 
-# 1) object specifications
-# 2) tables
-# 3) package specifications
-# 4) bodies
 
 EXTRA_DIST       = $(sql_scripts)
 

@@ -1,100 +1,51 @@
-/* perl generate_ddl.pl (version 2021-08-27) --nodynamic-sql --force-view --skip-install-sql --nostrip-source-schema */
+/* perl generate_ddl.pl (version 2023-01-05) --nodynamic-sql --force-view --group-constraints --skip-install-sql --source-schema=EPCAPP --strip-source-schema */
 
 /*
--- JDBC url            : jdbc:oracle:thin:ORACLE_TOOLS@//localhost:1521/orcl
+-- JDBC url - username : jdbc:oracle:thin:@pato - EPCAPP
 -- source schema       : 
 -- source database link: 
--- target schema       : ORACLE_TOOLS
+-- target schema       : EPCAPP
 -- target database link: 
 -- object type         : 
 -- object names include: 1
--- object names        : EPC,
-EPC_CLNT,
-EPC_CLNT_OBJECT,
-EPC_SRVR,
-STD_OBJECT,
-STD_OBJECT_MGR,
-STD_OBJECTS
+-- object names        : EPC_CLNT_OBJECT,
+      EPC,
+      EPC_CLNT,
+      EPC_SRVR,
 -- skip repeatables    : 0
 -- interface           : pkg_ddl_util v5
 -- transform params    : 
+-- exclude objects     : 
+-- include objects     : 
 -- owner               : ORACLE_TOOLS
 */
 -- pkg_ddl_util v5
 call dbms_application_info.set_module('uninstall.sql', null);
-/* SQL statement 1 (ALTER;ORACLE_TOOLS;CONSTRAINT;STD_OBJECTS_CHK4;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
+/* SQL statement 1 (DROP;EPCAPP;PACKAGE_BODY;EPC_CLNT;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 1');
-ALTER TABLE "ORACLE_TOOLS"."STD_OBJECTS" DROP CONSTRAINT STD_OBJECTS_CHK4;
+DROP PACKAGE BODY EPC_CLNT;
 
-/* SQL statement 2 (ALTER;ORACLE_TOOLS;CONSTRAINT;STD_OBJECTS_CHK3;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
+/* SQL statement 2 (DROP;EPCAPP;PACKAGE_BODY;EPC_SRVR;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 2');
-ALTER TABLE "ORACLE_TOOLS"."STD_OBJECTS" DROP CONSTRAINT STD_OBJECTS_CHK3;
+DROP PACKAGE BODY EPC_SRVR;
 
-/* SQL statement 3 (ALTER;ORACLE_TOOLS;CONSTRAINT;STD_OBJECTS_CHK2;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
+/* SQL statement 3 (DROP;EPCAPP;TYPE_BODY;EPC_CLNT_OBJECT;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 3');
-ALTER TABLE "ORACLE_TOOLS"."STD_OBJECTS" DROP CONSTRAINT STD_OBJECTS_CHK2;
+DROP TYPE BODY EPC_CLNT_OBJECT;
 
-/* SQL statement 4 (ALTER;ORACLE_TOOLS;CONSTRAINT;STD_OBJECTS_CHK1;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
+/* SQL statement 4 (DROP;EPCAPP;PACKAGE_SPEC;EPC_CLNT;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 4');
-ALTER TABLE "ORACLE_TOOLS"."STD_OBJECTS" DROP CONSTRAINT STD_OBJECTS_CHK1;
+DROP PACKAGE EPC_CLNT;
 
-/* SQL statement 5 (ALTER;ORACLE_TOOLS;CONSTRAINT;STD_OBJECTS_PK;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
+/* SQL statement 5 (DROP;EPCAPP;PACKAGE_SPEC;EPC_SRVR;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 5');
-ALTER TABLE "ORACLE_TOOLS"."STD_OBJECTS" DROP PRIMARY KEY KEEP INDEX;
+DROP PACKAGE EPC_SRVR;
 
-/* SQL statement 6 (DROP;ORACLE_TOOLS;INDEX;STD_OBJECTS_PK;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;2) */
+/* SQL statement 6 (DROP;EPCAPP;PACKAGE_SPEC;EPC;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 6');
-DROP INDEX ORACLE_TOOLS.STD_OBJECTS_PK;
+DROP PACKAGE EPC;
 
-/* SQL statement 7 (DROP;ORACLE_TOOLS;PACKAGE_BODY;EPC;;;;;;;;2) */
+/* SQL statement 7 (DROP;EPCAPP;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
 call dbms_application_info.set_action('SQL statement 7');
-DROP PACKAGE BODY ORACLE_TOOLS.EPC;
-
-/* SQL statement 8 (DROP;ORACLE_TOOLS;PACKAGE_BODY;EPC_CLNT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 8');
-DROP PACKAGE BODY ORACLE_TOOLS.EPC_CLNT;
-
-/* SQL statement 9 (DROP;ORACLE_TOOLS;PACKAGE_BODY;EPC_SRVR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 9');
-DROP PACKAGE BODY ORACLE_TOOLS.EPC_SRVR;
-
-/* SQL statement 10 (DROP;ORACLE_TOOLS;PACKAGE_BODY;STD_OBJECT_MGR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 10');
-DROP PACKAGE BODY ORACLE_TOOLS.STD_OBJECT_MGR;
-
-/* SQL statement 11 (DROP;ORACLE_TOOLS;TYPE_BODY;EPC_CLNT_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 11');
-DROP TYPE BODY ORACLE_TOOLS.EPC_CLNT_OBJECT;
-
-/* SQL statement 12 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;EPC_CLNT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 12');
-DROP PACKAGE ORACLE_TOOLS.EPC_CLNT;
-
-/* SQL statement 13 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;EPC_SRVR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 13');
-DROP PACKAGE ORACLE_TOOLS.EPC_SRVR;
-
-/* SQL statement 14 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;EPC;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 14');
-DROP PACKAGE ORACLE_TOOLS.EPC;
-
-/* SQL statement 15 (DROP;ORACLE_TOOLS;TYPE_BODY;STD_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 15');
-DROP TYPE BODY ORACLE_TOOLS.STD_OBJECT;
-
-/* SQL statement 16 (DROP;ORACLE_TOOLS;PACKAGE_SPEC;STD_OBJECT_MGR;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 16');
-DROP PACKAGE ORACLE_TOOLS.STD_OBJECT_MGR;
-
-/* SQL statement 17 (DROP;ORACLE_TOOLS;TABLE;STD_OBJECTS;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 17');
-DROP TABLE ORACLE_TOOLS.STD_OBJECTS PURGE;
-
-/* SQL statement 18 (DROP;ORACLE_TOOLS;TYPE_SPEC;EPC_CLNT_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 18');
-DROP TYPE ORACLE_TOOLS.EPC_CLNT_OBJECT;
-
-/* SQL statement 19 (DROP;ORACLE_TOOLS;TYPE_SPEC;STD_OBJECT;;;;;;;;2) */
-call dbms_application_info.set_action('SQL statement 19');
-DROP TYPE ORACLE_TOOLS.STD_OBJECT;
+DROP TYPE EPC_CLNT_OBJECT FORCE;
 

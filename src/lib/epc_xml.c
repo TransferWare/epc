@@ -42,8 +42,19 @@ typedef struct {
 
 #endif
 
+#if defined(HAVE_ORATYPES_H)
 #include <oratypes.h>
+#else
+#error No Oracle types header defined.
+#endif
+
+#if defined(HAVE_XML_H)
+#include <xml.h>
+#elif defined(HAVE_ORAXML_H)
 #include <oraxml.h>
+#else
+#error No Oracle XML header defined.
+#endif
 
 #define string_defined
 #include "epc_xml.h"

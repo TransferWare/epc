@@ -28,15 +28,24 @@ endif
 MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config-h.in \
                        stamp-h.in $(AUX_DIST)
 DISTCLEANFILES       = $(distdir).tar.gz
-EXTRA_DIST           = VERSION lint.am .mvn README.md CHANGELOG.md darwin-remove-rpath.sh
+EXTRA_DIST           = VERSION lint.am .mvn README.md CHANGELOG.md darwin-remove-rpath.sh pom.xml .mvn/maven.config ln_oracle_tools.sh
 
 # Gert-Jan Paulissen, 15-01-2014
 # libtoolize: AC_CONFIG_MACRO_DIR([config]) conflicts with ACLOCAL_AMFLAGS=-I config
 ACLOCAL_AMFLAGS      = -I config
 
+MVN                  = mvn
+
 lintdirs	           = $(top_builddir)/src/lib $(top_builddir)/src/prog
 
-dist: lint html
+check: check-version
+
+check-version:
+	@echo "Testing that package version is the same as the Maven revision"
+	chmod +x $(top_srcdir)/ln_oracle_tools.sh && $(top_srcdir)/ln_oracle_tools.sh $(top_srcdir)
+	@mvn_version=`echo '$${revision}' | $(MVN) -f $(top_srcdir)/pom.xml -N help:evaluate | grep -v '[INFO]'`; set -x; test "$(PACKAGE_VERSION)" = "$$mvn_version"
+
+dist: html
 
 lint:
 	@echo Making $@ in $(lintdirs)

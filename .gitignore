@@ -1,6 +1,7 @@
 # Generic
 *.log
 *.lis
+*.tmp
 
 # Emacs
 *~
@@ -17,6 +18,10 @@ config/
 configure
 VERSION
 
+# Copied by bootstrap
+config/dbug.m4
+ln_oracle_tools.sh
+
 # Doxygen
 doc/c/
 doc/sql/
@@ -24,6 +29,7 @@ doc/sql/
 # Make build directories
 build/
 b/
+.deps/
 
 # Soft Links
 ln_oracle_tools.sh

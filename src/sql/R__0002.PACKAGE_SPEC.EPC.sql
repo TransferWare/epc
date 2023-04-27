@@ -1,13 +1,21 @@
-CREATE OR REPLACE PACKAGE "EPC" IS
+CREATE OR REPLACE PACKAGE "EPC" AUTHID DEFINER IS
 /**
 --
 -- This package is used to implement RPC like functionality on Oracle.
 -- Messages are sent by the client to a server. The transport mechanisms
--- supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP) 
+-- supported are database pipes (package DBMS_PIPE), HTTP (package UTL_HTTP)
 -- and TCP/IP (package UTL_TCP).
 --
 -- @headcom
 */
+
+-- debugging only when you really need
+c_debugging constant boolean := false;
+c_testing constant boolean := $if $$Testing $then true $else false $end;
+
+-- to skip some tests
+e_not_tested exception;
+pragma exception_init(e_not_tested, -20002);
 
 subtype interface_name_subtype is varchar2(32);
 subtype namespace_subtype is varchar2(128);
@@ -40,7 +48,7 @@ data_type_double constant data_type_subtype := 5;
 data_type_xml    constant data_type_subtype := 7;
 data_type_date   constant data_type_subtype := 8;
 
-"xmlns:SOAP-ENV" constant varchar2(1000) := 
+"xmlns:SOAP-ENV" constant varchar2(1000) :=
   'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"';
 
 SOAP_HEADER_START constant varchar2(1000) :=
@@ -59,10 +67,10 @@ SOAP_HEADER_START constant varchar2(1000) :=
   ||'>'
   ||'<SOAP-ENV:Body>';
 
-SOAP_HEADER_END constant varchar2(1000) := 
+SOAP_HEADER_END constant varchar2(1000) :=
   '</SOAP-ENV:Body></SOAP-ENV:Envelope>';
 
-/* 
+/*
   Exceptions are raised using raise_application_error(error_number, ...),
   which expects error numbers in the range -20000 uptill -20999.
   The EPC uses -20100 uptill -20106.
@@ -85,16 +93,18 @@ SOAP_HEADER_END constant varchar2(1000) :=
     when something
     then
       dbms_output.put_line('something');
-      null;     
+      null;
   end;
 
-  This does not catch e_something. 
+  This does not catch e_something.
 
   When you uncomment the pragma lines, the exception is catched.
 */
 e_illegal_null_value exception;
 c_illegal_null_value constant pls_integer := -20100;
 pragma exception_init(e_illegal_null_value, -20100);
+-- p1: parameter name
+c_illegal_null_value_msg constant varchar2(4000 char) := 'Null value not allowed for parameter %s';
 
 e_wrong_protocol     exception;
 c_wrong_protocol     constant pls_integer := -20101;
@@ -107,17 +117,21 @@ pragma exception_init(e_comm_error, -20102);
 e_msg_timed_out      exception;
 c_msg_timed_out      constant pls_integer := -20103;
 pragma exception_init(e_msg_timed_out, -20103);
+-- p1: receiving from/sending to; p2: pipe; p3: timeout
+c_msg_timed_out_msg  constant varchar2(2000 char) := 'Timeout on %s pipe %s after %s seconds';
 
 e_msg_too_big        exception;
 c_msg_too_big        constant pls_integer := -20104;
 pragma exception_init(e_msg_too_big, -20104);
 
-e_msg_interrupted    exception;
-c_msg_interrupted    constant pls_integer := -20105;
+e_msg_interrupted     exception;
+c_msg_interrupted     constant pls_integer := -20105;
 pragma exception_init(e_msg_interrupted, -20105);
+-- p1: receiving from/sending to; p2: pipe
+c_msg_interrupted_msg constant varchar2(2000 char) := 'Message interrupted on %s pipe %s';
 
-e_parse_error        exception;
-c_parse_error        constant pls_integer := -20106;
+e_parse_error         exception;
+c_parse_error         constant pls_integer := -20106;
 pragma exception_init(e_parse_error, -20106);
 
 /* Start of backwards compatibility for exceptions. See epc.pls (package 4.0.0). */
@@ -141,33 +155,6 @@ pragma exception_init(msg_interrupted, -20105);
 /* End of backwards compatibility for exceptions. */
 
 /*ORA-06558 is raised if the message buffer overflows (currently 4096 bytes)*/
-
-/**
--- Print data.
---
--- Pretty prints a message using DBMS_OUTPUT.  The message is split into lines
--- (chr(10) is the separator).  Next lines longer than 255 characters are
--- printed in chunks of 255 characters each.
--- 
--- @param p_msg  XML message.
-*/
-procedure print
-(
-  p_msg in varchar2
-);
-
-/**
--- Debug the EPC or its depending packages.
---
--- Prints a debug message using the print() function.
--- The message is prefixed with 'DEBUG: '
--- 
--- @param p_msg  XML message.
-*/
-procedure debug
-(
-  p_msg in varchar2
-);
 
 end epc;
 /

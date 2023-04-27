@@ -1,4 +1,4 @@
-CREATE TYPE "EPC_CLNT_OBJECT" under std_object (
+CREATE TYPE "EPC_CLNT_OBJECT" AUTHID DEFINER under std_object (
   interface_name varchar2(32) /*epc.interface_name_subtype*/  /* the key */
   /* Protocol information */
 , protocol integer
@@ -29,11 +29,15 @@ CREATE TYPE "EPC_CLNT_OBJECT" under std_object (
 , recv_timeout integer
 
 , constructor function epc_clnt_object
-  ( p_interface_name in varchar2
+  ( self in out nocopy epc_clnt_object
+  , p_interface_name in varchar2
   )
   return self as result
 
 , overriding member function name(self in epc_clnt_object) return varchar2
+
+  -- every sub type must add its attributes (in capital letters)
+, overriding member procedure serialize(self in epc_clnt_object, p_json_object in out nocopy json_object_t)
 
 ) final;
 /

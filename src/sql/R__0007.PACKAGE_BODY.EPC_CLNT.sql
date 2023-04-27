@@ -49,13 +49,15 @@ A typical XML-RPC fault would be:
 
 */
 
+/* !!! SEE ALSO UT_RESET BELOW !!! */
+
 /* global variables used by a method call */
-g_method_name epc.method_name_subtype;
-g_oneway pls_integer;
+g_method_name epc.method_name_subtype := null;
+g_oneway pls_integer := null;
 g_http_req utl_http.req;
-g_msg epc.xml_subtype; /* input/output */
-g_doc xmltype; /* output */
-g_next_out_parameter pls_integer; /* number of next out (or in/out) parameter to read for XMLRPC */
+g_msg epc.xml_subtype := null; /* input/output */
+g_doc xmltype := null; /* output */
+g_next_out_parameter pls_integer := null; /* number of next out (or in/out) parameter to read for XMLRPC */
 
 -- constants
 c_max_msg_seq   constant pls_integer := 65535; /* msg seq wraps from 0 up till 65535 */
@@ -65,64 +67,83 @@ g_result_pipe epc.pipe_name_subtype := null;
 /* The current message sequence number.
    The message sequence number is incremented before a message
    is sent. This (incremented) number if part of the message
-   and must be returned as part of the result message. Now 
+   and must be returned as part of the result message. Now
    this can be checked.
 */
 g_msg_seq pls_integer := c_max_msg_seq;
 g_cdata_tag_start constant varchar2(9) := '<![CDATA[';
 g_cdata_tag_end   constant varchar2(3) := ']]>';
 
-g_decimal_char varchar2(1); -- needed to convert numbers to/from strings
-
-/*DBUG
-g_indent pls_integer := 1;
-/*DBUG*/
+g_decimal_char varchar2(1) := null; -- needed to convert numbers to/from strings
 
 -- LOCAL
 
-/*DBUG
+$if epc.c_debugging $then
+
+/*
+-- GJP 2022-12-04
+--
+-- We want to debug EPC using DBUG but there is one quirk:
+-- you can not debug EPC while using PLSDBUG since that is based on EPC so you get infinite recursion.
+--
+-- The solution is to disable the PLSDBUG method just before the DBUG call and activate it thereafter.
+*/
+
+"PLSDBUG" constant dbug.method_t := 'PLSDBUG';
+
 procedure enter(p_procname in varchar2)
 is
 begin
-  dbms_output.put_line(substr(lpad('>', g_indent, ' ')||p_procname, 1, 255));
-  g_indent := g_indent + 2;
-exception
-  when others
-  then null;
-end;
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.enter(p_procname);
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.enter(p_procname);
+  end if;
+end enter;
 
 procedure print(p_break_point in varchar2, p_format in varchar2, p_data in varchar2 default null)
 is
 begin
-  dbms_output.put_line(substr(lpad(' ', g_indent-1, ' ')||p_break_point||': '||replace(p_format, '%s', p_data), 1, 255));
-exception
-  when others
-  then null;
-end;
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.print(p_break_point, p_format, p_data);
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.print(p_break_point, p_format, p_data);
+  end if;
+end print;
 
 procedure leave
 is
 begin
-  g_indent := g_indent - 2;
-  dbms_output.put_line(substr(lpad('<', g_indent, ' '), 1, 255));
-exception
-  when others
-  then null;
-end;
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.leave;
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.leave;
+  end if;
+end leave;
 
 procedure leave_on_error
 is
-  l_error_stack constant varchar2(32767) := dbms_utility.format_error_backtrace;
 begin
-  leave;
-  dbms_output.put_line(substr(l_error_stack, 1+0*255, 255));
-  dbms_output.put_line(substr(l_error_stack, 1+1*255, 255));
-  dbms_output.put_line(substr(l_error_stack, 1+2*255, 255));
-exception
-  when others
-  then null;
-end;
-/*DBUG*/
+  if dbug.active("PLSDBUG")
+  then
+    dbug.activate("PLSDBUG", false); -- off
+    dbug.leave_on_error;
+    dbug.activate("PLSDBUG", true); -- on
+  else
+    dbug.leave_on_error;
+  end if;
+end leave_on_error;
+
+$end -- $if epc.c_debugging $then
 
 procedure connection2epc_clnt_info_obj
 ( p_connection in http_connection_rectype
@@ -235,9 +256,9 @@ procedure send_request_dbms_pipe
 is
   l_retval pls_integer := -1;
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.send_request_dbms_pipe');
-/*DBUG*/
+$end
 
   dbms_pipe.pack_message( g_msg );
   if g_oneway = 0
@@ -245,11 +266,11 @@ begin
     dbms_pipe.pack_message( g_result_pipe );
   end if;
 
-  l_retval := 
+  l_retval :=
     dbms_pipe.send_message
-    ( 
+    (
       p_epc_clnt_object.request_pipe
-    , p_epc_clnt_object.send_timeout 
+    , p_epc_clnt_object.send_timeout
     );
 
   case l_retval
@@ -263,6 +284,7 @@ begin
            'Timed out while sending message number ' ||
            to_char(g_msg_seq) ||
            ' for pipe ' || p_epc_clnt_object.request_pipe ||
+           ' and timeout ' || to_char(p_epc_clnt_object.send_timeout) ||
            '.'
          );
 
@@ -280,9 +302,14 @@ begin
       raise program_error; -- there are no more return codes
   end case;
 
-/*DBUG
+$if epc.c_debugging $then
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end send_request_dbms_pipe;
 
 procedure send_request_utl_http
@@ -294,7 +321,7 @@ is
 begin
   epc_clnt_info_obj2connection(p_epc_clnt_object, l_http_connection_rec);
 
-  g_http_req := 
+  g_http_req :=
     utl_http.begin_request
     ( l_http_connection_rec.url
     , l_http_connection_rec.method
@@ -363,7 +390,7 @@ begin
   while l_length > 0
   loop
     begin
-      l_bytes_written := 
+      l_bytes_written :=
         utl_tcp.write_text
         ( c => l_tcp_connection
         , data => substr(g_msg, l_offset, l_length)
@@ -396,9 +423,9 @@ is
   l_timeout pls_integer := p_epc_clnt_object.recv_timeout;
   l_start date;
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.recv_response_dbms_pipe');
-/*DBUG*/
+$end
 
   /* When the client is ahead of the server, a time-out may occur
      while waiting for a message sequence nr (X). The client retries
@@ -408,18 +435,18 @@ begin
 
   <<msg_seq_loop>>
   loop
-/*DBUG
+$if epc.c_debugging $then
     print('info', 'receiving from %s', g_result_pipe);
     print('info', 'timeout: %s', to_char(l_timeout));
-/*DBUG*/
+$end
     l_start := sysdate;
     l_retval :=
-      case 
-        when p_epc_clnt_object.recv_timeout > 0 and l_timeout <= 0 
+      case
+        when p_epc_clnt_object.recv_timeout > 0 and l_timeout <= 0
         then 1 -- timeout
         else
           dbms_pipe.receive_message
-          ( 
+          (
             g_result_pipe
           , l_timeout
           )
@@ -428,12 +455,12 @@ begin
     case l_retval
       when 0 -- Success
       then
-        l_timeout := 
-          case 
+        l_timeout :=
+          case
             when p_epc_clnt_object.recv_timeout = 0
             then 0
             else
-              l_timeout - 
+              l_timeout -
               /* elapsed time in seconds */ (sysdate - l_start) * ( 24 * 60 * 60 )
           end;
 
@@ -479,17 +506,17 @@ begin
     /* Get the message sequence */
     dbms_pipe.unpack_message( l_msg_seq_result );
 
-/*DBUG
+$if epc.c_debugging $then
     print('info', 'l_msg_seq_result: %s', l_msg_seq_result);
-/*DBUG*/
+$end
 
     if l_msg_seq_result = g_msg_seq
     then
       dbms_pipe.unpack_message( g_msg );
 
-/*DBUG
+$if epc.c_debugging $then
       print('info', 'g_msg: %s', g_msg);
-/*DBUG*/
+$end
 
       if p_epc_clnt_object.protocol = "NATIVE"
       then
@@ -518,14 +545,14 @@ begin
 
       exit msg_seq_loop; -- OK
     else
-      /* Example: 
+      /* Example:
 
          The client expects 1006 after it timed out, so
-         1005 is still in the queue. 
+         1005 is still in the queue.
          Just read that, ignore it and continue to wait for 1006.
-      */                  
+      */
       null;
-/*    
+/*
       raise_application_error
       ( epc.c_wrong_protocol
       , '(epc_clnt.recv_response_dbms_pipe) ' ||
@@ -533,13 +560,18 @@ begin
         'Expected "' || to_char(g_msg_seq) || '"' ||
         ' but received "' || to_char(l_msg_seq_result) || '"' || '.'
       );
-*/      
+*/
     end if;
   end loop msg_seq_loop;
 
-/*DBUG
+$if epc.c_debugging $then
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end recv_response_dbms_pipe;
 
 procedure recv_response_utl_http
@@ -548,6 +580,10 @@ procedure recv_response_utl_http
 is
   http_resp utl_http.resp;
 begin
+$if epc.c_debugging $then
+  enter('epc_clnt.recv_response_utl_http');
+$end
+
   http_resp :=
     utl_http.get_response(g_http_req);
   begin
@@ -556,12 +592,21 @@ begin
   exception
     when others
     then
-/*DBUG
-      epc.print(g_msg);
-/*DBUG*/
+$if epc.c_debugging $then
+      print('info', 'msg: %s', g_msg);
+$end
       utl_http.end_response(http_resp);
       raise;
   end;
+
+$if epc.c_debugging $then
+  leave;
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end recv_response_utl_http;
 
 procedure recv_response_utl_tcp
@@ -574,7 +619,7 @@ begin
   epc_clnt_info_obj2connection(p_epc_clnt_object, l_tcp_connection);
 
   begin
-    l_bytes_read := 
+    l_bytes_read :=
       utl_tcp.read_text
       ( c => l_tcp_connection
       , data => g_msg
@@ -602,13 +647,13 @@ as
 begin
   l_fault_node := p_doc.extract('/SOAP-ENV:Fault', epc."xmlns:SOAP-ENV");
   if (l_fault_node is not null) then
-    l_fault_code := 
+    l_fault_code :=
       l_fault_node.extract
       (
         '/SOAP-ENV:Fault/faultcode/child::text()'
       , epc."xmlns:SOAP-ENV"
       ).getstringval();
-    l_fault_string := 
+    l_fault_string :=
       l_fault_node.extract
       (
         '/SOAP-ENV:Fault/faultstring/child::text()'
@@ -628,12 +673,12 @@ as
 begin
   l_fault_node := p_doc.extract('/methodResponse/fault');
   if (l_fault_node is not null) then
-    l_fault_code := 
+    l_fault_code :=
       l_fault_node.extract
       (
         '/value/struct/member/value/int/child::text()'
       ).getstringval();
-    l_fault_string := 
+    l_fault_string :=
       l_fault_node.extract
       (
         '/value/struct/member/value/string/child::text()'
@@ -664,7 +709,7 @@ end set_protocol;
 
 procedure get_protocol
 ( p_epc_clnt_object in epc_clnt_object
-, p_protocol out protocol_subtype
+, p_protocol out nocopy protocol_subtype
 )
 is
 begin
@@ -684,7 +729,7 @@ end set_connection_info;
 
 procedure get_connection_info
 ( p_epc_clnt_object in epc_clnt_object
-, p_connection out http_connection_subtype
+, p_connection out nocopy http_connection_subtype
 )
 is
 begin
@@ -744,7 +789,7 @@ end set_connection_info;
 
 procedure get_connection_info
 ( p_epc_clnt_object in epc_clnt_object
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 )
 is
 begin
@@ -830,7 +875,7 @@ end set_protocol;
 
 procedure get_protocol
 ( p_interface_name in epc.interface_name_subtype
-, p_protocol out protocol_subtype
+, p_protocol out nocopy protocol_subtype
 )
 is
   l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
@@ -893,7 +938,7 @@ end set_connection_info;
 
 procedure get_connection_info
 ( p_interface_name in epc.interface_name_subtype
-, p_pipe_name out epc.pipe_name_subtype
+, p_pipe_name out nocopy epc.pipe_name_subtype
 )
 is
   l_epc_clnt_object epc_clnt_object := new epc_clnt_object(p_interface_name);
@@ -952,11 +997,18 @@ procedure new_request
 )
 is
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.new_request');
-  print('input', 'p_method_name: %s', p_method_name);
-  print('input', 'p_oneway: %s', p_oneway);
-/*DBUG*/
+  --p_epc_clnt_object.print;
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_method_name: %s; p_oneway: %s'
+    , p_method_name
+    , to_char(p_oneway)
+    )
+  );
+$end
 
   g_msg := null;
   g_method_name := p_method_name;
@@ -964,16 +1016,16 @@ begin
 
   if p_epc_clnt_object.connection_method = CONNECTION_METHOD_DBMS_PIPE
   then
-/*DBUG
+$if epc.c_debugging $then
     print('info', 'resetting buffer');
-/*DBUG*/
+$end
     dbms_pipe.reset_buffer;
     dbms_pipe.pack_message( p_epc_clnt_object.protocol );
     g_msg_seq := g_msg_seq + 1;
     if g_msg_seq > c_max_msg_seq then g_msg_seq := 0; end if;
-/*DBUG
+$if epc.c_debugging $then
     print('info', 'g_msg_seq: %s', g_msg_seq);
-/*DBUG*/
+$end
     dbms_pipe.pack_message( g_msg_seq );
 
     if p_epc_clnt_object.protocol = "NATIVE"
@@ -995,9 +1047,14 @@ begin
     end if;
   end if;
 
-/*DBUG
+$if epc.c_debugging $then
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end new_request;
 
 procedure set_request_parameter
@@ -1009,17 +1066,29 @@ procedure set_request_parameter
 )
 is
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.set_request_parameter (1)');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_value: %s', p_value);
-  print('input', 'p_max_bytes: %s', p_max_bytes);
-/*DBUG*/
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_value: %s; p_max_bytes: %s'
+    , p_name
+    , to_char(p_data_type)
+    , p_value
+    , to_char(p_max_bytes)
+    )
+  );
+$end
 
   if p_value is null
   then
-    raise epc.e_illegal_null_value;
+    raise_application_error
+    ( epc.c_illegal_null_value
+    , utl_lms.format_message
+      ( epc.c_illegal_null_value_msg
+      , p_name
+      )
+    );
   elsif p_max_bytes is not null and lengthb(p_value) > p_max_bytes
   then
     raise value_error;
@@ -1027,7 +1096,7 @@ begin
     case p_epc_clnt_object.protocol
       when "NATIVE"
       then
-        case 
+        case
           when p_data_type in (epc.data_type_string, epc.data_type_xml)
           then
             g_msg :=
@@ -1083,17 +1152,22 @@ begin
             ||chr(10);
         else
           raise value_error;
-        end if; 
+        end if;
 
       else
         raise program_error;
-    end case;            
+    end case;
   end if;
 
-/*DBUG
+$if epc.c_debugging $then
   print('output', 'msg: %s', g_msg);
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end set_request_parameter;
 
 procedure set_request_parameter
@@ -1105,16 +1179,28 @@ procedure set_request_parameter
 is
   l_data_type varchar2(10);
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.set_request_parameter (2)');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_value: %s', p_value);
-/*DBUG*/
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_value: %s'
+    , p_name
+    , to_char(p_data_type)
+    , to_char(p_value)
+    )
+  );
+$end
 
   if p_value is null
   then
-    raise epc.e_illegal_null_value;
+    raise_application_error
+    ( epc.c_illegal_null_value
+    , utl_lms.format_message
+      ( epc.c_illegal_null_value_msg
+      , p_name
+      )
+    );
   else
     case p_epc_clnt_object.protocol
       when "NATIVE"
@@ -1147,7 +1233,7 @@ begin
         end case;
 
         g_msg :=
-          g_msg 
+          g_msg
           ||'<'||p_name||' xsi:type="xsd:'||l_data_type||'">'
           ||replace(to_char(p_value), g_decimal_char, '.')
           ||'</'||p_name||'>';
@@ -1183,10 +1269,15 @@ begin
     end case;
   end if;
 
-/*DBUG
+$if epc.c_debugging $then
   print('output', 'msg: %s', g_msg);
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end set_request_parameter;
 
 procedure set_request_parameter
@@ -1196,21 +1287,33 @@ procedure set_request_parameter
 , p_value in date
 )
 is
-  l_value constant varchar2(17) := 
+  l_value constant varchar2(17) :=
     to_char(p_value, 'yyyymmdd')
     ||'T'
     ||to_char(p_value, 'hh24:mi:ss');
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.set_request_parameter (3)');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_value: %s', l_value);
-/*DBUG*/
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_value: %s'
+    , p_name
+    , to_char(p_data_type)
+    , l_value
+    )
+  );
+$end
 
   if p_value is null
   then
-    raise epc.e_illegal_null_value;
+    raise_application_error
+    ( epc.c_illegal_null_value
+    , utl_lms.format_message
+      ( epc.c_illegal_null_value_msg
+      , p_name
+      )
+    );
   else
     case p_epc_clnt_object.protocol
       when "NATIVE"
@@ -1250,10 +1353,15 @@ begin
     end case;
   end if;
 
-/*DBUG
+$if epc.c_debugging $then
   print('output', 'msg: %s', g_msg);
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end set_request_parameter;
 
 procedure send_request
@@ -1284,7 +1392,7 @@ begin
         ||epc.SOAP_HEADER_END;
 
     when "XMLRPC"
-    then 
+    then
       g_msg :=
         '<methodCall>'
         ||chr(10)
@@ -1318,7 +1426,7 @@ begin
 
         else
           raise program_error;
-      end case;  
+      end case;
 
     when CONNECTION_METHOD_UTL_HTTP
     then
@@ -1338,7 +1446,7 @@ begin
 
         else
           raise program_error;
-      end case;  
+      end case;
   end case;
 end send_request;
 
@@ -1347,9 +1455,9 @@ procedure recv_response
 )
 is
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.recv_response');
-/*DBUG*/
+$end
 
   case p_epc_clnt_object.connection_method
     when CONNECTION_METHOD_DBMS_PIPE
@@ -1372,29 +1480,29 @@ begin
 
     when "SOAP"
     then
-/*DBUG
-      epc.print(g_msg);
-/*DBUG*/
+$if epc.c_debugging $then
+      print('info', 'msg: %s', g_msg);
+$end
       g_doc :=
         xmltype.createxml(g_msg).extract
         ( '/SOAP-ENV:Envelope/SOAP-ENV:Body/child::node()'
         , epc."xmlns:SOAP-ENV"
         );
-/*DBUG
-      epc.print(g_doc.getstringval());
-/*DBUG*/
+$if epc.c_debugging $then
+      print('info', 'msg: %s', g_doc.getstringval());
+$end
       check_soap_fault(g_doc);
 
     when "XMLRPC"
-    then 
-/*DBUG
-      epc.print(g_msg);
-/*DBUG*/
+    then
+$if epc.c_debugging $then
+      print('info', 'msg: %s', g_msg);
+$end
       g_doc := xmltype.createxml(g_msg);
 
-/*DBUG
-      epc.print(g_doc.getstringval());
-/*DBUG*/
+$if epc.c_debugging $then
+      print('info', 'msg: %s', g_doc.getstringval());
+$end
       check_xmlrpc_fault(g_doc);
 
       g_next_out_parameter := 1;
@@ -1403,17 +1511,22 @@ begin
       raise program_error;
   end case;
 
-/*DBUG
+$if epc.c_debugging $then
   print('output', 'g_msg: %s', g_msg);
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end recv_response;
 
 procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out varchar2
+, p_value out nocopy varchar2
 , p_max_bytes in integer
 )
 is
@@ -1421,12 +1534,18 @@ is
   l_xml XMLType;
   l_extract_type varchar2(100);
 begin
-/*DBUG
+$if epc.c_debugging $then
   enter('epc_clnt.get_response_parameter');
-  print('input', 'p_name: %s', p_name);
-  print('input', 'p_data_type: %s', p_data_type);
-  print('input', 'p_max_bytes: %s', p_max_bytes);
-/*DBUG*/
+  print
+  ( 'input'
+  , utl_lms.format_message
+    ( 'p_name: %s; p_data_type: %s; p_max_bytes: %s: %s'
+    , p_name
+    , to_char(p_data_type)
+    , to_char(p_max_bytes)
+    )
+  );
+$end
 
   if p_epc_clnt_object.protocol = "NATIVE"
   then
@@ -1435,9 +1554,9 @@ begin
       e_wrong_data_type_requested exception;
       pragma exception_init (e_wrong_data_type_requested, -6559);
     begin
-/*DBUG
+$if epc.c_debugging $then
       print('debug', 'g_msg: %s', g_msg);
-/*DBUG*/
+$end
 
       if substr(g_msg, 1, 1) = to_char(p_data_type)
       then
@@ -1470,7 +1589,7 @@ begin
     case p_epc_clnt_object.protocol
       when "SOAP"
       then
-        l_xml := 
+        l_xml :=
           g_doc.extract
           (
             '//'||p_name||l_extract_type
@@ -1478,7 +1597,7 @@ begin
           );
 
       when "XMLRPC"
-      then 
+      then
         case p_data_type
           when epc.data_type_xml
           then
@@ -1505,7 +1624,7 @@ begin
             raise value_error;
         end case;
 
-        l_xml := 
+        l_xml :=
           g_doc.extract
           (
             '/methodResponse/params/param['
@@ -1519,7 +1638,7 @@ begin
 
       else
         raise program_error;
-    end case;   
+    end case;
 
     l_value := l_xml.getstringval();
 
@@ -1537,7 +1656,7 @@ begin
           );
       end if;
 
-      p_value := 
+      p_value :=
         dbms_xmlgen.convert
         (
           xmlData => l_value
@@ -1553,18 +1672,29 @@ begin
     raise value_error;
   end if;
 
-/*DBUG
-  print('output', 'g_msg: %s', g_msg);
-  print('output', 'p_value: %s', p_value);
+$if epc.c_debugging $then
+  print
+  ( 'output'
+  , utl_lms.format_message
+    ( 'g_msg: %s; p_value: %s'
+    , g_msg
+    , p_value
+    )
+  );
   leave;
-/*DBUG*/
+exception
+  when others
+  then
+    leave_on_error;
+    raise;
+$end
 end get_response_parameter;
 
 procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out number
+, p_value out nocopy number
 )
 is
   l_value epc.string_subtype;
@@ -1583,7 +1713,7 @@ procedure get_response_parameter
 ( p_epc_clnt_object in epc_clnt_object
 , p_name in epc.parameter_name_subtype
 , p_data_type in epc.data_type_subtype
-, p_value out date
+, p_value out nocopy date
 )
 is
   l_value epc.string_subtype;
@@ -1608,6 +1738,154 @@ begin
   end if;
 end shutdown;
 
+$if epc.c_testing $then
+
+procedure ut_reset
+is
+begin
+  g_method_name := null;
+  g_oneway := null;
+  g_msg := null; /* input/output */
+  g_doc := null; /* output */
+  g_next_out_parameter := null; /* number of next out (or in/out) parameter to read for XMLRPC */
+  g_result_pipe := null;
+  g_msg_seq := c_max_msg_seq;
+  g_decimal_char := null; -- needed to convert numbers to/from strings
+end;
+
+procedure ut_set_protocol
+is
+begin
+  -- first three OK
+  set_protocol
+  ( p_interface_name => 'dummy'
+  , p_protocol => "NATIVE"
+  );
+  set_protocol
+  ( p_interface_name => 'dummy'
+  , p_protocol => "SOAP"
+  );
+  set_protocol
+  ( p_interface_name => 'dummy'
+  , p_protocol => "XMLRPC"
+  );
+  begin
+    set_protocol
+    ( p_interface_name => 'dummy'
+    , p_protocol => null
+    );
+  exception
+    when value_error
+    then
+      raise program_error;
+  end;
+end;  
+
+procedure ut_get_protocol
+is
+  l_protocol_exp protocol_subtype;
+  l_protocol_act protocol_subtype;
+begin
+  for i_idx in 1..4
+  loop
+    l_protocol_exp := case i_idx when 1 then "NATIVE" when 2 then "SOAP" when 3 then "XMLRPC" end;
+
+    begin    
+      set_protocol
+      ( p_interface_name => 'dummy'
+      , p_protocol => l_protocol_exp
+      );
+    exception
+      when value_error
+      then
+        if l_protocol_exp is not null
+        then
+          raise;
+        end if;
+    end;
+
+    get_protocol
+    ( p_interface_name => 'dummy'
+    , p_protocol => l_protocol_act
+    );
+    ut.expect(l_protocol_act, to_char(i_idx)).to_equal(nvl(l_protocol_exp, "XMLRPC")); -- latest not null is stored
+  end loop;
+end;
+
+procedure ut_set_connection_info
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_get_connection_info
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_request_send_timeout
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_response_recv_timeout
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_namespace
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_inline_namespace
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_new_request
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_set_request_parameter
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_send_request
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_recv_response
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_get_response_parameter
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+procedure ut_shutdown
+is
+begin
+  raise epc.e_not_tested;
+end;
+
+$end
+
 begin
   select  substr(value, 1, 1) as decimal_char
   into    g_decimal_char
@@ -1616,9 +1894,9 @@ begin
 
   g_result_pipe := 'EPC$' || dbms_pipe.unique_session_name;
 
-  /* 
-  || GJP 08-01-2001 
-  || Emptying the result pipe seems to prevent timeouts on receipt. 
+  /*
+  || GJP 08-01-2001
+  || Emptying the result pipe seems to prevent timeouts on receipt.
   */
 
   dbms_pipe.purge( g_result_pipe );

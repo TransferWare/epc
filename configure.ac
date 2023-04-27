@@ -1,7 +1,7 @@
-# -*-fundamental-*-
+# -*-autoconf-*-
 # Process this file with autoconf to produce a configure script.
 
-# Copyright (C) 2002-2021 G.J. Paulissen
+# Copyright (C) 2002-2022 G.J. Paulissen
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -17,8 +17,8 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-AC_REVISION([2021-08-02])
-AC_INIT([epc],[6.0.0],[gert.jan.paulissen@gmail.com])
+AC_REVISION([2022-12-01])
+AC_INIT([epc],[7.0.0],[gert.jan.paulissen@gmail.com])
 
 # version check
 if test -f "$srcdir/VERSION"
@@ -63,8 +63,7 @@ esac
 
 AM_INIT_AUTOMAKE
 
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL
+LT_INIT([win32-dll])
 
 case ${host_os} in
 *darwin*)
@@ -101,7 +100,7 @@ dnl AC_ARG_VAR(PERL,[The program name of Perl.])
 
 AC_PROG_CC
 
-AM_PROG_LEX
+AC_PROG_LEX(yywrap)
 if test "$LEX" != flex; then
   LEX="$SHELL $missing_dir/missing flex"
   AC_SUBST(LEX_OUTPUT_ROOT, lex.yy)
@@ -144,6 +143,14 @@ AM_CONDITIONAL([DOXYGEN], [test -n "$DOXYGEN"])
 # dbug package ?
 ACX_WITH_DBUG
 
+# Checks for header files.
+
+# Autoupdate added the next two lines to ensure that your configure
+# script's behavior did not change.  They are probably safe to remove.
+AC_CHECK_INCLUDES_DEFAULT
+AC_PROG_EGREP
+
+
 # Oracle checks
 ACX_PROG_PROC
 ACX_PROG_SQLPLUS
@@ -169,10 +176,7 @@ LT_INIT
 # Check for _int64, __int64, unsigned long long used by Oracle header files oratypes.h and oraxml.h
 AC_CHECK_TYPES([_int64, __int64, unsigned long long])
 
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
-AC_CHECK_HEADERS([sqlproto.h sqlcpr.h oraxml.h oratypes.h])
+AC_CHECK_HEADERS_ONCE([assert.h errno.h malloc/malloc.h stdlib.h signal.h string.h sys/types.h time.h stdarg.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -208,6 +212,7 @@ LTLIBOBJS=`echo "$LIB@&t@OBJS" |
            sed 's,\.[[^.]]* ,.lo ,g;s,\.[[^.]]*$,.lo,'`
 AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
+
 AC_CONFIG_FILES([replace/Makefile])
 AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile])
 # Perl is substituted in these scripts

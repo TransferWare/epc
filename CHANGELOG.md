@@ -1,6 +1,6 @@
 # Changelog
 
-Copyright (C) 1997-2021 G.J. Paulissen 
+Copyright (C) 1997-2022 G.J. Paulissen 
 
 
 All notable changes to this project will be documented in this file.
@@ -9,6 +9,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Please see the [EPC issue queue](https://github.com/TransferWare/epc/issues) for issues.
+
+Types of changes:
+- *Added* for new features.
+- *Changed* for changes in existing functionality.
+- *Deprecated* for soon-to-be removed features.
+- *Removed* for now removed features.
+- *Fixed* for any bug fixes.
+- *Security* in case of vulnerabilities.
+
+[Unreleased]
+
+## [7.0.0] - 2023-04-27
+
+### Added
+
+- [It must be possible to create a private request pipe with a custom maximum pipe size.](https://github.com/TransferWare/epc/issues/10)
+- [Add the ability to only output C or PL/SQL code.](https://github.com/TransferWare/epc/issues/9)
+- [Add debugging to EPC_CLNT when no message can be sent for a database pipe.](https://github.com/TransferWare/epc/issues/8)
+
+## [6.1.0] - 2021-08-11
+
+### Fixed
+
+- [On Mac OS X you should disable shared libraries.](https://github.com/TransferWare/epc/issues/2)
+- [On Mac OS X libraries or executables with @rpath pose problems while testing.](https://github.com/TransferWare/epc/issues/3)
+- [The configure script must set ORACLE_LIBS and ORACLE_LDFLAGS instead of LIBS and LDFLAGS.](https://github.com/TransferWare/epc/issues/4)
+- [When PostgreSQL sqlca is installed in /usr/local/include it overrides Oracle's sqlca.](https://github.com/TransferWare/epc/issues/5)
 
 ## [6.0.0] - 2021-08-02
 

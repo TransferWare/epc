@@ -229,7 +229,11 @@
 #define SQLCA_INIT
 #endif
 
+EXEC SQL BEGIN DECLARE SECTION;
+
 EXEC SQL INCLUDE sqlca;
+
+EXEC SQL END DECLARE SECTION;
 
 #if HAVE_SQLCPR_H
 #include <sqlcpr.h>
@@ -378,8 +382,8 @@ epc__abort( char *msg )
 
   (void) fprintf(stderr, "%s\n", msg);
   buf_len = sizeof (err_msg);
-  sqlglm(err_msg, &buf_len, &msg_len);
-  (void) fprintf(stderr, "%.*s\n", msg_len, err_msg);
+  sqlglm((unsigned char*)err_msg, &buf_len, &msg_len);
+  (void) fprintf(stderr, "%.*s\n", (int) msg_len, err_msg);
 
   exit(EXIT_FAILURE);
 }
@@ -445,6 +449,9 @@ epc__connect( epc__info_t *epc__info )
   return status;
 }
 
+#ifdef  sqlca
+#undef  sqlca
+#endif
 #define sqlca (*(epc__info->sqlca))
 
 static
@@ -473,6 +480,8 @@ epc__connect_register_db( epc__info_t *epc__info )
   char *request_pipe = epc__info->pipe;
   short request_pipe_nl = ( request_pipe == NULL ? -1 : 0 );
   int purge_pipe = epc__info->purge_pipe;
+  int max_pipe_size = epc__info->max_pipe_size;
+  int private = epc__info->private;
   EXEC SQL END DECLARE SECTION;
 
   DBUG_ENTER( "epc__connect_register_db" );
@@ -491,6 +500,8 @@ epc__connect_register_db( epc__info_t *epc__info )
       epc_srvr.set_connection_info( epc_srvr.get_epc_key, :request_pipe:request_pipe_nl );
     end if;
     epc_srvr.get_connection_info( epc_srvr.get_epc_key, l_pipe_name );
+    /* GJP 2022-12-14 It must be possible to create a private request pipe with a custom maximum pipe size. */
+    epc_srvr.create_pipe( l_pipe_name, :max_pipe_size, :private <> 0 );
     if :purge_pipe != 0
     then
       epc_srvr.purge_pipe( l_pipe_name );
@@ -725,6 +736,7 @@ epc__error_t
 epc__send_response_pipe( epc__info_t * epc__info, epc__call_t * epc__call )
 {
   DBUG_ENTER( "epc__send_response_pipe" );
+  DBUG_PRINT( "input", ( "epc__call->function: %p; epc__call->function->oneway: %d; epc__call->msg_info: %s", (void*)epc__call->function, epc__call->function->oneway, epc__call->msg_info ) );
 
   epc__call->epc__error = OK;
 
@@ -763,6 +775,7 @@ EXEC SQL END DECLARE SECTION;
 epc__info_t *epc__info;
 {
   DBUG_ENTER("epc__send_response_pipe_db");
+  DBUG_PRINT( "input", ( "msg_response: %s; msg_info: %s", msg_response, msg_info ) );
 
   EXEC SQL WHENEVER SQLERROR DO EPC__ABORT(__FILE__, __LINE__, "-- Oracle error --");
 

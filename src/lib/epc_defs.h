@@ -76,6 +76,9 @@ typedef struct epc__info
   dword_t purge_pipe;
   dword_t interrupt;
   /*@null@ */ /*@observer@ */ char *program;
+  /* GJP 2022-12-14 It must be possible to create a private request pipe with a custom maximum pipe size. */
+  dword_t max_pipe_size;
+  dword_t private;
 } epc__info_t;
 
 typedef /*@null@ *//*@only@ */ epc__info_t *epc__info_ptr_t;

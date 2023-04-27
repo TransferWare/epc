@@ -127,38 +127,20 @@ rem list
 
 prompt Performance test doing a null block
 
-variable l_group_name varchar2(100)
-
-execute :l_group_name := 'epctest.sql';
-
 declare
   l_epc_clnt_object epc_clnt_object;
   l_recv_timeout constant integer := 10;
 begin
+  -- clean up local storage
+  std_object_mgr.delete_std_objects;
+
   -- Store object into PL/SQL table
-  std_object_mgr.set_group_name(null);
   epc_clnt.set_response_recv_timeout(:l_interface_name, l_recv_timeout);
 
-  -- Store object into table std_objects
-  std_object_mgr.set_group_name(:l_group_name);
-  epc_clnt.set_response_recv_timeout(:l_interface_name, l_recv_timeout * 2);
-
   -- Retrieve from PL/SQL table
-  std_object_mgr.set_group_name(null);
   l_epc_clnt_object := new epc_clnt_object(:l_interface_name);
 
   if l_epc_clnt_object.recv_timeout = l_recv_timeout
-  then
-    null;
-  else
-    raise value_error;
-  end if;
-
-  -- Retrieve from table std_objects
-  std_object_mgr.set_group_name(:l_group_name);
-  l_epc_clnt_object := new epc_clnt_object(:l_interface_name);
-
-  if l_epc_clnt_object.recv_timeout = l_recv_timeout * 2
   then
     null;
   else
@@ -213,7 +195,7 @@ prompt Performance test doing &&N number of calls doing nothing with results ret
 
 /
 
-execute std_object_mgr.delete_std_objects(p_group_name => :l_group_name)
+execute std_object_mgr.delete_std_objects
 
 prompt Finished.
 spool off

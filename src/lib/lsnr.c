@@ -158,7 +158,9 @@ epc__main (int argc, char **argv, epc__interface_t * epc_interface)
  *   <tr><td>-D OPTIONS</td><td>Turn on debugging using the DBUG library.</td></tr>
  *   <tr><td>-I</td><td>Interrupt the server waiting on the request pipe.</td></tr>
  *   <tr><td>-P</td><td>Purge the request pipe.</td></tr>
+ *   <tr><td>-X</td><td>Create a private request pipe.</td></tr>
  *   <tr><td>-h</td><td>Print a help message.</td></tr>
+ *   <tr><td>-m MAX_PIPE_SIZE</td><td>Create a request pipe of this maximum size.</td></tr>
  *   <tr><td>-p REQUEST_PIPE</td><td>Set the request pipe.</td></tr>
  *   <tr><td>-u USERID</td><td>Use this connect string for the Oracle logon.</td></tr>
  *   <tr><td>-v</td><td>Displays the EPC listener version.</td></tr>
@@ -178,6 +180,9 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
   char *request_pipe = NULL;
   dword_t purge_pipe = 0;
   dword_t interrupt = 0;
+  /* GJP 2022-12-14 It must be possible to create a private request pipe with a custom maximum pipe size. */
+  dword_t max_pipe_size = 8192;
+  dword_t private = 0;
   int nr;
   epc__error_t ret;
   /*@only@ *//*@null@ */ epc__info_t *epc__info = NULL;
@@ -219,9 +224,23 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
               purge_pipe = 1;
               break;
 
+            case 'X':
+              private = 1;
+              break;
+
+            /* upper case before lower case */
+              
             case 'h':
               help (argv[0]);
               return OK;
+
+            case 'm':
+              /* Is it -m... or -m ... */
+              if (argv[nr][2] != '\0')
+                max_pipe_size = atoi(&argv[nr][2]);
+              else
+                max_pipe_size = atoi(&argv[++nr][0]);
+              break;
 
             case 'p':
               /* Is it -p... or -p ... */
@@ -284,6 +303,8 @@ epc__list_main (int argc, char **argv, epc__interface_t * epc_interface, ...)
       epc__info->interrupt = interrupt;
       epc__info->purge_pipe = purge_pipe;
       epc__info->program = argv[0];
+      epc__info->max_pipe_size = max_pipe_size;
+      epc__info->private = private;
       if ((ret = epc__set_logon (epc__info, logon)) != OK)
         break;
 
@@ -373,7 +394,7 @@ Syntax: %s "
 #ifndef DBUG_OFF
 "-D <dbug options> "
 #endif
-"-I -P -h -p <request pipe> -u <user connect> -v\n\
+"-I -P -X -h -m <max pipe size> -p <request pipe> -u <user connect> -v\n\
 \n\
 Flags:\n"
 #ifndef DBUG_OFF
@@ -383,7 +404,9 @@ Flags:\n"
 "\
         I       interrupt the server waiting on the request pipe\n\
         P       purge the request pipe\n\
+        X       create a private request pipe\n\
         h       this help\n\
+        m       create a request pipe of this maximum size\n\
         p       set name of request pipe\n\
         u       user connect string for database logon, e.g. SCOTT/TIGER@DB\n\
         v       display the EPC listener version\n\
