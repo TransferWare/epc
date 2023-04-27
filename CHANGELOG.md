@@ -20,6 +20,10 @@ Types of changes:
 
 [Unreleased]
 
+## [7.0.0] - 2023-04-27
+
+### Added
+
 - [It must be possible to create a private request pipe with a custom maximum pipe size.](https://github.com/TransferWare/epc/issues/10)
 - [Add the ability to only output C or PL/SQL code.](https://github.com/TransferWare/epc/issues/9)
 - [Add debugging to EPC_CLNT when no message can be sent for a database pipe.](https://github.com/TransferWare/epc/issues/8)
