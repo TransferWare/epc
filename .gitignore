@@ -30,3 +30,6 @@ doc/sql/
 build/
 b/
 .deps/
+
+# Soft Links
+ln_oracle_tools.sh
