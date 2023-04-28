@@ -1,3 +1,3 @@
-SUBDIRS    = prog lib
+SUBDIRS    = prog lib sql
 
 EXTRA_DIST = 

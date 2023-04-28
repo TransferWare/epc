@@ -214,7 +214,7 @@ AC_SUBST(LTLIBOBJS)dnl
 AC_SUBST(ac_aux_dir)dnl
 
 AC_CONFIG_FILES([replace/Makefile])
-AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile])
+AC_CONFIG_FILES([src/Makefile src/lib/Makefile src/prog/Makefile src/sql/Makefile])
 # Perl is substituted in these scripts
 AC_CONFIG_FILES([src/prog/epcdaemon.pl])
 AC_CONFIG_FILES([Makefile test/Makefile])
