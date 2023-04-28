@@ -16,16 +16,15 @@
 ## Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 sql_scripts      = 0001.TYPE_SPEC.EPC_CLNT_OBJECT.sql \
-									 R__0002.PACKAGE_SPEC.EPC.sql \
+								 	 R__0002.PACKAGE_SPEC.EPC.sql \
 									 R__0003.PACKAGE_SPEC.EPC_SRVR.sql \
 									 R__0004.PACKAGE_SPEC.EPC_CLNT.sql \
 									 R__0005.TYPE_BODY.EPC_CLNT_OBJECT.sql \
 									 R__0006.PACKAGE_BODY.EPC_SRVR.sql \
 									 R__0007.PACKAGE_BODY.EPC_CLNT.sql \
-									 R__0008.PACKAGE_BODY.EPC.sql \
-									 V0001__TYPE_SPEC.EPC_CLNT_OBJECT.sql \
-                   install.sql \
-                   uninstall.sql
+									 V20221203171807.0001__TYPE_SPEC.EPC_CLNT_OBJECT.sql \
+									 install.sql \
+									 uninstall.sql
 
 noinst_DATA      = $(sql_scripts)
 
